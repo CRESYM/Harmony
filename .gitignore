@@ -262,3 +262,5 @@ __pycache__/
 *.mat
 *.xml
 *.l
+*.asv
+*.autosave
