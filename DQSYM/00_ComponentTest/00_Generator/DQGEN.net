@@ -1,0 +1,66 @@
+Unit specified : OMU
+
+rlc matrix:
+
+Node_1 Node_2 Type      R(ohms)     L(mH)       C(uF)/U(V)  Branch#  Block name
+------------------------------------------------------------------------------------
+15     6      S         0.1         1           0           1        phase_A: RL_src
+14     5      S         0.1         1           0           2        phase_B: RL_src
+13     4      S         0.1         1           0           3        phase_C: RL_src
+6      0      P         50          0           20          4        phase_A: ParallelRLC22
+5      0      P         50          0           20          5        phase_B: ParallelRLC22
+4      0      P         50          0           20          6        phase_C: ParallelRLC22
+6      5      S         3.114e+04   0           0           7        Mac_EMT/Rparasitic    
+5      4      S         3.114e+04   0           0           8        Mac_EMT/Rparasitic    
+4      6      S         3.114e+04   0           0           9        Mac_EMT/Rparasitic    
+
+Number of nodes: 7
+Number of branches: 9
+Number of transformers: 0
+Number of mutuals (inductive coupling): 0
+Number of voltage sources: 3
+Number of current sources: 2
+Number of switches: 0
+
+Source matrix:
+
+Node1 Node2 U/I  Mag.     Phase    Frequency Type   Block name
+           (0/1) (V/A)  (degrees)     (Hz)
+--------------------------------------------------------------
+4     6     1    17077.1  24.7773  60        14     A: Mac_EMT        
+4     5     1    17077.1  -95.2227 60        14     B: Mac_EMT        
+15    0     0    19595.9  0        60        22     A: 500 kV 3333 MVA
+14    0     0    19595.9  -120     60        22     B: 500 kV 3333 MVA
+13    0     0    19595.9  120      60        22     C: 500 kV 3333 MVA
+
+
+Total number of inductances and capacitors: 6
+
+Output expressions:
+
+y_u1 = U_AB: Mac_EMT
+y_u2 = U_BC: Mac_EMT
+y_u3 = U A: B1
+y_u4 = U B: B1
+y_u5 = U C: B1
+y_u6 = U A: B22
+y_u7 = U B: B22
+y_u8 = U C: B22
+y_u9 = U A: B500
+y_u10 = U B: B500
+y_u11 = U C: B500
+y_i12 = I A: B1
+y_i13 = I B: B1
+y_i14 = I C: B1
+y_i15 = I A: B22
+y_i16 = I B: B22
+y_i17 = I C: B22
+y_i18 = I A: B500
+y_i19 = I B: B500
+y_i20 = I C: B500
+y_u21 = Ub1: RL_src
+y_u22 = Ub2: RL_src
+y_u23 = Ub3: RL_src
+y_u24 = Ub1: ParallelRLC22
+y_u25 = Ub2: ParallelRLC22
+y_u26 = Ub3: ParallelRLC22
