@@ -442,7 +442,10 @@ classdef cDQN < handle
             Dd12 = C*INVR*B*dt/2;
             
             %Calculating the PNZ matrices
-                
+            
+                a = -0.5+0.866i;
+                a2 = -0.5-0.866i;
+                Sas = [1,a,a2;1,a2,a;1,1,1]/3;
             
                 arows = size(Ad1,1)/3; %signal size
                 acols = size(Ad1,2)/3; %signal size
@@ -482,7 +485,7 @@ classdef cDQN < handle
             
                 for i = 1 : arows
                     for j = 1 : acols
-                        Adc((1:3) + (i-1)*3,(1:3) + (j-1)*3) = obj.Sas*Ad1((1:3) + (i-1)*3,(1:3) + (j-1)*3)/obj.Sas;
+                        Adc((1:3) + (i-1)*3,(1:3) + (j-1)*3) = Sas*Ad1((1:3) + (i-1)*3,(1:3) + (j-1)*3)/Sas;
                         %Adc((1:3) + (i-1)*3,(1:3) + (j-1)*3) = diag(diag(real(Adc((1:3) + (i-1)*3,(1:3) + (j-1)*3))));
                     end
                 end
@@ -494,7 +497,7 @@ classdef cDQN < handle
             
                 for i = 1 : brows
                     for j = 1 : bcols
-                        Bdc((1:3) + (i-1)*3,(1:3) + (j-1)*3) = obj.Sas*Bd1((1:3) + (i-1)*3,(1:3) + (j-1)*3)/obj.Sas;
+                        Bdc((1:3) + (i-1)*3,(1:3) + (j-1)*3) = Sas*Bd1((1:3) + (i-1)*3,(1:3) + (j-1)*3)/Sas;
                         %Bdc((1:3) + (i-1)*3,(1:3) + (j-1)*3) = diag(diag(real(Bdc((1:3) + (i-1)*3,(1:3) + (j-1)*3))));
                     end
                 end
@@ -506,7 +509,7 @@ classdef cDQN < handle
             
                 for i = 1 : crows
                     for j = 1 : ccols
-                        Cdc((1:3) + (i-1)*3,(1:3) + (j-1)*3) = obj.Sas*Cd1((1:3) + (i-1)*3,(1:3) + (j-1)*3)/obj.Sas;
+                        Cdc((1:3) + (i-1)*3,(1:3) + (j-1)*3) = Sas*Cd1((1:3) + (i-1)*3,(1:3) + (j-1)*3)/Sas;
                         %Cdc((1:3) + (i-1)*3,(1:3) + (j-1)*3) = diag(diag(real(Cdc((1:3) + (i-1)*3,(1:3) + (j-1)*3))));
                     end
                 end
@@ -518,7 +521,7 @@ classdef cDQN < handle
             
                 for i = 1 : d1rows
                     for j = 1 : d1cols
-                        Ddc1((1:3) + (i-1)*3,(1:3) + (j-1)*3) = obj.Sas*Dd11((1:3) + (i-1)*3,(1:3) + (j-1)*3)/obj.Sas;
+                        Ddc1((1:3) + (i-1)*3,(1:3) + (j-1)*3) = Sas*Dd11((1:3) + (i-1)*3,(1:3) + (j-1)*3)/Sas;
                         %Ddc1((1:3) + (i-1)*3,(1:3) + (j-1)*3) = diag(diag(real(Ddc1((1:3) + (i-1)*3,(1:3) + (j-1)*3))));
                     end
                 end
@@ -530,41 +533,29 @@ classdef cDQN < handle
             
                 for i = 1 : d2rows
                     for j = 1 : d2cols
-                        Ddc2((1:3) + (i-1)*3,(1:3) + (j-1)*3) = obj.Sas*Dd12((1:3) + (i-1)*3,(1:3) + (j-1)*3)/obj.Sas;
+                        Ddc2((1:3) + (i-1)*3,(1:3) + (j-1)*3) = Sas*Dd12((1:3) + (i-1)*3,(1:3) + (j-1)*3)/Sas;
                         %Ddc2((1:3) + (i-1)*3,(1:3) + (j-1)*3) = diag(diag(real(Ddc2((1:3) + (i-1)*3,(1:3) + (j-1)*3))));
                     end
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
-            Adc(abs(Adc)<10*eps) = 0;
-            Bdc(abs(Bdc)<10*eps) = 0;
-            Cdc(abs(Cdc)<10*eps) = 0;
-            Ddc(abs(Ddc1)<10*eps) = 0;
-            Ddc(abs(Ddc2)<10*eps) = 0;
-        
-        
-            % Adc = real(Adc);
-            % Bdc = real(Bdc);
-            % Cdc = real(Cdc);
-            % Ddc2 = real(Ddc);
-            % Ddc2 = real(Ddc);
-        
-        
-            InitVec_c = complex(zeros(brows*3,N+1));
-        
-        
-            if(~isempty(InitVec))
-                if(mod(numel(InitVec),3)~=0) error('[SS_DQNc_Mat] InitVec with wrong size --> needs to be a multiple of 3!'); end
-        
-                for k = 1 : numel(InitVec)/3
-                    InitVec_c((k-1)*3+1:(k-1)*3+3,1) = obj.Sas*InitVec((k-1)*3+1:(k-1)*3+3);
+            
+                % Adc(abs(Adc)<10*eps) = 0;
+                % Bdc(abs(Bdc)<10*eps) = 0;
+                % Cdc(abs(Cdc)<10*eps) = 0;
+                % Ddc(abs(Ddc)<10*eps) = 0;
+            
+                InitVec_c = complex(zeros(brows*3,N+1));
+            
+            
+                if(~isempty(InitVec))
+                    if(mod(numel(InitVec),3)~=0) error('[SS_DQNc_Mat] InitVec with wrong size --> needs to be a multiple of 3!'); end
+            
+                    for k = 1 : numel(InitVec)/3
+                        InitVec_c((k-1)*3+1:(k-1)*3+3,1) = Sas*InitVec((k-1)*3+1:(k-1)*3+3);
+                    end
                 end
-            end
-        
-        
-        
-        
-        
+
+
         
         end
         
