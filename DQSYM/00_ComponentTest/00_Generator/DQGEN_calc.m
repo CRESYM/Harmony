@@ -29,13 +29,15 @@ file = 'DQGEN.xlsx';
 run('DQGEN')
 sim('DQGEN')
 
-[Adc,Bdc,Cdc,Ddc1,Ddc2,InitVec_c] = oDP.fDiscSSTest(SYS.A,SYS.B,SYS.C,SYS.D,SYS.x0,Ts,N)
 
 
-I = eye(size(SYS.A,1));
-INVR = I/(I-SYS.A*Ts/2);
-Cd = INVR*SYS.C*Ts
-SYS.x01 = InitVec'
+% [Adc,Bdc,Cdc,Ddc1,Ddc2,InitVec_c] = oDP.fDiscSSTest(SYS.A,SYS.B,SYS.C,SYS.D,SYS.x0,Ts,N)
+% 
+% 
+% I = eye(size(SYS.A,1));
+% INVR = I/(I-SYS.A*Ts/2);
+% Cd = INVR*SYS.C*Ts
+% SYS.x01 = InitVec'
 
 
 
