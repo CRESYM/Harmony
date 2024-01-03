@@ -1,0 +1,96 @@
+Unit specified : OMU
+
+rlc matrix:
+
+Node_1 Node_2 Type      R(ohms)     L(mH)       C(uF)/U(V)  Branch#  Block name
+------------------------------------------------------------------------------------
+7      13     S         0.8929      16.58       0           1        phase_A: RL Src
+8      14     S         0.8929      16.58       0           2        phase_B: RL Src
+9      15     S         0.8929      16.58       0           3        phase_C: RL Src
+3      6      S         400         0           0           4        phase_A: R_startup
+2      5      S         400         0           0           5        phase_B: R_startup
+1      4      S         400         0           0           6        phase_C: R_startup
+13     0      S         240         0           0           7        phase_A: Ld1      
+14     0      S         240         0           0           8        phase_B: Ld1      
+15     0      S         240         0           0           9        phase_C: Ld1      
+19     0      S         2.218e+05   0           0           10       phase_A: Ld2      
+20     0      S         2.218e+05   0           0           11       phase_B: Ld2      
+21     0      S         2.218e+05   0           0           12       phase_C: Ld2      
+13     3      S         1e+06       0           0           13       snubber: Brk1/Breaker A
+14     2      S         1e+06       0           0           14       snubber: Brk1/Breaker B
+15     1      S         1e+06       0           0           15       snubber: Brk1/Breaker C
+3      6      S         1e+06       0           0           16       snubber: Brk2/Breaker A
+2      5      S         1e+06       0           0           17       snubber: Brk2/Breaker B
+1      4      S         1e+06       0           0           18       snubber: Brk2/Breaker C
+6      0      Tr        0.24        30.56       2.309e+05   19       transfo_1_winding_1: Tr1
+19     31     Tr        0.1663      21.18       1.923e+05   20       transfo_1_winding_2: Tr1
+33     0      P         1.6e+05     5.093e+05   0           21       transfo_1_Lm: Tr1       
+5      0      Tr        0.24        30.56       2.309e+05   22       transfo_2_winding_1: Tr1
+20     31     Tr        0.1663      21.18       1.923e+05   23       transfo_2_winding_2: Tr1
+34     0      P         1.6e+05     5.093e+05   0           24       transfo_2_Lm: Tr1       
+4      0      Tr        0.24        30.56       2.309e+05   25       transfo_3_winding_1: Tr1
+21     31     Tr        0.1663      21.18       1.923e+05   26       transfo_3_winding_2: Tr1
+35     0      P         1.6e+05     5.093e+05   0           27       transfo_3_Lm: Tr1       
+
+Number of nodes: 20
+Number of branches: 27
+Number of transformers: 3
+Number of mutuals (inductive coupling): 0
+Number of voltage sources: 6
+Number of current sources: 6
+Number of switches: 6
+
+Source matrix:
+
+Node1 Node2 U/I  Mag.     Phase    Frequency Type   Block name
+           (0/1) (V/A)  (degrees)     (Hz)
+--------------------------------------------------------------
+13    3     1    0        0        0         2      Brk1/Breaker A                            
+14    2     1    0        0        0         2      Brk1/Breaker B                            
+15    1     1    0        0        0         2      Brk1/Breaker C                            
+3     6     1    0        0        0         2      Brk2/Breaker A                            
+2     5     1    0        0        0         2      Brk2/Breaker B                            
+1     4     1    0        0        0         2      Brk2/Breaker C                            
+7     0     0    0        0        0         24     Voltage source/Controlled Voltage Source  
+8     0     0    0        0        0         24     Voltage source/Controlled Voltage Source6 
+9     0     0    0        0        0         24     Voltage source/Controlled Voltage Source7 
+19    0     0    0        0        0         24     Voltage source1/Controlled Voltage Source 
+20    0     0    0        0        0         24     Voltage source1/Controlled Voltage Source6
+21    0     0    0        0        0         24     Voltage source1/Controlled Voltage Source7
+
+Switch matrix:
+
+Node1 Node2 0/1  R.       L.       I#  U#  Switch type
+------------------------------------------------------
+13    3     0    0.001    0        1   1   Breaker
+14    2     0    0.001    0        2   2   Breaker
+15    1     0    0.001    0        3   3   Breaker
+3     6     0    0.01     0        4   4   Breaker
+2     5     0    0.01     0        5   5   Breaker
+1     4     0    0.01     0        6   6   Breaker
+
+Total number of inductances and capacitors: 12
+
+The following inductor currents are dependent: 
+Il_b20_n19_31 =  - Il_b23_n20_31  - Il_b26_n21_31 
+
+Output expressions:
+
+y_u1 = U_Brk1/Breaker A
+y_u2 = U_Brk1/Breaker B
+y_u3 = U_Brk1/Breaker C
+y_u4 = U_Brk2/Breaker A
+y_u5 = U_Brk2/Breaker B
+y_u6 = U_Brk2/Breaker C
+y_u7 = U A: prim
+y_u8 = U B: prim
+y_u9 = U C: prim
+y_u10 = U A: sec
+y_u11 = U B: sec
+y_u12 = U C: sec
+y_i13 = I A: prim
+y_i14 = I B: prim
+y_i15 = I C: prim
+y_i16 = I A: sec
+y_i17 = I B: sec
+y_i18 = I C: sec
