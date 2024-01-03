@@ -6,7 +6,7 @@ function [SYS1, rlc] = fNET2SS(file)
     
     rlc = xlsread(file,'RLC'); rlc = rlc(:,1:6);
     src = xlsread(file,'SRC'); src = src(:,1:6);
-    sw  = xlsread(file,'SW');
+    sw  = xlsread(file,'SW'); sw = sw(:,1:7);
     out = readtable(file,'Sheet','OUT');   
 
     % out = out(:,1:9);
@@ -31,7 +31,7 @@ function [SYS1, rlc] = fNET2SS(file)
     
     
     [A,B,C,D,stateNames,x0]=power_statespace(rlc,sw,src,[],yout,y_type,unit);
-
+    %[A,B,C,D,stateNames,x0,x0sw,rlsw,u,x,y,freq,Asw,Bsw,Csw,Dsw,Hlin] =power_statespace(rlc,sw,src,[],yout,y_type,unit);
 
     SYS = ss(A,B,C,D);
     SYS.StateName = stateNames(~contains(stateNames,'*'));
