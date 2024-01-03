@@ -31,6 +31,26 @@ file = 'IEEE_9bus.xlsx';
 run("IEEE_9bus")
 sim("IEEE_9bus")
 
+
+A = -R/L;
+B = eye(3)/L;
+C = eye(3);
+D = zeros(3,3);
+
+Ac = Sas*A/Sas;
+Bc = Sas*B/Sas;
+Cc = Sas*C/Sas;
+
+
+
+    I = eye(size(Ac,1));
+    INVR = I/(I-Ac*Ts/2);
+    Ad1 = INVR*(I+Ac*Ts/2);
+    Bd1 = INVR*Bc;
+    Cd1 = Cc*INVR*Ts;
+    Dd1 = Cd1*Bc/2;
+
+
 % LF = power_loadflow('-v2','IEEE_9bus','solve')
 % % 
 % % 
