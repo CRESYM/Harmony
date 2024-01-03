@@ -1,0 +1,169 @@
+Unit specified : OMU
+
+rlc matrix:
+
+Node_1 Node_2 Type      R(ohms)     L(mH)       C(uF)/U(V)  Branch#  Block name
+------------------------------------------------------------------------------------
+47     33     S         0.1663      52.95       0           1        MMC/Series RLC Branch10
+46     37     S         0.1663      52.95       0           2        MMC/Series RLC Branch11
+45     42     S         0.1663      52.95       0           3        MMC/Series RLC Branch12
+31     47     S         0.1663      52.95       0           4        MMC/Series RLC Branch6 
+35     46     S         0.1663      52.95       0           5        MMC/Series RLC Branch8 
+40     45     S         0.1663      52.95       0           6        MMC/Series RLC Branch9 
+33     4      S         1e+06       0           0           7        snubber: MMC/Half-Bridge MMC Am/Model/Dp
+3      33     S         1e+06       0           0           8        snubber: MMC/Half-Bridge MMC Am/Model/Dp1
+39     8      S         1e+06       0           0           9        snubber: MMC/Half-Bridge MMC Ap/Model/Dp 
+7      39     S         1e+06       0           0           10       snubber: MMC/Half-Bridge MMC Ap/Model/Dp1
+37     12     S         1e+06       0           0           11       snubber: MMC/Half-Bridge MMC Bm/Model/Dp 
+11     37     S         1e+06       0           0           12       snubber: MMC/Half-Bridge MMC Bm/Model/Dp1
+39     16     S         1e+06       0           0           13       snubber: MMC/Half-Bridge MMC Bp/Model/Dp 
+15     39     S         1e+06       0           0           14       snubber: MMC/Half-Bridge MMC Bp/Model/Dp1
+42     20     S         1e+06       0           0           15       snubber: MMC/Half-Bridge MMC Cm/Model/Dp 
+19     42     S         1e+06       0           0           16       snubber: MMC/Half-Bridge MMC Cm/Model/Dp1
+39     24     S         1e+06       0           0           17       snubber: MMC/Half-Bridge MMC Cp/Model/Dp 
+23     39     S         1e+06       0           0           18       snubber: MMC/Half-Bridge MMC Cp/Model/Dp1
+53     0      Tr        0.1663      21.18       1.923e+05   19       transfo_1_winding_1: MMC/Tr1             
+47     0      Tr        0.1663      21.18       1.923e+05   20       transfo_1_winding_2: MMC/Tr1             
+79     0      P         1.109e+05   3.53e+05    0           21       transfo_1_Lm: MMC/Tr1                    
+54     0      Tr        0.1663      21.18       1.923e+05   22       transfo_2_winding_1: MMC/Tr1             
+46     0      Tr        0.1663      21.18       1.923e+05   23       transfo_2_winding_2: MMC/Tr1             
+80     0      P         1.109e+05   3.53e+05    0           24       transfo_2_Lm: MMC/Tr1                    
+55     0      Tr        0.1663      21.18       1.923e+05   25       transfo_3_winding_1: MMC/Tr1             
+45     0      Tr        0.1663      21.18       1.923e+05   26       transfo_3_winding_2: MMC/Tr1             
+81     0      P         1.109e+05   3.53e+05    0           27       transfo_3_Lm: MMC/Tr1                    
+
+Number of nodes: 29
+Number of branches: 27
+Number of transformers: 3
+Number of mutuals (inductive coupling): 0
+Number of voltage sources: 27
+Number of current sources: 12
+Number of switches: 12
+
+Source matrix:
+
+Node1 Node2 U/I  Mag.     Phase    Frequency Type   Block name
+           (0/1) (V/A)  (degrees)     (Hz)
+--------------------------------------------------------------
+63    4     1    0        0        0         3      MMC/Half-Bridge MMC Am/Model/Dp          
+64    33    1    0        0        0         3      MMC/Half-Bridge MMC Am/Model/Dp1         
+65    8     1    0        0        0         3      MMC/Half-Bridge MMC Ap/Model/Dp          
+66    39    1    0        0        0         3      MMC/Half-Bridge MMC Ap/Model/Dp1         
+67    12    1    0        0        0         3      MMC/Half-Bridge MMC Bm/Model/Dp          
+68    37    1    0        0        0         3      MMC/Half-Bridge MMC Bm/Model/Dp1         
+69    16    1    0        0        0         3      MMC/Half-Bridge MMC Bp/Model/Dp          
+70    39    1    0        0        0         3      MMC/Half-Bridge MMC Bp/Model/Dp1         
+71    20    1    0        0        0         3      MMC/Half-Bridge MMC Cm/Model/Dp          
+72    42    1    0        0        0         3      MMC/Half-Bridge MMC Cm/Model/Dp1         
+73    24    1    0        0        0         3      MMC/Half-Bridge MMC Cp/Model/Dp          
+74    39    1    0        0        0         3      MMC/Half-Bridge MMC Cp/Model/Dp1         
+43    3     0    0        0        0         24     MMC/Half-Bridge MMC Am/Model/Vm          
+4     43    0    0        0        0         24     MMC/Half-Bridge MMC Am/Model/Vp          
+31    7     0    0        0        0         24     MMC/Half-Bridge MMC Ap/Model/Vm          
+8     31    0    0        0        0         24     MMC/Half-Bridge MMC Ap/Model/Vp          
+43    11    0    0        0        0         24     MMC/Half-Bridge MMC Bm/Model/Vm          
+12    43    0    0        0        0         24     MMC/Half-Bridge MMC Bm/Model/Vp          
+35    15    0    0        0        0         24     MMC/Half-Bridge MMC Bp/Model/Vm          
+16    35    0    0        0        0         24     MMC/Half-Bridge MMC Bp/Model/Vp          
+43    19    0    0        0        0         24     MMC/Half-Bridge MMC Cm/Model/Vm          
+20    43    0    0        0        0         24     MMC/Half-Bridge MMC Cm/Model/Vp          
+40    23    0    0        0        0         24     MMC/Half-Bridge MMC Cp/Model/Vm          
+24    40    0    0        0        0         24     MMC/Half-Bridge MMC Cp/Model/Vp          
+53    0     0    0        0        0         24     Voltage source/Controlled Voltage Source 
+54    0     0    0        0        0         24     Voltage source/Controlled Voltage Source6
+55    0     0    0        0        0         24     Voltage source/Controlled Voltage Source7
+33    63    0    0.001    0        0         21     Vf: MMC/Half-Bridge MMC Am/Model/Dp      
+3     64    0    0.001    0        0         21     Vf: MMC/Half-Bridge MMC Am/Model/Dp1     
+39    65    0    0.001    0        0         21     Vf: MMC/Half-Bridge MMC Ap/Model/Dp      
+7     66    0    0.001    0        0         21     Vf: MMC/Half-Bridge MMC Ap/Model/Dp1     
+37    67    0    0.001    0        0         21     Vf: MMC/Half-Bridge MMC Bm/Model/Dp      
+11    68    0    0.001    0        0         21     Vf: MMC/Half-Bridge MMC Bm/Model/Dp1     
+39    69    0    0.001    0        0         21     Vf: MMC/Half-Bridge MMC Bp/Model/Dp      
+15    70    0    0.001    0        0         21     Vf: MMC/Half-Bridge MMC Bp/Model/Dp1     
+42    71    0    0.001    0        0         21     Vf: MMC/Half-Bridge MMC Cm/Model/Dp      
+19    72    0    0.001    0        0         21     Vf: MMC/Half-Bridge MMC Cm/Model/Dp1     
+39    73    0    0.001    0        0         21     Vf: MMC/Half-Bridge MMC Cp/Model/Dp      
+23    74    0    0.001    0        0         21     Vf: MMC/Half-Bridge MMC Cp/Model/Dp1     
+
+Switch matrix:
+
+Node1 Node2 0/1  R.       L.       I#  U#  Switch type
+------------------------------------------------------
+63    4     0    0.001    0        1   1   Diode
+64    33    0    0.001    0        2   2   Diode
+65    8     0    0.001    0        3   3   Diode
+66    39    0    0.001    0        4   4   Diode
+67    12    0    0.001    0        5   5   Diode
+68    37    0    0.001    0        6   6   Diode
+69    16    0    0.001    0        7   7   Diode
+70    39    0    0.001    0        8   8   Diode
+71    20    0    0.001    0        9   9   Diode
+72    42    0    0.001    0        10  10  Diode
+73    24    0    0.001    0        11  11  Diode
+74    39    0    0.001    0        12  12  Diode
+
+Total number of inductances and capacitors: 15
+
+The following inductor currents are dependent: 
+Il_b1_n47_33 =  - Il_b5_n35_46  - Il_b6_n40_45  + Il_b23_n46_0  + Il_b26_n45_0 
+Il_b2_n46_37 =  + Il_b5_n35_46  - Il_b23_n46_0 
+Il_b3_n45_42 =  + Il_b6_n40_45  - Il_b26_n45_0 
+Il_b4_n31_47 =  - Il_b5_n35_46  - Il_b6_n40_45 
+Il_b20_n47_0 =  - Il_b23_n46_0  - Il_b26_n45_0 
+
+Output expressions:
+
+y_u1 = U_MMC/Half-Bridge MMC Am/Model/Dp
+y_u2 = U_MMC/Half-Bridge MMC Am/Model/Dp1
+y_u3 = U_MMC/Half-Bridge MMC Ap/Model/Dp
+y_u4 = U_MMC/Half-Bridge MMC Ap/Model/Dp1
+y_u5 = U_MMC/Half-Bridge MMC Bm/Model/Dp
+y_u6 = U_MMC/Half-Bridge MMC Bm/Model/Dp1
+y_u7 = U_MMC/Half-Bridge MMC Bp/Model/Dp
+y_u8 = U_MMC/Half-Bridge MMC Bp/Model/Dp1
+y_u9 = U_MMC/Half-Bridge MMC Cm/Model/Dp
+y_u10 = U_MMC/Half-Bridge MMC Cm/Model/Dp1
+y_u11 = U_MMC/Half-Bridge MMC Cp/Model/Dp
+y_u12 = U_MMC/Half-Bridge MMC Cp/Model/Dp1
+y_u13 = U_MMC/Subsystem/Voltage Measurement
+y_u14 = U_MMC/Subsystem1/Voltage Measurement
+y_u15 = U_MMC/Subsystem2/Voltage Measurement
+y_u16 = U_MMC/Subsystem3/Voltage Measurement
+y_u17 = U_MMC/Subsystem4/Voltage Measurement
+y_u18 = U_MMC/Subsystem5/Voltage Measurement
+y_u19 = U_MMC/Voltage Measurement12
+y_u20 = U A: conv
+y_u21 = U B: conv
+y_u22 = U C: conv
+y_u23 = U A: sec
+y_u24 = U B: sec
+y_u25 = U C: sec
+y_i26 = I_MMC/Current Measurement
+y_i27 = I_MMC/Current Measurement1
+y_i28 = I_MMC/Current Measurement2
+y_i29 = I_MMC/Current Measurement3
+y_i30 = I_MMC/Current Measurement4
+y_i31 = I_MMC/Current Measurement5
+y_i32 = I_MMC/Current Measurement6
+y_i33 = I_MMC/Current Measurement8
+y_i34 = I_MMC/Half-Bridge MMC Am/Model/Current Measurement7
+y_i35 = I_MMC/Half-Bridge MMC Am/Model/Current Measurement8
+y_i36 = I_MMC/Half-Bridge MMC Ap/Model/Current Measurement7
+y_i37 = I_MMC/Half-Bridge MMC Ap/Model/Current Measurement8
+y_i38 = I_MMC/Half-Bridge MMC Bm/Model/Current Measurement7
+y_i39 = I_MMC/Half-Bridge MMC Bm/Model/Current Measurement8
+y_i40 = I_MMC/Half-Bridge MMC Bp/Model/Current Measurement7
+y_i41 = I_MMC/Half-Bridge MMC Bp/Model/Current Measurement8
+y_i42 = I_MMC/Half-Bridge MMC Cm/Model/Current Measurement7
+y_i43 = I_MMC/Half-Bridge MMC Cm/Model/Current Measurement8
+y_i44 = I_MMC/Half-Bridge MMC Cp/Model/Current Measurement7
+y_i45 = I_MMC/Half-Bridge MMC Cp/Model/Current Measurement8
+y_i46 = I_MMC/Subsystem/Current Measurement1
+y_i47 = I_MMC/Subsystem1/Current Measurement1
+y_i48 = I_MMC/Subsystem2/Current Measurement1
+y_i49 = I_MMC/Subsystem3/Current Measurement1
+y_i50 = I_MMC/Subsystem4/Current Measurement1
+y_i51 = I_MMC/Subsystem5/Current Measurement1
+y_i52 = I A: sec
+y_i53 = I B: sec
+y_i54 = I C: sec
