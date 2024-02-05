@@ -63,6 +63,12 @@
     <ClCompile Include="Impedance.cpp">
       <Filter>Source Files\Elements\Impedance</Filter>
     </ClCompile>
+    <ClCompile Include="Transmission_line.cpp">
+      <Filter>Source Files\Elements\Transmission_line</Filter>
+    </ClCompile>
+    <ClCompile Include="Cable.cpp">
+      <Filter>Source Files\Elements\Transmission_line</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Element.h">
@@ -70,6 +76,12 @@
     </ClInclude>
     <ClInclude Include="Impedance.h">
       <Filter>Header Files\Elements\Impedance</Filter>
+    </ClInclude>
+    <ClInclude Include="Transmission_line.h">
+      <Filter>Header Files\Elements\Transmission_line</Filter>
+    </ClInclude>
+    <ClInclude Include="Cable.h">
+      <Filter>Header Files\Elements\Transmission_line</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -123,13 +123,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Cable.cpp" />
     <ClCompile Include="Element.cpp" />
     <ClCompile Include="Impedance.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Transmission_line.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Cable.h" />
     <ClInclude Include="Element.h" />
     <ClInclude Include="Impedance.h" />
+    <ClInclude Include="Transmission_line.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
