@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Elements">
+      <UniqueIdentifier>{64c8c335-21e9-4b1a-abf6-2bcccc70513f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements">
+      <UniqueIdentifier>{0ca1c3a1-1175-43b6-bee9-de8b833fda62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Converter">
+      <UniqueIdentifier>{055d7132-3785-40c4-8665-e4b6c9181f2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Impedance">
+      <UniqueIdentifier>{001a6f93-2150-4667-bb3d-f0549beba0b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Impedance">
+      <UniqueIdentifier>{296bb80f-9575-4255-9a40-8d3448d9f2f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Transmission_line">
+      <UniqueIdentifier>{f3934476-df2a-44ed-a3dc-9d1fcc7707a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Transmission_line">
+      <UniqueIdentifier>{0c069cf1-a49a-4bc4-8600-73ef65718a70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Impedance\Resistor">
+      <UniqueIdentifier>{babea72a-6fe7-45ec-8a6b-c4403d515aa3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Impedance\Capacitor">
+      <UniqueIdentifier>{039f216c-b87b-4cd1-9921-01547314f0ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Impedance\Inductor">
+      <UniqueIdentifier>{44966e2d-feab-4f03-8b85-e557ff5e53b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Impedance\Resistor">
+      <UniqueIdentifier>{7569b2f4-a67e-415a-b986-578fab5490b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Impedance\Inductor">
+      <UniqueIdentifier>{b3f1ab28-6b71-45fa-9ac7-9f57e00f722e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Impedance\Capacitor">
+      <UniqueIdentifier>{c2699be7-5e70-45de-9725-47561daa0087}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Element.cpp">
+      <Filter>Source Files\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="Impedance.cpp">
+      <Filter>Source Files\Elements\Impedance</Filter>
+    </ClCompile>
+    <ClCompile Include="Transmission_line.cpp">
+      <Filter>Source Files\Elements\Transmission_line</Filter>
+    </ClCompile>
+    <ClCompile Include="Cable.cpp">
+      <Filter>Source Files\Elements\Transmission_line</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Element.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="Impedance.h">
+      <Filter>Header Files\Elements\Impedance</Filter>
+    </ClInclude>
+    <ClInclude Include="Transmission_line.h">
+      <Filter>Header Files\Elements\Transmission_line</Filter>
+    </ClInclude>
+    <ClInclude Include="Cable.h">
+      <Filter>Header Files\Elements\Transmission_line</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
