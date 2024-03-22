@@ -52,6 +52,12 @@
     <Filter Include="Header Files\Elements\Impedance\Capacitor">
       <UniqueIdentifier>{c2699be7-5e70-45de-9725-47561daa0087}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Elements\Tools">
+      <UniqueIdentifier>{81e7edd4-fe3d-42df-a2b3-a7e649b4df6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Tools">
+      <UniqueIdentifier>{9779be3d-05cb-45b6-9189-5d9c7f29e71b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -69,6 +75,9 @@
     <ClCompile Include="Cable.cpp">
       <Filter>Source Files\Elements\Transmission_line</Filter>
     </ClCompile>
+    <ClCompile Include="abcd_parameters.cpp">
+      <Filter>Source Files\Elements\Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Element.h">
@@ -82,6 +91,18 @@
     </ClInclude>
     <ClInclude Include="Cable.h">
       <Filter>Header Files\Elements\Transmission_line</Filter>
+    </ClInclude>
+    <ClInclude Include="abcd_parameters.h">
+      <Filter>Header Files\Elements\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="symbol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="network.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -127,12 +127,17 @@
     <ClCompile Include="Element.cpp" />
     <ClCompile Include="Impedance.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="abcd_parameters.cpp" />
     <ClCompile Include="Transmission_line.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cable.h" />
+    <ClInclude Include="constants.h" />
     <ClInclude Include="Element.h" />
+    <ClInclude Include="abcd_parameters.h" />
     <ClInclude Include="Impedance.h" />
+    <ClInclude Include="network.h" />
+    <ClInclude Include="symbol.h" />
     <ClInclude Include="Transmission_line.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
