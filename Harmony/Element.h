@@ -13,6 +13,16 @@ public:
 	int output_pins;
 	bool transformation;
 
+	// Default constructor
+	Element() {}
+
+	// Constructor with explicit parameters
+	Element(int in_pins, int out_pins, const OverheadLine& tl, bool transform)
+		: input_pins(in_pins), output_pins(out_pins), transformation(transform) {
+		// Initialize other members as needed
+		// Example: pins initialization
+	}
+
 	// Constructor
 	Element(const std::unordered_map<std::string, std::string>& args) {
 		for (auto it = args.begin(); it != args.end(); ++it) {

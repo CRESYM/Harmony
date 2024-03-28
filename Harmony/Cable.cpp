@@ -7,7 +7,7 @@
 #include <stdexcept>
 
 // Constructor
-Cable::Cable() {}
+Cable::Cable():transformation(false) {} // Initialize transformation to false by default
 
 // Destructor
 Cable::~Cable() {}
@@ -22,9 +22,8 @@ std::string convertToString(const std::vector<std::pair<double, double>>& value)
 
 // Function to set a property with the given key and value
 void Cable::setProperty(const std::string& key, const std::string& value) {
-	// You can handle setting properties based on the key and value here
+// handle setting properties based on the key and value here
 // For example, you might want to set different properties based on the key
-
 
 	if (key == "length") {
 		// Convert the value string to double and set the length
@@ -93,20 +92,21 @@ void handleProperty(Cable& c, const std::string& key, const std::vector<std::pai
 void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs, bool transformation) {
 	// Access Z[i][i] from the Cable object c
 	int i = 3;
-	double Z_ii = c.Z[i][i];
-	double P_ii = c.P[i][i];
+	double Z_ii = c.Z[i][i]; //impedance
+	double P_ii = c.P[i][i]; // shunt admittance
 
 	// Iterate through kwargs
 	for (const auto& pair : kwargs) {
 		const std::string& key = pair.first;
 		const std::vector<std::pair<double, double>>& value = pair.second;
-		
+
 		// Check if property exists and handle it accordingly
 		handleProperty(c, key, value);
 
 		// conversion procedure #not FP
 		//core outer radius    #not FP
-		// Perform additional transformations based on specific keys
+		// Perform additional transformations based on specific keys 
+		// checks if the equivalent area of the conductor C1 is not zero. If it's not zero, it performs a calculation involving the property ρ and updates its value accordingly. If the area is zero, it does nothing.
 		if (key == "C1") {
 			// Access and modify the conductor from the Cable object
 			Conductor* conductorPtr = c.getConductor("C1");

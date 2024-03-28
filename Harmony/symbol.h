@@ -11,6 +11,8 @@ public:
 	double value;
 
 	Symbol(const std::string& name_, double value_) : name(name_), value(value_) {}
+	// Default constructor initializes name with an empty string and value with 0.0
+	Symbol() : name(""), value(0.0) {}
 };
 
 class SymbolTable {

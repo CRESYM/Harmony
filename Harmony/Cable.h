@@ -9,7 +9,7 @@
 #include <tuple>
 #include <string>
 
-// Define the Conductor class
+// Define the Conductor class presents conducting layer
 class Conductor {
 public:
 	// Constructor
@@ -17,11 +17,11 @@ public:
 		: ri(ri), ro(ro), resistivity(resistivity), permeability(permeability), area(area) {}
 
 	// Member variables
-	double ri;
-	double ro;
-	double resistivity;
-	double permeability;
-	double area;
+	double ri; //conductor inner radius
+	double ro; //conductor outer radius
+	double resistivity; //conductor resistivity ρ [Ωm]
+	double permeability;  //relative permeability μᵣ
+	double area; //nominal area
 
 	// Getter functions
 	double getInnerRadius() const { return ri; }
@@ -36,7 +36,7 @@ public:
 	}
 };
 
-// Define the Insulator class
+// Define the Insulator class presents insulating layer
 class Insulator {
 public:
 	// Constructor
@@ -44,31 +44,33 @@ public:
 		: ri(ri), ro(ro), permittivity(permittivity), permeability(permeability), innerSemiConductorOuterRadius(innerSemiConductorOuterRadius), outerSemiConductorInnerRadius(outerSemiConductorInnerRadius) {}
 
 	// Member variables
-	double ri;
-	double ro;
-	double permittivity;
-	double permeability;
+	double ri;  //insulator inner radius
+	double ro;  //insulator outer radius
+	double permittivity; //relative permittivity ϵᵣ
+	double permeability; //relative permeability μᵣ
+	//If a semiconductor is present, in an insulator, we have: rᵢ < semiconductor < a + a < insulator < b + b < semiconductor < rₒ
+
 	double innerSemiConductorOuterRadius;
 	double outerSemiConductorInnerRadius;
-	double a; // Add 'a' as a member variable
-	double b; // Add 'b' as a member variable
+	double a; //inner semiconductor outer radius -> Inner semiconductor rᵢ < r < a
+	double b; //outer semiconductor inner radius -> Outer semiconductor b < r < rₒ
 };
 
-// Define the Cable class
+// Define the Cable class as a subtype (<:) of abstract type Transmission_line
 class Cable {
 public:
-	std::vector<std::vector<double>> P;
-	std::vector<std::vector<double>> Z;
+	std::vector<std::vector<double>> P; //initialization (still no value inside) of the array P with datatype Basic
+	std::vector<std::vector<double>> Z; //same as ow above
 	int n = 3;
 
 	// Public member functions
-	void setLength(double length) { this->length = length; }
-	void addConductor(const std::string& key, const Conductor& conductor) { conductors[key] = conductor; }
-	void addInsulator(const std::string& key, const Insulator& insulator) { insulators[key] = insulator; }
+	void setLength(double length) { this->length = length; } 
+	void addConductor(const std::string& key, const Conductor& conductor) { conductors[key] = conductor; } 
+	void addInsulator(const std::string& key, const Insulator& insulator) { insulators[key] = insulator; } 
 	void addPosition(double x, double y) { positions.push_back(std::make_pair(x, y)); }
-	void setEarthParameters(int mu, int epsilon, int rho) { earth_parameters = std::make_tuple(mu, epsilon, rho); }
-	void setConfiguration(const std::string& configuration) { this->configuration = configuration; }
-	void setType(const std::string& type) { this->type = type; }
+	void setEarthParameters(int mu, int epsilon, int rho) { earth_parameters = std::make_tuple(mu, epsilon, rho); } 
+	void setConfiguration(const std::string& configuration) { this->configuration = configuration; } 
+	void setType(const std::string& type) { this->type = type; } // 
 	void setEliminate(bool eliminate) { this->eliminate = eliminate; }
 	void setTransformation(const std::string& value) { transformation = value; }
 
@@ -161,21 +163,22 @@ public:
 
 private:
 	// Private member variables
-	double length = 0;
+	double length = 0;   //line length [m]
+	//dictionary with a particular order. Key: Symbol-> C1, C2, C3 and C4. Value: Conductor-> Mutable Struct Conductor, defined above
 	std::unordered_map<std::string, Conductor> conductors = { {"Symbol", Conductor(/* Constructor arguments for Conductor */)},
 															  {"Conductor", Conductor(/* Constructor arguments for Conductor */)} };
+	//dictionary with a particular order. Key: Symbol-> I1, I2, I3 and I4. Value: Insulator-> Mutable Struct Insulator, defined above
 	std::unordered_map<std::string, Insulator> insulators = { {"Symbol", Insulator(/* Constructor arguments for Conductor */)},
 															  {"Conductor", Insulator(/* Constructor arguments for Conductor */)} };
+	//indicates all variables are real number, vector composed by tuple of real numbers. e.g. positions=[(0,0),(1,1)]. Cables positions 1st:x=0, y=0. 2nd: x=1, y=1.
 	std::vector<std::pair<double, double>> positions;
+	//(μᵣ, ϵᵣ, ρ) in units ([], [], [Ωm]) compact way of representing the type for a tuple of length N where all elements are of type Int or Float64.
 	std::tuple<int, int, int> earth_parameters;
-	std::string configuration = "coaxial";
+
+	std::string configuration = "coaxial";//Configuration is a datatype symbol with value coaxial Symbol -> Type of data. Symbols can be entered using the quote operator ":"
 	std::string type = "underground";
-	//std::vector<std::vector<double>> P;
-	//std::vector<std::vector<double>> Z;
 	bool eliminate = true;
 	std::string transformation;
-
-	//std::pair<std::vector<std::vector<std::complex<double>>>, std::vector<std::vector<std::complex<double>>>> eval_parameters(const std::complex<double>& s) const;
 };
 
 #endif

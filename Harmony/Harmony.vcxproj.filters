@@ -78,6 +78,9 @@
     <ClCompile Include="abcd_parameters.cpp">
       <Filter>Source Files\Elements\Tools</Filter>
     </ClCompile>
+    <ClCompile Include="overhead_line.cpp">
+      <Filter>Source Files\Elements\Transmission_line</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Element.h">
@@ -102,6 +105,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="network.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="overhead_line.h">
+      <Filter>Header Files\Elements\Transmission_line</Filter>
+    </ClInclude>
+    <ClInclude Include="basic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

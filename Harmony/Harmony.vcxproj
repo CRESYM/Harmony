@@ -76,6 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,15 +129,18 @@
     <ClCompile Include="Impedance.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="abcd_parameters.cpp" />
+    <ClCompile Include="overhead_line.cpp" />
     <ClCompile Include="Transmission_line.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="basic.h" />
     <ClInclude Include="Cable.h" />
     <ClInclude Include="constants.h" />
     <ClInclude Include="Element.h" />
     <ClInclude Include="abcd_parameters.h" />
     <ClInclude Include="Impedance.h" />
     <ClInclude Include="network.h" />
+    <ClInclude Include="overhead_line.h" />
     <ClInclude Include="symbol.h" />
     <ClInclude Include="Transmission_line.h" />
   </ItemGroup>
