@@ -4,6 +4,8 @@
 #include <string>
 #include <unordered_map>
 #include <stdexcept>
+#include <functional> // Include the functional header for std::hash
+
 
 class Element {
 public:
@@ -15,13 +17,6 @@ public:
 
 	// Default constructor
 	Element() {}
-
-	// Constructor with explicit parameters
-	Element(int in_pins, int out_pins, const OverheadLine& tl, bool transform)
-		: input_pins(in_pins), output_pins(out_pins), transformation(transform) {
-		// Initialize other members as needed
-		// Example: pins initialization
-	}
 
 	// Constructor
 	Element(const std::unordered_map<std::string, std::string>& args) {
@@ -64,6 +59,29 @@ public:
 			pins["2." + std::to_string(i)] = "";
 		}
 	}
+};
+
+// Define the hash function for Element
+struct ElementHash {
+	size_t operator()(const Element& elem) const {
+		// Calculate a hash value based on the unique properties of Element
+		// Combine hash values of individual data members using std::hash_combine or other techniques
+		// Example: hashing based on symbol and pins
+		size_t hashValue = std::hash<std::string>{}(elem.symbol);
+		for (const auto& pair : elem.pins) {
+			hashValue ^= std::hash<std::string>{}(pair.first) + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
+			hashValue ^= std::hash<std::string>{}(pair.second) + 0x9e3779b9 + (hashValue << 6) + (hashValue >> 2);
+		}
+		return hashValue;
+	}
+};
+
+bool operator==(const Element& lhs, const Element& rhs) {
+	// Compare member variables for equality
+	return lhs.symbol == rhs.symbol
+		&& lhs.input_pins == rhs.input_pins
+		&& lhs.output_pins == rhs.output_pins
+		&& lhs.transformation == rhs.transformation;
 };
 
 #endif // ELEMENT_H

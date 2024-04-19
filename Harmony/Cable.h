@@ -2,12 +2,14 @@
 
 #define _CABLE_H_
 
-#include "Transmission_line.h"
+#include "Transmissionline.h"
+#include "Element.h"
 
 #include <unordered_map>
 #include <vector>
 #include <tuple>
 #include <string>
+#include <utility>
 
 // Define the Conductor class presents conducting layer
 class Conductor {
@@ -57,42 +59,51 @@ public:
 };
 
 // Define the Cable class as a subtype (<:) of abstract type Transmission_line
-class Cable {
+class Cable : public TransmissionLine {
 public:
-	std::vector<std::vector<double>> P; //initialization (still no value inside) of the array P with datatype Basic
-	std::vector<std::vector<double>> Z; //same as ow above
-	int n = 3;
+	// Constructor
+	Cable() :
+		length(0),
+		configuration("coaxial"),
+		type("underground"),
+		transformation(false),
+		eliminate(true)
+	{}
 
 	// Public member functions
-	void setLength(double length) { this->length = length; } 
+	std::vector<std::vector<double>> P;
+	std::vector<std::vector<double>> Z;
+
+
+	//void setLength(double length) { this->length = length; } 
+	void setLength(double newLength) { length = newLength; }
 	void addConductor(const std::string& key, const Conductor& conductor) { conductors[key] = conductor; } 
 	void addInsulator(const std::string& key, const Insulator& insulator) { insulators[key] = insulator; } 
-	void addPosition(double x, double y) { positions.push_back(std::make_pair(x, y)); }
-	void setEarthParameters(int mu, int epsilon, int rho) { earth_parameters = std::make_tuple(mu, epsilon, rho); } 
-	void setConfiguration(const std::string& configuration) { this->configuration = configuration; } 
-	void setType(const std::string& type) { this->type = type; } // 
-	void setEliminate(bool eliminate) { this->eliminate = eliminate; }
+	//void addPosition(double x, double y) { positions.push_back(std::make_pair(x, y)); }
+	void addPosition(double x, double y) { positions.emplace_back(x, y); }
+	//void setEarthParameters(int mu, int epsilon, int rho) { earth_parameters = std::make_tuple(mu, epsilon, rho); } 
+	//void setConfiguration(const std::string& configuration) { this->configuration = configuration; } 
+	//void setTransformation(const std::string& value) { transformation = value; }
+	void setEarthParameters(double mu, double epsilon, double rho) { earth_parameters = std::make_tuple(mu, epsilon, rho); }
+	void setConfiguration(const std::string& newConfig) { configuration = newConfig; }
 	void setTransformation(const std::string& value) { transformation = value; }
+	void setEliminate(bool value) { eliminate = value; } //to change the value of eliminate
 
-	// Function to set P matrix
-	void setP(const std::vector<std::vector<double>>& newP) {
-		P = newP;
-	}
 
-	// Function to set Z matrix
-	void setZ(const std::vector<std::vector<double>>& newZ) {
-		Z = newZ;
-	}
+	// Setters for P and Z matrices
+	void setP(const std::vector<std::vector<double>>& newP) { P = newP;}
+	void setZ(const std::vector<std::vector<double>>& newZ) { Z = newZ;}
 
-	/*// Function to update the elements of the P matrix
-	void updatePMatrix(int i, double P_i) {
-		for (int j = 0; j <= i; j++) {
-			P[j][i] += P_i;
-			P[i][j] += P_i;
-		}
-	}*/
+	// Getter methods
+	double getLength() const { return length; }
+	//const std::unordered_map<std::string, Conductor>& getConductors() const { return conductors; }
+	//const std::unordered_map<std::string, Insulator>& getInsulators() const { return insulators; }
+	const std::tuple<double, double, double>& getEarthParameters() const { return earth_parameters; }
+	const std::vector<std::pair<double, double>>& getPositions() const { return positions; }
+	const std::string& getConfiguration() const { return configuration; }
+	const std::string& getType() const { return type; }
+	bool getEliminate() const { return eliminate; }
 
-	// Function to access a conductor from the conductors map
 	Conductor* getConductor(const std::string& key) {
 		auto it = conductors.find(key);
 		if (it != conductors.end()) {
@@ -102,6 +113,24 @@ public:
 			return nullptr; // Return nullptr if conductor not found
 		}
 	}
+
+	// Function to access an insulator from the insulators map
+	Insulator* getInsulator(const std::string& key) {
+		auto it = insulators.find(key);
+		if (it != insulators.end()) {
+			return &(it->second);
+		}
+		return nullptr; // Insulator not found
+	}
+
+	/*
+	std::tuple<int, int, int> getEarthParameters() const {
+		return earth_parameters;
+	}
+
+	std::string getType() const {return type;}
+	void setType(const std::string& newType) {type = newType;}
+	}*/
 
 	// Function to modify a conductor in the conductors map
 	void updateConductor(const std::string& key, const Conductor& conductor) {
@@ -113,22 +142,9 @@ public:
 		conductors.erase(key);
 	}
 
-/*	const std::unordered_map<std::string, Conductor>& getConductors() const {
-		return conductors;
-	}*/
-
 	// Define a member function in the Cable class to access the conductors map
 	const std::unordered_map<std::string, Conductor>& getCableConductors() const {
 		return conductors;
-	}
-
-	// Function to access an insulator from the insulators map
-	Insulator* getInsulator(const std::string& key) {
-		auto it = insulators.find(key);
-		if (it != insulators.end()) {
-			return &(it->second);
-		}
-		return nullptr; // Insulator not found
 	}
 
 	// Define a member function in the Cable class to access the insulators map
@@ -142,28 +158,15 @@ public:
 	bool isConductor(const std::string& key) { return (conductors.find(key) != conductors.end()); }
 	bool isInsulator(const std::string& key) { return (insulators.find(key) != insulators.end()); }
 
-	std::tuple<int, int, int> getEarthParameters() const {
-		return earth_parameters;
-	}
-
-	const std::vector<std::pair<double, double>>& getPositions() const {
-		return positions;
-	}
-
-	std::string getType() const {
-		return type;
-	}
 
 	friend void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs, bool transformation);
-	// Constructor
-	Cable();
 
 	// Destructor
 	~Cable();
 
 private:
 	// Private member variables
-	double length = 0;   //line length [m]
+	double length;   //line length [m]
 	//dictionary with a particular order. Key: Symbol-> C1, C2, C3 and C4. Value: Conductor-> Mutable Struct Conductor, defined above
 	std::unordered_map<std::string, Conductor> conductors = { {"Symbol", Conductor(/* Constructor arguments for Conductor */)},
 															  {"Conductor", Conductor(/* Constructor arguments for Conductor */)} };
@@ -173,10 +176,10 @@ private:
 	//indicates all variables are real number, vector composed by tuple of real numbers. e.g. positions=[(0,0),(1,1)]. Cables positions 1st:x=0, y=0. 2nd: x=1, y=1.
 	std::vector<std::pair<double, double>> positions;
 	//(μᵣ, ϵᵣ, ρ) in units ([], [], [Ωm]) compact way of representing the type for a tuple of length N where all elements are of type Int or Float64.
-	std::tuple<int, int, int> earth_parameters;
+	std::tuple<double, double, double> earth_parameters;
 
-	std::string configuration = "coaxial";//Configuration is a datatype symbol with value coaxial Symbol -> Type of data. Symbols can be entered using the quote operator ":"
-	std::string type = "underground";
+	std::string configuration;//Configuration is a datatype symbol with value coaxial Symbol -> Type of data. Symbols can be entered using the quote operator ":"
+	std::string type;
 	bool eliminate = true;
 	std::string transformation;
 };

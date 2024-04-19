@@ -1,17 +1,21 @@
-#include <iostream>
 using namespace std;
 
 #include "Element.h"
 #include "Cable.h"
 #include "network.h"
+#include "eval_parameter.h"
+#include "symengine_n.h"
 #include <unordered_map>
+
+
 #include <string>
 #include <iostream>
 #include <vector>
 #include <complex>
 #include <cmath>
-#include "Network.h" // Include the Network header
+//#include "Network.h" // Include the Network header
 
+/*
 // Function to compute impedance for a given frequency
 std::complex<double> computeImpedance(const Network& network, const std::vector<std::string>& inputPins, const std::vector<std::string>& outputPins, double omega) {
 	// Placeholder implementation
@@ -37,9 +41,9 @@ std::pair<std::vector<std::complex<double>>, std::vector<double>> determine_Impe
 	}
 
 	return { impedance, frequencies };
-}
+} */
 
-int main()
+/*int main()
 {
 	// Create instances of conductors and insulators
 	Conductor C1(31.75e-3, 2.18e-8, 1); // Adjust constructor arguments based on your class definition
@@ -131,7 +135,71 @@ int main()
 
 	// Assuming you have a function to plot Bode plots
 	bode(imp, omega);
-	*/
+	
+
+	return 0;*/
+int main()
+{
+	// Define a Cable object
+	Cable c;
+	
+	std::unordered_map<Element, int, ElementHash> myMap;
+
+	// Define some sample values for P and Z matrices
+	std::vector<std::vector<double>> P = {
+		{1.0, 2.0, 3.0},
+		{4.0, 5.0, 6.0},
+		{7.0, 8.0, 9.0}
+	};
+
+	std::vector<std::vector<double>> Z = {
+		{9.0, 8.0, 7.0},
+		{6.0, 5.0, 4.0},
+		{3.0, 2.0, 1.0}
+	};
+
+	// Define some sample kwargs
+	std::unordered_map<std::string, std::vector<std::pair<double, double>>> kwargs;
+	// Populate kwargs as needed
+
+	// Call the cable function
+	cable(c, P, Z, kwargs, true);
+
+	// Insert an element into myMap
+	std::unordered_map<std::string, std::string> args = {
+	{"symbol", "some_symbol"},
+	{"input_pins", "4"},
+	{"output_pins", "2"},
+	{"transformation", "true"}
+	};
+
+	Element elem(args);
+	myMap.emplace(elem, 42); // Inserting the element with an arbitrary value
+
+	//test the eval_parameters function
+	// Define a sample Complex number
+	Complex s(1.0, 2.0);
+
+	// Call the eval_parameters function
+	Eval_parameter evalParam;
+	auto result = evalParam.eval_parameters(c, s);
+	
+	// Print the result
+	std::cout << "Z matrix:" << std::endl;
+	for (const auto& row : result.first) {
+		for (const auto& elem : row) {
+			std::cout << elem.getReal() << " + " << elem.getImag() << "i ";
+		}
+		std::cout << std::endl;
+	}
+
+	std::cout << "Y matrix:" << std::endl;
+	for (const auto& row : result.second) {
+		for (const auto& elem : row) {
+			std::cout << elem.getReal() << " + " << elem.getImag() << "i ";
+		}
+		std::cout << std::endl;
+	}
 
 	return 0;
 }

@@ -127,10 +127,13 @@
     <ClCompile Include="Cable.cpp" />
     <ClCompile Include="Element.cpp" />
     <ClCompile Include="Impedance.cpp" />
+    <ClCompile Include="Kron.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="abcd_parameters.cpp" />
     <ClCompile Include="overhead_line.cpp" />
-    <ClCompile Include="Transmission_line.cpp" />
+    <ClCompile Include="Eval_parameter.cpp" />
+    <ClCompile Include="Symengine_n.cpp" />
+    <ClCompile Include="Transmissionline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="basic.h" />
@@ -138,11 +141,18 @@
     <ClInclude Include="constants.h" />
     <ClInclude Include="Element.h" />
     <ClInclude Include="abcd_parameters.h" />
+    <ClInclude Include="eval_parameter.h" />
     <ClInclude Include="Impedance.h" />
+    <ClInclude Include="Kron.h" />
+    <ClInclude Include="symengine_n.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="overhead_line.h" />
     <ClInclude Include="symbol.h" />
-    <ClInclude Include="Transmission_line.h" />
+    <ClInclude Include="SymbolicType.h" />
+    <ClInclude Include="Transmissionline.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Class_Diagram.cd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

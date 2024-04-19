@@ -69,9 +69,6 @@
     <ClCompile Include="Impedance.cpp">
       <Filter>Source Files\Elements\Impedance</Filter>
     </ClCompile>
-    <ClCompile Include="Transmission_line.cpp">
-      <Filter>Source Files\Elements\Transmission_line</Filter>
-    </ClCompile>
     <ClCompile Include="Cable.cpp">
       <Filter>Source Files\Elements\Transmission_line</Filter>
     </ClCompile>
@@ -81,6 +78,18 @@
     <ClCompile Include="overhead_line.cpp">
       <Filter>Source Files\Elements\Transmission_line</Filter>
     </ClCompile>
+    <ClCompile Include="Symengine_n.cpp">
+      <Filter>Source Files\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="Kron.cpp">
+      <Filter>Source Files\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="Eval_parameter.cpp">
+      <Filter>Source Files\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="Transmissionline.cpp">
+      <Filter>Source Files\Elements\Transmission_line</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Element.h">
@@ -88,9 +97,6 @@
     </ClInclude>
     <ClInclude Include="Impedance.h">
       <Filter>Header Files\Elements\Impedance</Filter>
-    </ClInclude>
-    <ClInclude Include="Transmission_line.h">
-      <Filter>Header Files\Elements\Transmission_line</Filter>
     </ClInclude>
     <ClInclude Include="Cable.h">
       <Filter>Header Files\Elements\Transmission_line</Filter>
@@ -113,5 +119,23 @@
     <ClInclude Include="basic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SymbolicType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="symengine_n.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Kron.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="eval_parameter.h">
+      <Filter>Header Files\Elements\Transmission_line</Filter>
+    </ClInclude>
+    <ClInclude Include="Transmissionline.h">
+      <Filter>Header Files\Elements\Transmission_line</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Class_Diagram.cd" />
   </ItemGroup>
 </Project>

@@ -5,7 +5,7 @@
 
 // Function definition for impedance
 Impedance impedance(const std::vector<std::vector<Basic>>& value, const std::vector<std::vector<Basic>>& z, int pins, bool transformation){ //z define the value of the impedance pins define the n of pin -> integer
-	bool transformation = false;
+	transformation = false;
 	Impedance imp;
 
 	if (!z.empty()) { //if z has a value -> enter

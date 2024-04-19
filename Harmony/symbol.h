@@ -4,6 +4,13 @@
 #include <iostream>
 #include <cmath>
 #include <unordered_map>
+#include <vector>
+#include <utility>
+#include <string>
+
+#include "Cable.h"
+#include "symengine_n.h"
+class Complex;
 
 class Symbol {
 public:
@@ -13,6 +20,11 @@ public:
 	Symbol(const std::string& name_, double value_) : name(name_), value(value_) {}
 	// Default constructor initializes name with an empty string and value with 0.0
 	Symbol() : name(""), value(0.0) {}
+
+	// Static method to create a symbolic variable
+	static Symbol symbols(const std::string& name) {
+		return Symbol(name, 0.0); // Initialize the value to 0.0
+	}
 };
 
 class SymbolTable {

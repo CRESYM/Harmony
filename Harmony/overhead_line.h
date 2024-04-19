@@ -1,7 +1,8 @@
 ﻿#ifndef OVERHEAD_LINE_H
 #define OVERHEAD_LINE_H
 
-#include "Transmission_line.h"
+#include "Element.h"
+#include "Transmissionline.h"
 #include "symbol.h" // Include Symbol class declaration
 #include "basic.h" //Include basic.h instead of redefining Basic struct 
 
@@ -41,7 +42,7 @@ public:
 	std::tuple<std::vector<double>, std::vector<double>> positions = { {},{} }; //add absolute positions manually
 };
 
-class OverheadLine{
+class overhead_Line : public TransmissionLine {
 public:
 	double length = 0;  // line length [km]
 	Conductors conductors;
@@ -62,6 +63,8 @@ public:
 	static std::tuple<std::vector<double>, std::vector<double>> estimate_concentric(const Conductors& c);
 	static std::tuple<std::vector<double>, std::vector<double>> estimate_offset(const Conductors& c);
 	static std::tuple<std::vector<double>, std::vector<double>> bundle_position(int n, double d);
+
+//	void overhead_line(overhead_Line& tl, std::unordered_map<std::string, std::variant<int, double, std::tuple<std::vector<double>, std::vector<double>>, Symbol>>& kwargs);
 
 	// Function to set P matrix
 	void setP(const std::vector<std::vector<Basic>>& newP) {

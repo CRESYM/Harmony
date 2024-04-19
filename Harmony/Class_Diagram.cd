@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Impedance" Collapsed="true">
+    <Position X="7" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAEAABAAAABACAgAAAAAAAAAAA=</HashCode>
+      <FileName>Impedance.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Element" Collapsed="true">
+    <Position X="4.75" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAABAAAAAAAAAAoAAAQAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Element.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Cable" Collapsed="true">
+    <Position X="4.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>YAAAIGBAQgACECAEAEARJAAAARHBLAIBEABABEFAIAE=</HashCode>
+      <FileName>Cable.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TransmissionLine" Collapsed="true">
+    <Position X="3.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEQAIAAAEAgAACAAAAAAAAAAAAAAAAABAAAgAAAAAAA=</HashCode>
+      <FileName>Transmissionline.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="overhead_Line" Collapsed="true">
+    <Position X="2.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABCAAAAAAAAEAAAAEERBAACAAAACAAIAABUAABAAAE=</HashCode>
+      <FileName>overhead_line.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Eval_parameter" Collapsed="true">
+    <Position X="5.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAA=</HashCode>
+      <FileName>eval_parameter.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

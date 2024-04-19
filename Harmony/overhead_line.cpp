@@ -11,6 +11,8 @@
 #include <vector>
 #include <string>
 
+
+/*
 Basic::Basic(double value) : ptr(nullptr) {
 	// Allocate memory for a double and store the value
 	double* doublePtr = new double(value);
@@ -21,17 +23,16 @@ Basic::Basic(double value) : ptr(nullptr) {
 // Define a type for the function pointer
 using EstimateFunction = std::function<std::tuple<double, double>(Conductors&)>;
 
-void overhead_line(OverheadLine& tl, std::unordered_map<std::string, std::variant<int, double, std::tuple<std::vector<double>, std::vector<double>>, Symbol>>& kwargs) {
-
+void overhead_Line :: overhead_line(overhead_Line& tl, std::unordered_map<std::string, std::variant<int, double, std::tuple<std::vector<double>, std::vector<double>>, Symbol>>& kwargs) {
 	bool transformation = false;
 
 	// Define the unordered_map of organization functions
 	std::unordered_map<std::string, std::function<std::tuple<std::vector<double>, std::vector<double>>(const Conductors&)>> dict_organization = {
-		{"flat", &OverheadLine::estimate_flat},
-		{"vertical", &OverheadLine::estimate_vertical},
-		{"delta", &OverheadLine::estimate_delta},
-		{"concentric", &OverheadLine::estimate_concentric},
-		{"offset", &OverheadLine::estimate_offset},
+		{"flat", &overhead_Line::estimate_flat},
+		{"vertical", &overhead_Line::estimate_vertical},
+		{"delta", &overhead_Line::estimate_delta},
+		{"concentric", &overhead_Line::estimate_concentric},
+		{"offset", &overhead_Line::estimate_offset},
 		{tl.conductors.organization.name, [&tl](const Conductors& c) { return std::make_tuple(std::vector<double>{0}, std::vector<double>{c.ybc}); }}
 	};
 
@@ -53,10 +54,10 @@ void overhead_line(OverheadLine& tl, std::unordered_map<std::string, std::varian
 			else { // key == "eliminate"
 				tl.eliminate = std::get<int>(val);
 			}
-		}
+		} //check definitions and calculate parameters
 		else if (key == "conductors") {
 			Conductors& c = tl.conductors;
-			const auto&[nb, nsb, ybc, deltaYbc, deltaXbc, deltaTildeXbc, dsag, dsb, rc, RdC, gc, murc, positions, organization] = std::get<std::tuple<int, int, double, double, double, double, double, double, double, double, double, double, std::tuple<std::vector<double>, std::vector<double>>, Symbol>>(val);
+			const auto& [nb, nsb, ybc, deltaYbc, deltaXbc, deltaTildeXbc, dsag, dsb, rc, RdC, gc, murc, positions, organization] = std::get<std::tuple<int, int, double, double, double, double, double, double, double, double, double, double, std::tuple<std::vector<double>, std::vector<double>>, Symbol>>(val);
 			c.nb = nb;
 			c.nsb = nsb;
 			c.ybc = ybc;
@@ -73,11 +74,11 @@ void overhead_line(OverheadLine& tl, std::unordered_map<std::string, std::varian
 			c.organization = organization;
 
 			Conductors conductors = std::get<Conductors>(val);
-			auto[flat_x, flat_y] = OverheadLine::estimate_flat(conductors);
-			auto[vertical_x, vertical_y] = OverheadLine::estimate_vertical(conductors);
-			auto[delta_x, delta_y] = OverheadLine::estimate_delta(conductors);
-			auto[concentric_x, concentric_y] = OverheadLine::estimate_concentric(conductors);
-			auto[offset_x, offset_y] = OverheadLine::estimate_offset(conductors);
+			auto[flat_x, flat_y] = overhead_Line::estimate_flat(conductors);
+			auto[vertical_x, vertical_y] = overhead_Line::estimate_vertical(conductors);
+			auto[delta_x, delta_y] = overhead_Line::estimate_delta(conductors);
+			auto[concentric_x, concentric_y] = overhead_Line::estimate_concentric(conductors);
+			auto[offset_x, offset_y] = overhead_Line::estimate_offset(conductors);
 		}
 		else if (key == "groundwires") {
 			Groundwires& g = tl.groundwires;
@@ -144,7 +145,7 @@ void overhead_line(OverheadLine& tl, std::unordered_map<std::string, std::varian
 			std::tie(x, y) = tl.conductors.positions;
 		}
 
-		auto[xsb, ysb] = OverheadLine::bundle_position(tl.conductors.nsb, tl.conductors.dsb);
+		auto[xsb, ysb] = overhead_Line::bundle_position(tl.conductors.nsb, tl.conductors.dsb);
 		for (int i = 0; i < tl.conductors.nb; ++i) {
 			for (int j = 0; j < tl.conductors.nsb; ++j) {
 				x_array.push_back(x[i] + xsb[j]);
@@ -233,7 +234,7 @@ void overhead_line(OverheadLine& tl, std::unordered_map<std::string, std::varian
 }
 
 //check definitions and calculate parameters
-std::tuple<std::vector<double>, std::vector<double>> OverheadLine::estimate_flat(const Conductors& c) {
+std::tuple<std::vector<double>, std::vector<double>> overhead_Line::estimate_flat(const Conductors& c) {
 	if (c.nb == 2) {
 		return { {-c.deltaXbc / 2, c.deltaXbc / 2}, {c.ybc, c.ybc} };
 	}
@@ -248,7 +249,7 @@ std::tuple<std::vector<double>, std::vector<double>> OverheadLine::estimate_flat
 	}
 }
 
-std::tuple<std::vector<double>, std::vector<double>> OverheadLine::estimate_vertical(const Conductors& c) {
+std::tuple<std::vector<double>, std::vector<double>> overhead_Line::estimate_vertical(const Conductors& c) {
 	if (c.nb == 3) {
 		std::vector<double> x;
 		std::vector<double> y;
@@ -268,7 +269,7 @@ std::tuple<std::vector<double>, std::vector<double>> OverheadLine::estimate_vert
 	}
 }
 
-std::tuple<std::vector<double>, std::vector<double>> OverheadLine::estimate_delta(const Conductors& c) {
+std::tuple<std::vector<double>, std::vector<double>> overhead_Line::estimate_delta(const Conductors& c) {
 	if (c.nb % 3 == 0) {
 		if (c.nb == 3) {
 			std::vector<double> x = { -c.deltaXbc / 2, c.deltaXbc / 2, 0 };
@@ -287,7 +288,7 @@ std::tuple<std::vector<double>, std::vector<double>> OverheadLine::estimate_delt
 	}
 }
 
-std::tuple<std::vector<double>, std::vector<double>> OverheadLine::estimate_concentric(const Conductors& c) {
+std::tuple<std::vector<double>, std::vector<double>> overhead_Line::estimate_concentric(const Conductors& c) {
 	if (c.nb % 3 == 0) {
 		if (c.nb == 3) {
 			std::vector<double> x = { -c.deltaTildeXbc, 0, 0 };
@@ -307,7 +308,7 @@ std::tuple<std::vector<double>, std::vector<double>> OverheadLine::estimate_conc
 	}
 }
 
-std::tuple<std::vector<double>, std::vector<double>> OverheadLine::estimate_offset(const Conductors& c) {
+std::tuple<std::vector<double>, std::vector<double>> overhead_Line::estimate_offset(const Conductors& c) {
 	if (c.nb % 3 == 0) {
 		if (c.nb == 3) {
 			std::vector<double> x = { -c.deltaTildeXbc, 0, 0 };
@@ -327,7 +328,7 @@ std::tuple<std::vector<double>, std::vector<double>> OverheadLine::estimate_offs
 	}
 }
 
-std::tuple<std::vector<double>, std::vector<double>> OverheadLine::bundle_position(int n, double d) {
+std::tuple<std::vector<double>, std::vector<double>> overhead_Line::bundle_position(int n, double d) {
 	if (n == 1) {
 		return std::make_tuple(std::vector<double>{0}, std::vector<double>{0});
 	}
@@ -349,4 +350,4 @@ std::tuple<std::vector<double>, std::vector<double>> OverheadLine::bundle_positi
 
 		return std::make_tuple(xsb, ysb);
 	}
-}
+}*/

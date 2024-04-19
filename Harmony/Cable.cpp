@@ -1,16 +1,18 @@
-﻿#include "cable.h"
+﻿#include "Element.h"
+#include "Transmissionline.h"
+#include "cable.h"
 #include "constants.h"
 #include "symbol.h"
-#include "element.h"
+
 #include <cmath> // Include cmath for mathematical functions like log, sqrt, etc.
 #include <algorithm>
 #include <stdexcept>
 
 // Constructor
-Cable::Cable():transformation(false) {} // Initialize transformation to false by default
+//Cable::Cable():transformation(false) {} // Initialize transformation to false by default
 
 // Destructor
-Cable::~Cable() {}
+//Cable::~Cable() {}
 
 std::string convertToString(const std::vector<std::pair<double, double>>& value) {
 	std::ostringstream oss;
@@ -183,7 +185,7 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 	// Ground parameters
 	double mu_0 = 4 * M_PI * 1e-7; // Vacuum permeability
 	double epsilon_0 = 8.85e-12;    // Vacuum permittivity
-	auto earthParams = c.getEarthParameters();
+	auto earthParams = c.getEarthParameters(); //(μᵣ, ϵᵣ, ρ) in units([], [], [Ωm]) compact way of representing the type for a tuple of length N where all elements are of type Int or Float64.
 	double mu_g = std::get<0>(earthParams) * mu_0; // Ground permittivity
 	double epsilon_g = std::get<1>(earthParams) * epsilon_0; // Ground permeability
 	double sigma_g = 1 / std::get<2>(earthParams); // Ground conductivity
@@ -341,7 +343,8 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 		}
 	}
 
-	if (c.getType == "underground") {
+	//if (c.getType == "underground") {
+	if (c.getType() == "underground") {
 		for (int i = 0; i < n; ++i) {
 			for (int j = 0; j < n; ++j) {
 				double H = positions[i - 1].second + positions[j - 1].second; // H = sum of depth of ith and jth cables
