@@ -52,13 +52,19 @@ include_directories(header path)
 # Add your source files
 add_executable(YourExecutableName source1.cpp source2.cpp)
 
-# Other configuration and target linking as needed
+-----
+- Clone SymEngine Repository
+- Open Visual Studio Solution: Navigate to the SymEngine directory and look for a Visual Studio solution file (.sln). 
+     If there isn't one, you need to generate it using CMake. 
+- Navigate to symengine folder
+- mkdir build
+- cd build
+- cmake -G "Visual Studio 15 2017" -A x64 -DCMAKE_MODULE_PATH="path/to/cmake/where/FindGMP.cmake/exists" -DGMP_INCLUDE_DIR="path/to/gmp/header/file" -DGMP_LIBRARY="path/to/gmp/lib/file" ..
 
-
-- 
-
-
-- 
-
-
+- Once you have the solution file, open it in Visual Studio.
+- Configure Build: If required, configure the build settings in Visual Studio according to your preferences. 
+- Build SymEngine: Build the SymEngine project in Visual Studio. 
+- Link to Your Project: Once SymEngine is built, you can link to it in your C++ project.
+     You'll need to include the appropriate header files from SymEngine in your project and specify the location of the library files.
+- Configure Project Settings: In your C++ project settings, specify the include directories where SymEngine headers are located and link against the SymEngine library files.
 3- Build Your Project: Finally, build your project, ensuring that it is linked correctly with both GMP and SymEngine libraries.
