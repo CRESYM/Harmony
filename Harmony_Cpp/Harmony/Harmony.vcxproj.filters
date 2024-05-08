@@ -81,13 +81,10 @@
     <ClCompile Include="Symengine_n.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="Kron.cpp">
-      <Filter>Source Files\Elements</Filter>
+    <ClCompile Include="Transmissionline.cpp">
+      <Filter>Source Files\Elements\Transmission_line</Filter>
     </ClCompile>
     <ClCompile Include="Eval_parameter.cpp">
-      <Filter>Source Files\Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="Transmissionline.cpp">
       <Filter>Source Files\Elements\Transmission_line</Filter>
     </ClCompile>
   </ItemGroup>
@@ -107,20 +104,11 @@
     <ClInclude Include="constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="symbol.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="network.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="overhead_line.h">
       <Filter>Header Files\Elements\Transmission_line</Filter>
-    </ClInclude>
-    <ClInclude Include="basic.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SymbolicType.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="symengine_n.h">
       <Filter>Header Files</Filter>
@@ -133,6 +121,15 @@
     </ClInclude>
     <ClInclude Include="Transmissionline.h">
       <Filter>Header Files\Elements\Transmission_line</Filter>
+    </ClInclude>
+    <ClInclude Include="MyBasic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MySymbol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MySymbolicType.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

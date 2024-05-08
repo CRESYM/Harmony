@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "basic.h"
+#include <basic.h>
 #include <complex>
 
 template<typename T>
@@ -36,30 +36,30 @@ private:
 };
 
 // Example definition of Complex
-class Complex {
+class NyComplex {
 public:
 	//Complex(double realPart, double imagPart) : real(realPart), imag(imagPart) {}
-	Complex(double realPart = 0.0, double imagPart = 0.0) : real(realPart), imag(imagPart) {}
+	NyComplex(double realPart = 0.0, double imagPart = 0.0) : real(realPart), imag(imagPart) {}
 
 	double getReal() const { return real; }
 	double getImag() const { return imag; }
 
 	// Overload the * operator for complex multiplication
-	Complex operator*(const Complex& other) const {
+	NyComplex operator*(const NyComplex& other) const {
 		double resultReal = real * other.real - imag * other.imag;
 		double resultImag = real * other.imag + imag * other.real;
-		return Complex(resultReal, resultImag);
+		return NyComplex(resultReal, resultImag);
 	}
 
 	// Overload the += operator for complex addition and assignment
-	Complex& operator+=(const Complex& other) {
+	NyComplex& operator+=(const NyComplex& other) {
 		real += other.real;
 		imag += other.imag;
 		return *this;
 	}
 
 	// Overload the -= operator for complex addition and assignment
-	Complex& operator-=(const Complex& other) {
+	NyComplex& operator-=(const NyComplex& other) {
 		real -= other.real;
 		imag -= other.imag;
 		return *this;
@@ -71,11 +71,11 @@ public:
 	}
 
 	// Overloaded division operator
-	Complex operator/(const Complex& other) const {
+	NyComplex operator/(const NyComplex& other) const {
 		double divisor = other.real * other.real + other.imag * other.imag;
 		double realPart = (real * other.real + imag * other.imag) / divisor;
 		double imagPart = (imag * other.real - real * other.imag) / divisor;
-		return Complex(realPart, imagPart);
+		return NyComplex(realPart, imagPart);
 	}
 
 private:
@@ -85,7 +85,7 @@ private:
 
 
 // Define BasicType for Constants
-enum class Constant { pi, eulergamma, exp_1, catalan, goldenratio };
+/*enum class Constant { pi, eulergamma, exp_1, catalan, goldenratio };
 
 // Function declarations for N
 int N(const int& a);
@@ -94,7 +94,7 @@ Complex N(const Complex& a);
 template<typename T>
 T N(const BasicType<T>& b);
 Constant N(const BasicType<Constant>& b);
-Complex N(const Basic& b); // N(b::SymEngine.Basic)
+Complex N(const Basic& b); // N(b::SymEngine.Basic)*/
 
 
 #endif // SYMENGINE_N_H

@@ -1,5 +1,5 @@
-#ifndef SYMBOL_H
-#define SYMBOL_H
+/*#ifndef MYSYMBOL_H
+#define MYSYMBOL_H
 
 #include <iostream>
 #include <cmath>
@@ -7,23 +7,32 @@
 #include <vector>
 #include <utility>
 #include <string>
+#include <symbol.h>
+#include <basic.h>
 
 #include "Cable.h"
 #include "symengine_n.h"
+#include "MyBasic.h" // Include the header file where Basic is defined
+
+
+//using CMapBasicBasic = std::unordered_map<SymEngine::Basic, SymEngine::Basic, BasicHash, BasicEqual>;
+
+
 class Complex;
 
-class Symbol {
+class MySymbol {
 public:
 	std::string name;
 	double value;
 
-	Symbol(const std::string& name_, double value_) : name(name_), value(value_) {}
+	MySymbol(const std::string& name_, double value_) : name(name_), value(value_) {}
 	// Default constructor initializes name with an empty string and value with 0.0
-	Symbol() : name(""), value(0.0) {}
+	MySymbol() : name(""), value(0.0) {}
 
 	// Static method to create a symbolic variable
-	static Symbol symbols(const std::string& name) {
-		return Symbol(name, 0.0); // Initialize the value to 0.0
+	static SymEngine::Basic symbols(const std::string& name) {
+		// Assuming Basic has a constructor that takes a name and a default value
+		return Basic(name);
 	}
 };
 
@@ -48,4 +57,4 @@ public:
 		}
 	}
 };
-#endif
+#endif*/

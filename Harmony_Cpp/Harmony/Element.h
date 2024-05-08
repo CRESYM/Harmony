@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <functional> // Include the functional header for std::hash
 
-
 class Element {
 public:
 	std::string symbol;
@@ -19,30 +18,48 @@ public:
 	Element() {}
 
 	// Constructor
-	Element(const std::unordered_map<std::string, std::string>& args) {
-		for (auto it = args.begin(); it != args.end(); ++it) {
-			const std::string& key = it->first;
-			const std::string& val = it->second;
+	/*Element(const std::string& symbol_, int input_pins_, int output_pins_, bool transformation_) :
+		symbol(symbol_), input_pins(input_pins_), output_pins(output_pins_), transformation(transformation_) {
 
-			if (key == "symbol") {
-				symbol = val;
-			}
-			else if (key == "input_pins") {
-				input_pins = std::stoi(val);
-			}
-			else if (key == "output_pins") {
-				output_pins = std::stoi(val);
-			}
-			else if (key == "element_value") {
-				// This field is of type Any in Julia, here we can use a generic type or a variant
-				// For simplicity, we can skip handling this field in the constructor
-			}
-			else if (key == "transformation") {
-				transformation = (val == "true");
-			}
-			else {
-				throw std::invalid_argument("The property name " + key + " is not defined.");
-			}
+		// Definition of pins
+		if (!transformation) {
+			input_pins -= 1;
+			output_pins -= 1;
+		}
+
+		for (int i = 1; i <= input_pins; ++i) {
+			pins["1." + std::to_string(i)] = "";
+		}
+
+		for (int i = 1; i <= output_pins; ++i) {
+			pins["2." + std::to_string(i)] = "";
+		}
+	}*/
+	Element(const std::unordered_map<std::string, std::string>& args) {
+		// Initialize member variables from args
+		if (args.find("symbol") != args.end()) {
+			symbol = args.at("symbol");
+		}
+		else {
+			throw std::invalid_argument("Symbol is missing in constructor arguments.");
+		}
+		if (args.find("input_pins") != args.end()) {
+			input_pins = std::stoi(args.at("input_pins"));
+		}
+		else {
+			throw std::invalid_argument("Input pins are missing in constructor arguments.");
+		}
+		if (args.find("output_pins") != args.end()) {
+			output_pins = std::stoi(args.at("output_pins"));
+		}
+		else {
+			throw std::invalid_argument("Output pins are missing in constructor arguments.");
+		}
+		if (args.find("transformation") != args.end()) {
+			transformation = (args.at("transformation") == "true");
+		}
+		else {
+			throw std::invalid_argument("Transformation flag is missing in constructor arguments.");
 		}
 
 		// Definition of pins
@@ -59,6 +76,9 @@ public:
 			pins["2." + std::to_string(i)] = "";
 		}
 	}
+
+
+
 };
 
 // Define the hash function for Element
@@ -76,7 +96,7 @@ struct ElementHash {
 	}
 };
 
-bool operator==(const Element& lhs, const Element& rhs) {
+inline bool operator==(const Element& lhs, const Element& rhs) {
 	// Compare member variables for equality
 	return lhs.symbol == rhs.symbol
 		&& lhs.input_pins == rhs.input_pins
@@ -85,5 +105,3 @@ bool operator==(const Element& lhs, const Element& rhs) {
 };
 
 #endif // ELEMENT_H
-
-

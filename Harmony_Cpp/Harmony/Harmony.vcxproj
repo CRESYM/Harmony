@@ -88,9 +88,13 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\akermansaravi\Desktop\gitRepo\gmp-6.3.0\gmp-6.3.0\include;C:\Users\akermansaravi\Desktop\gitRepo\symengine\symengine;C:\Users\akermansaravi\Desktop\gitRepo\symengine\build\symengine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>C:\Users\akermansaravi\Desktop\gitRepo\gmp-6.3.0\gmp-6.3.0\lib;C:\Users\akermansaravi\Desktop\gitRepo\symengine\build\symengine\Debug;C:\Users\akermansaravi\Desktop\gitRepo\vcpkg\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>symengine.lib;gmp.lib;libgmp.a;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -127,7 +131,6 @@
     <ClCompile Include="Cable.cpp" />
     <ClCompile Include="Element.cpp" />
     <ClCompile Include="Impedance.cpp" />
-    <ClCompile Include="Kron.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="abcd_parameters.cpp" />
     <ClCompile Include="overhead_line.cpp" />
@@ -136,7 +139,7 @@
     <ClCompile Include="Transmissionline.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="basic.h" />
+    <ClInclude Include="MyBasic.h" />
     <ClInclude Include="Cable.h" />
     <ClInclude Include="constants.h" />
     <ClInclude Include="Element.h" />
@@ -147,8 +150,8 @@
     <ClInclude Include="symengine_n.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="overhead_line.h" />
-    <ClInclude Include="symbol.h" />
-    <ClInclude Include="SymbolicType.h" />
+    <ClInclude Include="MySymbol.h" />
+    <ClInclude Include="MySymbolicType.h" />
     <ClInclude Include="Transmissionline.h" />
   </ItemGroup>
   <ItemGroup>

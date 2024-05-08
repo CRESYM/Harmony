@@ -1,5 +1,4 @@
 ﻿#ifndef _CABLE_H_
-
 #define _CABLE_H_
 
 #include "Transmissionline.h"
@@ -10,6 +9,10 @@
 #include <tuple>
 #include <string>
 #include <utility>
+#include <basic.h>
+#include <symbol.h>
+#include <complex.h>
+#include <rational.h>
 
 // Define the Conductor class presents conducting layer
 class Conductor {
@@ -67,22 +70,28 @@ public:
 		configuration("coaxial"),
 		type("underground"),
 		transformation(false),
-		eliminate(true)
+		eliminate(true),
+		real_part(0), // Initialize real part to 0
+		imag_part(0),
+		//s(SymEngine::Complex(0, 0)) // Initialize s with default value
+		s(nullptr)
 	{}
+
+	//const SymEngine::Complex& getSymbolS() const { return s; }
 
 	// Public member functions
 	std::vector<std::vector<double>> P;
 	std::vector<std::vector<double>> Z;
 
 
-	//void setLength(double length) { this->length = length; } 
+	//void setLength(double length) { this->length = length; }
 	void setLength(double newLength) { length = newLength; }
-	void addConductor(const std::string& key, const Conductor& conductor) { conductors[key] = conductor; } 
-	void addInsulator(const std::string& key, const Insulator& insulator) { insulators[key] = insulator; } 
+	void addConductor(const std::string& key, const Conductor& conductor) { conductors[key] = conductor; }
+	void addInsulator(const std::string& key, const Insulator& insulator) { insulators[key] = insulator; }
 	//void addPosition(double x, double y) { positions.push_back(std::make_pair(x, y)); }
 	void addPosition(double x, double y) { positions.emplace_back(x, y); }
-	//void setEarthParameters(int mu, int epsilon, int rho) { earth_parameters = std::make_tuple(mu, epsilon, rho); } 
-	//void setConfiguration(const std::string& configuration) { this->configuration = configuration; } 
+	//void setEarthParameters(int mu, int epsilon, int rho) { earth_parameters = std::make_tuple(mu, epsilon, rho); }
+	//void setConfiguration(const std::string& configuration) { this->configuration = configuration; }
 	//void setTransformation(const std::string& value) { transformation = value; }
 	void setEarthParameters(double mu, double epsilon, double rho) { earth_parameters = std::make_tuple(mu, epsilon, rho); }
 	void setConfiguration(const std::string& newConfig) { configuration = newConfig; }
@@ -91,8 +100,19 @@ public:
 
 
 	// Setters for P and Z matrices
-	void setP(const std::vector<std::vector<double>>& newP) { P = newP;}
-	void setZ(const std::vector<std::vector<double>>& newZ) { Z = newZ;}
+	void setP(const std::vector<std::vector<double>>& newP) { P = newP; }
+	void setZ(const std::vector<std::vector<double>>& newZ) { Z = newZ; }
+
+
+	// Setter for s
+	void setSymbolS(const SymEngine::Complex* symbol) {
+		s = symbol;
+	}
+
+	// Getter for s
+	const SymEngine::Complex* getSymbolS() const {
+		return s;
+	}
 
 	// Getter methods
 	double getLength() const { return length; }
@@ -103,6 +123,8 @@ public:
 	const std::string& getConfiguration() const { return configuration; }
 	const std::string& getType() const { return type; }
 	bool getEliminate() const { return eliminate; }
+
+	//const Complex& getSymbolS() const { return s; }
 
 	Conductor* getConductor(const std::string& key) {
 		auto it = conductors.find(key);
@@ -123,8 +145,8 @@ public:
 		return nullptr; // Insulator not found
 	}
 
-	/*
-	std::tuple<int, int, int> getEarthParameters() const {
+
+	/*std::tuple<int, int, int> getEarthParameters() const {
 		return earth_parameters;
 	}
 
@@ -159,6 +181,7 @@ public:
 	bool isInsulator(const std::string& key) { return (insulators.find(key) != insulators.end()); }
 
 
+	//friend void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs, bool transformation);
 	friend void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs, bool transformation);
 
 	// Destructor
@@ -168,11 +191,11 @@ private:
 	// Private member variables
 	double length;   //line length [m]
 	//dictionary with a particular order. Key: Symbol-> C1, C2, C3 and C4. Value: Conductor-> Mutable Struct Conductor, defined above
-	std::unordered_map<std::string, Conductor> conductors = { {"Symbol", Conductor(/* Constructor arguments for Conductor */)},
-															  {"Conductor", Conductor(/* Constructor arguments for Conductor */)} };
+	std::unordered_map<std::string, Conductor> conductors = { {"Symbol", Conductor(/* Constructor arguments for Conductor*/)},
+															  {"Conductor", Conductor(/* Constructor arguments for Conductor*/)} };
 	//dictionary with a particular order. Key: Symbol-> I1, I2, I3 and I4. Value: Insulator-> Mutable Struct Insulator, defined above
-	std::unordered_map<std::string, Insulator> insulators = { {"Symbol", Insulator(/* Constructor arguments for Conductor */)},
-															  {"Conductor", Insulator(/* Constructor arguments for Conductor */)} };
+	std::unordered_map<std::string, Insulator> insulators = { {"Symbol", Insulator(/* Constructor arguments for Conductor*/)},
+															  {"Conductor", Insulator(/* Constructor arguments for Conductor*/)} };
 	//indicates all variables are real number, vector composed by tuple of real numbers. e.g. positions=[(0,0),(1,1)]. Cables positions 1st:x=0, y=0. 2nd: x=1, y=1.
 	std::vector<std::pair<double, double>> positions;
 	//(μᵣ, ϵᵣ, ρ) in units ([], [], [Ωm]) compact way of representing the type for a tuple of length N where all elements are of type Int or Float64.
@@ -182,6 +205,14 @@ private:
 	std::string type;
 	bool eliminate = true;
 	std::string transformation;
+
+	// Define variables for real and imaginary parts
+	// Define variables for real and imaginary parts
+	SymEngine::rational_class real_part;
+	SymEngine::rational_class imag_part;
+
+	//SymEngine::Complex s; // Assuming Complex is a member of Cable class
+	const SymEngine::Complex* s; // Store pointer to SymEngine::Complex
 };
 
 #endif
