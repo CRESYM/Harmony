@@ -95,7 +95,8 @@ public:
 	//void setTransformation(const std::string& value) { transformation = value; }
 	void setEarthParameters(double mu, double epsilon, double rho) { earth_parameters = std::make_tuple(mu, epsilon, rho); }
 	void setConfiguration(const std::string& newConfig) { configuration = newConfig; }
-	void setTransformation(const std::string& value) { transformation = value; }
+	//void setTransformation(const std::string& value) { transformation = value; }
+	void setTransformation(const bool value) { transformation = value; }
 	void setEliminate(bool value) { eliminate = value; } //to change the value of eliminate
 
 
@@ -204,7 +205,8 @@ private:
 	std::string configuration;//Configuration is a datatype symbol with value coaxial Symbol -> Type of data. Symbols can be entered using the quote operator ":"
 	std::string type;
 	bool eliminate = true;
-	std::string transformation;
+	//std::string transformation;
+	bool transformation;
 
 	// Define variables for real and imaginary parts
 	// Define variables for real and imaginary parts

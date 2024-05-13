@@ -41,8 +41,8 @@ int main()
 	// Populate kwargs as needed
 
 	// Call the cable function
-	bool trasformation = true;
-	cable(c, P, Z, kwargs, trasformation);
+	bool transformation = true;
+	cable(c, P, Z, kwargs, transformation);
 
 	// Insert an element into myMap
 	std::unordered_map<std::string, std::string> args = {

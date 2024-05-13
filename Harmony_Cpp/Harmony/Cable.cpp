@@ -24,6 +24,7 @@
 #include <string>
 #include <stdexcept>
 #include <map>
+#include <cctype> // Include the header for std::tolower
 
 
 using namespace SymEngine;
@@ -56,14 +57,32 @@ enum class PropertyType {
 // Destructor
 //Cable::~Cable() {}
 
-std::string convertToString(const std::vector<std::pair<double, double>>& value) {
+/*std::string convertToString(const std::vector<std::pair<double, double>>& value) {
 	std::ostringstream oss;
 	for (const auto& pair : value) {
 		oss << "(" << pair.first << "," << pair.second << ") ";
 	}
 	return oss.str();
-}
+}*/
 
+bool convertToBoolean(const std::string& value) {
+	// Convert string to lowercase for case-insensitive comparison
+	std::string lowercaseValue = value;
+	std::transform(lowercaseValue.begin(), lowercaseValue.end(), lowercaseValue.begin(),
+		[](unsigned char c) { return std::tolower(c); });
+
+	// Check if the string represents true or false
+	if (lowercaseValue == "true" || lowercaseValue == "1") {
+		return true;
+	}
+	else if (lowercaseValue == "false" || lowercaseValue == "0") {
+		return false;
+	}
+	else {
+		// Handle invalid input
+		throw std::invalid_argument("Invalid boolean value: " + value);
+	}
+}
 
 // Function to set a property with the given key and value
 void Cable::setProperty(const std::string& key, const std::string& value) {
@@ -84,7 +103,18 @@ void Cable::setProperty(const std::string& key, const std::string& value) {
 	}
 	else if (key == "transformation") {
 		// Set the transformation
-		transformation = value;
+		//transformation = value;
+		// Set the transformation based on the string value
+		if (value == "true") {
+			transformation = true;
+		}
+		else if (value == "false") {
+			transformation = false;
+		}
+		else {
+			// Handle invalid input
+			throw std::invalid_argument("Invalid value for transformation: " + value);
+		}
 	}
 	else {
 		// Handle other properties as needed
@@ -173,8 +203,15 @@ void handleProperty(Cable& c, const std::string& key, const std::vector<std::pai
 	}
 	else if (key == "transformation") {
 		// Handle transformation property
-		std::string transformationStr = convertToString(value);
-		c.setTransformation(transformationStr);
+		//bool transformationValue = convertToBoolean(value);
+		//c.setTransformation(transformationValue);
+		if (value.size() == 1) {
+			bool transformationValue = value[0].first != 0.0 || value[0].second != 0.0;
+			c.setTransformation(transformationValue);
+		}
+		else {
+			throw std::invalid_argument("Invalid value for transformation property: not a boolean string.");
+		}
 	}
 	else {
 		throw std::invalid_argument("Unknown cable property name.");
