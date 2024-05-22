@@ -1,0 +1,14 @@
+Install Prerequisites   (Refer to: https://github.com/symengine/symengine/wiki/Building-SymEngine)
+
+CMake v2.8.5 or above
+GMP 5.0 or above
+C++ compiler with C++11 features
+How to obtain these using package managers are given below
+With MinGW-w64
+Compile gmp with MinGW-w64 and MSYS.
+
+To install do
+
+ cmake -G "MinGW Makefiles" -DCMAKE_PREFIX_PATH=C:\MinGW .
+ cmake --build .
+ cmake --build . --target install
