@@ -450,50 +450,62 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 		symbols[symbolic_rho.get_name()] = rho; // Assuming rho is the resistivity value
 
 		// Evaluate the product expression with the symbol values
-		double product_value = SymEngine::eval_double(*product);
-		double m = std::sqrt(s_value * mu / rho); // Calculate m
-		double delta_r = r_o - r_i; // Calculate Δr
-		double Z_aa, Z_bb, Z_ab;
+		try {
+			std::cout << "Expression to be evaluated: " << *product << std::endl;
 
-		if (r_i != 0) {
-			Z_aa = rho * m / (2 * M_PI * r_i) * std::tanh(m * delta_r) - rho / (2 * M_PI * r_i * (r_i + r_o));
-			Z_bb = rho * m / (2 * M_PI * r_o) * std::tanh(m * delta_r) + rho / (2 * M_PI * r_o * (r_i + r_o));
-		}
-		else {
-			Z_bb = rho * m / (2 * M_PI * r_o) * std::tanh(0.733 * m * r_o) + 0.3179 * rho / (M_PI * r_o * r_o);
-		}
-		Z_ab = rho * m / (M_PI * (r_o + r_i)) * (1.0 / sinh(m * delta_r));
+			double product_value = SymEngine::eval_double(*product);
+			double m = std::sqrt(s_value * mu / rho); // Calculate m
+			double delta_r = r_o - r_i; // Calculate Δr
+			double Z_aa, Z_bb, Z_ab;
 
-		c.Z[i][i] += Z_bb;
-		//i++;
-
-
-		if (i > 0) {
-			c.Z[i][i - 1] += -Z_ab; // Eq. 44 from simulator tutorial, not considering the insulator material Zi
-			c.Z[i - 1][i] += -Z_ab;
-			c.Z[i - 1][i - 1] += Z_aa;
-		}
-		if (i == n_l - 1) {
-
-			double m = sqrt(s_value * mu_g / rho_g); // same as row 156, this time with ground permeability μᵍ and resistivity ρᵍ
-			double H = 2 * positions[0].second;
-			double d_ij = 0; // Calculate dᵢⱼ from both conductors and insulators
-
-			// Iterate over conductors to find maximum radius
-			for (const auto& conductor : conductors) {
-				d_ij = std::max(d_ij, conductor.second.ro);
+			if (r_i != 0) {
+				Z_aa = rho * m / (2 * M_PI * r_i) * std::tanh(m * delta_r) - rho / (2 * M_PI * r_i * (r_i + r_o));
+				Z_bb = rho * m / (2 * M_PI * r_o) * std::tanh(m * delta_r) + rho / (2 * M_PI * r_o * (r_i + r_o));
 			}
-
-			// Iterate over insulators to find maximum radius
-			for (const auto& insulator : insulators) {
-				d_ij = std::max(d_ij, insulator.second.ro);
+			else {
+				Z_bb = rho * m / (2 * M_PI * r_o) * std::tanh(0.733 * m * r_o) + 0.3179 * rho / (M_PI * r_o * r_o);
 			}
+			Z_ab = rho * m / (M_PI * (r_o + r_i)) * (1.0 / sinh(m * delta_r));
 
-			double x = d_ij;
-			double Z_g = s_value * mu_g / (2 * M_PI) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
-			c.Z[i][i] += Z_g;
+			c.Z[i][i] += Z_bb;
+			//i++;
+
+
+			if (i > 0) {
+				c.Z[i][i - 1] += -Z_ab; // Eq. 44 from simulator tutorial, not considering the insulator material Zi
+				c.Z[i - 1][i] += -Z_ab;
+				c.Z[i - 1][i - 1] += Z_aa;
+			}
+			if (i == n_l - 1) {
+
+				double m = sqrt(s_value * mu_g / rho_g); // same as row 156, this time with ground permeability μᵍ and resistivity ρᵍ
+				double H = 2 * positions[0].second;
+				double d_ij = 0; // Calculate dᵢⱼ from both conductors and insulators
+
+				// Iterate over conductors to find maximum radius
+				for (const auto& conductor : conductors) {
+					d_ij = std::max(d_ij, conductor.second.ro);
+				}
+
+				// Iterate over insulators to find maximum radius
+				for (const auto& insulator : insulators) {
+					d_ij = std::max(d_ij, insulator.second.ro);
+				}
+
+				double x = d_ij;
+				double Z_g = s_value * mu_g / (2 * M_PI) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
+				c.Z[i][i] += Z_g;
+			}
+			i++;
 		}
-		i++;
+		catch (const SymEngine::SymEngineException &e) {
+			// Catch any SymEngine exceptions and print the error message
+			std::cerr << "SymEngine exception caught: " << e.what() << std::endl;
+		}
+		catch (const std::exception &e) {
+			// Catch any other exceptions and print the error message
+			std::cerr << "Exception caught: " << e.what() << std::endl;
+		}
 	}
 
 	// make shunt admittance -> Insulator

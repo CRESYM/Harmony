@@ -52,7 +52,7 @@ public:
 	}
 
 	// Overload the += operator for complex addition and assignment
-	NyComplex& operator+=(const NyComplex& other) {
+	/*NyComplex& operator+=(const NyComplex& other) {
 		real += other.real;
 		imag += other.imag;
 		return *this;
@@ -63,7 +63,7 @@ public:
 		real -= other.real;
 		imag -= other.imag;
 		return *this;
-	}
+	}*/
 
 	// Define the abs function for Complex numbers
 	double abs() const {

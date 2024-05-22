@@ -6,10 +6,9 @@
 #include "symengine_n.h"
 #include "Kron.h"
 
-#include <iostream>
+#include <symengine_exception.h>
 #include <symengine_config.h>
 #include <basic.h>
-#include <symbol.h>
 #include <functions.h>
 #include <matrix.h>
 #include <matrix_expressions.h>
@@ -17,11 +16,17 @@
 #include <complex_double.h>
 #include <eval_mpc.h> // Include for mpc functions
 #include <complex_mpc.h>
-#include <add.h>
-#include <matrices/transpose.h>
 #include <eval_double.h>
+#include <add.h>
+#include <mul.h>
+#include <matrices/transpose.h>
+#include <subs.h>
+#include <symbol.h>
 #include <real_double.h>
 #include <rational.h>
+#include <iostream>
+
+using namespace SymEngine;
 
 using SymEngine::Basic;
 using SymEngine::Symbol;
@@ -37,7 +42,6 @@ using SymEngine::real_double;
 using SymEngine::conjugate;
 using SymEngine::I;
 
-using namespace SymEngine;
 
 //using SymEngine::linalg::inv; // Import the inv function from the linalg namespace
 
@@ -65,122 +69,179 @@ std::vector<std::vector<SymEngine::RCP<const SymEngine::Basic>>> convert_to_syme
 	return sym_matrix;
 }
 
-std::pair<std::vector<std::vector<std::complex<double>>>, std::vector<std::vector<std::complex<double>>>> Eval_parameter::eval_parameters(const Cable & c, const std::complex<double>& s_param) {
-	// Step 1: Evaluate P
-	std::vector<std::vector<SymEngine::RCP<const SymEngine::Basic>>> c_P;
 
-	// Initialize the complex array P
-	std::vector<std::vector<std::complex<double>>> P;
+/*RCP<const Basic> substitute_symbol(const RCP<const Basic> &expr, const std::string &symbol_name, double value) {
+	map_basic_basic subs_map;
+	RCP<const Symbol> symbol_ptr = symbol(symbol_name);
+	subs_map[symbol_ptr] = real_double(value);
+	return expr->subs(subs_map);
+}*/
 
-	//const Complex& s = c.getSymbolS();
-	const SymEngine::Complex* s_ptr = c.getSymbolS();
+// Function to substitute a symbol with a numerical value
+RCP<const Basic> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value) {
+	RCP<const Symbol> symbol = SymEngine::symbol(symbol_name);
+	RCP<const Basic> value_expr = real_double(value);
+	map_basic_basic subs_map;
+	subs_map[symbol] = value_expr;
+	return expr->subs(subs_map);
+}
 
-	if (s_ptr) {
-		// Dereference the pointer to access the object
-		const SymEngine::Complex& s = *s_ptr;
+std::pair<std::vector<std::vector<std::complex<double>>>, std::vector<std::vector<std::complex<double>>>> Eval_parameter :: eval_parameters(const Cable& c, const std::complex<double>& s_param) {
+	try {
+		// Step 1: Evaluate P
+		std::vector<std::vector<SymEngine::RCP<const SymEngine::Basic>>> c_P = c.getCP();
 
-		// Iterate over each row in c.P
+		// Initialize the complex array P
+		std::vector<std::vector<std::complex<double>>> P;
+
+		//const Complex& s = c.getSymbolS();
+		//const SymEngine::Complex* s_ptr = c.getSymbolS();
+
+		/*if (s_ptr) {
+			// Dereference the pointer to access the object
+			//const SymEngine::Complex& s = *s_ptr;
+
+			// Iterate over each row in c.P
+			for (const auto& row : c_P) {
+				std::vector<std::complex<double>> P_row;
+				// Iterate over each element in the row
+				for (const auto& elem : row) {
+					// Evaluate the expression and convert it to double
+
+					//double real_part = SymEngine::eval_double(*elem);
+
+					//std::complex<double> complex_value(real_part);
+
+					//P_row.push_back(complex_value);
+					auto substituted_elem = substitute_symbol(elem, "s", std::real(s_param));
+					double real_part = SymEngine::eval_double(*substituted_elem);
+					std::complex<double> complex_value(real_part);
+					P_row.push_back(complex_value);
+				}
+				// Add the row to P
+				P.push_back(P_row);
+			}
+		}
+		else {
+			std::cerr << "Error: SymEngine::Complex pointer is null." << std::endl;
+			// Handle the error appropriately, possibly by returning an error indicator or throwing an exception
+			return {}; // Return an empty pair
+		}*/
+		// Ensure the symbol 's' is substituted with 's_param'
 		for (const auto& row : c_P) {
 			std::vector<std::complex<double>> P_row;
-			// Iterate over each element in the row
 			for (const auto& elem : row) {
-				// Evaluate the expression and convert it to double
-
-				double real_part = SymEngine::eval_double(*elem);
-
-				std::complex<double> complex_value(real_part);
-
-				P_row.push_back(complex_value);
+				try {
+					auto substituted_elem = substitute_symbol(elem, "s", std::real(s_param));
+					double real_part = SymEngine::eval_double(*substituted_elem);
+					std::complex<double> complex_value(real_part);
+					P_row.push_back(complex_value);
+				}
+				catch (const SymEngineException &e) {
+					std::cerr << "Error substituting or evaluating expression: " << e.what() << std::endl;
+					throw;
+				}
 			}
-			// Add the row to P
 			P.push_back(P_row);
 		}
-	}
-	else {
-		std::cerr << "Error: SymEngine::Complex pointer is null." << std::endl;
-		// Handle the error appropriately, possibly by returning an error indicator or throwing an exception
-		return {}; // Return an empty pair
-	}
 
-	// Evaluate Z matrix
-	std::vector<std::vector<SymEngine::RCP<const SymEngine::Basic>>> c_Z;
+		// Evaluate Z matrix
+		std::vector<std::vector<SymEngine::RCP<const SymEngine::Basic>>> c_Z = c.getCZ();
 
-	std::vector<std::vector<std::complex<double>>> Z;
-	for (const auto& row : c_Z) {
-		std::vector<std::complex<double>> Z_row;
+		std::vector<std::vector<std::complex<double>>> Z;
 
-		for (const auto& elem : row) {
+		for (const auto& row : c_Z) {
+			std::vector<std::complex<double>> Z_row;
 
-			double real_part = SymEngine::eval_double(*elem);
+			for (const auto& elem : row) {
+				try {
 
-			std::complex<double> complex_value(real_part);//, imag_part);
-			Z_row.push_back(complex_value);
+					//double real_part = SymEngine::eval_double(*elem);
+
+					//std::complex<double> complex_value(real_part);//, imag_part);
+					//Z_row.push_back(complex_value);
+					auto substituted_elem = substitute_symbol(elem, "s", std::real(s_param));
+					double real_part = SymEngine::eval_double(*substituted_elem);
+					std::complex<double> complex_value(real_part);
+					Z_row.push_back(complex_value);
+				}
+				catch (const SymEngineException &e) {
+					std::cerr << "Error substituting or evaluating expression: " << e.what() << std::endl;
+					throw;
+				}
+			}
+			Z.push_back(Z_row);
 		}
 		// Add the row to Z
-		Z.push_back(Z_row);
-	}
+		//Z.push_back(Z_row);
+	//}
 
 
 	// Convert P and Z matrices to arrays of complex numbers
-	std::vector<std::vector<std::complex<double>>> P_real, Z_real;
-	for (const auto& row_P : P) {
-		std::vector<std::complex<double>> row_real_P;
-		for (const auto& elem_P : row_P) {
-			//row_real_P.emplace_back(std::complex<double>(elem_P), 0.0);
-			row_real_P.emplace_back(elem_P);
+		std::vector<std::vector<std::complex<double>>> P_real, Z_real;
+		for (const auto& row_P : P) {
+			std::vector<std::complex<double>> row_real_P;
+			for (const auto& elem_P : row_P) {
+				//row_real_P.emplace_back(std::complex<double>(elem_P), 0.0);
+				row_real_P.emplace_back(elem_P);
 
+			}
+			P_real.emplace_back(row_real_P);
 		}
-		P_real.emplace_back(row_real_P);
-	}
-	for (const auto& row_Z : Z) {
-		std::vector<std::complex<double>> row_real_Z;
-		for (const auto& elem_Z : row_Z) {
-			//row_real_Z.emplace_back(std::complex<double>(std::real(elem_Z), 0.0));
-			row_real_Z.emplace_back(elem_Z);
+		for (const auto& row_Z : Z) {
+			std::vector<std::complex<double>> row_real_Z;
+			for (const auto& elem_Z : row_Z) {
+				//row_real_Z.emplace_back(std::complex<double>(std::real(elem_Z), 0.0));
+				row_real_Z.emplace_back(elem_Z);
+			}
+			Z_real.emplace_back(row_real_Z);
 		}
-		Z_real.emplace_back(row_real_Z);
-	}
 
-	// If eliminate flag is true, apply Kron elimination
-	// Step 3: Kron elimination if necessary
-	auto& conductors = c.getCableConductors();
-	auto& positions = c.getPositions();
-
-	// Convert Z and P matrices to SymEngine complex matrices
-	auto sym_Z = convert_to_symengine_matrix(Z);
-	auto sym_P = convert_to_symengine_matrix(P);
-
-	if (c.getEliminate()) {
-		int nl = conductors.size(); // Assuming c.conductors is a vector
-		int n = positions.size();    // Assuming c.positions is a vector
-		std::vector<int> cond_noElim;
-		for (int i = 1; i <= n; ++i) {
-			cond_noElim.push_back((i - 1) * nl + 1);
-		}
+		// If eliminate flag is true, apply Kron elimination
+		// Step 3: Kron elimination if necessary
+		auto& conductors = c.getCableConductors();
+		auto& positions = c.getPositions();
 
 		// Convert Z and P matrices to SymEngine complex matrices
-		std::vector<std::vector<SymEngine::RCP<const SymEngine::Basic>>> sym_Z = convert_to_symengine_matrix(Z);
-		std::vector<std::vector<SymEngine::RCP<const SymEngine::Basic>>> sym_P = convert_to_symengine_matrix(P);
-	}
+		//auto sym_Z = convert_to_symengine_matrix(Z);
+		//auto sym_P = convert_to_symengine_matrix(P);
 
+		if (c.getEliminate()) {
+			int nl = conductors.size(); // Assuming c.conductors is a vector
+			int n = positions.size();    // Assuming c.positions is a vector
+			std::vector<int> cond_noElim;
+			for (int i = 1; i <= n; ++i) {
+				cond_noElim.push_back((i - 1) * nl + 1);
+			}
 
-	//Step4. Compute shunt admittance matrix Y
-	std::vector<std::vector<std::complex<double>>> Y_real;
-	for (size_t i = 0; i < P_real.size(); ++i) {
-		std::vector<std::complex<double>> row_Y_real;
-		for (size_t j = 0; j < P_real[i].size(); ++j) {
-			row_Y_real.emplace_back(s_param / P_real[i][j]);
+			// Convert Z and P matrices to SymEngine complex matrices
+			//std::vector<std::vector<SymEngine::RCP<const SymEngine::Basic>>> sym_Z = convert_to_symengine_matrix(Z);
+			//std::vector<std::vector<SymEngine::RCP<const SymEngine::Basic>>> sym_P = convert_to_symengine_matrix(P);
 		}
-		Y_real.emplace_back(row_Y_real);
-	}
 
-	if (Z_real.empty() || Y_real.empty()) {
-		// Return a default value if the computations were unsuccessful
-		return std::make_pair(std::vector<std::vector<std::complex<double>>>(), std::vector<std::vector<std::complex<double>>>());
+
+		//Step4. Compute shunt admittance matrix Y
+		std::vector<std::vector<std::complex<double>>> Y_real;
+		for (size_t i = 0; i < P_real.size(); ++i) {
+			std::vector<std::complex<double>> row_Y_real;
+			for (size_t j = 0; j < P_real[i].size(); ++j) {
+				row_Y_real.emplace_back(s_param / P_real[i][j]);
+			}
+			Y_real.emplace_back(row_Y_real);
+		}
+
+		if (Z_real.empty() || Y_real.empty()) {
+			// Return a default value if the computations were unsuccessful
+			return std::make_pair(std::vector<std::vector<std::complex<double>>>(), std::vector<std::vector<std::complex<double>>>());
+		}
+		else {
+			// Return the computed matrices if the computations were successful
+			return std::make_pair(Z_real, Y_real);
+		}
 	}
-	else {
-		// Return the computed matrices if the computations were successful
-		return std::make_pair(Z_real, Y_real);
+	catch (const std::exception& e) {
+		std::cerr << "Exception caught in eval_parameters: " << e.what() << std::endl;
+		throw;
 	}
 }
 

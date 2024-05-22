@@ -4,15 +4,24 @@
 #include "Transmissionline.h"
 #include "Element.h"
 
+#include <basic.h>
+#include <symbol.h>
+#include <complex.h>
+#include <rational.h>
+#include <dict.h>
+#include <eval_double.h>
 #include <unordered_map>
 #include <vector>
 #include <tuple>
 #include <string>
 #include <utility>
-#include <basic.h>
-#include <symbol.h>
-#include <complex.h>
-#include <rational.h>
+#include <memory>
+
+using namespace SymEngine; 
+using SymEngine::symbol;
+using SymEngine::Basic;
+using SymEngine::RCP;
+using SymEngine::eval_double;
 
 // Define the Conductor class presents conducting layer
 class Conductor {
@@ -125,6 +134,14 @@ public:
 	const std::string& getType() const { return type; }
 	bool getEliminate() const { return eliminate; }
 
+	// Getters for symbolic matrices
+	//std::vector<std::vector<RCP<const Basic>>> getCZ() const;
+	//std::vector<std::vector<RCP<const Basic>>> getCP() const;
+
+	// Getters for symbolic matrices
+	std::vector<std::vector<RCP<const Basic>>> getCZ() const { return CZ; }
+	std::vector<std::vector<RCP<const Basic>>> getCP() const { return CP; }
+
 	//const Complex& getSymbolS() const { return s; }
 
 	Conductor* getConductor(const std::string& key) {
@@ -181,6 +198,17 @@ public:
 	bool isConductor(const std::string& key) { return (conductors.find(key) != conductors.end()); }
 	bool isInsulator(const std::string& key) { return (insulators.find(key) != insulators.end()); }
 
+	//void setCZ(const std::vector<std::vector<RCP<const Basic>>>& cz);
+	//void setCP(const std::vector<std::vector<RCP<const Basic>>>& cp);
+
+	void setCZ(const std::vector<std::vector<RCP<const Basic>>>& cz) {
+		CZ = cz;
+	}
+
+	void setCP(const std::vector<std::vector<RCP<const Basic>>>& cp) {
+		CP = cp;
+	}
+
 
 	//friend void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs, bool transformation);
 	friend void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs, bool transformation);
@@ -215,6 +243,9 @@ private:
 
 	//SymEngine::Complex s; // Assuming Complex is a member of Cable class
 	const SymEngine::Complex* s; // Store pointer to SymEngine::Complex
+
+	std::vector<std::vector<RCP<const Basic>>> CZ;
+	std::vector<std::vector<RCP<const Basic>>> CP;
 };
 
 #endif
