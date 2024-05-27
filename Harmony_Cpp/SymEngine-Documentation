@@ -30,7 +30,17 @@
      
      This typically involves setting the C_INCLUDE_PATH (for headers) and LIBRARY_PATH (for libraries) environment variables or specifying these paths in your build system configuration.
 
-
+2- Build MPFR
+- Download MPFR
+- Extract the source code
+- Create a directory for MPFR installation:
+     mkdir new\folder\for\MPFR\installation
+- Navigate to the MPFR Directory
+- ./configure --prefix=path\to\install\directory --with-gmp=path\to\gmp
+- Build and Install MPFR:
+     make
+     make check
+     make install  
 
 2- Build SymEngine: Once GMP is built and installed, you can proceed to build SymEngine, ensuring that it is configured to use the GMP library.
 - Download SymEngine source code
