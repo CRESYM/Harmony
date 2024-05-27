@@ -12,3 +12,14 @@ To install do
  cmake -G "MinGW Makefiles" -DCMAKE_PREFIX_PATH=C:\MinGW .
  cmake --build .
  cmake --build . --target install
+
+
+--------------
+1- Download symengine (last version), extract it
+2- Navigate to the source directory of symengine
+3- Create a build directory 
+   mkdir build
+   cd build
+4- 
+4- cmake .. -G "Visual Studio 16 2019" -A x64 -DCMAKE_INSTALL_PREFIX=C:\libs\symengine -DGMP_INCLUDE_DIR=C:\libs\gmp\include -DGMP_LIBRARIES=C:\libs\gmp\lib\libgmp.a -DMPFR_INCLUDE_DIR=C:\libs\mpfr\include -DMPFR_LIBRARIES=C:\libs\mpfr\lib\libmpfr.a
+5- 
