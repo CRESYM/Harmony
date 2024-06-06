@@ -72,6 +72,23 @@ cd vcpkg
     clang --version
 
 Building SymEngine
+1. Clone the SymEngine repository: 
+git clone https://github.com/symengine/symengine.git
+cd symengine
+
+2. Create a build directory:
+mkdir build
+cd build
+
+3.Configure SymEngine to use the static libraries:
+cmake -G "MSYS Makefiles" -DCMAKE_PREFIX_PATH="/usr/local/gmp;/usr/local/mpfr;/usr/local/mpc;/usr/local/flint;/path/to/llvm" -DWITH_GMP=ON -DWITH_MPFR=ON -DWITH_MPC=ON -DWITH_FLINT=ON -DWITH_LLVM=ON .. 
+(cmake -G "MSYS Makefiles" -DCMAKE_PREFIX_PATH="C:\Users\akermansaravi\Desktop\gitRepo\gmp-6.3.0\gmp-6.3.0;C:\Users\akermansaravi\Desktop\gitRepo\mpfr-4.2.1\mpfr-4.2.1;C:\Users\akermansaravi\Desktop\gitRepo\mpc-1.3.1\mpc-1.3.1;C:\Users\akermansaravi\Desktop\gitRepo\flint-3.1.3-p1\flint-3.1.3-p1;C:\Program Files\LLVM" -DWITH_GMP=ON -DWITH_MPFR=ON -DWITH_MPC=ON -DWITH_FLINT=ON -DWITH_LLVM=ON ..
+)
+
+4. Build and Install SymEngine: 
+make
+make install
+
 
 
 
