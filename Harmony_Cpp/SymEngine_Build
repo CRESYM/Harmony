@@ -1,25 +1,78 @@
-Install Prerequisites   (Refer to: https://github.com/symengine/symengine/wiki/Building-SymEngine)
+SymEngine need some Prerequisites tools and external libraries to build...
 
-CMake v2.8.5 or above
-GMP 5.0 or above
-C++ compiler with C++11 features
-How to obtain these using package managers are given below
-With MinGW-w64
-Compile gmp with MinGW-w64 and MSYS.
+Prerequisites
+1-Install CMake: Download and install CMake from cmake.org. Ensure CMake is added to your system PATH.
+2-Install Visual Studio: Make sure you have Visual Studio installed with the "Desktop development with C++" workload.
+3-Install Git: Download and install Git from git-scm.com.
 
-To install do
+Install External Libraries
+1-Install vcpkg and install gmp mpfr mpc flint llvm through vcpkg, if you have enough RAM, and a powerful CPU
 
- cmake -G "MinGW Makefiles" -DCMAKE_PREFIX_PATH=C:\MinGW .
- cmake --build .
- cmake --build . --target install
+git clone https://github.com/microsoft/vcpkg.git (Clone the vcpkg repository)
+cd vcpkg
+.\bootstrap-vcpkg.bat
+
+.\vcpkg install gmp mpfr mpc flint llvm (Install required libraries using vcpkg)
+
+2- if not... you need to download and install the required libraries: GMP, MPFR, MPC, FLINT, and LLVM, ensuring compatibility with Windows step by step, to do so..
+ 1. GMP (https://gmplib.org/)
+    Download the Windows build (zip or tar.xz).
+    Extract the downloaded file.
+    Open a Visual Studio Developer Command Prompt or MinGW64
+    Navigate to the extracted directory.
+
+    cd gmp-<version>
+    ./configure --prefix=/usr/local/gmp
+    make
+    make install
+
+ 2. MPFR (https://www.mpfr.org/mpfr-4.2.1/)
+    Download the latest tar.xz file.
+    Extract the downloaded file.
+    Open a Visual Studio Developer Command Prompt or MinGW64
+    Navigate to the extracted directory.
+
+    cd mpfr-<version>
+    ./configure --prefix=/usr/local/mpfr --with-gmp=/usr/local/gmp
+    make
+    make install
+
+ 3. MPC (https://directory.fsf.org/wiki/Mpc)
+    Download the latest tar.gz file.
+    Extract the downloaded file.
+    Open a Visual Studio Developer Command Prompt or MinGW64
+    Navigate to the extracted directory.
+
+    cd mpc-<version>
+    ./configure --prefix=/usr/local/mpc --with-gmp=/usr/local/gmp --with-mpfr=/usr/local/mpfr
+    make
+    make install
+
+ 4. FLINT (https://github.com/flintlib/flint/releases/tag/v3.1.3-p1)
+    Navigate to the "Releases" section of the repository and download the latest stable release tarball
+    Extract the tarball:
+    tar -xzf flint-latestversion.tar.gz
+    cd flint-latestversion
+
+    Configure FLINT to use the static GMP library:
+    ./configure --prefix=/usr/local/flint --with-gmp=/usr/local/gmp --enable-static --disable-shared
+
+    Build and install FLINT:
+    make
+    make install
+
+ 5. LLVM (https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.6)
+    For building and integrating SymEngine with Visual Studio on a 64-bit Windows system, you should download the 64-bit pre-built binaries of LLVM
+    
+    Run the installer:
+    Double-click the downloaded .exe file to run the installer.
+    During installation, ensure that the option to add LLVM to the system PATH is selected. This allows the clang and clang++ compilers to be easily accessible from any command prompt or terminal.
+
+    Verify the installation:
+    clang --version
+
+Building SymEngine
 
 
---------------
-1- Download symengine (last version), extract it
-2- Navigate to the source directory of symengine
-3- Create a build directory 
-   mkdir build
-   cd build
-4- 
-4- cmake .. -G "Visual Studio 16 2019" -A x64 -DCMAKE_INSTALL_PREFIX=C:\libs\symengine -DGMP_INCLUDE_DIR=C:\libs\gmp\include -DGMP_LIBRARIES=C:\libs\gmp\lib\libgmp.a -DMPFR_INCLUDE_DIR=C:\libs\mpfr\include -DMPFR_LIBRARIES=C:\libs\mpfr\lib\libmpfr.a
-5- 
+
+
