@@ -6,7 +6,10 @@ function [SYS1, rlc] = fNET2SS(file)
     
     rlc = xlsread(file,'RLC'); rlc = rlc(:,1:6);
     src = xlsread(file,'SRC'); src = src(:,1:6);
-    sw  = xlsread(file,'SW'); sw = sw(:,1:7);
+    sw  = xlsread(file,'SW'); 
+    if(~isempty(sw))
+        sw = sw(:,1:7);
+    end
     out = readtable(file,'Sheet','OUT');   
 
     % out = out(:,1:9);
@@ -37,6 +40,8 @@ function [SYS1, rlc] = fNET2SS(file)
     SYS.StateName = stateNames(~contains(stateNames,'*'));
 
 
+
+    
     SYS1.A = SYS.A;
     SYS1.B = SYS.B;
     SYS1.C = SYS.C;
