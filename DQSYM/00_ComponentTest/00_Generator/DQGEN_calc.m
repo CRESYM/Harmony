@@ -4,7 +4,7 @@ restoredefaultpath;
 addpath(genpath('..\..\#lib'));
 
 
-N = 2;
+N = 3;
 Ts = 50e-6;
 Ts_dqn = Ts;
 %Ts_dqn = 1e-3;
