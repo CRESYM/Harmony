@@ -3,7 +3,7 @@ close all;
 restoredefaultpath;
 addpath(genpath('..\..\..\#lib'));
 
-%pssp
+%
 % Parameters file for SPS model: HVDC_MMC.slx
 %
 %
@@ -123,12 +123,6 @@ L_cable= 15e-3;   % (H)
 Rg= 100;              % (Ohms)
 Cg= 50e-9;            % (F)
 
-D_R  = 0.001;
-D_Vf = 0;
-D_Rs = 1e8; %1e4
-D_Cs = inf;
-
-
 
 %%% NEW
 
@@ -148,23 +142,11 @@ Rarm=Rarm_pu*Zb_ac;
 
 HRM = 2;
 
-load('ACDC')
-load('S')
-
-% % g = Simulink.Mask.get('DQGEN2/Mac_EMT');
-% S  = GetDataForEquivalentModel('Discrete',gcbh);
-% 
-% DSS = Simulink.Mask.get('HVDCMMCInterconnection/DSS');
-% DSS = DSS.getWorkspaceVariables;
-% 
-% Ad1 = DSS(2).Value;
-% Bd1 = DSS(4).Value;
-% Cd1 = DSS(6).Value;
-% Dd1 = DSS(9).Value;
+load('sps_ACDC')
 
 % file = 'AC_Grid.xlsx';
 % [SYS, rlc] = fNET2SS(file);
-% Simulink.BlockDiagram.getAlgebraicLoops(mdl);
+% 
 % sps_AC = power_analyze('HVDCMMCInterconnection','structure')
 % sps_DC = power_analyze('HVDCMMCInterconnection','structure')
 
