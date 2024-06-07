@@ -4,7 +4,7 @@ restoredefaultpath;
 addpath(genpath('..\..\#lib'));
 
 
-N = 7;
+N = 16;
 f = 50;
 
 N_vec = 10:2:200;
@@ -25,7 +25,6 @@ Ws = 2*pi*f;
 oDP = cDQN(f);
 
 [Xdcpnz, Ydcpnz, Zdcpnz, Xdcpnz_c, Ydcpnz_c, Zdcpnz_c] = fGenerateInputSignals(N,0);
-
 
 Ta_dqn = oDP.Ta_dqn;
 

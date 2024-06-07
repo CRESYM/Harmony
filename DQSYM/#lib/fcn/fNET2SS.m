@@ -40,6 +40,8 @@ function [SYS1, rlc] = fNET2SS(file)
     SYS.StateName = stateNames(~contains(stateNames,'*'));
 
 
+
+    
     SYS1.A = SYS.A;
     SYS1.B = SYS.B;
     SYS1.C = SYS.C;

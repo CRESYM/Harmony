@@ -5,7 +5,7 @@ addpath(genpath('..\..\#lib'));
 
 
 
-N = 1;
+N = 3;
 Ts = 50e-6;
 Ts_dqn = Ts;
 
