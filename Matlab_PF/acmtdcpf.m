@@ -13,7 +13,7 @@ function [] = acmtdcpf (acFileName, mtdcFileName)
 %  [2]  Mauro Escobar, https://github.com/me2533/acopf
 %  [3]  Matacdc1.0 unser's manual, https://www.esat.kuleuven.be/electa/teaching/matacdc/MatACDCManual
 
-% Contact: Haixiao Li, haixiaoli.ee@gmail.com
+%  haixiaoli.ee@gmail.com
 
 
 %%  " Adding DC Grid and Converter Parameters "
@@ -322,7 +322,7 @@ end % ID of AC bus connected to generators
 
 convids = cell (nbuses_ac, 1);
 for i = 1:nconvs
-    if conv(i,2)<=nbuses_ac
+    if conv(i,3) == ng
     convids{conv(i,2)} = [convids{conv(i,2)}; i conv(i,3)];
     end
 end % ID of ac grid bus connected to converters
@@ -497,7 +497,7 @@ end
 Con = []; Obj = 0;
 for ng=1:ngrids
     Con = [Con; con_acdc{ng}];
-    Obj = 0+obj_acdc{ng};
+    Obj = Obj + obj_acdc{ng};
 end 
 Obj = Obj + sum(convPloss) ;
 Con = [Con; con_dc];
