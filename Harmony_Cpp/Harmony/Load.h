@@ -1,5 +1,5 @@
-#ifndef TRANSMISSIONLINE_H
-#define TRANSMISSIONLINE_H
+#ifndef LOAD
+#define LOAD
 
 #include "Element.h"
 
@@ -15,14 +15,13 @@
 #include <symengine/complex_double.h>
 
 
-class TransmissionLine : public Element {
+class Load : public Element {
 public:
-	TransmissionLine() {}
-	~TransmissionLine() {}
+	Load() {}
+	~Load() {}
 
-	void compute_y_parameters(double R, double L, double G, double C, double length, double frequency);
+	void compute_y_parameters_rlc(double R, double L, double C, double frequency);
 private:
 };
 
 #endif
-

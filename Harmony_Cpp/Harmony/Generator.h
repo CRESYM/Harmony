@@ -1,5 +1,5 @@
-#ifndef TRANSMISSIONLINE_H
-#define TRANSMISSIONLINE_H
+#ifndef GENERATOR
+#define GENERATOR
 
 #include "Element.h"
 
@@ -15,12 +15,12 @@
 #include <symengine/complex_double.h>
 
 
-class TransmissionLine : public Element {
+class Generator : public Element {
 public:
-	TransmissionLine() {}
-	~TransmissionLine() {}
+	Generator() {}
+	~Generator() {}
 
-	void compute_y_parameters(double R, double L, double G, double C, double length, double frequency);
+	void compute_y_parameters_generator(double R_f, double L_f, double X_d, double T_f, double frequency);
 private:
 };
 

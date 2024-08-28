@@ -1,12 +1,15 @@
 #include "Element.h"
-#include "Cable.h"
-#include "eval_parameter.h"
+#include "TransmissionLine.h"
+#include "Generator.h"
+#include "Load.h"
+#include "Transformer.h"
 
-#include <expression.h>
-#include <complex_double.h>
-#include <complex.h>
-#include <eval_double.h>
-#include <symengine_config.h>
+
+#include <symengine/expression.h>
+#include <symengine/complex_double.h>
+#include <symengine/complex.h>
+#include <symengine/eval_double.h>
+#include <symengine/symengine_config.h>
 
 #include <iostream>
 #include <complex>
@@ -16,7 +19,7 @@ using namespace std;
 
 int main()
 {
-	using namespace SymEngine;
+	/*using namespace SymEngine;
 
 	// Define a Cable object
 	Cable c;
@@ -89,6 +92,47 @@ int main()
 
 	std::cout << "hello" << std::endl;
 
+	return 0;*/
+
+	// Transmission Line Parameters
+	double R_tl = 0.01;       // Resistance per unit length (ohms/m)
+	double L_tl = 2.5e-7;     // Inductance per unit length (H/m)
+	double G_tl = 1e-9;       // Conductance per unit length (S/m)
+	double C_tl = 1e-11;      // Capacitance per unit length (F/m)
+	double length = 1000;     // Length of the transmission line (m)
+	double frequency = 1e6;   // Frequency (Hz)
+
+	// Compute the Y-parameters for the transmission line
+	compute_y_parameters(R_tl, L_tl, G_tl, C_tl, length, frequency);
+
+	// Transformer Parameters
+	double R_p = 0.5;  // Primary winding resistance (ohms)
+	double X_p = 1.0;  // Primary winding leakage reactance (ohms)
+	double R_s = 0.1;  // Secondary winding resistance (ohms)
+	double X_s = 0.2;  // Secondary winding leakage reactance (ohms)
+	double a = 10.0;   // Turns ratio (primary to secondary)
+
+	// Compute the Y-parameters for the transformer
+	compute_y_parameters_transformer(R_p, X_p, R_s, X_s, a);
+
+	// Generator Parameters
+	double R_f = 1.0;
+	double L_f = 0.01;
+	double X_d = 1.0;
+	double T_f = 0.1;
+	double gen_frequency = 60;
+
+	compute_y_parameters_generator(R_f, L_f, X_d, T_f, gen_frequency);
+
+	// Load (RLC) Parameters
+	double R = 10.0;
+	double L = 0.01;
+	double C = 0.001;
+	double load_frequency = 60;
+
+	compute_y_parameters_rlc(R, L, C, load_frequency);
+
 	return 0;
+}
 
 }

@@ -87,6 +87,15 @@
     <ClCompile Include="Eval_parameter.cpp">
       <Filter>Source Files\Elements\Transmission_line</Filter>
     </ClCompile>
+    <ClCompile Include="H:\SimpleModel\Generator.cpp">
+      <Filter>Source Files\Elements\Transmission_line</Filter>
+    </ClCompile>
+    <ClCompile Include="H:\SimpleModel\Load.cpp">
+      <Filter>Source Files\Elements\Transmission_line</Filter>
+    </ClCompile>
+    <ClCompile Include="H:\SimpleModel\Transformer.cpp">
+      <Filter>Source Files\Elements\Transmission_line</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Element.h">
@@ -130,6 +139,15 @@
     </ClInclude>
     <ClInclude Include="MySymbolicType.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Generator.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="Load.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="Transformer.h">
+      <Filter>Header Files\Elements</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

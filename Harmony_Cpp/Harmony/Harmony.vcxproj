@@ -22,32 +22,32 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{400EABA6-3864-4933-B488-7BDF2884100E}</ProjectGuid>
     <RootNamespace>Harmony</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -88,13 +88,14 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\akermansaravi\Desktop\gitRepo\gmp-6.3.0\gmp-6.3.0\include;C:\Users\akermansaravi\Desktop\gitRepo\symengine\symengine;C:\Users\akermansaravi\Desktop\gitRepo\symengine\build\symengine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>D:\Softwares\vcpkg\packages\symengine_x64-windows\include\symengine</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4146</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>C:\Users\akermansaravi\Desktop\gitRepo\gmp-6.3.0\gmp-6.3.0\lib;C:\Users\akermansaravi\Desktop\gitRepo\symengine\build\symengine\Debug;C:\Users\akermansaravi\Desktop\gitRepo\vcpkg\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>symengine.lib;gmp.lib;libgmp.a;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Softwares\vcpkg\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>symengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -130,6 +131,9 @@
   <ItemGroup>
     <ClCompile Include="Cable.cpp" />
     <ClCompile Include="Element.cpp" />
+    <ClCompile Include="H:\SimpleModel\Generator.cpp" />
+    <ClCompile Include="H:\SimpleModel\Load.cpp" />
+    <ClCompile Include="H:\SimpleModel\Transformer.cpp" />
     <ClCompile Include="Impedance.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="abcd_parameters.cpp" />
@@ -139,6 +143,8 @@
     <ClCompile Include="Transmissionline.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Generator.h" />
+    <ClInclude Include="Load.h" />
     <ClInclude Include="MyBasic.h" />
     <ClInclude Include="Cable.h" />
     <ClInclude Include="constants.h" />
@@ -152,6 +158,7 @@
     <ClInclude Include="overhead_line.h" />
     <ClInclude Include="MySymbol.h" />
     <ClInclude Include="MySymbolicType.h" />
+    <ClInclude Include="Transformer.h" />
     <ClInclude Include="Transmissionline.h" />
   </ItemGroup>
   <ItemGroup>
