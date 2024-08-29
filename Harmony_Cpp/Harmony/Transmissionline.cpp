@@ -2,6 +2,12 @@
 #include "Element.h"
 #include <iostream>
 
+#include <symengine/symengine_rcp.h>
+#include <symengine/symbol.h>
+#include <symengine/functions.h>
+#include <symengine/eval.h>
+#include <symengine/real_double.h>
+
 using namespace SymEngine;
 
 #ifndef M_PI

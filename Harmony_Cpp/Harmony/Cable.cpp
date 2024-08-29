@@ -675,15 +675,23 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 	args["transformation"] = transformation ? "true" : "false";*/
 
 	std::unordered_map<std::string, std::string> args;
-	args["symbol"] = "some_symbol";
-	args["input_pins"] = "4";
-	args["output_pins"] = "2";
-	args["transformation"] = "true";
+	args["symbol"] = "some_symbol";       // Set the symbol
+	args["input_pins"] = "4";             // Set the number of input pins
+	args["output_pins"] = "2";            // Set the number of output pins
+	//args["transformation"] = "true";
 
 	//Element elem(args);
 
 	// Assuming `c` is an instance of the `Cable` class and `elem` is an instance of the `Element` class
-	Element elem(args);
+	//Element elem(args);
+		// Create an Element object using the map
+	try {
+		Element elem(args);
+		elem.printElementInfo();  // Print the element's info to verify it's correct
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Error while creating Element: " << e.what() << std::endl;
+	}
 	//Element elem("symbol_value", n, n, transformation);
 
 	//elem.element_value = c; // Assuming `element_value` is of type `Cable` or a suitable type

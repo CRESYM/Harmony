@@ -131,15 +131,15 @@
   <ItemGroup>
     <ClCompile Include="Cable.cpp" />
     <ClCompile Include="Element.cpp" />
-    <ClCompile Include="H:\SimpleModel\Generator.cpp" />
-    <ClCompile Include="H:\SimpleModel\Load.cpp" />
-    <ClCompile Include="H:\SimpleModel\Transformer.cpp" />
+    <ClCompile Include="Generator.cpp" />
     <ClCompile Include="Impedance.cpp" />
+    <ClCompile Include="Load.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="abcd_parameters.cpp" />
     <ClCompile Include="overhead_line.cpp" />
     <ClCompile Include="Eval_parameter.cpp" />
     <ClCompile Include="Symengine_n.cpp" />
+    <ClCompile Include="Transformer.cpp" />
     <ClCompile Include="Transmissionline.cpp" />
   </ItemGroup>
   <ItemGroup>

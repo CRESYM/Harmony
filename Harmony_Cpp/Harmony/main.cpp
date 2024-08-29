@@ -94,8 +94,31 @@ int main()
 
 	return 0;*/
 
+	// Create an Element with symbol "R1", 2 input pins, and 2 output pins
+	Element elem("R1", 2, 2);
+
+	// Print out the element's information
+	elem.printElementInfo();
+
+	// Get all nodes (pins)
+	auto nodes = elem.getNodes();
+	std::cout << "All Nodes:" << std::endl;
+	for (const auto& node : nodes) {
+		std::cout << "  " << node << std::endl;
+	}
+
+	// Get nodes excluding a specific pin (e.g., "1.1")
+	auto filtered_nodes = elem.getNodesByPin("1.1");
+	std::cout << "Nodes excluding '1.1':" << std::endl;
+	for (const auto& node : filtered_nodes) {
+		std::cout << "  " << node << std::endl;
+	}
+
+	return 0;
+}
+
 	// Transmission Line Parameters
-	double R_tl = 0.01;       // Resistance per unit length (ohms/m)
+/*	double R_tl = 0.01;       // Resistance per unit length (ohms/m)
 	double L_tl = 2.5e-7;     // Inductance per unit length (H/m)
 	double G_tl = 1e-9;       // Conductance per unit length (S/m)
 	double C_tl = 1e-11;      // Capacitance per unit length (F/m)
@@ -132,7 +155,7 @@ int main()
 
 	compute_y_parameters_rlc(R, L, C, load_frequency);
 
-	return 0;
-}
+	return 0;*/
 
-}
+
+//}

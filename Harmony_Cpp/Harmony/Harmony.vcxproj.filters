@@ -58,13 +58,16 @@
     <Filter Include="Header Files\Elements\Tools">
       <UniqueIdentifier>{9779be3d-05cb-45b6-9189-5d9c7f29e71b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Elements\Generetor">
+      <UniqueIdentifier>{5b3de7fe-51f8-4d76-b655-6694558d975b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Generator">
+      <UniqueIdentifier>{31a1eb71-0a46-45ce-becd-e8645b8e4be0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Element.cpp">
-      <Filter>Source Files\Elements</Filter>
     </ClCompile>
     <ClCompile Include="Impedance.cpp">
       <Filter>Source Files\Elements\Impedance</Filter>
@@ -87,20 +90,20 @@
     <ClCompile Include="Eval_parameter.cpp">
       <Filter>Source Files\Elements\Transmission_line</Filter>
     </ClCompile>
-    <ClCompile Include="H:\SimpleModel\Generator.cpp">
-      <Filter>Source Files\Elements\Transmission_line</Filter>
+    <ClCompile Include="Element.cpp">
+      <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="H:\SimpleModel\Load.cpp">
-      <Filter>Source Files\Elements\Transmission_line</Filter>
+    <ClCompile Include="Generator.cpp">
+      <Filter>Source Files\Elements\Generator</Filter>
     </ClCompile>
-    <ClCompile Include="H:\SimpleModel\Transformer.cpp">
-      <Filter>Source Files\Elements\Transmission_line</Filter>
+    <ClCompile Include="Load.cpp">
+      <Filter>Source Files\Elements\Generator</Filter>
+    </ClCompile>
+    <ClCompile Include="Transformer.cpp">
+      <Filter>Source Files\Elements\Generator</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Element.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
     <ClInclude Include="Impedance.h">
       <Filter>Header Files\Elements\Impedance</Filter>
     </ClInclude>
@@ -140,14 +143,17 @@
     <ClInclude Include="MySymbolicType.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Generator.h">
+    <ClInclude Include="Element.h">
       <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="Generator.h">
+      <Filter>Header Files\Elements\Generetor</Filter>
     </ClInclude>
     <ClInclude Include="Load.h">
-      <Filter>Header Files\Elements</Filter>
+      <Filter>Header Files\Elements\Generetor</Filter>
     </ClInclude>
     <ClInclude Include="Transformer.h">
-      <Filter>Header Files\Elements</Filter>
+      <Filter>Header Files\Elements\Generetor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
