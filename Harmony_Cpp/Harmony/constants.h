@@ -1,25 +1,18 @@
-#ifndef CONSTANTS_H
+﻿#ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#include <cmath>
-#include <string>
-#include <tuple>
+#include <symengine/basic.h>
+#include <symengine/expression.h>
+#include <symengine/real_double.h>
+#include <symengine/eval.h>
+#include <cmath>  // Include cmath for std::acos
 
-const double M_PI = std::acos(-1.0);
+using namespace SymEngine;
 
-/*// Function declaration for symbols function
+// Define a constant for π (pi) using SymEngine
+extern const RCP<const Basic> PI;
 
-struct Symbol {
-	std::string name;
+// Define a constant for π (pi) using standard C++
+extern const double M_PI ;
 
-	// Constructor
-	Symbol(const std::string& name_) : name(name_) {}
-};
-
-// Function declaration for symbols function
-Symbol symbols(const std::string& name);
-
-// Function declaration to get the numeric value of a symbol
-double getNumericValue(const Symbol& symbol);*/
-
-#endif
+#endif // CONSTANTS_H

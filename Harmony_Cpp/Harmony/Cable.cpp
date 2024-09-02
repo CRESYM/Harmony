@@ -1,19 +1,10 @@
 ﻿#include "Element.h"
 #include "Transmissionline.h"
 #include "cable.h"
-#include "constants.h"
+#include "Constants.h"
 
 //#pragma comment(lib, "symengine.lib") 
-#include <symengine_config.h>
-#include <expression.h> 
-#include <basic.h>
-#include <matrices/immutable_dense_matrix.h>
-#include <integer.h>
-#include <symbol.h>
-#include <mul.h>
-#include <eval_double.h>
-#include <number.h>
-#include <real_double.h>
+#include <symengine/eval_double.h> // For evaluating SymEngine objects to double
 
 #include <cmath> // Include cmath for mathematical functions like log, sqrt, etc.
 #include <algorithm>
@@ -111,8 +102,6 @@ void Cable::setProperty(const std::string& key, const std::string& value) {
 }
 
 // Function to handle properties
-//void handleProperty(Cable& c, const std::string& key, const std::vector<std::pair<double, double>>& value) {
-//void handleProperty(Cable& c, const std::string& key, const PropertyValue& value, PropertyType type) {
 void handleProperty(Cable& c, const std::string& key, const std::vector<std::pair<double, double>>& value) {
 
 	if (key == "positions") {
@@ -149,17 +138,11 @@ void handleProperty(Cable& c, const std::string& key, const std::vector<std::pai
 }
 
 
-//void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs, bool transformation) {
 void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs) {
 
-	//transformation = false; // Set transformation to false by default
 
-	// Loop through the provided arguments
-	//for (const auto& [key, value] : args) {
-	//int i = 3;
-	//double Z_ii = c.Z[i][i]; // impedance
-	//double P_ii = c.P[i][i]; // shunt admittance
-
+	 // Evaluate PI to a double
+	double pi_value = rcp_static_cast<const RealDouble>(PI)->as_double();
 
 	// Iterate through kwargs
 	for (const auto& pair : kwargs) {
@@ -176,7 +159,7 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 			if (conductorPtr != nullptr) {
 				double area = conductorPtr->getArea();
 				if (area != 0) {
-					conductorPtr->setResistivity(conductorPtr->getResistivity() * M_PI * conductorPtr->getOuterRadius() * conductorPtr->getOuterRadius() / area);
+					conductorPtr->setResistivity(conductorPtr->getResistivity() * pi_value * conductorPtr->getOuterRadius() * conductorPtr->getOuterRadius() / area);
 
 					// Update the conductor in the Cable object
 					c.updateConductor("C1", *conductorPtr);
@@ -191,7 +174,7 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 			// Check if SC conductor exists
 			auto conductorC1 = c.getConductor("C1");
 			if (conductorC1 && conductorC1->getArea() != 0) {
-				conductorC1->setResistivity(conductorC1->getResistivity() * M_PI * conductorC1->getOuterRadius() * conductorC1->getOuterRadius() / conductorC1->getArea());
+				conductorC1->setResistivity(conductorC1->getResistivity() * pi_value * conductorC1->getOuterRadius() * conductorC1->getOuterRadius() / conductorC1->getArea());
 				c.updateConductor("C1", *conductorC1);
 			}
 		}
@@ -201,20 +184,13 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 
 			if (conductorSC && conductorC2) {
 				if (conductorSC->getArea() != 0) {
-					//conductorC2->setInnerRadius(std::sqrt(conductorSC->getOuterRadius() * conductorSC->getOuterRadius() - conductorSC->getArea() / M_PI));
-					c.getConductor("C2")->ri = std::sqrt(conductorSC->ro * conductorSC->ro - conductorSC->area / M_PI);
+					c.getConductor("C2")->ri = std::sqrt(conductorSC->ro * conductorSC->ro - conductorSC->area / pi_value);
 				}
 				else {
 					//conductorC2->setInnerRadius(conductorSC->getInnerRadius());
 					c.getConductor("C2")->ri = conductorSC->ri;
 				}
 		
-
-				// Calculate outer radius of conductor C2
-				//double c2OuterRadius = sqrt((c.getConductor("C2")->ro * c.getConductor("C2")->ro - conductorSC->ro * conductorSC->ro) *
-					//conductorSC->resistivity / c.getConductor("C2")->resistivity + conductorSC->ro * conductorSC->ro);
-				//c.getConductor("C2")->ro = c2OuterRadius;
-
 				double c2OuterRadius = std::sqrt((conductorC2->getOuterRadius() * conductorC2->getOuterRadius() - conductorSC->getOuterRadius() * conductorSC->getOuterRadius()) *
 					conductorSC->getResistivity() / conductorC2->getResistivity() + conductorSC->getOuterRadius() * conductorSC->getOuterRadius());
 				c.getConductor("C2")->ro = c2OuterRadius;
@@ -249,11 +225,11 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 			c.getInsulator("I1")->permittivity *= x;
 			double N = 1.4;
 			// Assuming 'permeability' represents relative permeability
-			c.getInsulator("I1")->permeability *= (1 + 2 * M_PI * M_PI * N * N * (c.getInsulator("I1")->ro * c.getInsulator("I1")->ro - c.getInsulator("I1")->ri * c.getInsulator("I1")->ri) / log(c.getInsulator("I1")->ro / c.getInsulator("I1")->ri));
+			c.getInsulator("I1")->permeability *= (1 + 2 * pi_value * pi_value * N * N * (c.getInsulator("I1")->ro * c.getInsulator("I1")->ro - c.getInsulator("I1")->ri * c.getInsulator("I1")->ri) / log(c.getInsulator("I1")->ro / c.getInsulator("I1")->ri));
 		}
 	}
 	// Ground parameters
-	double mu_0 = 4 * M_PI * 1e-7; // Vacuum permeability
+	double mu_0 = 4 * pi_value * 1e-7; // Vacuum permeability
 	double epsilon_0 = 8.85e-12;    // Vacuum permittivity
 	auto earthParams = c.getEarthParameters(); //(μᵣ, ϵᵣ, ρ) in units([], [], [Ωm]) compact way of representing the type for a tuple of length N where all elements are of type Int or Float64.
 	double mu_g = std::get<0>(earthParams) * mu_0; // Ground permittivity
@@ -322,13 +298,13 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 			double Z_aa, Z_bb, Z_ab;
 
 			if (r_i != 0) {
-				Z_aa = rho * m / (2 * M_PI * r_i) * std::tanh(m * delta_r) - rho / (2 * M_PI * r_i * (r_i + r_o));
-				Z_bb = rho * m / (2 * M_PI * r_o) * std::tanh(m * delta_r) + rho / (2 * M_PI * r_o * (r_i + r_o));
+				Z_aa = rho * m / (2 * pi_value * r_i) * std::tanh(m * delta_r) - rho / (2 * pi_value * r_i * (r_i + r_o));
+				Z_bb = rho * m / (2 * pi_value * r_o) * std::tanh(m * delta_r) + rho / (2 * pi_value * r_o * (r_i + r_o));
 			}
 			else {
-				Z_bb = rho * m / (2 * M_PI * r_o) * std::tanh(0.733 * m * r_o) + 0.3179 * rho / (M_PI * r_o * r_o);
+				Z_bb = rho * m / (2 * pi_value * r_o) * std::tanh(0.733 * m * r_o) + 0.3179 * rho / (pi_value * r_o * r_o);
 			}
-			Z_ab = rho * m / (M_PI * (r_o + r_i)) * (1.0 / sinh(m * delta_r));
+			Z_ab = rho * m / (pi_value * (r_o + r_i)) * (1.0 / sinh(m * delta_r));
 
 			c.Z[i][i] += Z_bb;
 			//i++;
@@ -356,7 +332,7 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 				}
 
 				double x = d_ij;
-				double Z_g = s_value * mu_g / (2 * M_PI) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
+				double Z_g = s_value * mu_g / (2 * pi_value) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
 				c.Z[i][i] += Z_g;
 			}
 			i++;
@@ -382,8 +358,8 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 		double epsilon = insulator.permittivity * epsilon_0;
 		// Assuming P is declared as a 2D vector
 
-		double Z_i = s_value * mu / (2 * M_PI) * log(r_o / r_i); // Insulator layer impedance
-		double P_i = log(r_o / r_i) / (2 * M_PI * epsilon); // P expression
+		double Z_i = s_value * mu / (2 * pi_value) * log(r_o / r_i); // Insulator layer impedance
+		double P_i = log(r_o / r_i) / (2 * pi_value * epsilon); // P expression
 
 		c.Z[insulatorIndex][insulatorIndex] += Z_i; // For the impedance matrix diagonal values, add also the insulator impedance
 		// Update the elements of P matrix for the current insulator
@@ -417,15 +393,13 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 				double dᵢⱼ = sqrt(pow(c.getPositions()[i].first - c.getPositions()[j].first, 2) +
 					pow(c.getPositions()[i].second - c.getPositions()[j].second, 2));
 				double x = abs(c.getPositions()[i].first - c.getPositions()[j].first);
-				double Z_g = s_value * mu_g / (2 * M_PI) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
+				double Z_g = s_value * mu_g / (2 * pi_value) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
 
 				c.Z[i * n_l][j * n_l] += Z_g;
 				c.Z[j * n_l][i * n_l] += Z_g;
 			}
 		}
 	}
-
-
 
 	// reduction for represention core, sheath and armor
 	for (int k = 0; k < n; ++k) {
@@ -461,9 +435,6 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 
 		for (int i = 1; i < n; ++i) {
 			for (int j = 0; j < n; ++j) {
-				//double H = positions[i - 1].second + positions[j - 1].second; // H = sum of depth of ith and jth cables
-				//double x = abs(positions[i - 1].first - positions[j - 1].first);
-				//double y = abs(positions[i - 1].second - positions[j - 1].second);
 				double H = positions[i].second + positions[j].second; // H = sum of depth of ith and jth cables
 				double x = abs(positions[i].first - positions[j].first);
 				double y = abs(positions[i].second - positions[j].second);
@@ -484,7 +455,7 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 					D1 = sqrt(x * x + y * y);
 					D2 = sqrt(x * x + H * H);
 				}
-				double P_ij = log(D2 / D1) / (2 * M_PI * epsilon_0);
+				double P_ij = log(D2 / D1) / (2 * pi_value * epsilon_0);
 				for (int k = i * n_l; k < (i + 1) * n_l; ++k) {
 					for (int l = j * n_l; l < (j + 1) * n_l; ++l) {
 						c.P[k][l] += P_ij;

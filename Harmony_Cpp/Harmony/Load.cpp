@@ -2,14 +2,18 @@
 
 #include "Element.h"
 #include "Load.h"
+#include "Constants.h"
 #include <iostream>
 
 using namespace SymEngine;
 
 void Load::compute_y_parameters_rlc(double R, double L, double C, double frequency)
 {
-    RCP<const Basic> pi = real_double(3.141592653589793);
-    RCP<const Basic> omega = mul(real_double(2), mul(pi, real_double(frequency)));
+    //RCP<const Basic> pi = real_double(3.141592653589793);
+    //RCP<const Basic> omega = mul(real_double(2), mul(pi, real_double(frequency)));
+
+    RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
+
 
     RCP<const Basic> R_val = real_double(R);
     RCP<const Basic> L_val = real_double(L);

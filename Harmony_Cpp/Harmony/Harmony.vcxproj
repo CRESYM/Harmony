@@ -130,6 +130,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Cable.cpp" />
+    <ClCompile Include="Constants.cpp" />
     <ClCompile Include="Element.cpp" />
     <ClCompile Include="Generator.cpp" />
     <ClCompile Include="Impedance.cpp" />
@@ -144,19 +145,15 @@
   <ItemGroup>
     <ClInclude Include="Generator.h" />
     <ClInclude Include="Load.h" />
-    <ClInclude Include="MyBasic.h" />
     <ClInclude Include="Cable.h" />
-    <ClInclude Include="constants.h" />
+    <ClInclude Include="Constants.h" />
     <ClInclude Include="Element.h" />
     <ClInclude Include="abcd_parameters.h" />
     <ClInclude Include="eval_parameter.h" />
     <ClInclude Include="Impedance.h" />
-    <ClInclude Include="Kron.h" />
     <ClInclude Include="symengine_n.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="overhead_line.h" />
-    <ClInclude Include="MySymbol.h" />
-    <ClInclude Include="MySymbolicType.h" />
     <ClInclude Include="Transformer.h" />
     <ClInclude Include="Transmissionline.h" />
   </ItemGroup>

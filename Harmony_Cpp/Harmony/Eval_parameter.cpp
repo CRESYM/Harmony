@@ -4,8 +4,6 @@
 //#include "MyBasic.h"
 //#include "MySymbolicType.h"
 #include "symengine_n.h"
-#include "Kron.h"
-
 #include <symengine_exception.h>
 #include <symengine_config.h>
 #include <basic.h>

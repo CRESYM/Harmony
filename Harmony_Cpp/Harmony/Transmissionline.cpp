@@ -1,21 +1,20 @@
 #include "TransmissionLine.h"
 #include "Element.h"
+#include "Constants.h"
 #include <iostream>
 
-#include <symengine/symengine_rcp.h>
-#include <symengine/symbol.h>
-#include <symengine/functions.h>
-#include <symengine/eval.h>
 #include <symengine/real_double.h>
 
 using namespace SymEngine;
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 void TransmissionLine::compute_y_parameters(double R, double L, double G, double C, double length, double frequency) {
-    double omega = 2 * M_PI * frequency;
+    //double omega = 2 * M_PI * frequency;
+
+    // Convert PI to double
+    double pi_double = rcp_static_cast<const RealDouble>(PI)->as_double();
+
+    // Use the double value of PI
+    double omega = 2 * pi_double * frequency;
 
     RCP<const Symbol> R_sym = symbol("R");
     RCP<const Symbol> L_sym = symbol("L");

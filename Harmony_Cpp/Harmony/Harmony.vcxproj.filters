@@ -99,6 +99,9 @@
     <ClCompile Include="Transformer.cpp">
       <Filter>Source Files\Elements\Generator</Filter>
     </ClCompile>
+    <ClCompile Include="Constants.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Impedance.h">
@@ -110,7 +113,7 @@
     <ClInclude Include="abcd_parameters.h">
       <Filter>Header Files\Elements\Tools</Filter>
     </ClInclude>
-    <ClInclude Include="constants.h">
+    <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="network.h">
@@ -122,23 +125,11 @@
     <ClInclude Include="symengine_n.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Kron.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="eval_parameter.h">
       <Filter>Header Files\Elements\Transmission_line</Filter>
     </ClInclude>
     <ClInclude Include="Transmissionline.h">
       <Filter>Header Files\Elements\Transmission_line</Filter>
-    </ClInclude>
-    <ClInclude Include="MyBasic.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MySymbol.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MySymbolicType.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Element.h">
       <Filter>Header Files\Elements</Filter>

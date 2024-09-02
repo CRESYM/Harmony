@@ -1,13 +1,18 @@
 #include "Element.h"
 #include "Generator.h"
+#include "Constants.h"
 #include <iostream>
 
 using namespace SymEngine; 
 
 void Generator::compute_y_parameters_generator(double R_f, double L_f, double X_d, double T_f, double frequency)
 {
-    RCP<const Basic> pi = real_double(3.141592653589793);
-    RCP<const Basic> omega = mul(real_double(2), mul(pi, real_double(frequency)));
+    //RCP<const Basic> pi = real_double(3.141592653589793);
+    //RCP<const Basic> omega = mul(real_double(2), mul(pi, real_double(frequency)));
+
+    // Use the constant PI from Constants.h
+    RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
+
     RCP<const Basic> s = mul(I, omega);
 
     RCP<const Basic> R_f_val = real_double(R_f);
