@@ -86,25 +86,17 @@ public:
 		s(nullptr)
 	{}
 
-	//const SymEngine::Complex& getSymbolS() const { return s; }
 
 	// Public member functions
 	std::vector<std::vector<double>> P;
 	std::vector<std::vector<double>> Z;
 
-
-	//void setLength(double length) { this->length = length; }
 	void setLength(double newLength) { length = newLength; }
 	void addConductor(const std::string& key, const Conductor& conductor) { conductors[key] = conductor; }
 	void addInsulator(const std::string& key, const Insulator& insulator) { insulators[key] = insulator; }
-	//void addPosition(double x, double y) { positions.push_back(std::make_pair(x, y)); }
 	void addPosition(double x, double y) { positions.emplace_back(x, y); }
-	//void setEarthParameters(int mu, int epsilon, int rho) { earth_parameters = std::make_tuple(mu, epsilon, rho); }
-	//void setConfiguration(const std::string& configuration) { this->configuration = configuration; }
-	//void setTransformation(const std::string& value) { transformation = value; }
 	void setEarthParameters(double mu, double epsilon, double rho) { earth_parameters = std::make_tuple(mu, epsilon, rho); }
 	void setConfiguration(const std::string& newConfig) { configuration = newConfig; }
-	//void setTransformation(const std::string& value) { transformation = value; }
 	void setTransformation(const bool value) { transformation = value; }
 	void setEliminate(bool value) { eliminate = value; } //to change the value of eliminate
 
@@ -126,17 +118,11 @@ public:
 
 	// Getter methods
 	double getLength() const { return length; }
-	//const std::unordered_map<std::string, Conductor>& getConductors() const { return conductors; }
-	//const std::unordered_map<std::string, Insulator>& getInsulators() const { return insulators; }
 	const std::tuple<double, double, double>& getEarthParameters() const { return earth_parameters; }
 	const std::vector<std::pair<double, double>>& getPositions() const { return positions; }
 	const std::string& getConfiguration() const { return configuration; }
 	const std::string& getType() const { return type; }
 	bool getEliminate() const { return eliminate; }
-
-	// Getters for symbolic matrices
-	//std::vector<std::vector<RCP<const Basic>>> getCZ() const;
-	//std::vector<std::vector<RCP<const Basic>>> getCP() const;
 
 	// Getters for symbolic matrices
 	std::vector<std::vector<RCP<const Basic>>> getCZ() const { return CZ; }
@@ -162,15 +148,6 @@ public:
 		}
 		return nullptr; // Insulator not found
 	}
-
-
-	/*std::tuple<int, int, int> getEarthParameters() const {
-		return earth_parameters;
-	}
-
-	std::string getType() const {return type;}
-	void setType(const std::string& newType) {type = newType;}
-	}*/
 
 	// Function to modify a conductor in the conductors map
 	void updateConductor(const std::string& key, const Conductor& conductor) {
@@ -198,9 +175,6 @@ public:
 	bool isConductor(const std::string& key) { return (conductors.find(key) != conductors.end()); }
 	bool isInsulator(const std::string& key) { return (insulators.find(key) != insulators.end()); }
 
-	//void setCZ(const std::vector<std::vector<RCP<const Basic>>>& cz);
-	//void setCP(const std::vector<std::vector<RCP<const Basic>>>& cp);
-
 	void setCZ(const std::vector<std::vector<RCP<const Basic>>>& cz) {
 		CZ = cz;
 	}
@@ -209,9 +183,7 @@ public:
 		CP = cp;
 	}
 
-
-	//friend void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs, bool transformation);
-	friend void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs, bool transformation);
+	friend void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs);
 
 	// Destructor
 	~Cable();
@@ -237,11 +209,9 @@ private:
 	bool transformation;
 
 	// Define variables for real and imaginary parts
-	// Define variables for real and imaginary parts
 	SymEngine::rational_class real_part;
 	SymEngine::rational_class imag_part;
 
-	//SymEngine::Complex s; // Assuming Complex is a member of Cable class
 	const SymEngine::Complex* s; // Store pointer to SymEngine::Complex
 
 	std::vector<std::vector<RCP<const Basic>>> CZ;

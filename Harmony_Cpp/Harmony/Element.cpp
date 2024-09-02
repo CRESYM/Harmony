@@ -6,12 +6,12 @@
 
 // Default constructor
 Element::Element()
-    : symbol(""), input_pins(0), output_pins(0), element_value(nullptr) {
+    : element_symbol(""), input_pins(0), output_pins(0), element_value(nullptr) {
     // Initialize default state
 }
 
 Element::Element(const std::string& symbol, int input_pins, int output_pins)
-    : symbol(symbol), input_pins(input_pins), output_pins(output_pins), element_value(nullptr) {
+    : element_symbol(symbol), input_pins(input_pins), output_pins(output_pins), element_value(nullptr) {
     // Define pins based on input and output pin counts
     for (int i = 1; i <= input_pins; ++i) {
         pins.push_back("1." + std::to_string(i));
@@ -23,9 +23,9 @@ Element::Element(const std::string& symbol, int input_pins, int output_pins)
 
 // New constructor that takes an unordered_map
 Element::Element(const std::unordered_map<std::string, std::string>& args)
-    : symbol(""), input_pins(0), output_pins(0), element_value(nullptr) {
+    : element_symbol(""), input_pins(0), output_pins(0), element_value(nullptr) {
     try {
-        symbol = args.at("symbol");  // Retrieve and set the symbol
+        element_symbol = args.at("symbol");  // Retrieve and set the symbol
         input_pins = std::stoi(args.at("input_pins"));  // Convert input pins count from string to int
         output_pins = std::stoi(args.at("output_pins"));  // Convert output pins count from string to int
     }
@@ -86,7 +86,7 @@ std::vector<std::string> Element::getNodesByPin(const std::string& pin) const {
 }
 
 void Element::printElementInfo() const {
-    std::cout << "Element Symbol: " << symbol << std::endl;
+    std::cout << "Element Symbol: " << element_symbol << std::endl;
     std::cout << "Number of Input Pins: " << input_pins << std::endl;
     std::cout << "Number of Output Pins: " << output_pins << std::endl;
     std::cout << "Total Number of Pins: " << getTotalPins() << std::endl;

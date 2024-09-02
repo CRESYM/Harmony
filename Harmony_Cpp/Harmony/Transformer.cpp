@@ -3,7 +3,9 @@
 
 using namespace SymEngine;
 
-void compute_y_parameters_transformer(double R_p, double X_p, double R_s, double X_s, double a) {
+
+void Transformer::compute_y_parameters_transformer(double R_p, double X_p, double R_s, double X_s, double a)
+{
     RCP<const Basic> R_p_val = real_double(R_p);
     RCP<const Basic> X_p_val = real_double(X_p);
 
@@ -35,4 +37,3 @@ void compute_y_parameters_transformer(double R_p, double X_p, double R_s, double
     std::cout << "|Transformer Y_param3|: " << Y_param3_abs << " S" << std::endl;
     std::cout << "|Transformer Y_param4|: " << Y_param4_abs << " S" << std::endl;
 }
-

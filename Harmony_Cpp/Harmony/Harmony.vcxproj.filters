@@ -81,9 +81,6 @@
     <ClCompile Include="overhead_line.cpp">
       <Filter>Source Files\Elements\Transmission_line</Filter>
     </ClCompile>
-    <ClCompile Include="Symengine_n.cpp">
-      <Filter>Source Files\Elements</Filter>
-    </ClCompile>
     <ClCompile Include="Transmissionline.cpp">
       <Filter>Source Files\Elements\Transmission_line</Filter>
     </ClCompile>

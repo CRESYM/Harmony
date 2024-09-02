@@ -138,7 +138,6 @@
     <ClCompile Include="abcd_parameters.cpp" />
     <ClCompile Include="overhead_line.cpp" />
     <ClCompile Include="Eval_parameter.cpp" />
-    <ClCompile Include="Symengine_n.cpp" />
     <ClCompile Include="Transformer.cpp" />
     <ClCompile Include="Transmissionline.cpp" />
   </ItemGroup>

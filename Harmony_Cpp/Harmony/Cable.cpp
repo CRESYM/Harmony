@@ -51,20 +51,6 @@ enum class PropertyType {
 	Transformation
 };
 
-// Constructor
-//Cable::Cable():transformation(false) {} // Initialize transformation to false by default
-
-// Destructor
-//Cable::~Cable() {}
-
-/*std::string convertToString(const std::vector<std::pair<double, double>>& value) {
-	std::ostringstream oss;
-	for (const auto& pair : value) {
-		oss << "(" << pair.first << "," << pair.second << ") ";
-	}
-	return oss.str();
-}*/
-
 bool convertToBoolean(const std::string& value) {
 	// Convert string to lowercase for case-insensitive comparison
 	std::string lowercaseValue = value;
@@ -129,62 +115,6 @@ void Cable::setProperty(const std::string& key, const std::string& value) {
 //void handleProperty(Cable& c, const std::string& key, const PropertyValue& value, PropertyType type) {
 void handleProperty(Cable& c, const std::string& key, const std::vector<std::pair<double, double>>& value) {
 
-	/*if (key == "positions") {
-		// Handle positions property
-		// No need to convert, directly use the provided value
-		//for (const auto& pos : value) {
-			//c.addPosition(pos.first, pos.second);
-		//}
-
-		// Convert value to vector of pairs and add positions
-		const auto& positions = std::get<std::vector<std::pair<double, double>>>(value);
-		for (const auto& pos : positions) {
-			c.addPosition(pos.first, pos.second);
-		}
-	}
-	else if (c.isConductor(key)) {
-		// Handle conductor property
-		// Assuming addConductor accepts a single Conductor object
-		Conductor conductor; // Create a Conductor object
-		// Populate the conductor object using the provided value
-		// For example:
-		// conductor = createConductorFromVector(value); // Convert vector to Conductor
-		c.addConductor(key, conductor); // Add the conductor to the Cable object
-	}
-	else if (c.isInsulator(key)) {
-		// Handle insulator property
-		// Assuming addInsulator accepts a single Insulator object
-		Insulator insulator; // Convert vector to Insulator
-		c.addInsulator(key, insulator);
-	}
-	else if (key == "transformation") {
-		// Handle transformation property
-		//std::string transformationStr = convertToString(value);
-		std::string transformationStr = std::get<std::string>(value);
-		c.setTransformation(transformationStr);
-	}
-	else {
-		throw std::invalid_argument("Unknown cable property name.");
-	}*/
-
-	/*if (type == PropertyType::Positions) {
-		for (const auto& pos : value.positions) {
-			c.addPosition(pos.first, pos.second);
-		}
-	}
-	else if (type == PropertyType::Conductor) {
-		c.addConductor(key, value.conductor);
-	}
-	else if (type == PropertyType::Insulator) {
-		c.addInsulator(key, value.insulator);
-	}
-	else if (type == PropertyType::Transformation) {
-		c.setTransformation(value.transformationStr);
-	}
-	else {
-		throw std::invalid_argument("Unknown cable property value type.");
-	}*/
-
 	if (key == "positions") {
 		for (const auto& pos : value) {
 			c.addPosition(pos.first, pos.second);
@@ -218,16 +148,11 @@ void handleProperty(Cable& c, const std::string& key, const std::vector<std::pai
 	}
 }
 
-/*Symbol symbols(const std::string& name) {
-	return Symbol(name);
-}*/
-// Create a symbol table and add symbol-value pairs
-
 
 //void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs, bool transformation) {
-void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs, bool transformation) {
+void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs) {
 
-	transformation = false; // Set transformation to false by default
+	//transformation = false; // Set transformation to false by default
 
 	// Loop through the provided arguments
 	//for (const auto& [key, value] : args) {
@@ -243,22 +168,6 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 		const auto& value = pair.second;
 
 		handleProperty(c, key, value);
-		if (key == "transformation") {
-			transformation = true; // Update transformation flag
-		}
-
-		// Handle each keyword argument based on its key
-		/*if (key == "positions") {
-			handleProperty(c, key, value);
-		}
-		else if (key == "transformation") {
-			handleProperty(c, key, value);
-		}
-		else {
-			// Handle other properties as needed
-			// For example:
-			throw std::invalid_argument("Unknown property name.");
-		}*/
 
 
 		if (key == "C1") {
@@ -280,10 +189,6 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 			// Conversion procedure for metalic screen (SC) and equivalent sheath layer (C2)
 			// add metalic screen conversions, equivalent sheat layer
 			// Check if SC conductor exists
-			/*Conductor* conductorSC = c.getConductor("SC");
-			if (conductorSC != nullptr) {
-				// Conductor found, perform actions
-			}*/
 			auto conductorC1 = c.getConductor("C1");
 			if (conductorC1 && conductorC1->getArea() != 0) {
 				conductorC1->setResistivity(conductorC1->getResistivity() * M_PI * conductorC1->getOuterRadius() * conductorC1->getOuterRadius() / conductorC1->getArea());
@@ -303,29 +208,7 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 					//conductorC2->setInnerRadius(conductorSC->getInnerRadius());
 					c.getConductor("C2")->ri = conductorSC->ri;
 				}
-				//double c2OuterRadius = std::sqrt((conductorC2->getOuterRadius() * conductorC2->getOuterRadius() - conductorSC->getOuterRadius() * conductorSC->getOuterRadius()) *
-					//conductorSC->getResistivity() / conductorC2->getResistivity() + conductorSC->getOuterRadius() * conductorSC->getOuterRadius());
-
-				/*// Assuming nullptr is returned when conductor is not found
-				bool conductorExists = c.getConductor("SC") != nullptr;
-				if (conductorExists) {
-					// Check if C2 conductor is present
-					if (c.getConductor("C2") == nullptr) { // Assuming nullptr is returned when conductor is not found
-						throw std::invalid_argument("There must be present sheath together with screen layer.");
-					}
-
-					// If the equivalent area of the semiconductor is defined and different from zero
-					Conductor* conductorSC = c.getConductor("SC");
-					if (conductorSC->area != 0) {
-						// Calculate internal radius of conductor C2
-						c.getConductor("C2")->ri = sqrt(conductorSC->ro * conductorSC->ro - conductorSC->area / M_PI);
-					}
-					else {
-						// If the screen equivalent area is not defined, set the internal radius of conductor C2 equal to the internal screen radius
-						c.getConductor("C2")->ri = conductorSC->ri;
-					}
-
-				}*/
+		
 
 				// Calculate outer radius of conductor C2
 				//double c2OuterRadius = sqrt((c.getConductor("C2")->ro * c.getConductor("C2")->ro - conductorSC->ro * conductorSC->ro) *
@@ -380,14 +263,6 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 	double gamma = 0.5772156649;
 	double g = 1e-11;
 
-	//Symbol s = symbols("s"); // Definition of the variable S as a symbol
-	//SymbolTable symbolTable;
-	//symbolTable.addSymbol("s", 10.0); // Add symbol "s" with a numeric value of 10.0
-
-
-
-	// Retrieve the numeric value associated with the symbol "s"
-	//double s_value = symbolTable.getNumericValue("s");
 
 	// Define variables for frequency domain implementation
 	auto& conductors = c.getCableConductors();
@@ -395,10 +270,6 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 	auto& positions = c.getPositions();
 
 	double d_ij = 0; // Initialize d_ij
-	//int n = 3; // ested for cycle with a short notation. assuming 3 conductors: n=3 -> (k,l)= (1,1) -> (1,2) -> (1,3) -> (2,1) -> (2,2) -> (2,3) -> (3,1) -> (3,2) -> (3,3)
-	//std::vector<std::vector<double>> P(n, std::vector<double>(n, 0.0)); // Initialize P matrix with zeros
-
-
 
 	// Define variables for frequency domain implementation
 	size_t n_l = conductors.size(); // Number of cable layers
@@ -406,14 +277,6 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 
 	// Create vec_basic objects for P and Z matrices
 	vec_basic P_values, Z_values;
-
-	//ImmutableDenseMatrix Z(n * n_l, n * n_l, Z_values); // Impedance matrix
-	//ImmutableDenseMatrix P(n * n_l, n * n_l, P_values); // Shunt admittance matrix
-
-	//std::vector<std::vector<double>> Z(n * n_l, std::vector<double>(n * n_l, 0.0)); // Impedance matrix		std::vector<std::vector<double>> P(n * n_l, std::vector<double>(n * n_l, 0.0)); // P matrix
-
-	// make series impedance #pag24 simulator_tutorial
-	// between rows 153 and 181 -> CONDUCTORS Case (no insulators) -> i need as external indicator. It is needed to compute the Z matrix position until key is inside the number of keys present in conductors
 
 	size_t i = 0; // External indicator
 
@@ -537,31 +400,6 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 		}
 	}
 
-	/*for (int i = 1; i <= n; ++i) { // n = number of cables
-		for (int row = (i - 1) * n_l; row < i * n_l; ++row) {
-			for (int col = (i - 1) * n_l; col < i * n_l; ++col) {
-				//c.Z[row][col] = Z[row % n_l][col % n_l]; // Copy and translate the same conductor impedance matrix
-				//c.P[row][col] = P[row % n_l][col % n_l]; // Same for the P matrix
-				c.Z[row][col] = Z[(row % n_l) + ((i - 1) * n_l)][(col % n_l) + ((i - 1) * n_l)]; // Copy and translate the same conductor impedance matrix
-				c.P[row][col] = P[(row % n_l) + ((i - 1) * n_l)][(col % n_l) + ((i - 1) * n_l)]; // Same for the P matrix
-			}
-		}
-
-		for (int j = i + 1; j < n; ++j) { // Add earth return impedance and mutual impedance between cables
-			double m = sqrt(s_value * mu_g / rho_g);
-			//double H = positions[i - 1].second + positions[j - 1].second; // H = sum of depth of ith and jth cables
-			//double d_ij = sqrt(pow(positions[i - 1].first - positions[j - 1].first, 2) + pow(positions[i - 1].second - positions[j - 1].second, 2));
-			//double x = abs(positions[i - 1].first - positions[j - 1].first);
-			double H = positions[i - 1].second + positions[j - 1].second; // H = sum of depth of ith and jth cables
-			double d_ij = sqrt(pow(positions[i - 1].first - positions[j - 1].first, 2) + pow(positions[i - 1].second - positions[j - 1].second, 2));
-			double x = abs(positions[i - 1].first - positions[j - 1].first);
-
-			double Z_g = s_value * mu_g / (2 * M_PI) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
-			c.Z[i * n_l][j * n_l] += Z_g; // Mutual impedance between cables
-			c.Z[j * n_l][i * n_l] += Z_g; // Same as the row above, but in the mutual position
-		}
-	}*/
-
 	for (int i = 1; i <= n; ++i) {
 		for (int j = 1; j <= n; ++j) {
 			// Copy and translate the same conductor impedance matrix
@@ -664,20 +502,12 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 	c.setP(P); // Assign P matrix to c.P
 	c.setZ(Z); // Assign Z matrix to c.Z
 
-	// Create an Element object with input_pins = n, output_pins = n,
-	// element_value = c, and transformation = transformation
-	// Assuming `n` and `transformation` are defined appropriately
-
-// Create an unordered_map to hold the constructor arguments
-	/*std::unordered_map<std::string, std::string> args;
-	args["input_pins"] = std::to_string(n);
-	args["output_pins"] = std::to_string(n);
-	args["transformation"] = transformation ? "true" : "false";*/
-
 	std::unordered_map<std::string, std::string> args;
 	args["symbol"] = "some_symbol";       // Set the symbol
 	args["input_pins"] = "4";             // Set the number of input pins
 	args["output_pins"] = "2";            // Set the number of output pins
+	args["element_value"] = "42";         // Optional: Example value for element_value
+
 	//args["transformation"] = "true";
 
 	//Element elem(args);
@@ -686,17 +516,20 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 	//Element elem(args);
 		// Create an Element object using the map
 	try {
+		// Create an Element object using the map
 		Element elem(args);
+
+		// Access element_value if needed, safely cast to the expected type
+		if (elem.element_value != nullptr) {
+			int* val = static_cast<int*>(elem.element_value);
+			std::cout << "Element Value: " << *val << std::endl;
+		}
+
 		elem.printElementInfo();  // Print the element's info to verify it's correct
 	}
 	catch (const std::exception& e) {
 		std::cerr << "Error while creating Element: " << e.what() << std::endl;
 	}
-	//Element elem("symbol_value", n, n, transformation);
-
-	//elem.element_value = c; // Assuming `element_value` is of type `Cable` or a suitable type
-
-	//std::cout << "yes!cable.\n";
 
 }
 // Destructor definition

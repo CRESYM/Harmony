@@ -6,10 +6,21 @@
 #include <stdexcept>
 #include <functional> // Include the functional header for std::hash
 
+#include <symengine/expression.h>
+#include <symengine/symbol.h>
+#include <symengine/add.h>
+#include <symengine/mul.h>
+#include <symengine/pow.h>
+#include <symengine/real_double.h>
+#include <symengine/eval.h>
+#include <symengine/functions.h>
+#include <symengine/complex.h>
+#include <symengine/complex_double.h>
+
 
 class Element {
 public:
-    std::string symbol;
+    std::string element_symbol;
     std::vector<std::string> pins;
     int input_pins;
     int output_pins;

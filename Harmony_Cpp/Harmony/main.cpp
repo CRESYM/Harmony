@@ -87,13 +87,10 @@ int main()
 			std::cout << elem.real() << " + " << elem.imag() << "i ";
 		}
 		std::cout << std::endl;
-	}
+	}*/
 
 
-	std::cout << "hello" << std::endl;
-
-	return 0;*/
-
+	//Test for element
 	// Create an Element with symbol "R1", 2 input pins, and 2 output pins
 	Element elem("R1", 2, 2);
 
@@ -114,48 +111,53 @@ int main()
 		std::cout << "  " << node << std::endl;
 	}
 
-	return 0;
-}
-
-	// Transmission Line Parameters
-/*	double R_tl = 0.01;       // Resistance per unit length (ohms/m)
+/*
+// Test for Transmission Line Parameters
+	double R_tl = 0.01;       // Resistance per unit length (ohms/m)
 	double L_tl = 2.5e-7;     // Inductance per unit length (H/m)
 	double G_tl = 1e-9;       // Conductance per unit length (S/m)
 	double C_tl = 1e-11;      // Capacitance per unit length (F/m)
 	double length = 1000;     // Length of the transmission line (m)
 	double frequency = 1e6;   // Frequency (Hz)
 
-	// Compute the Y-parameters for the transmission line
-	compute_y_parameters(R_tl, L_tl, G_tl, C_tl, length, frequency);
 
-	// Transformer Parameters
+	// Create an instance of TransmissionLine and compute Y-parameters
+	TransmissionLine transmissionLine;
+	// Compute the Y-parameters for the transmission line
+	transmissionLine.compute_y_parameters(R_tl, L_tl, G_tl, C_tl, length, frequency);
+
+	//Test for Transformer Parameters
 	double R_p = 0.5;  // Primary winding resistance (ohms)
 	double X_p = 1.0;  // Primary winding leakage reactance (ohms)
 	double R_s = 0.1;  // Secondary winding resistance (ohms)
 	double X_s = 0.2;  // Secondary winding leakage reactance (ohms)
 	double a = 10.0;   // Turns ratio (primary to secondary)
 
+	// Create an instance of Transformer and compute Y-parameters
+	Transformer transformer;
 	// Compute the Y-parameters for the transformer
-	compute_y_parameters_transformer(R_p, X_p, R_s, X_s, a);
+	transformer.compute_y_parameters_transformer(R_p, X_p, R_s, X_s, a);
 
-	// Generator Parameters
+	// Test for Generator Parameters
 	double R_f = 1.0;
 	double L_f = 0.01;
 	double X_d = 1.0;
 	double T_f = 0.1;
 	double gen_frequency = 60;
 
-	compute_y_parameters_generator(R_f, L_f, X_d, T_f, gen_frequency);
+	// Create an instance of Generator and compute Y-parameters
+	Generator generator;
+	generator.compute_y_parameters_generator(R_f, L_f, X_d, T_f, gen_frequency);
 
-	// Load (RLC) Parameters
+	//Test for Load (RLC) Parameters
 	double R = 10.0;
 	double L = 0.01;
 	double C = 0.001;
 	double load_frequency = 60;
 
-	compute_y_parameters_rlc(R, L, C, load_frequency);
+	// Create an instance of Load and compute Y-parameters
+	Load load;
+	load.compute_y_parameters_rlc(R, L, C, load_frequency);*/
 
-	return 0;*/
-
-
-//}
+	return 0; 
+}
