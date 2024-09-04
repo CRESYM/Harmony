@@ -265,7 +265,7 @@ end
  % 3 nodal active power injection 
  % 4 nodal reactive power injection 
  % 5 active power flow used for calculate active power injection
- % 6 active power flow used for calculate active power injection
+ % 6 rective power flow used for calculate active power injection
  % 7 generator active power 
  % 8 generator reactive power 
  % 9 node voltage difference 
