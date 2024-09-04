@@ -2,7 +2,7 @@ function [] = acmtdcpf (acFileName, mtdcFileName)
 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% acmtdcPf can be used to do AC/MTDDC PF calcuation by solving OPF %%%%%%
+%%% acmtdcpf can be used to do AC/MTDDC PF calcuation by solving OPF %%%%%%
 %%% model. Yalmip is for OPF formuation and Ipopt is the solver %%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -13,7 +13,7 @@ function [] = acmtdcpf (acFileName, mtdcFileName)
 %  [2]  Mauro Escobar, https://github.com/me2533/acopf
 %  [3]  Matacdc1.0 unser's manual, https://www.esat.kuleuven.be/electa/teaching/matacdc/MatACDCManual
 
-%  haixiaoli.ee@gmail.com
+%  h.li199305ee@gmail.com
 
 
 %%  " Adding DC Grid and Converter Parameters "
@@ -125,8 +125,8 @@ tic;
 % 12. ac： nodal voltage angle at node c of converter ac side 
 % 13. Ic: converter current 
 var_dc = sdpvar (2*nbuses_dc+11*nconvs,1); 
-lb_dc = zeros(2*nbuses_dc+11*nconvs,1);
-ub_dc = zeros(2*nbuses_dc+11*nconvs,1);
+lb_dc = -inf(2*nbuses_dc+11*nconvs,1);
+ub_dc = inf(2*nbuses_dc+11*nconvs,1);
 % 1.
 lb_dc(1:nbuses_dc) = bus_dc(:,13); 
 ub_dc(1:nbuses_dc) = bus_dc(:,12);
@@ -364,8 +364,8 @@ pd{ng} = bus_ac{ng}(:,3)/baseMVA;
 qd{ng} = bus_ac{ng}(:,4)/baseMVA; 
 
 %%  " Defining AC Grid Primal Variables and Boundaries "
-lb_ac = zeros(4*nbuses_ac+2*ngens,1);
-ub_ac = zeros(4*nbuses_ac+2*ngens,1);
+lb_ac = -inf(4*nbuses_ac+2*ngens,1);
+ub_ac = inf(4*nbuses_ac+2*ngens,1);
 
 % 1
 lb_ac(1:nbuses_ac) = bus_ac{ng}(:,13); % lb for nodal voltage amplitude
