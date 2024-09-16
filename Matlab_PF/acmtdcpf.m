@@ -2,7 +2,7 @@ function [] = acmtdcpf (acFileName, mtdcFileName)
 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% acMtdcPf can be used to do AC/MTDDC PF calcuation by solving OPF %%%%%%
+%%% acmtdcpf can be used to do AC/MTDDC PF calcuation by solving OPF %%%%%%
 %%% model. Yalmip is for OPF formuation and Ipopt is the solver %%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -13,10 +13,12 @@ function [] = acmtdcpf (acFileName, mtdcFileName)
 %  [2]  Mauro Escobar, https://github.com/me2533/acopf
 %  [3]  Matacdc1.0 unser's manual, https://www.esat.kuleuven.be/electa/teaching/matacdc/MatACDCManual
 
-%  haixiaoli.ee@gmail.com
+%  h.li199305ee@gmail.com
 
 
 %%  " Adding DC Grid and Converter Parameters "
+tic;
+
 [filepath,name,ext] = fileparts(mtdcFileName);
   
   if ~strcmp(ext,'.m')
@@ -102,9 +104,9 @@ function [] = acmtdcpf (acFileName, mtdcFileName)
            end
        end
    end
-   closs = closs/(basekVac.^2/baseMVA);
+   closs = closs./(basekVac.^2/baseMVA);
    aloss = conv(:,19)/baseMVA;
-   bloss = conv(:,20)/basekVac;
+   bloss = conv(:,20)./basekVac;
 
 %%  " Defining DC Grid and Coverter Primal Variables and Boundaries "
 
@@ -121,10 +123,10 @@ function [] = acmtdcpf (acFileName, mtdcFileName)
 % 10. as： nodal voltage angle at node s of converter ac side
 % 11. af： nodal voltage angle at node f of converter ac side 
 % 12. ac： nodal voltage angle at node c of converter ac side 
-% 13. Ic: converter current 换流器电流
+% 13. Ic: converter current 
 var_dc = sdpvar (2*nbuses_dc+11*nconvs,1); 
-lb_dc = zeros(2*nbuses_dc+11*nconvs,1);
-ub_dc = zeros(2*nbuses_dc+11*nconvs,1);
+lb_dc = -inf(2*nbuses_dc+11*nconvs,1);
+ub_dc = inf(2*nbuses_dc+11*nconvs,1);
 % 1.
 lb_dc(1:nbuses_dc) = bus_dc(:,13); 
 ub_dc(1:nbuses_dc) = bus_dc(:,12);
@@ -181,7 +183,7 @@ Ic = var_dc(2*nbuses_dc+10*nconvs+(1:nconvs), 1);
 convPloss = sdpvar(nconvs, 1);
 
 con_dc = [];
-con_dc = [con_dc; lb_dc <= var_dc <= ub_dc]; % boundary for primary variables
+con_dc = [con_dc; lb_dc <= var_dc <= ub_dc]; 
 
 %%  " Adding DC Grid and Converter Constraints " 
 for i= 1:nbuses_dc 
@@ -257,13 +259,18 @@ end
   ngrids = size(unique(mpc.bus(:,14)),1);
 
 %%  " Defining AC Grid Primal Variables " 
- % [vm_ac,va_ac,pn_ac,qn,pij,qij,pgen,qgen] 
+ % [vm_ac, va_ac, pn_ac, qn_ac, pij_ac, qij_ac, pgen, qgen, theta_diff, vn_product_] 
  % 1 nodal voltage amplitude 
  % 2 nodal voltage phase 
  % 3 nodal active power injection 
  % 4 nodal reactive power injection 
- % 5 generator active power 
- % 6 generator reactive power 
+ % 5 active power flow used for calculate active power injection
+ % 6 rective power flow used for calculate active power injection
+ % 7 generator active power 
+ % 8 generator reactive power 
+ % 9 node voltage difference 
+ % 10 node voltage production
+
 
  % multiple ac grids
  var_ac = cell(ngrids,1);
@@ -274,10 +281,10 @@ end
  pgen = cell(ngrids,1);
  qgen = cell(ngrids,1);
 
- PP = cell(ngrids,1);
- QQ = cell(ngrids,1);
- PPc = cell(ngrids,1);
- QQc = cell(ngrids,1);
+%  PP = cell(ngrids,1);
+%  QQ = cell(ngrids,1);
+%  PPc = cell(ngrids,1);
+%  QQc = cell(ngrids,1);
 
  con_acdc = cell(ngrids,1);
  obj_acdc = cell(ngrids,1);
@@ -287,6 +294,13 @@ end
  gen_ac = cell(ngrids,1);
  pd_ac = cell(ngrids,1);
  qd_dc = cell(ngrids,1);
+
+ va_vac_mat = cell(ngrids, 1);
+ va_ac_mat_t = cell(ngrids, 1);
+ theta_diff = cell(ngrids, 1);
+ vn_product = cell(ngrids, 1);
+ pij_ac = cell(ngrids, 1);
+ qij_ac = cell(ngrids, 1);
 
  recBuses = [];
  recRef = [];
@@ -327,8 +341,8 @@ for i = 1:nconvs
     end
 end % ID of ac grid bus connected to converters
 
-frombranchids = cell(nbuses_ac,1);
-tobranchids = cell(nbuses_ac,1);
+% frombranchids = cell(nbuses_ac,1);
+% tobranchids = cell(nbuses_ac,1);
 anglelim_rad = zeros(nbranches_ac,2);
 for i=1:nbranches_ac
   minangle = branch_ac{ng}(i,12);
@@ -338,8 +352,8 @@ if (minangle==0 && maxangle==0) || (minangle==-360 && maxangle==360)
 end
   anglelim_rad(i,1) = pi*minangle/180;
   anglelim_rad(i,2) = pi*maxangle/180;
-  frombranchids{IDtoCountmap(branch_ac{ng}(i,1))} = [frombranchids{IDtoCountmap(branch_ac{ng}(i,1))} i];
-  tobranchids{IDtoCountmap(branch_ac{ng}(i,2))} = [tobranchids{IDtoCountmap(branch_ac{ng}(i,2))} i];
+%   frombranchids{IDtoCountmap(branch_ac{ng}(i,1))} = [frombranchids{IDtoCountmap(branch_ac{ng}(i,1))} i];
+%   tobranchids{IDtoCountmap(branch_ac{ng}(i,2))} = [tobranchids{IDtoCountmap(branch_ac{ng}(i,2))} i];
 end  % save ID of "frombus" and "tobus" for each branch
 
 [YY, ~, ~] = makeYbus(baseMVA, bus_ac{ng}, branch_ac{ng});
@@ -350,8 +364,8 @@ pd{ng} = bus_ac{ng}(:,3)/baseMVA;
 qd{ng} = bus_ac{ng}(:,4)/baseMVA; 
 
 %%  " Defining AC Grid Primal Variables and Boundaries "
-lb_ac = zeros(4*nbuses_ac+2*ngens,1);
-ub_ac = zeros(4*nbuses_ac+2*ngens,1);
+lb_ac = -inf(4*nbuses_ac+2*ngens,1);
+ub_ac = inf(4*nbuses_ac+2*ngens,1);
 
 % 1
 lb_ac(1:nbuses_ac) = bus_ac{ng}(:,13); % lb for nodal voltage amplitude
@@ -400,43 +414,53 @@ con_acdc{ng} = [];
 con_acdc{ng} = [con_acdc{ng}; lb_ac<= var_ac{ng} <=ub_ac]; 
 
 %%  " Building AC Grid Constraints "
-PP{ng} = sdpvar(nbuses_ac, 1);
-QQ{ng} = sdpvar(nbuses_ac, 1);
-% Pij = sdpvar(nbuses_ac, nbuses_ac, 'full');
-% Qij = sdpvar(nbuses_ac, nbuses_ac, 'full');
-i=1;
-for j = 1:nbuses_ac
-    con_acdc{ng} = [con_acdc{ng}; PP{ng}(j) == vm_ac{ng}(i)*vm_ac{ng}(j)*(GG(i,j)*cos(va_ac{ng}(i)-va_ac{ng}(j))+BB(i,j)*sin(va_ac{ng}(i)-va_ac{ng}(j)))];
-    con_acdc{ng} = [con_acdc{ng}; QQ{ng}(j) == vm_ac{ng}(i)*vm_ac{ng}(j)*(GG(i,j)*sin(va_ac{ng}(i)-va_ac{ng}(j))-BB(i,j)*cos(va_ac{ng}(i)-va_ac{ng}(j)))];
-%         if i~=j 
-%            con_acdc = [con_acdc; Pij(i,j) == (vm_ac(i)^2-vm_ac(i)*vm_ac(j)*cos(va_ac(i)-va_ac(j)))*(-1)*GG(i,j)-vm_ac(i)*vm_ac(j)*(-1)*BB(i,j)*sin(va_ac(i)-va_ac(j))];
-%            con_acdc = [con_acdc; Qij(i,j) == -(vm_ac(i)^2-vm_ac(i)*vm_ac(j)*cos(va_ac(i)-va_ac(j)))*(-1)*BB(i,j)-vm_ac(i)*vm_ac(j)*(-1)*GG(i,j)*sin(va_ac(i)-va_ac(j))];
-%         end 
-end
-con_acdc{ng} = [con_acdc{ng}; pn_ac{ng}(i) == sum(PP{ng})];
-con_acdc{ng} = [con_acdc{ng}; qn_ac{ng}(i) == sum(QQ{ng})]; % constraints for ac power flow part 1
+% PP{ng} = sdpvar(nbuses_ac, 1);
+% QQ{ng} = sdpvar(nbuses_ac, 1);
+% % Pij = sdpvar(nbuses_ac, nbuses_ac, 'full');
+% % Qij = sdpvar(nbuses_ac, nbuses_ac, 'full');
+% i=1;
+% for j = 1:nbuses_ac
+%     con_acdc{ng} = [con_acdc{ng}; PP{ng}(j) == vm_ac{ng}(i)*vm_ac{ng}(j)*(GG(i,j)*cos(va_ac{ng}(i)-va_ac{ng}(j))+BB(i,j)*sin(va_ac{ng}(i)-va_ac{ng}(j)))];
+%     con_acdc{ng} = [con_acdc{ng}; QQ{ng}(j) == vm_ac{ng}(i)*vm_ac{ng}(j)*(GG(i,j)*sin(va_ac{ng}(i)-va_ac{ng}(j))-BB(i,j)*cos(va_ac{ng}(i)-va_ac{ng}(j)))];
+% %         if i~=j 
+% %            con_acdc = [con_acdc; Pij(i,j) == (vm_ac(i)^2-vm_ac(i)*vm_ac(j)*cos(va_ac(i)-va_ac(j)))*(-1)*GG(i,j)-vm_ac(i)*vm_ac(j)*(-1)*BB(i,j)*sin(va_ac(i)-va_ac(j))];
+% %            con_acdc = [con_acdc; Qij(i,j) == -(vm_ac(i)^2-vm_ac(i)*vm_ac(j)*cos(va_ac(i)-va_ac(j)))*(-1)*BB(i,j)-vm_ac(i)*vm_ac(j)*(-1)*GG(i,j)*sin(va_ac(i)-va_ac(j))];
+% %         end 
+% end
+% con_acdc{ng} = [con_acdc{ng}; pn_ac{ng}(i) == sum(PP{ng})];
+% con_acdc{ng} = [con_acdc{ng}; qn_ac{ng}(i) == sum(QQ{ng})]; % constraints for ac power flow part 1
+% 
+% PPc{ng} = cell(nbuses_ac, 1);
+% QQc{ng} = cell(nbuses_ac, 1);
+% for i = 2: nbuses_ac  
+%       j = []; a=[]; b=[];
+%       j = [j; i];
+%     if length(frombranchids{i})
+%           k = frombranchids{i}; 
+%           j = [j; branch_ac{ng}(k,2)];
+%     end     
+%     if length(tobranchids{i})
+%           kk = tobranchids{i};
+%           j = [j; branch_ac{ng}(kk,1)];
+%     end
+%        PPc{ng}{i} = sdpvar(length(j),1); 
+%        QQc{ng}{i} = sdpvar(length(j),1); 
+% 
+%        con_acdc{ng} = [con_acdc{ng}; PPc{ng}{i} == vm_ac{ng}(i)*ones(length(j), 1).*vm_ac{ng}(j).*(GG(i,j)'.*cos(va_ac{ng}(i)-va_ac{ng}(j))+BB(i,j)'.*sin(va_ac{ng}(i)-va_ac{ng}(j)))];
+%        con_acdc{ng} = [con_acdc{ng}; QQc{ng}{i} == vm_ac{ng}(i)*ones(length(j), 1).*vm_ac{ng}(j).*(GG(i,j)'.*sin(va_ac{ng}(i)-va_ac{ng}(j))-BB(i,j)'.*cos(va_ac{ng}(i)-va_ac{ng}(j)))];
+%        con_acdc{ng} = [con_acdc{ng}; pn_ac{ng}(i) == sum(PPc{ng}{i})];
+%        con_acdc{ng} = [con_acdc{ng}; qn_ac{ng}(i) == sum(QQc{ng}{i})]; % constraints for power flow part 2
+% end
 
-PPc{ng} = cell(nbuses_ac, 1);
-QQc{ng} = cell(nbuses_ac, 1);
-for i = 2: nbuses_ac  
-      j = []; a=[]; b=[];
-      j = [j; i];
-    if length(frombranchids{i})
-          k = frombranchids{i}; 
-          j = [j; branch_ac{ng}(k,2)];
-    end     
-    if length(tobranchids{i})
-          kk = tobranchids{i};
-          j = [j; branch_ac{ng}(kk,1)];
-    end
-       PPc{ng}{i} = sdpvar(length(j),1); 
-       QQc{ng}{i} = sdpvar(length(j),1); 
+va_ac_mat{ng} = repmat(va_ac{ng}, 1, nbuses_ac);
+va_ac_mat_t{ng} = repmat(va_ac{ng}.', nbuses_ac, 1);
+theta_diff{ng} = va_ac_mat{ng} - va_ac_mat_t{ng}; 
+vn_product{ng} = vm_ac{ng}*vm_ac{ng}.';
+pij_ac{ng} = vn_product{ng} .* (GG .* cos(theta_diff{ng}) + BB .* sin(theta_diff{ng}));
+qij_ac{ng} = vn_product{ng} .* (GG .* sin(theta_diff{ng}) - BB .* cos(theta_diff{ng}));
+con_acdc{ng} = [con_acdc{ng}; pn_ac{ng} == sum(pij_ac{ng}, 2)];
+con_acdc{ng} = [con_acdc{ng}; qn_ac{ng} == sum(qij_ac{ng}, 2)];
 
-       con_acdc{ng} = [con_acdc{ng}; PPc{ng}{i} == vm_ac{ng}(i)*ones(length(j), 1).*vm_ac{ng}(j).*(GG(i,j)'.*cos(va_ac{ng}(i)-va_ac{ng}(j))+BB(i,j)'.*sin(va_ac{ng}(i)-va_ac{ng}(j)))];
-       con_acdc{ng} = [con_acdc{ng}; QQc{ng}{i} == vm_ac{ng}(i)*ones(length(j), 1).*vm_ac{ng}(j).*(GG(i,j)'.*sin(va_ac{ng}(i)-va_ac{ng}(j))-BB(i,j)'.*cos(va_ac{ng}(i)-va_ac{ng}(j)))];
-       con_acdc{ng} = [con_acdc{ng}; pn_ac{ng}(i) == sum(PPc{ng}{i})];
-       con_acdc{ng} = [con_acdc{ng}; qn_ac{ng}(i) == sum(QQc{ng}{i})]; % constraints for power flow part 2
-end
 
 %%  " Building AC/DC Coupling Constraints "
 for i = 1:nbuses_ac
@@ -481,10 +505,6 @@ for i = 1:nbuses_ac
     end
 end
 
-
-%  con_acdc{ng} = [con_acdc{ng}; vm_ac{ng}(conv(:,2)) == vs];
-%  con_acdc{ng} = [con_acdc{ng}; va_ac{ng}(conv(:,2)) == as];
-
 actgen = gen{ng}(:,8);
 if gencost(1,4) == 3
     obj_acdc{ng} = sum(actgen.*( baseMVA^2*gencost(:,5).*pgen{ng}.^2 + baseMVA*gencost(:,6).*pgen{ng} + gencost(:,7) ));
@@ -494,48 +514,52 @@ end % objective
 
 end
 
+cputime = toc; 
+
 Con = []; Obj = 0;
 for ng=1:ngrids
     Con = [Con; con_acdc{ng}];
-    Obj = Obj + obj_acdc{ng};
+    Obj = Obj+obj_acdc{ng};
 end 
-Obj = Obj + sum(convPloss) ;
+
 Con = [Con; con_dc];
 
-Opt = sdpsettings('solver', 'ipopt', 'ipopt.mu_strategy','adaptive',  'ipopt.tol', 1e-7,  ...
+Opt = sdpsettings('solver', 'ipopt', 'ipopt.mu_strategy','adaptive',  'ipopt.tol', 1e-5,  ...
 'ipopt.dual_inf_tol', 1e-1, 'ipopt.compl_inf_tol', 1e-5, 'ipopt.acceptable_compl_inf_tol', 1e-3);
 opfOut = optimize(Con, Obj, Opt);
 
 
 %%  " Showing Power Flow Results "
-fprintf(1,'\n================================================================================');
-fprintf(1,'\n|   AC  Bus Data                                                                 |');
-    fprintf('\n================================================================================');
-    fprintf('\n Bus      Area      Voltage          Generation             Load        ');
-    fprintf('\n #        #    Mag [pu] Ang [deg]   P [MW]   Q [MVAr]   P [MW]  Q [MVAr]');
-    fprintf('\n-----   -----  --------  --------  --------  --------  -------- --------');
+fid = fopen('TestNonlin.txt', 'w');
+fid = 1;
+fprintf(fid,'\n================================================================================');
+fprintf(fid,'\n|   AC Bus Power Flow Results                                                  |');
+    fprintf(fid,'\n================================================================================');
+    fprintf(fid,'\n Bus      Area      Voltage          Generation             Load        ');
+    fprintf(fid,'\n #        #    Mag [pu] Ang [deg]   P [MW]   Q [MVAr]   P [MW]  Q [MVAr]');
+    fprintf(fid,'\n-----   -----  --------  --------  --------  --------  -------- --------');
 
     for ng = 1:ngrids
         genindex = gen{ng}(:,1);
 
         for i = 1:recBuses(ng)
-            fprintf(1,'\n %3d %7d %8.3f %9.3f', i, ng, value(vm_ac{ng}(i)), value(va_ac{ng}(i))/pi*180);
+            fprintf(fid,'\n %3d %7d %8.3f %9.3f', i, ng, value(vm_ac{ng}(i)), value(va_ac{ng}(i))/pi*180);
 
             if i == recRef(ng)
-               fprintf('*')
+               fprintf(fid, '*')
             end
 
             if ismember(i,genindex)
                m = gen{ng}(:,1);
                if i == refbuscount
-                  fprintf(1,'%9.2f %9.2f', value(pgen{ng}(find(m== i), 1))*baseMVA, value(qgen{ng}(find(m== i), 1))*baseMVA );
+                  fprintf(fid,'%9.2f %9.2f', value(pgen{ng}(find(m== i), 1))*baseMVA, value(qgen{ng}(find(m== i), 1))*baseMVA );
                else
-                   fprintf(1,'%10.2f %9.2f', value(pgen{ng}(find(m== i), 1))*baseMVA, value(qgen{ng}(find(m== i), 1))*baseMVA );
+                   fprintf(fid,'%10.2f %9.2f', value(pgen{ng}(find(m== i), 1))*baseMVA, value(qgen{ng}(find(m== i), 1))*baseMVA );
                end
-                fprintf(1,'%10.2f %8.2f', value(pd{ng}(i)*baseMVA), value(qd{ng}(i)*baseMVA) );
+                fprintf(fid,'%10.2f %8.2f', value(pd{ng}(i)*baseMVA), value(qd{ng}(i)*baseMVA) );
             else
-                fprintf(1, '       -         -');
-                fprintf(1,'%12.2f %8.2f', value(pd{ng}(i)*baseMVA), value(qd{ng}(i)*baseMVA) );
+                fprintf(fid, '       -         -');
+                fprintf(fid,'%12.2f %8.2f', value(pd{ng}(i)*baseMVA), value(qd{ng}(i)*baseMVA) );
             end
 
         end
@@ -545,24 +569,27 @@ fprintf(1,'\n|   AC  Bus Data                                                   
     for ng=1:ngrids
         GenCostRes = GenCostRes+value(obj_acdc{ng});
     end 
- fprintf('\n-----   ----- --------  --------  --------  --------  -------- --------');
- fprintf('\n The total generation costs is ＄%.2f(€%.2f)',GenCostRes, GenCostRes/1.08);
- fprintf('\n');
- fprintf('\n');
+ fprintf(fid,'\n-----   ----- --------  --------  --------  --------  -------- --------');
+ fprintf(fid,'\n The total generation costs is ＄%.2f(€%.2f)',GenCostRes, GenCostRes/1.08);
+ fprintf(fid,'\n');
+ fprintf(fid,'\n');
 
 
 
-fprintf(1, '\n================================================================================');
-fprintf(1, '\n|     DC bus data                                                              |');
-fprintf(1, '\n================================================================================');
-fprintf(1, '\n Bus   Bus    AC   DC Voltage   DC Power   PCC Bus Injection   Converter loss');
-fprintf(1, '\n DC #  AC #  Area   Vdc [pu]    Pdc [MW]   Ps [MW]  Qs [MVAr]  Conv_Ploss [MW]');
-fprintf(1, '\n-----  ----  ----  ---------    --------   -------  --------    --------');
+fprintf(fid, '\n================================================================================');
+fprintf(fid, '\n|     DC Bus Power Flow Results                                                |');
+fprintf(fid, '\n================================================================================');
+fprintf(fid, '\n Bus   Bus    AC   DC Voltage   DC Power   PCC Bus Injection   Converter loss');
+fprintf(fid, '\n DC #  AC #  Area   Vdc [pu]    Pdc [MW]   Ps [MW]  Qs [MVAr]  Conv_Ploss [MW]');
+fprintf(fid, '\n-----  ----  ----  ---------    --------   -------  --------    --------');
 
 for i = 1:nbuses_dc
-        fprintf(1,'\n %3d %5d %5d %9.3f %12.3f %9.3f %9.3f %11.3f', i, conv(i,2), conv(i,3), value(vn_dc(i)), value(pn_dc(i))*baseMVA ...
+        fprintf(fid,'\n %3d %5d %5d %9.3f %12.3f %9.3f %9.3f %11.3f', i, conv(i,2), conv(i,3), value(vn_dc(i)), value(pn_dc(i))*baseMVA ...
             , value(ps(i))*baseMVA, value(qs(i))*baseMVA, value(convPloss(i)*baseMVA));
 end
-fprintf(1, '\n-----  ----  ----  ---------    --------   -------  --------    --------');
- fprintf('\n The total converter losses is %.3f MW',sum(value(convPloss))*baseMVA);
- fprintf('\n');
+fprintf(fid, '\n-----  ----  ----  ---------    --------   -------  --------    --------');
+ fprintf(fid,'\n The total converter losses is %.3f MW',sum(value(convPloss))*baseMVA);
+ fprintf(fid,'\n');
+ fprintf(fid,'\n Power flow computation time is %.3fs',cputime);
+ fprintf(fid,'\n');
+ fprintf(fid,'\n');
