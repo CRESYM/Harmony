@@ -3,6 +3,7 @@
 #include "Generator.h"
 #include "Load.h"
 #include "Transformer.h"
+#include "Bus.h"
 
 
 #include <symengine/expression.h>
@@ -92,7 +93,7 @@ int main()
 
 	//Test for element
 	// Create an Element with symbol "R1", 2 input pins, and 2 output pins
-	Element elem("R1", 2, 2);
+	/*Element elem("R1", 2, 2);
 
 	// Print out the element's information
 	elem.printElementInfo();
@@ -109,7 +110,7 @@ int main()
 	std::cout << "Nodes excluding '1.1':" << std::endl;
 	for (const auto& node : filtered_nodes) {
 		std::cout << "  " << node << std::endl;
-	}
+	}*/
 
 /*
 // Test for Transmission Line Parameters
@@ -158,6 +159,23 @@ int main()
 	// Create an instance of Load and compute Y-parameters
 	Load load;
 	load.compute_y_parameters_rlc(R, L, C, load_frequency);*/
+
+	// Example for the IEEE 4-bus system
+	int numBuses = 4;
+	int numBranches = 5;
+
+	// Define the branches as pairs of (fromBus, toBus)
+	std::vector<std::pair<int, int>> branches = {
+		{1, 2},  // Line 1: Bus 1 to Bus 2
+		{1, 3},  // Line 2: Bus 1 to Bus 3
+		{2, 3},  // Line 3: Bus 2 to Bus 3
+		{2, 4},  // Line 4: Bus 2 to Bus 4
+		{3, 4}   // Line 5: Bus 3 to Bus 4
+	};
+
+	// Create a Bus object and print the incidence matrix
+	Bus busSystem(numBuses, numBranches, branches);
+	busSystem.printIncidenceMatrix();
 
 	return 0; 
 }

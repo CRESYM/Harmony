@@ -129,6 +129,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Bus.cpp" />
     <ClCompile Include="Cable.cpp" />
     <ClCompile Include="Constants.cpp" />
     <ClCompile Include="Element.cpp" />
@@ -143,6 +144,7 @@
     <ClCompile Include="Transmissionline.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bus.h" />
     <ClInclude Include="Generator.h" />
     <ClInclude Include="Load.h" />
     <ClInclude Include="Cable.h" />
@@ -156,9 +158,6 @@
     <ClInclude Include="overhead_line.h" />
     <ClInclude Include="Transformer.h" />
     <ClInclude Include="Transmissionline.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Class_Diagram.cd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
