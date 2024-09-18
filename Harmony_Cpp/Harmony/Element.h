@@ -1,6 +1,8 @@
 #ifndef ELEMENT_H
 #define ELEMENT_H
 
+#include "network.h"
+
 #include <string>
 #include <unordered_map>
 #include <stdexcept>
@@ -18,7 +20,8 @@
 #include <symengine/complex_double.h>
 
 
-class Element {
+
+class Element : public Network {
 public:
     std::string element_symbol;
     std::vector<std::string> pins;

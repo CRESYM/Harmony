@@ -138,6 +138,7 @@
     <ClCompile Include="Load.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="abcd_parameters.cpp" />
+    <ClCompile Include="network.cpp" />
     <ClCompile Include="overhead_line.cpp" />
     <ClCompile Include="Eval_parameter.cpp" />
     <ClCompile Include="Transformer.cpp" />
