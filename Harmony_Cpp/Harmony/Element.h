@@ -1,10 +1,18 @@
 #ifndef ELEMENT_H
 #define ELEMENT_H
 
+#include "Constants.h"
 #include <string>
+//#include <iostream>
+
+#include <symengine/expression.h>
+#include <symengine/real_double.h>
+#include <symengine/eval.h>
+#include <symengine/complex_double.h>
+#include <symengine/functions.h>
 #include <iostream>
 
-
+using namespace SymEngine;
 
 class Element {
 public:

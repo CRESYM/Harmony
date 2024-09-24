@@ -130,13 +130,6 @@ using namespace std;
 	// Compute the Y-parameters for the transmission line
 	transmissionLine.compute_y_parameters(R_tl, L_tl, G_tl, C_tl, length, frequency);
 
-	//Test for Transformer Parameters
-	double R_p = 0.5;  // Primary winding resistance (ohms)
-	double X_p = 1.0;  // Primary winding leakage reactance (ohms)
-	double R_s = 0.1;  // Secondary winding resistance (ohms)
-	double X_s = 0.2;  // Secondary winding leakage reactance (ohms)
-	double a = 10.0;   // Turns ratio (primary to secondary)
-
 	// Create an instance of Transformer and compute Y-parameters
 	Transformer transformer;
 	// Compute the Y-parameters for the transformer
@@ -158,10 +151,6 @@ using namespace std;
 	double L = 0.01;
 	double C = 0.001;
 	double load_frequency = 60;
-
-	// Create an instance of Load and compute Y-parameters
-	Load load;
-	load.compute_y_parameters_rlc(R, L, C, load_frequency);*/
 
 	// Example for the IEEE 4-bus system
 	//int numBuses = 4;
