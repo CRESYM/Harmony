@@ -8,11 +8,6 @@
 
 class Element {
 public:
-    std::string element_symbol;
-    int input_pins;
-    int output_pins;
-    void* element_value;  // Placeholder for the element definition
-
     // Parameterized constructor
     Element(const std::string& symbol, int inputPins, int outputPins)
         : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins), element_value(nullptr) {}
@@ -23,6 +18,8 @@ public:
     // Getters
     int getInputPins() const { return input_pins; }
     int getOutputPins() const { return output_pins; }
+    std::string getElementSymbol() const { return element_symbol; } // New getter for element_symbol
+
 
     // Print element information
     void printElementInfo() const {
@@ -32,7 +29,12 @@ public:
     }
 
     // Virtual function to compute Y-parameters
-    virtual void compute_y_parameters(double R_f, double L_f, double X_d, double T_f, double frequency);
+    virtual void compute_y_parameters(double frequency) = 0;
+private:
+    std::string element_symbol;
+    int input_pins;
+    int output_pins;
+    void* element_value;  // Placeholder for the element definition
 };
 
 #endif // ELEMENT_H

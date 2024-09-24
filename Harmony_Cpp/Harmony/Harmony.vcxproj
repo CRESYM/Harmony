@@ -129,6 +129,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Admittance.cpp" />
     <ClCompile Include="Bus.cpp" />
     <ClCompile Include="Cable.cpp" />
     <ClCompile Include="Constants.cpp" />
@@ -145,6 +146,7 @@
     <ClCompile Include="Transmissionline.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Admittance.h" />
     <ClInclude Include="Bus.h" />
     <ClInclude Include="Generator.h" />
     <ClInclude Include="Load.h" />

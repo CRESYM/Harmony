@@ -108,6 +108,9 @@
     <ClCompile Include="network.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Admittance.cpp">
+      <Filter>Source Files\Elements\Impedance</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Impedance.h">
@@ -151,6 +154,9 @@
     </ClInclude>
     <ClInclude Include="Bus.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Admittance.h">
+      <Filter>Header Files\Elements\Impedance</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

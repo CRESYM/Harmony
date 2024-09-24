@@ -18,10 +18,12 @@
 using Net = std::vector<std::tuple<std::string, std::string>>;
 
 class Network {
-public:
+private: 
     std::unordered_map<std::string, Bus*> buses; // Map of bus names to buses
     std::unordered_map<std::string, Element*> elements;  // Map of designators to elements
     std::unordered_map<Bus*, std::vector<Element*>> connections; // Connections between buses and elements
+
+public:
 
 	// Constructor
 	Network() {}
@@ -62,6 +64,11 @@ public:
     // Print the connections
     void printConnections();
 
+    // Getters for private members
+    const std::unordered_map<std::string, Bus*>& getBuses() const { return buses; }
+    const std::unordered_map<std::string, Element*>& getElements() const { return elements; }
+    const std::unordered_map<Bus*, std::vector<Element*>>& getConnections() const { return connections; }
+
    /* // Function to add a pin to the network
     void addPin(const std::tuple<std::string, std::string>& pin);
 
@@ -76,17 +83,6 @@ public:
 
     // Function to connect all elements' pins with their nets
     //void connectPins();
-
-private:
-    //std::unordered_map<std::string, Element*> elements;  // Map of designators to elements
-    //std::unordered_map<std::string, Net> nets;          // Map of net names to nets (pins)
-    //std::unordered_map<std::string, std::vector<std::string>> connections;  // Node connections
-
-    // Helper function to find the net for a given pin
-   // Net& netFor(const std::tuple<std::string, std::string>& pin);
-
-    // Helper function to delete nets associated with a designator
-   // void deleteNet(const std::string& designator);
 };
 
 #endif // NETWORK_H

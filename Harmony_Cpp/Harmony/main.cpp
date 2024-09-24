@@ -1,11 +1,12 @@
 #include "Element.h"
 //#include "TransmissionLine.h"
 #include "Generator.h"
-//#include "Load.h"
+#include "Load.h"
 //#include "Transformer.h"
 #include "Bus.h"
 #include "Impedance.h"
 #include "network.h"
+#include "Admittance.h"
 
 
 #include <symengine/expression.h>
@@ -178,6 +179,11 @@ using namespace std;
 	// Create a Bus object and print the incidence matrix
 	//Bus busSystem(numBuses, numBranches, branches);
 	//busSystem.printIncidenceMatrix();
+
+//Test Admittance
+//std::vector<RCP<Symbol>> admittanceValues; // Initialize with your values
+//Admittance* admittance = new Admittance("A1", 2, admittanceValues);
+
 int main()
 {
 	Network myNetwork;
@@ -187,8 +193,11 @@ int main()
 	Bus* bus2 = new Bus("Bus2");
 
 	// Create Impedance and Generator objects
-	Impedance* impedance1 = new Impedance("Z1", 2, 2);  // Symbol, inputPins, outputPins
-	Impedance* impedance2 = new Impedance("Z2", 2, 2);
+	//Impedance* impedance1 = new Impedance("Z1", 2, 2);  // Symbol, inputPins, outputPins
+	//Impedance* impedance2 = new Impedance("Z2", 2, 2);
+	Load* Load1 = new Load("L1", 2, 2);
+	Load* Load2 = new Load("L1", 2, 2);
+
 	Generator* generator = new Generator("G1", 1, 1);
 
 	// Add buses to the network
@@ -196,29 +205,45 @@ int main()
 	myNetwork.addBus("Bus2", bus2);
 
 	// Add elements to the network
-	myNetwork.addElement("Z1", impedance1);
-	myNetwork.addElement("Z2", impedance2);
+	myNetwork.addElement("Z1", Load1);
+	myNetwork.addElement("Z2", Load2);
 	myNetwork.addElement("G1", generator);
 
 	// Connect elements to buses
-	myNetwork.connectElementToBus(impedance1, bus1);
-	myNetwork.connectElementToBus(impedance2, bus2);
+	myNetwork.connectElementToBus(Load1, bus1);
+	myNetwork.connectElementToBus(Load2, bus2);
 	myNetwork.connectElementToBus(generator, bus1);
 
 	// Print the connections to verify the network
 	myNetwork.printConnections();
 
-	// Compute Y parameters for the generator
-	generator->compute_y_parameters(0.02, 0.05, 1.0, 0.1, 60.0);
+	// Frequency for Y-parameter computation
+	double frequency = 60.0; // Example frequency in Hz
 
+	// Compute Y parameters for the Generator
+	std::cout << "\nComputing Y-parameters for Generator:\n";
+	generator->compute_y_parameters(frequency);
+
+	// Compute Y parameters for the Impedance elements
+	std::cout << "\nComputing Y-parameters for Impedance Z1:\n";
+	Load1->compute_y_parameters(frequency);
+
+	std::cout << "\nComputing Y-parameters for Impedance Z2:\n";
+	Load2->compute_y_parameters(frequency);
+
+	// Optionally, compute Y parameters for the Load
+	// std::cout << "\nComputing Y-parameters for Load:\n";
+	//load->compute_y_parameters(frequency); // Uncomment if needed
 
 	// Clean up dynamically allocated memory
 	delete bus1;
 	delete bus2;
-	delete impedance1;
-	delete impedance2;
+	delete Load1;
+	delete Load2;
 	delete generator;
 
+	// Optionally, delete the Load object if it was created
+	// delete load; // Uncomment if needed
 
-	return 0; 
+	return 0;
 }
