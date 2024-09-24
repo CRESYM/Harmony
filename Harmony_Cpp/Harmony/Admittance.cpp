@@ -8,6 +8,7 @@ Admittance::Admittance(int pins, vector<RCP<Symbol>> values) {
     Element::input_pins = pins;
     Element::output_pins = pins;
     admittance = RCP<Symbol>[pins][pins];
+
     if (values.capacity() != 0)  // if there are entries
     {
         if (pins != 0) // if there are element connections check further

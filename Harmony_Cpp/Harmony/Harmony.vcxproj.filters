@@ -64,6 +64,12 @@
     <Filter Include="Source Files\Elements\Generator">
       <UniqueIdentifier>{31a1eb71-0a46-45ce-becd-e8645b8e4be0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Elements\Admittance">
+      <UniqueIdentifier>{ea77ca02-1507-43d0-b556-811869680c86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Admittance">
+      <UniqueIdentifier>{741f081e-a1aa-43a5-8304-5c335091b715}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -108,6 +114,9 @@
     <ClCompile Include="network.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Admittance.cpp">
+      <Filter>Source Files\Elements\Admittance</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Impedance.h">
@@ -151,6 +160,9 @@
     </ClInclude>
     <ClInclude Include="Bus.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Admittance.h">
+      <Filter>Header Files\Elements\Admittance</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

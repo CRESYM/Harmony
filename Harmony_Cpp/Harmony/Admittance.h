@@ -14,6 +14,8 @@
 #include <symengine/complex.h>
 #include <symengine/complex_double.h>
 
+using namespace SymEngine;
+
 
 /*
 Creates admittance with specified number of input/output pins `pins`. The admittance expression
