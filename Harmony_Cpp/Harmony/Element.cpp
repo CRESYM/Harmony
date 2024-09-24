@@ -1,10 +1,24 @@
 // element.cpp
 
 #include "element.h"
-#include <iostream>
-#include <stdexcept>
+#include "Constants.h"
 
-// Default constructor
+#include <symengine/expression.h>
+#include <symengine/real_double.h>
+#include <symengine/eval.h>
+#include <symengine/complex_double.h>
+#include <symengine/functions.h>
+#include <iostream>
+
+using namespace SymEngine;
+
+// Destructor definition
+Element::~Element() {
+    // If you need to clean up resources, do it here.
+    // Currently, there's nothing to clean up, but it’s a good practice to define it.
+}
+
+/*// Default constructor
 Element::Element()
     : element_symbol(""), input_pins(0), output_pins(0), element_value(nullptr) {
     // Initialize default state
@@ -95,5 +109,30 @@ void Element::printElementInfo() const {
     for (const auto& pin : pins) {
         std::cout << "  " << pin << std::endl;
     }
-}
+}*/
+void Element::compute_y_parameters(double R_f, double L_f, double X_d, double T_f, double frequency) {
+    std::cout << "Computing Y-parameters for element: " << element_symbol << std::endl;
 
+    RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
+    RCP<const Basic> s = mul(I, omega);
+
+    RCP<const Basic> R_f_val = real_double(R_f);
+    RCP<const Basic> L_f_val = real_double(L_f);
+    RCP<const Basic> Z_f = add(R_f_val, mul(s, L_f_val));
+    RCP<const Basic> Y_f = div(real_double(1), Z_f);
+
+    RCP<const Basic> X_d_val = real_double(X_d);
+    RCP<const Basic> Z_d = mul(I, X_d_val);
+    RCP<const Basic> T_f_val = real_double(T_f);
+    RCP<const Basic> H_f = div(real_double(1), add(mul(T_f_val, s), real_double(1)));
+
+    RCP<const Basic> Y11 = Y_f;
+    RCP<const Basic> Y12 = neg(div(H_f, Z_d));
+    RCP<const Basic> Y21 = real_double(0);
+    RCP<const Basic> Y22 = neg(div(real_double(1), Z_d));
+
+    std::cout << "|Element Y11|: " << eval_double(*abs(Y11)) << " S" << std::endl;
+    std::cout << "|Element Y12|: " << eval_double(*abs(Y12)) << " S" << std::endl;
+    std::cout << "|Element Y21|: " << eval_double(*abs(Y21)) << " S" << std::endl;
+    std::cout << "|Element Y22|: " << eval_double(*abs(Y22)) << " S" << std::endl;
+}

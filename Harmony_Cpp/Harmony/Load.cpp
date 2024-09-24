@@ -7,7 +7,7 @@
 
 using namespace SymEngine;
 
-void Load::compute_y_parameters_rlc(double R, double L, double C, double frequency)
+/*void Load::compute_y_parameters_rlc(double R, double L, double C, double frequency)
 {
     //RCP<const Basic> pi = real_double(3.141592653589793);
     //RCP<const Basic> omega = mul(real_double(2), mul(pi, real_double(frequency)));
@@ -47,3 +47,4 @@ void Load::compute_y_parameters_rlc(double R, double L, double C, double frequen
     std::cout << "|Load Y_param3|: " << Y_param3_abs << " S" << std::endl;
     std::cout << "|Load Y_param4|: " << Y_param4_abs << " S" << std::endl;
 }
+*/

@@ -1,10 +1,10 @@
 #include "Transformer.h"
 #include <iostream>
 
-using namespace SymEngine;
+//using namespace SymEngine;
 
 
-void Transformer::compute_y_parameters_transformer(double R_p, double X_p, double R_s, double X_s, double a)
+/*void Transformer::compute_y_parameters_transformer(double R_p, double X_p, double R_s, double X_s, double a)
 {
     RCP<const Basic> R_p_val = real_double(R_p);
     RCP<const Basic> X_p_val = real_double(X_p);
@@ -36,4 +36,4 @@ void Transformer::compute_y_parameters_transformer(double R_p, double X_p, doubl
     std::cout << "|Transformer Y_param2|: " << Y_param2_abs << " S" << std::endl;
     std::cout << "|Transformer Y_param3|: " << Y_param3_abs << " S" << std::endl;
     std::cout << "|Transformer Y_param4|: " << Y_param4_abs << " S" << std::endl;
-}
+}*/

@@ -6,11 +6,14 @@
 
 class Load : public Element {
 public:
-	Load() {}
-	~Load() {}
+    // Parameterized constructor that calls the base class constructor
+   // Load(const std::string& symbol, int inputPins, int outputPins)
+    //    : Element(symbol, inputPins, outputPins) {}
 
-	void compute_y_parameters_rlc(double R, double L, double C, double frequency);
-private:
+  //  ~Load() {}
+
+    //void compute_y_parameters_rlc(double R, double L, double C, double frequency);
+//private:
 };
 
 #endif

@@ -6,11 +6,14 @@
 
 class Transformer : public Element {
 public:
-	Transformer() {}
-	~Transformer() {}
+    // Parameterized constructor that calls the base class constructor
+   // Transformer(const std::string& symbol, int inputPins, int outputPins)
+   //     : Element(symbol, inputPins, outputPins) {}
 
-	void compute_y_parameters_transformer(double R_p, double X_p, double R_s, double X_s, double a);
-private:
+  //  ~Transformer() {}
+
+   // void compute_y_parameters_transformer(double R_p, double X_p, double R_s, double X_s, double a);
+//private:
 };
 
 #endif

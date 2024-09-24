@@ -1,9 +1,11 @@
 #include "Element.h"
-#include "TransmissionLine.h"
+//#include "TransmissionLine.h"
 #include "Generator.h"
-#include "Load.h"
-#include "Transformer.h"
+//#include "Load.h"
+//#include "Transformer.h"
 #include "Bus.h"
+#include "Impedance.h"
+#include "network.h"
 
 
 #include <symengine/expression.h>
@@ -18,8 +20,8 @@
 
 using namespace std;
 
-int main()
-{
+//int main()
+//{
 	/*using namespace SymEngine;
 
 	// Define a Cable object
@@ -161,21 +163,62 @@ int main()
 	load.compute_y_parameters_rlc(R, L, C, load_frequency);*/
 
 	// Example for the IEEE 4-bus system
-	int numBuses = 4;
-	int numBranches = 5;
+	//int numBuses = 4;
+	//int numBranches = 5;
 
 	// Define the branches as pairs of (fromBus, toBus)
-	std::vector<std::pair<int, int>> branches = {
+	/*std::vector<std::pair<int, int>> branches = {
 		{1, 2},  // Line 1: Bus 1 to Bus 2
 		{1, 3},  // Line 2: Bus 1 to Bus 3
 		{2, 3},  // Line 3: Bus 2 to Bus 3
 		{2, 4},  // Line 4: Bus 2 to Bus 4
 		{3, 4}   // Line 5: Bus 3 to Bus 4
-	};
+	};*/
 
 	// Create a Bus object and print the incidence matrix
-	Bus busSystem(numBuses, numBranches, branches);
-	busSystem.printIncidenceMatrix();
+	//Bus busSystem(numBuses, numBranches, branches);
+	//busSystem.printIncidenceMatrix();
+int main()
+{
+	Network myNetwork;
+
+	// Create Bus objects
+	Bus* bus1 = new Bus("Bus1");
+	Bus* bus2 = new Bus("Bus2");
+
+	// Create Impedance and Generator objects
+	Impedance* impedance1 = new Impedance("Z1", 2, 2);  // Symbol, inputPins, outputPins
+	Impedance* impedance2 = new Impedance("Z2", 2, 2);
+	Generator* generator = new Generator("G1", 1, 1);
+
+	// Add buses to the network
+	myNetwork.addBus("Bus1", bus1);
+	myNetwork.addBus("Bus2", bus2);
+
+	// Add elements to the network
+	myNetwork.addElement("Z1", impedance1);
+	myNetwork.addElement("Z2", impedance2);
+	myNetwork.addElement("G1", generator);
+
+	// Connect elements to buses
+	myNetwork.connectElementToBus(impedance1, bus1);
+	myNetwork.connectElementToBus(impedance2, bus2);
+	myNetwork.connectElementToBus(generator, bus1);
+
+	// Print the connections to verify the network
+	myNetwork.printConnections();
+
+	// Compute Y parameters for the generator
+	generator->compute_y_parameters(0.02, 0.05, 1.0, 0.1, 60.0);
+
+
+	// Clean up dynamically allocated memory
+	delete bus1;
+	delete bus2;
+	delete impedance1;
+	delete impedance2;
+	delete generator;
+
 
 	return 0; 
 }

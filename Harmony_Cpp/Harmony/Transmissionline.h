@@ -17,11 +17,13 @@
 
 class TransmissionLine : public Element {
 public:
-	TransmissionLine() {}
-	~TransmissionLine() {}
+    // Parameterized constructor that calls the base class constructor
+   // TransmissionLine(const std::string& symbol, int inputPins, int outputPins)
+    //    : Element(symbol, inputPins, outputPins) {}
 
-	void compute_y_parameters(double R, double L, double G, double C, double length, double frequency);
-private:
+ //   ~TransmissionLine() {}
+
+   // void compute_y_parameters(double R, double L, double G, double C, double length, double frequency);
 };
 
 #endif

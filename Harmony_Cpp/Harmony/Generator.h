@@ -5,10 +5,12 @@
 
 class Generator : public Element {
 public:
-	Generator() {}
-	~Generator() {}
+    Generator(const std::string& symbol, int inputPins, int outputPins)
+        : Element(symbol, inputPins, outputPins) {}
 
-	void compute_y_parameters_generator(double R_f, double L_f, double X_d, double T_f, double frequency);
+    ~Generator() {}
+
+	//void compute_y_parameters_generator(double R_f, double L_f, double X_d, double T_f, double frequency);
 private:
 };
 

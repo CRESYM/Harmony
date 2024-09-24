@@ -1,11 +1,11 @@
-#include "Element.h"
-#include "Generator.h"
-#include "Constants.h"
-#include <iostream>
+//#include "Element.h"
+//#include "Generator.h"
+//#include "Constants.h"
+//#include <iostream>
 
-using namespace SymEngine; 
+//using namespace SymEngine; 
 
-void Generator::compute_y_parameters_generator(double R_f, double L_f, double X_d, double T_f, double frequency)
+/*void Generator::compute_y_parameters_generator(double R_f, double L_f, double X_d, double T_f, double frequency)
 {
     //RCP<const Basic> pi = real_double(3.141592653589793);
     //RCP<const Basic> omega = mul(real_double(2), mul(pi, real_double(frequency)));
@@ -46,9 +46,9 @@ void Generator::compute_y_parameters_generator(double R_f, double L_f, double X_
     double Y12_abs_val = eval_double(*Y12_abs);
     double Y21_abs_val = eval_double(*Y21_abs);
     double Y22_abs_val = eval_double(*Y22_abs);
-
+ 
     std::cout << "|Generator Y11|: " << Y11_abs_val << " S" << std::endl;
     std::cout << "|Generator Y12|: " << Y12_abs_val << " S" << std::endl;
     std::cout << "|Generator Y21|: " << Y21_abs_val << " S" << std::endl;
     std::cout << "|Generator Y22|: " << Y22_abs_val << " S" << std::endl;
-}
+}*/

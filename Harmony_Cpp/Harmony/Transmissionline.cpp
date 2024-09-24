@@ -7,7 +7,7 @@
 
 using namespace SymEngine;
 
-void TransmissionLine::compute_y_parameters(double R, double L, double G, double C, double length, double frequency) {
+/*void TransmissionLine::compute_y_parameters(double R, double L, double G, double C, double length, double frequency) {
     //double omega = 2 * M_PI * frequency;
 
     // Convert PI to double
@@ -81,5 +81,5 @@ void TransmissionLine::compute_y_parameters(double R, double L, double G, double
     std::cout << "Transmission Line Y12: " << Y12_val << " S" << std::endl;
     std::cout << "Transmission Line Y21: " << Y21_val << " S" << std::endl;
     std::cout << "Transmission Line Y22: " << Y22_val << " S" << std::endl;
-}
+}*/
 

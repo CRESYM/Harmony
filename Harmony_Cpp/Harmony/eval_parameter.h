@@ -15,7 +15,7 @@
 
 using namespace SymEngine;
 
-class Eval_parameter : public Element {
+/*class Eval_parameter : public Element {
 public:
 	std::pair<std::vector<std::vector<std::complex<double>>>, std::vector<std::vector<std::complex<double>>>> eval_parameters(const Cable& c, const std::complex<double>& s_param);
 
@@ -41,7 +41,7 @@ private:
 			throw;
 		}
 	}
-};
+};*/
 
 #endif //EVAL_PARAMETER_H
 

@@ -71,7 +71,7 @@ public:
 };
 
 // Define the Cable class as a subtype (<:) of abstract type Transmission_line
-class Cable : public TransmissionLine {
+/*class Cable : public TransmissionLine {
 public:
 	// Constructor
 	Cable() :
@@ -192,11 +192,11 @@ private:
 	// Private member variables
 	double length;   //line length [m]
 	//dictionary with a particular order. Key: Symbol-> C1, C2, C3 and C4. Value: Conductor-> Mutable Struct Conductor, defined above
-	std::unordered_map<std::string, Conductor> conductors = { {"Symbol", Conductor(/* Constructor arguments for Conductor*/)},
-															  {"Conductor", Conductor(/* Constructor arguments for Conductor*/)} };
+	std::unordered_map<std::string, Conductor> conductors = { {"Symbol", Conductor(/* Constructor arguments for Conductor)},
+															  {"Conductor", Conductor(/* Constructor arguments for Conductor)} };
 	//dictionary with a particular order. Key: Symbol-> I1, I2, I3 and I4. Value: Insulator-> Mutable Struct Insulator, defined above
-	std::unordered_map<std::string, Insulator> insulators = { {"Symbol", Insulator(/* Constructor arguments for Conductor*/)},
-															  {"Conductor", Insulator(/* Constructor arguments for Conductor*/)} };
+	std::unordered_map<std::string, Insulator> insulators = { {"Symbol", Insulator(/* Constructor arguments for Conductor)},
+															  {"Conductor", Insulator(/* Constructor arguments for Conductor)} };
 	//indicates all variables are real number, vector composed by tuple of real numbers. e.g. positions=[(0,0),(1,1)]. Cables positions 1st:x=0, y=0. 2nd: x=1, y=1.
 	std::vector<std::pair<double, double>> positions;
 	//(μᵣ, ϵᵣ, ρ) in units ([], [], [Ωm]) compact way of representing the type for a tuple of length N where all elements are of type Int or Float64.
@@ -216,7 +216,7 @@ private:
 
 	std::vector<std::vector<RCP<const Basic>>> CZ;
 	std::vector<std::vector<RCP<const Basic>>> CP;
-};
+};*/
 
 #endif
 
