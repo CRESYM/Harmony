@@ -15,7 +15,7 @@
 //class Element;
 
 // Type alias for a pair of element designator and pin name
-using Net = std::vector<std::tuple<std::string, std::string>>;
+using Net = std::unordered_map<Bus*, std::vector<Element*>>;
 
 class Network {
 private: 

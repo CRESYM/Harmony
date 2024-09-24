@@ -39,8 +39,8 @@ Admittance::Admittance(const std::string& symbol, int pins, vector<RCP<Symbol>> 
 
 // Destructor to free allocated memory
 Admittance::~Admittance() {
-   // for (int i = 0; i < input_pins; i++) {
-    for (int i = 0; i < getInputPins(); i++) { // Use the getter method
+    //for (int i = 0; i < input_pins; i++) {
+    for (int i = 0; i < getInputPins(); i++) { // Use getter to access input_pins
         delete[] admittance[i];
     }
     delete[] admittance;

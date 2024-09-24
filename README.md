@@ -9,3 +9,5 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 (ii) analyse complex situations; 
 (iii) refine mitigation measures; and  
 (iv) lower overall equipment costs. 
+
+## Contributors
