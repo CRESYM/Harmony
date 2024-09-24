@@ -15,7 +15,7 @@
 //class Element;
 
 // Type alias for a pair of element designator and pin name
-using Net = std::vector<std::tuple<std::string, std::string>>;
+using Net = std::unordered_map<Bus*, std::vector<Element*>>;
 
 class Network {
 public:
@@ -77,13 +77,17 @@ public:
     // Function to connect all elements' pins with their nets
     //void connectPins();
 
+    // Helper function to find the net for a given pin
+    Net& netFor(std::string start_bus, std::string end_bus);
+
+    void compute_equivalent_admittance(std::string start_bus, std::string end_bus);
+
 private:
     //std::unordered_map<std::string, Element*> elements;  // Map of designators to elements
     //std::unordered_map<std::string, Net> nets;          // Map of net names to nets (pins)
     //std::unordered_map<std::string, std::vector<std::string>> connections;  // Node connections
 
-    // Helper function to find the net for a given pin
-   // Net& netFor(const std::tuple<std::string, std::string>& pin);
+    
 
     // Helper function to delete nets associated with a designator
    // void deleteNet(const std::string& designator);
