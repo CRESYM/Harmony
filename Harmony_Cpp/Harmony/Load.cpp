@@ -50,7 +50,7 @@ using namespace SymEngine;
 */
 
 // Load-specific Y-parameters
-void Load::compute_y_parameters(double frequency) {
+/*void Load::compute_y_parameters(double frequency) {
 
     RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
 
@@ -86,4 +86,4 @@ void Load::compute_y_parameters(double frequency) {
     std::cout << "|Load Y_param2|: " << Y_param2_abs << " S" << std::endl;
     std::cout << "|Load Y_param3|: " << Y_param3_abs << " S" << std::endl;
     std::cout << "|Load Y_param4|: " << Y_param4_abs << " S" << std::endl;
-}
+}*/

@@ -173,34 +173,36 @@ using namespace std;
 //std::vector<RCP<Symbol>> admittanceValues; // Initialize with your values
 //Admittance* admittance = new Admittance("A1", 2, admittanceValues);
 
-int main()
-{
+int main() {
 	Network myNetwork;
 
 	// Create Bus objects
 	Bus* bus1 = new Bus("Bus1");
 	Bus* bus2 = new Bus("Bus2");
 
-	// Create Impedance and Generator objects
-	//Impedance* impedance1 = new Impedance("Z1", 2, 2);  // Symbol, inputPins, outputPins
-	//Impedance* impedance2 = new Impedance("Z2", 2, 2);
-	Load* Load1 = new Load("L1", 2, 2);
-	Load* Load2 = new Load("L1", 2, 2);
-
+	// Create Load and Generator objects
+	Load* load1 = new Load("L1", 2, 2); // Assuming it is a three-phase load
+	Load* load2 = new Load("L2", 2, 2);
 	Generator* generator = new Generator("G1", 1, 1);
+
+	// Check if the generator was created properly
+	if (!generator) {
+		std::cerr << "Failed to create generator." << std::endl;
+		return -1;
+	}
 
 	// Add buses to the network
 	myNetwork.addBus("Bus1", bus1);
 	myNetwork.addBus("Bus2", bus2);
 
 	// Add elements to the network
-	myNetwork.addElement("Z1", Load1);
-	myNetwork.addElement("Z2", Load2);
+	myNetwork.addElement("L1", load1);
+	myNetwork.addElement("L2", load2);
 	myNetwork.addElement("G1", generator);
 
 	// Connect elements to buses
-	myNetwork.connectElementToBus(Load1, bus1);
-	myNetwork.connectElementToBus(Load2, bus2);
+	myNetwork.connectElementToBus(load1, bus1);
+	myNetwork.connectElementToBus(load2, bus2);
 	myNetwork.connectElementToBus(generator, bus1);
 
 	// Print the connections to verify the network
@@ -209,30 +211,37 @@ int main()
 	// Frequency for Y-parameter computation
 	double frequency = 60.0; // Example frequency in Hz
 
-	// Compute Y parameters for the Generator
-	std::cout << "\nComputing Y-parameters for Generator:\n";
-	generator->compute_y_parameters(frequency);
+	// Compute Y parameters with error handling
+	try {
+		std::cout << "\nComputing Y-parameters for Generator:\n";
+		generator->compute_y_parameters(frequency);
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Error computing Y-parameters for Generator: " << e.what() << std::endl;
+	}
 
-	// Compute Y parameters for the Impedance elements
-	std::cout << "\nComputing Y-parameters for Impedance Z1:\n";
-	Load1->compute_y_parameters(frequency);
+	try {
+		std::cout << "\nComputing Y-parameters for Load L1:\n";
+		load1->compute_y_parameters(frequency);
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Error computing Y-parameters for Load L1: " << e.what() << std::endl;
+	}
 
-	std::cout << "\nComputing Y-parameters for Impedance Z2:\n";
-	Load2->compute_y_parameters(frequency);
-
-	// Optionally, compute Y parameters for the Load
-	// std::cout << "\nComputing Y-parameters for Load:\n";
-	//load->compute_y_parameters(frequency); // Uncomment if needed
+	try {
+		std::cout << "\nComputing Y-parameters for Load L2:\n";
+		load2->compute_y_parameters(frequency);
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Error computing Y-parameters for Load L2: " << e.what() << std::endl;
+	}
 
 	// Clean up dynamically allocated memory
 	delete bus1;
 	delete bus2;
-	delete Load1;
-	delete Load2;
+	delete load1;
+	delete load2;
 	delete generator;
-
-	// Optionally, delete the Load object if it was created
-	// delete load; // Uncomment if needed
 
 	return 0;
 }
