@@ -3,17 +3,7 @@
 
 #include "Element.h"
 #include <vector> // Include vector header
-#include <symengine/symbol.h>
-#include <symengine/add.h>
-#include <symengine/mul.h>
-#include <symengine/pow.h>
-#include <symengine/real_double.h>
-#include <symengine/eval.h>
-#include <symengine/functions.h>
-#include <symengine/complex.h>
-#include <symengine/complex_double.h>
 
-using namespace SymEngine;
 
 using namespace SymEngine; // Use the SymEngine namespace
 

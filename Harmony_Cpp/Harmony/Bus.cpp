@@ -1,5 +1,5 @@
-#include "bus.h"
-#include "element.h"
+#include "Bus.h"
+#include "Element.h"
 
 #include <iostream>
 #include <sstream>  // Include for string streams

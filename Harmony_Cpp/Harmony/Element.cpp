@@ -5,12 +5,6 @@
 #include "Load.h"
 #include "Generator.h"
 #include "Impedance.h"
-
-#include <symengine/expression.h>
-#include <symengine/real_double.h>
-#include <symengine/eval.h>
-#include <symengine/complex_double.h>
-#include <symengine/functions.h>
 #include <iostream>
 
 using namespace SymEngine;
