@@ -5,6 +5,27 @@
 #include "Constants.h"
 #include <iostream>
 
+Load::Load(const std::string& symbol, int pins, std::vector<double> values) : Element(symbol, pins, pins){
+    if (pins == 0)
+        throw std::invalid_argument("Invalid number of pins, must be greater than 0!");
+
+    int capacity = values.capacity();
+    if (capacity == 3) {
+        R(pins, values[0]);
+        L(pins, values[1]);
+        C(pins, values[2]);
+    }
+    else if (capacity == 3 * pins) {
+        for (int i; i < pins; i++) {
+            R.push_back(values[i]);
+            L.push_back(values[pins + i]);
+            C.push_back(values[2 * pins + 1]);
+        }
+    }
+    else
+        throw std::invalid_argument("Invalid number of values, it should be equal to the number pins, or 3 x number of pins.");
+}
+
 // Load-specific Y-parameters for three-phase
 
 void Load::compute_y_parameters(double frequency) {
@@ -65,42 +86,3 @@ void Load::compute_y_parameters(double frequency) {
     }
 }
 
-// Load-specific Y-parameters
-//Single-phase
-/*void Load::compute_y_parameters(double frequency) {
-
-    RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
-
-
-    RCP<const Basic> R_val = real_double(R);
-    RCP<const Basic> L_val = real_double(L);
-    RCP<const Basic> C_val = real_double(C);
-    RCP<const Basic> j = I;
-
-    RCP<const Basic> Z_RLC = add(add(R_val, mul(j, mul(omega, L_val))), mul(j, div(real_double(-1), mul(omega, C_val))));
-
-    RCP<const Basic> Y_RLC = div(real_double(1), Z_RLC);
-
-    RCP<const Basic> Y_param1 = Y_RLC;
-    RCP<const Basic> Y_param2 = real_double(0);
-    RCP<const Basic> Y_param3 = real_double(0);
-    RCP<const Basic> Y_param4 = real_double(0);
-
-    RCP<const Number> Y_param1_eval = rcp_static_cast<const Number>(evalf(*Y_param1, 53));
-    RCP<const Number> Y_param2_eval = rcp_static_cast<const Number>(evalf(*Y_param2, 53));
-    RCP<const Number> Y_param3_eval = rcp_static_cast<const Number>(evalf(*Y_param3, 53));
-    RCP<const Number> Y_param4_eval = rcp_static_cast<const Number>(evalf(*Y_param4, 53));
-
-    RCP<const Basic> Y_param1_abs = abs(Y_param1_eval);
-
-    double Y_param1_abs_val = eval_double(*Y_param1_abs);
-
-    double Y_param2_abs = 0.0;
-    double Y_param3_abs = 0.0;
-    double Y_param4_abs = 0.0;
-
-    std::cout << "|Load Y_param1|: " << Y_param1_abs_val << " S" << std::endl;
-    std::cout << "|Load Y_param2|: " << Y_param2_abs << " S" << std::endl;
-    std::cout << "|Load Y_param3|: " << Y_param3_abs << " S" << std::endl;
-    std::cout << "|Load Y_param4|: " << Y_param4_abs << " S" << std::endl;
-}*/

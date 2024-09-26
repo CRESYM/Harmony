@@ -4,14 +4,21 @@
 #include "Element.h"
 #include <vector>
 
+/*
+Creates load with resistive, inductive and capacitive components in series. Its constructor 
+gets information about pin number and furthermore, R, L, C values. These values can be given 
+as single value per each component R, L, C, and thus, input 3 values as vector. Or there can be
+a separate value per each component R, L, C per pin/phase and thus, it gets 3 * pins input 
+values.
+*/
+
 class Load : public Element {
 public:
     //Single-phase
     //Load(const std::string& symbol, int inputPins, int outputPins)
         //: Element(symbol, inputPins, outputPins) {}
 
-    Load(const std::string& symbol, int inputPins, int outputPins)
-        : Element(symbol, inputPins, outputPins), R(3, 10.0), L(3, 0.01), C(3, 0.001) {}
+    Load(const std::string& symbol, int pins, std::vector<double> values);
 
     ~Load() {}
 

@@ -55,6 +55,8 @@ public:
     // Virtual function to compute Y-parameters (to be implemented by derived classes)
     virtual void compute_y_parameters(double frequency) = 0;
 
+    virtual void print_element_values();
+
 protected:
     std::string element_symbol;
     int input_pins;
