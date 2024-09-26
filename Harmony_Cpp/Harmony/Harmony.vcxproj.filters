@@ -58,9 +58,6 @@
     <Filter Include="Header Files\Elements\Tools">
       <UniqueIdentifier>{9779be3d-05cb-45b6-9189-5d9c7f29e71b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Elements\Generetor">
-      <UniqueIdentifier>{5b3de7fe-51f8-4d76-b655-6694558d975b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Elements\Generator">
       <UniqueIdentifier>{31a1eb71-0a46-45ce-becd-e8645b8e4be0}</UniqueIdentifier>
     </Filter>
@@ -69,6 +66,15 @@
     </Filter>
     <Filter Include="Source Files\Elements\Admittance">
       <UniqueIdentifier>{741f081e-a1aa-43a5-8304-5c335091b715}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Source">
+      <UniqueIdentifier>{4ae9f8c2-d2c2-4020-83d5-0478524b4b87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Generator">
+      <UniqueIdentifier>{5b3de7fe-51f8-4d76-b655-6694558d975b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Source">
+      <UniqueIdentifier>{8f2539f8-ec43-419a-8667-90bc20294b17}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -115,7 +121,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Admittance.cpp">
-      <Filter>Source Files\Elements\Impedance</Filter>
+      <Filter>Source Files\Elements\Admittance</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -150,19 +156,19 @@
       <Filter>Header Files\Elements</Filter>
     </ClInclude>
     <ClInclude Include="Generator.h">
-      <Filter>Header Files\Elements\Generetor</Filter>
+      <Filter>Header Files\Elements\Generator</Filter>
     </ClInclude>
     <ClInclude Include="Load.h">
-      <Filter>Header Files\Elements\Generetor</Filter>
+      <Filter>Header Files\Elements\Generator</Filter>
     </ClInclude>
     <ClInclude Include="Transformer.h">
-      <Filter>Header Files\Elements\Generetor</Filter>
+      <Filter>Header Files\Elements\Generator</Filter>
     </ClInclude>
     <ClInclude Include="Bus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Admittance.h">
-      <Filter>Header Files\Elements\Impedance</Filter>
+      <Filter>Header Files\Elements\Admittance</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

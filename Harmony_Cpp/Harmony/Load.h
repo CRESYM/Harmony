@@ -23,6 +23,7 @@ public:
     ~Load() {}
 
     void compute_y_parameters(double frequency) override; // Declaration
+    void printElementValues() override; // Declaration
 
     double getResistance(int phase) const {
         if (phase >= 0 && phase < R.size()) {

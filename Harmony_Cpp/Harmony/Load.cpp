@@ -11,12 +11,12 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
 
     int capacity = values.capacity();
     if (capacity == 3) {
-        R(pins, values[0]);
-        L(pins, values[1]);
-        C(pins, values[2]);
+        R = std::vector<double>(pins, values[0]);
+        L = std::vector<double>(pins, values[1]);
+        C = std::vector<double>(pins, values[2]);
     }
     else if (capacity == 3 * pins) {
-        for (int i; i < pins; i++) {
+        for (int i = 0; i < pins; i++) {
             R.push_back(values[i]);
             L.push_back(values[pins + i]);
             C.push_back(values[2 * pins + 1]);
@@ -24,15 +24,9 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
     }
     else
         throw std::invalid_argument("Invalid number of values, it should be equal to the number pins, or 3 x number of pins.");
-}
-
-// Load-specific Y-parameters for three-phase
-
-void Load::compute_y_parameters(double frequency) {
-    std::cout << "Computing Y-parameters for a three-phase load...\n";
-
+    
     // Check for initialization
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < pins; ++i) {
         if (R[i] == 0 || L[i] == 0 || C[i] == 0) {
             std::cerr << "Load parameters not initialized correctly for phase " << i + 1 << "!" << std::endl;
             return;
@@ -41,6 +35,22 @@ void Load::compute_y_parameters(double frequency) {
             std::cerr << "Load parameters initialized correctly for phase " << i + 1 << "!" << std::endl;
         }
     }
+}
+
+void Load::printElementValues() {
+    printElementInfo();
+
+    for (int i = 0; i < input_pins; i++) {
+        std::cout << "Resistance connected to pin " << i + 1 << " is: " << R[i] << std::endl;
+        std::cout << "Inductance connected to pin " << i + 1 << " is: " << L[i] << std::endl;
+        std::cout << "Capacitance connected to pin " << i + 1 << " is: " << C[i] << std::endl;
+    }
+}
+
+// Load-specific Y-parameters for three-phase
+
+void Load::compute_y_parameters(double frequency) {
+    std::cout << "Computing Y-parameters for a three-phase load...\n";
 
     RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
     RCP<const Basic> j = I;
