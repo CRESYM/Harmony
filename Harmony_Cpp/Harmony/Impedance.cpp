@@ -2,6 +2,35 @@
 #include "Element.h"
 #include "Constants.h"
 
+// Constructor for single-phase using a symbolic impedance value
+Impedance::Impedance(const std::string& symbol, int inputPins, int outputPins, const RCP<const Basic>& impedanceValue)
+    : Element(symbol, inputPins, outputPins), Z_matrix(1, 1) { // Initializing a 1x1 matrix for a single-phase
+    Z_matrix.set(0, 0, impedanceValue); // Set the impedance value
+}
+
+// Constructor for three-phase using a 3x3 matrix for multi-phase systems
+Impedance::Impedance(const std::string& symbol, int inputPins, int outputPins, const DenseMatrix& impedanceMatrix)
+    : Element(symbol, inputPins, outputPins), Z_matrix(impedanceMatrix) { // Use the provided matrix directly
+    if (impedanceMatrix.nrows() != 3 || impedanceMatrix.ncols() != 3) {
+        throw std::invalid_argument("Impedance matrix must be 3x3 for three-phase systems.");
+    }
+}
+
+// Constructor for vector-based values (single-phase or three-phase)
+Impedance::Impedance(const std::string& symbol, int inputPins, int outputPins, const std::vector<std::vector<RCP<Symbol>>>& impedanceValues)
+    : Element(symbol, inputPins, outputPins), Z_matrix(inputPins, outputPins) {
+    for (int i = 0; i < inputPins; ++i) {
+        for (int j = 0; j < outputPins; ++j) {
+            Z_matrix.set(i, j, impedanceValues[i][j]); // Set values from the vector to the Z_matrix
+        }
+    }
+}
+
+// Destructor
+Impedance::~Impedance() {
+    // Clean-up if needed (Smart pointers handle most memory management)
+}
+
 // Implementation of compute_y_parameters for Single-phaseImpedance
 //void Impedance::compute_y_parameters(double frequency) {
 
@@ -29,26 +58,26 @@
     std::cout << "|Impedance Y_param4|: " << 0.0 << " S" << std::endl;*/
     //}
     // 
-    //Three-phase
+//Three-phase
 void Impedance::compute_y_parameters(double frequency) {
     // Compute angular frequency
     double omega = 2 * M_PI * frequency;
 
-    // Assuming Z_matrix holds the impedance for a 3-phase system
-    std::vector<std::vector<double>> Y_matrix(3, std::vector<double>(3, 0));
-
-    // Inverse of the impedance matrix will give the admittance matrix (Y = Z^-1)
-    // This requires matrix inversion (for simplicity, using a numerical library would be helpful)
-
-    // TODO: Implement matrix inversion (you can use Eigen library for this)
-
-    // For now, assuming diagonal matrix (impedance only between the same phases):
-    for (int i = 0; i < 3; i++) {
-        Y_matrix[i][i] = 1 / Z_matrix[i][i];  // Y = 1/Z
+    // Ensure Z_matrix is initialized
+    if (Z_matrix.nrows() == 0 || Z_matrix.ncols() == 0) {
+        throw std::runtime_error("Impedance matrix is not initialized.");
     }
 
-    // Output the computed Y-parameters for each phase
-    for (int i = 0; i < 3; i++) {
-        std::cout << "|Y_matrix[" << (i + 1) << "," << (i + 1) << "]|: " << Y_matrix[i][i] << " S" << std::endl;
+    // Inverting the impedance matrix to compute the Y parameters
+    DenseMatrix Y_matrix(Z_matrix.nrows(), Z_matrix.ncols());
+    Z_matrix.inv(Y_matrix); // Use the inv method of DenseMatrix to invert
+
+    // Output the computed Y-parameters
+    std::cout << "Y-parameters for Impedance (symbolic representation):" << std::endl;
+    for (size_t i = 0; i < Y_matrix.nrows(); ++i) {
+        for (size_t j = 0; j < Y_matrix.ncols(); ++j) {
+            std::cout << Y_matrix.get(i, j)->__str__() << " ";
+        }
+        std::cout << std::endl;
     }
 }

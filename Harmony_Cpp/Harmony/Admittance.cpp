@@ -1,31 +1,31 @@
 ﻿#include "Admittance.h"
 #include <stdexcept>
+#include <iostream> // For printing matrix information
 
 using namespace std;
 using namespace SymEngine;
 
-Admittance::Admittance(const std::string& symbol, int pins, vector<RCP<Symbol>> values)
-    : Element(symbol, pins, pins) { // Call the Element constructor
-    // Initialize the admittance 2D array
-    admittance = new RCP<Symbol>*[pins]; // Allocate array of pointers
-    for (int i = 0; i < pins; i++) {
-        admittance[i] = new RCP<Symbol>[pins]; // Allocate each row
-    }
-
-    if (values.size() != 0) {  // If there are entries
-        if (pins > 0) { // Check for valid number of pins
-            if (values.size() == 1) {
-                for (int i = 0; i < pins; i++)
-                    admittance[i][i] = values[0];
+// Constructor for vector-based values
+Admittance::Admittance(const std::string& symbol, int pins, const std::vector<RCP<Symbol>>& values)
+    : Element(symbol, pins, pins), Y_matrix(pins, pins) { // Initialize DenseMatrix
+    if (values.size() != 0) {
+        if (pins > 0) {
+            if (values.size() == 1) { // Single value case
+                for (int i = 0; i < pins; i++) {
+                    Y_matrix.set(i, i, values[0]); // Set diagonal
+                }
             }
-            else if (values.size() == pins) {
-                for (int i = 0; i < pins; i++)
-                    admittance[i][i] = values[i];
+            else if (values.size() == pins) { // Diagonal values specified
+                for (int i = 0; i < pins; i++) {
+                    Y_matrix.set(i, i, values[i]);
+                }
             }
-            else if (values.size() == pins * pins) {
-                for (int i = 0; i < pins; i++)
-                    for (int j = 0; j < pins; j++)
-                        admittance[i][j] = values[i * pins + j];
+            else if (values.size() == pins * pins) { // Full matrix specified
+                for (int i = 0; i < pins; i++) {
+                    for (int j = 0; j < pins; j++) {
+                        Y_matrix.set(i, j, values[i * pins + j]);
+                    }
+                }
             }
             else {
                 throw invalid_argument("Invalid number of admittance vector entries: " + to_string(values.size()));
@@ -37,11 +37,36 @@ Admittance::Admittance(const std::string& symbol, int pins, vector<RCP<Symbol>> 
     }
 }
 
-// Destructor to free allocated memory
-Admittance::~Admittance() {
-    //for (int i = 0; i < input_pins; i++) {
-    for (int i = 0; i < getInputPins(); i++) { // Use getter to access input_pins
-        delete[] admittance[i];
+// Single-phase constructor
+Admittance::Admittance(const std::string& symbol, int pins, const RCP<const Basic>& admittanceValue)
+    : Element(symbol, pins, pins), Y_matrix(pins, pins) {
+    for (int i = 0; i < pins; i++) {
+        Y_matrix.set(i, i, admittanceValue); // Set diagonal elements
     }
-    delete[] admittance;
+}
+
+// Three-phase constructor
+Admittance::Admittance(const std::string& symbol, int pins, const DenseMatrix& admittanceMatrix)
+    : Element(symbol, pins, pins), Y_matrix(admittanceMatrix) {}
+
+// Destructor
+Admittance::~Admittance() {
+    // No need for manual memory management
+}
+
+// Method to compute Y-parameters
+void Admittance::compute_y_parameters(double frequency) {
+    // Output the symbolic representation of the Y-parameters
+    cout << "Y-parameters for Admittance (symbolic representation):" << endl;
+    for (size_t i = 0; i < Y_matrix.nrows(); ++i) {
+        for (size_t j = 0; j < Y_matrix.ncols(); ++j) {
+            cout << Y_matrix.get(i, j)->__str__() << " ";
+        }
+        cout << endl;
+    }
+}
+
+Admittance::~Admittance() {
+    // No need to manually free memory for std::vector or DenseMatrix
+    std::cout << "Admittance object for destroyed." << std::endl;
 }
