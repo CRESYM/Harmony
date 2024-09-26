@@ -63,30 +63,34 @@ int main() {
 
 	//Load* load2 = new Load("L2", 3, values);
 	//Generator* generator = new Generator("G1", 1, 1);
-	// 
+
+
 	//// Check if the generator was created properly
 	//if (!generator) {
 	//	std::cerr << "Failed to create generator." << std::endl;
 	//	return -1;
 	//}
-	
+
 	//// Add buses to the network
 	//myNetwork.addBus("Bus1", bus1);
 	//myNetwork.addBus("Bus2", bus2);
-	
+
 	//// Add elements to the network
 	//myNetwork.addElement("L1", load1);
 	//myNetwork.addElement("L2", load2);
 	//myNetwork.addElement("G1", generator);
-	
+
 	//// Connect elements to buses
 	//myNetwork.connectElementToBus(load1, bus1);
 	//myNetwork.connectElementToBus(load2, bus2);
 	//myNetwork.connectElementToBus(generator, bus1);
+
 	//// Print the connections to verify the network
 	//myNetwork.printConnections();
+
 	//// Frequency for Y-parameter computation
 	//double frequency = 60.0; // Example frequency in Hz
+
 	//// Compute Y parameters with error handling
 	//try {
 	//	std::cout << "\nComputing Y-parameters for Generator:\n";
@@ -95,6 +99,7 @@ int main() {
 	//catch (const std::exception& e) {
 	//	std::cerr << "Error computing Y-parameters for Generator: " << e.what() << std::endl;
 	//}
+
 	//try {
 	//	std::cout << "\nComputing Y-parameters for Load L1:\n";
 	//	load1->compute_y_parameters(frequency);
@@ -102,6 +107,7 @@ int main() {
 	//catch (const std::exception& e) {
 	//	std::cerr << "Error computing Y-parameters for Load L1: " << e.what() << std::endl;
 	//}
+
 	//try {
 	//	std::cout << "\nComputing Y-parameters for Load L2:\n";
 	//	load2->compute_y_parameters(frequency);
@@ -109,12 +115,14 @@ int main() {
 	//catch (const std::exception& e) {
 	//	std::cerr << "Error computing Y-parameters for Load L2: " << e.what() << std::endl;
 	//}
+
 	//// Clean up dynamically allocated memory
 	//delete bus1;
 	//delete bus2;
 	//delete load1;
 	//delete load2;
 	//delete generator;
+
 
 	delete load1;
 

@@ -24,14 +24,8 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
     }
     else
         throw std::invalid_argument("Invalid number of values, it should be equal to the number pins, or 3 x number of pins.");
-    //}
-
-    // Load-specific Y-parameters for three-phase
-
-    //void Load::compute_y_parameters(double frequency) {
-        //std::cout << "Computing Y-parameters for a three-phase load...\n";
-
-        // Check for initialization
+    
+    // Check for initialization
     for (int i = 0; i < pins; ++i) {
         if (R[i] == 0 || L[i] == 0 || C[i] == 0) {
             std::cerr << "Load parameters not initialized correctly for phase " << i + 1 << "!" << std::endl;

@@ -19,11 +19,13 @@ public:
         // Initialize Y parameters
         double G = P / (V * V); // Conductance
         double B = Q / (V * V); // Susceptance
+
         // Create a diagonal Y matrix
         for (int i = 0; i < input_pins; ++i) {
             Y[i] = std::complex<double>(G, -B); // Y = G - jB
         }
     }
+
     // Function to create Y parameters
     void compute_y_parameters(double frequency) {
     }
@@ -31,12 +33,15 @@ public:
     std::vector<std::complex<double>> eval_y() const {
         return Y;
     }
+
     void printElementValues();
+
 private:
     // Properties
     double Z;      // Source series impedance [Omega]
     double V;      // Voltage amplitude [kV]
     double theta;  // Phase shift [radians]
+
     // Properties used for power flow
     double P;      // Active power output [MW]
     double Q;      // Reactive power output [MVAr]
@@ -44,7 +49,9 @@ private:
     double P_max;  // Max active power output [MW]
     double Q_min;  // Min reactive power output [MVA]
     double Q_max;  // Max reactive power output [MVA]
+
     std::vector<std::complex<double>> Y; // Y parameters for the source
 };
+
 #endif
 
