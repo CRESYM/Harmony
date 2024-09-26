@@ -126,6 +126,9 @@
     <ClCompile Include="AC_source.cpp">
       <Filter>Source Files\Elements\Source</Filter>
     </ClCompile>
+    <ClCompile Include="AC_source.cpp">
+      <Filter>Source Files\Elements</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Impedance.h">
@@ -175,6 +178,9 @@
     </ClInclude>
     <ClInclude Include="AC_source.h">
       <Filter>Header Files\Elements\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="AC_source.h">
+      <Filter>Header Files\Elements</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -5,7 +5,7 @@
 #include "Constants.h"
 #include <iostream>
 
-Load::Load(const std::string& symbol, int pins, std::vector<double> values) : Element(symbol, pins, pins){
+Load::Load(const std::string& symbol, int pins, std::vector<double> values) : Element(symbol, pins, pins) {
     if (pins == 0)
         throw std::invalid_argument("Invalid number of pins, must be greater than 0!");
 
@@ -36,19 +36,17 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
         }
     }
 }
-
+    
 void Load::printElementValues() {
-    printElementInfo();
-
-    for (int i = 0; i < input_pins; i++) {
-        std::cout << "Resistance connected to pin " << i + 1 << " is: " << R[i] << std::endl;
-        std::cout << "Inductance connected to pin " << i + 1 << " is: " << L[i] << std::endl;
-        std::cout << "Capacitance connected to pin " << i + 1 << " is: " << C[i] << std::endl;
-    }
+        printElementInfo();
+        for (int i = 0; i < input_pins; i++) {
+            std::cout << "Resistance connected to pin " << i + 1 << " is: " << R[i] << std::endl;
+            std::cout << "Inductance connected to pin " << i + 1 << " is: " << L[i] << std::endl;
+            std::cout << "Capacitance connected to pin " << i + 1 << " is: " << C[i] << std::endl;
+        }
 }
 
 // Load-specific Y-parameters for three-phase
-
 void Load::compute_y_parameters(double frequency) {
     std::cout << "Computing Y-parameters for a three-phase load...\n";
 
