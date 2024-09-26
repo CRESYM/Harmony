@@ -7,6 +7,7 @@
 #include "Impedance.h"
 #include "network.h"
 #include "Admittance.h"
+#include "AC_source.h"
 
 
 #include <symengine/expression.h>
@@ -184,6 +185,9 @@ int main() {
 	vector<double> values{ 10.0, 0.01, 0.001 };
 	Load* load1 = new Load("L1", 3, values); // Assuming it is a three-phase load
 	load1->printElementValues();
+
+	AC_source* source1 = new AC_source("s1", 3, 10.0, 100.0, 0.0, 100, 50, 0, 150, 0, 75);
+	source1->printElementValues();
 	//Load* load2 = new Load("L2", 3, values);
 	//Generator* generator = new Generator("G1", 1, 1);
 

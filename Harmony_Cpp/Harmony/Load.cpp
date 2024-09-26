@@ -59,7 +59,7 @@ void Load::compute_y_parameters(double frequency) {
     std::vector<std::vector<RCP<const Basic>>> Y_matrix(3, std::vector<RCP<const Basic>>(3));
 
     // Loop over phases to compute Y-parameters
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < input_pins; ++i) {
         RCP<const Basic> R_val = real_double(R[i]);
         RCP<const Basic> L_val = real_double(L[i]);
         RCP<const Basic> C_val = real_double(C[i]);
