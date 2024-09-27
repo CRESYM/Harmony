@@ -3,7 +3,7 @@
 #include "Constants.h"
 
 // Constructor for single-phase using a symbolic impedance value
-Impedance::Impedance(const std::string& symbol, int inputPins, int outputPins, const RCP<const Basic>& impedanceValue)
+/*Impedance::Impedance(const std::string& symbol, int inputPins, int outputPins, const RCP<const Basic>& impedanceValue)
     : Element(symbol, inputPins, outputPins), Z_matrix(1, 1) { // Initializing a 1x1 matrix for a single-phase
     Z_matrix.set(0, 0, impedanceValue); // Set the impedance value
 }
@@ -24,7 +24,7 @@ Impedance::Impedance(const std::string& symbol, int inputPins, int outputPins, c
             Z_matrix.set(i, j, impedanceValues[i][j]); // Set values from the vector to the Z_matrix
         }
     }
-}
+}*/
 
 // Destructor
 Impedance::~Impedance() {
