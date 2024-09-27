@@ -38,7 +38,7 @@ private:
     std::vector<double> X;  // Reactances for primary and secondary windings
     double a;  // Turns ratio
 
-    RCP<const Basic> Y_matrix[4];  // Y-parameter matrix for a transformer (4 elements: Y11, Y12, Y21, Y22)
+    DenseMatrix Y_matrix;  // Y-parameter matrix for a transformer (4 elements: Y11, Y12, Y21, Y22)
 };
 
 #endif // TRANSFORMER_H

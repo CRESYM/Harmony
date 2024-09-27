@@ -30,6 +30,8 @@ Transformer::Transformer(const std::string& symbol, int pins, std::vector<double
             std::cerr << "Transformer parameters initialized correctly for winding " << i + 1 << "!" << std::endl;
         }
     }
+    // Initialize Y_matrix with 2x2 dimensions
+    Y_matrix = DenseMatrix(2, 2);
 }
 
 // Function to print the transformer values
@@ -50,7 +52,7 @@ void Transformer::compute_y_parameters(double frequency) {
     RCP<const Basic> j = I;  // Imaginary unit
 
     // Matrix for Y-parameters (2x2)
-    std::vector<std::vector<RCP<const Basic>>> Y_matrix(2, std::vector<RCP<const Basic>>(2));
+    //std::vector<std::vector<RCP<const Basic>>> Y_matrix(2, std::vector<RCP<const Basic>>(2));
 
     // Primary side
     RCP<const Basic> R_p = real_double(R[0]);
@@ -67,15 +69,16 @@ void Transformer::compute_y_parameters(double frequency) {
     RCP<const Basic> Y_s = div(real_double(1), add(R_s, mul(j, X_s)));
 
     // Compute Y-parameters
-    Y_matrix[0][0] = Y_p;  // Y11
-    Y_matrix[0][1] = mul(real_double(-a), Y_p);  // Y12
-    Y_matrix[1][0] = Y_matrix[0][1];  // Y21 (symmetrical to Y12)
-    Y_matrix[1][1] = Y_s;  // Y22
+    Y_matrix.set(0, 0, Y_p);  // Y11
+    Y_matrix.set(0, 1, mul(real_double(-a), Y_p));  // Y12
+    Y_matrix.set(1, 0, Y_matrix.get(0, 1));  // Y21 (symmetrical to Y12)
+    Y_matrix.set(1, 1, Y_s);  // Y22
+
 
     // Print the Y-parameters
     for (int i = 0; i < 2; ++i) {
         for (int j = 0; j < 2; ++j) {
-            double Y_val_abs = eval_double(*abs(Y_matrix[i][j]));
+            double Y_val_abs = eval_double(*abs(Y_matrix.get(i, j)));
             std::cout << "|Transformer Y" << (i + 1) << (j + 1) << "|: " << Y_val_abs << " S" << std::endl;
         }
     }
