@@ -1,39 +1,84 @@
 #include "Transformer.h"
+#include "Element.h"
+#include "Constants.h"
 #include <iostream>
 
-//using namespace SymEngine;
 
+using namespace SymEngine;
 
-/*void Transformer::compute_y_parameters_transformer(double R_p, double X_p, double R_s, double X_s, double a)
-{
-    RCP<const Basic> R_p_val = real_double(R_p);
-    RCP<const Basic> X_p_val = real_double(X_p);
+// Constructor
+Transformer::Transformer(const std::string& symbol, int pins, std::vector<double> values) : Element(symbol, pins, pins) {
+    if (pins != 2)  // Typically a transformer has 2 pins (primary and secondary)
+        throw std::invalid_argument("Invalid number of pins, transformer must have 2 pins!");
 
-    RCP<const Basic> j = I; // Built-in constant for imaginary unit
+    if (values.size() == 5) {
+        R = { values[0], values[2] };  // Primary and secondary resistances
+        X = { values[1], values[3] };  // Primary and secondary reactances
+        a = values[4];  // Turns ratio
+    }
+    else {
+        throw std::invalid_argument("Invalid number of values, must be 5 (R_primary, X_primary, R_secondary, X_secondary, a)!");
+    }
 
-    RCP<const Basic> Y_p = div(real_double(1), add(R_p_val, mul(j, X_p_val)));
+    // Check if the values are properly initialized
+    for (int i = 0; i < 2; ++i) {
+        if (R[i] == 0 || X[i] == 0 || a == 0) {
+            std::cerr << "Transformer parameters not initialized correctly for winding " << i + 1 << "!" << std::endl;
+            return;
+        }
+        else {
+            std::cerr << "Transformer parameters initialized correctly for winding " << i + 1 << "!" << std::endl;
+        }
+    }
+}
 
-    RCP<const Basic> R_s_val = real_double(R_s);
-    RCP<const Basic> X_s_val = real_double(X_s);
-    RCP<const Basic> Y_s = div(real_double(1), add(R_s_val, mul(j, X_s_val)));
+// Function to print the transformer values
+void Transformer::printElementValues() {
+    printElementInfo();
+    std::cout << "Primary Resistance: " << R[0] << " ohms" << std::endl;
+    std::cout << "Primary Reactance: " << X[0] << " ohms" << std::endl;
+    std::cout << "Secondary Resistance: " << R[1] << " ohms" << std::endl;
+    std::cout << "Secondary Reactance: " << X[1] << " ohms" << std::endl;
+    std::cout << "Turns Ratio: " << a << std::endl;
+}
 
-    RCP<const Basic> Y_param1 = Y_p;
-    RCP<const Basic> Y_param2 = mul(real_double(-a), Y_p);
-    RCP<const Basic> Y_param3 = div(real_double(-1), mul(real_double(a), add(R_s_val, mul(j, X_s_val))));
-    RCP<const Basic> Y_param4 = Y_s;
+// Y-parameter computation using SymEngine
+void Transformer::compute_y_parameters(double frequency) {
+    std::cout << "Computing Y-parameters for a transformer...\n";
 
-    RCP<const Basic> Y_param1_eval = evalf(*Y_param1, 53);
-    RCP<const Basic> Y_param2_eval = evalf(*Y_param2, 53);
-    RCP<const Basic> Y_param3_eval = evalf(*Y_param3, 53);
-    RCP<const Basic> Y_param4_eval = evalf(*Y_param4, 53);
+    RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
+    RCP<const Basic> j = I;  // Imaginary unit
 
-    double Y_param1_abs = rcp_static_cast<const RealDouble>(Y_param1_eval)->as_double();
-    double Y_param2_abs = rcp_static_cast<const RealDouble>(Y_param2_eval)->as_double();
-    double Y_param3_abs = rcp_static_cast<const RealDouble>(Y_param3_eval)->as_double();
-    double Y_param4_abs = rcp_static_cast<const RealDouble>(Y_param4_eval)->as_double();
+    // Matrix for Y-parameters (2x2)
+    std::vector<std::vector<RCP<const Basic>>> Y_matrix(2, std::vector<RCP<const Basic>>(2));
 
-    std::cout << "|Transformer Y_param1|: " << Y_param1_abs << " S" << std::endl;
-    std::cout << "|Transformer Y_param2|: " << Y_param2_abs << " S" << std::endl;
-    std::cout << "|Transformer Y_param3|: " << Y_param3_abs << " S" << std::endl;
-    std::cout << "|Transformer Y_param4|: " << Y_param4_abs << " S" << std::endl;
-}*/
+    // Primary side
+    RCP<const Basic> R_p = real_double(R[0]);
+    RCP<const Basic> X_p = real_double(X[0]);
+
+    // Secondary side
+    RCP<const Basic> R_s = real_double(R[1]);
+    RCP<const Basic> X_s = real_double(X[1]);
+
+    RCP<const Basic> a_val = real_double(a);
+
+    // Compute the primary and secondary admittances
+    RCP<const Basic> Y_p = div(real_double(1), add(R_p, mul(j, X_p)));
+    RCP<const Basic> Y_s = div(real_double(1), add(R_s, mul(j, X_s)));
+
+    // Compute Y-parameters
+    Y_matrix[0][0] = Y_p;  // Y11
+    Y_matrix[0][1] = mul(real_double(-a), Y_p);  // Y12
+    Y_matrix[1][0] = Y_matrix[0][1];  // Y21 (symmetrical to Y12)
+    Y_matrix[1][1] = Y_s;  // Y22
+
+    // Print the Y-parameters
+    for (int i = 0; i < 2; ++i) {
+        for (int j = 0; j < 2; ++j) {
+            double Y_val_abs = eval_double(*abs(Y_matrix[i][j]));
+            std::cout << "|Transformer Y" << (i + 1) << (j + 1) << "|: " << Y_val_abs << " S" << std::endl;
+        }
+    }
+}
+
+ 

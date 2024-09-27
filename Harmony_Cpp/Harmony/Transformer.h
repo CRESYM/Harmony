@@ -1,24 +1,44 @@
-#ifndef TRANSFORMER
-#define TRANSFORMER
+#ifndef TRANSFORMER_H
+#define TRANSFORMER_H
 
 #include "Element.h"
+#include <vector>
+#include <string>
+#include <iostream>
 
+using namespace SymEngine;
 
 class Transformer : public Element {
 public:
-    // Parameterized constructor that calls the base class constructor
-   // Transformer(const std::string& symbol, int inputPins, int outputPins)
-   //     : Element(symbol, inputPins, outputPins) {}
+    Transformer(const std::string& symbol, int pins, std::vector<double> values);  // Constructor with vector input for parameters
 
-  //  ~Transformer() {}
+    ~Transformer() {}
 
-   // void compute_y_parameters_transformer(double R_p, double X_p, double R_s, double X_s, double a);
+    void compute_y_parameters(double frequency) override;  // Declaration for Y parameter computation
+    void printElementValues() override;  // Declaration for printing values
+
+    double getResistance(int winding) const {
+        if (winding >= 0 && winding < R.size()) {
+            return R[winding];
+        }
+        throw std::out_of_range("Invalid winding index");
+    }
+
+    double getReactance(int winding) const {
+        if (winding >= 0 && winding < X.size()) {
+            return X[winding];
+        }
+        throw std::out_of_range("Invalid winding index");
+    }
+
+    double getTurnsRatio() const { return a; }
+
 private:
-	double R_p = 0.5;  // Primary winding resistance (ohms)
-	double X_p = 1.0;  // Primary winding leakage reactance (ohms)
-	double R_s = 0.1;  // Secondary winding resistance (ohms)
-	double X_s = 0.2;  // Secondary winding leakage reactance (ohms)
-	double a = 10.0;   // Turns ratio (primary to secondary)
+    std::vector<double> R;  // Resistances for primary and secondary windings
+    std::vector<double> X;  // Reactances for primary and secondary windings
+    double a;  // Turns ratio
+
+    RCP<const Basic> Y_matrix[4];  // Y-parameter matrix for a transformer (4 elements: Y11, Y12, Y21, Y22)
 };
 
-#endif
+#endif // TRANSFORMER_H

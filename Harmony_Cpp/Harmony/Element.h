@@ -20,12 +20,18 @@
 class Element {
 public:
     // Constructor for single-phase systems
-    Element(const std::string& symbol, int inputPins, int outputPins)
-        : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins), is_three_phase(false) {}
+    //Element(const std::string& symbol, int inputPins, int outputPins)
+      //  : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins), is_three_phase(false) {}
 
     // Constructor for three-phase systems (3x3 impedance/admittance matrix)
-    Element(const std::string& symbol, int inputPins, int outputPins, const std::vector<std::vector<double>>& matrix)
-        : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins), impedance_matrix(matrix), is_three_phase(true) {}
+    //Element(const std::string& symbol, int inputPins, int outputPins, const std::vector<std::vector<double>>& matrix)
+       // : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins), impedance_matrix(matrix), is_three_phase(true) {}
+
+     // Unified constructor for both single-phase and three-phase systems
+    Element(const std::string& symbol, int inputPins, int outputPins,
+        const std::vector<std::vector<double>>& matrix = std::vector<std::vector<double>>())
+        : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins),
+          is_three_phase(false) {}
 
     // Destructor
     virtual ~Element();
@@ -55,7 +61,7 @@ public:
     // Virtual function to compute Y-parameters (to be implemented by derived classes)
     virtual void compute_y_parameters(double frequency) = 0;
 
-    virtual void printElementValues();
+    virtual void printElementValues()=0;
 
 protected:
     std::string element_symbol;

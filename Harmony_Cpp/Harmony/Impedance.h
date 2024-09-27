@@ -11,13 +11,29 @@ using namespace SymEngine;
 class Impedance : public Element {
 public:
     // Constructor for single-phase using a symbolic impedance value
-    Impedance(const std::string& symbol, int inputPins, int outputPins, const RCP<const Basic>& impedanceValue);
+    //Impedance(const std::string& symbol, int inputPins, int outputPins, const RCP<const Basic>& impedanceValue);
 
     // Constructor for three-phase using a 3x3 matrix for multi-phase systems
-    Impedance(const std::string& symbol, int inputPins, int outputPins, const DenseMatrix& impedanceMatrix);
+    //Impedance(const std::string& symbol, int inputPins, int outputPins, const DenseMatrix& impedanceMatrix);
 
     // Constructor for vector-based values (single-phase or three-phase)
-    Impedance(const std::string& symbol, int inputPins, int outputPins, const std::vector<std::vector<RCP<Symbol>>>& impedanceValues);
+    //Impedance(const std::string& symbol, int inputPins, int outputPins, const std::vector<std::vector<RCP<Symbol>>>& impedanceValues);
+    // Unified constructor for both single-phase and three-phase systems
+    Impedance(const std::string& symbol, int inputPins, int outputPins,
+        const DenseMatrix& impedanceMatrix = createZeroMatrix(1))
+        : Element(symbol, inputPins, outputPins), Z_matrix(impedanceMatrix) {
+
+        // Check if the impedanceMatrix is three-phase
+        is_three_phase = (impedanceMatrix.nrows() == 3 && impedanceMatrix.ncols() == 3);
+
+        // Print information based on the type of Impedance created
+        if (is_three_phase) {
+            std::cout << "Three-phase Impedance created for element: " << symbol << std::endl;
+        }
+        else {
+            std::cout << "Single-phase Impedance created for element: " << symbol << std::endl;
+        }
+    }
 
     // Destructor
     ~Impedance();
@@ -27,6 +43,16 @@ public:
 
 private:
     DenseMatrix Z_matrix; // Matrix representation of impedance
+    // Helper function to create a zero matrix
+    static DenseMatrix createZeroMatrix(int size) {
+        DenseMatrix zeroMatrix(size, size);
+        for (int i = 0; i < size; ++i) {
+            for (int j = 0; j < size; ++j) {
+                zeroMatrix.set(i, j, zero); // Use SymEngine's symbolic `zero`
+            }
+        }
+        return zeroMatrix;
+    }
 };
 
 #endif // _IMPEDANCE_H_

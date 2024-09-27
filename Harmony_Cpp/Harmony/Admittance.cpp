@@ -5,68 +5,48 @@
 using namespace std;
 using namespace SymEngine;
 
-// Constructor for vector-based values
-Admittance::Admittance(const std::string& symbol, int pins, const std::vector<RCP<Symbol>>& values)
-    : Element(symbol, pins, pins), Y_matrix(pins, pins) { // Initialize DenseMatrix
-    if (values.size() != 0) {
-        if (pins > 0) {
-            if (values.size() == 1) { // Single value case
-                for (int i = 0; i < pins; i++) {
-                    Y_matrix.set(i, i, values[0]); // Set diagonal
-                }
-            }
-            else if (values.size() == pins) { // Diagonal values specified
-                for (int i = 0; i < pins; i++) {
-                    Y_matrix.set(i, i, values[i]);
-                }
-            }
-            else if (values.size() == pins * pins) { // Full matrix specified
-                for (int i = 0; i < pins; i++) {
-                    for (int j = 0; j < pins; j++) {
-                        Y_matrix.set(i, j, values[i * pins + j]);
-                    }
-                }
-            }
-            else {
-                throw invalid_argument("Invalid number of admittance vector entries: " + to_string(values.size()));
-            }
-        }
-        else {
-            throw invalid_argument("Invalid number of pins, must be greater than 0!");
-        }
-    }
-}
-
-// Single-phase constructor
-Admittance::Admittance(const std::string& symbol, int pins, const RCP<const Basic>& admittanceValue)
-    : Element(symbol, pins, pins), Y_matrix(pins, pins) {
-    for (int i = 0; i < pins; i++) {
-        Y_matrix.set(i, i, admittanceValue); // Set diagonal elements
-    }
-}
-
-// Three-phase constructor
+// Unified constructor for both single-phase and three-phase systems
 Admittance::Admittance(const std::string& symbol, int pins, const DenseMatrix& admittanceMatrix)
-    : Element(symbol, pins, pins), Y_matrix(admittanceMatrix) {}
+    : Element(symbol, pins, pins), Y_matrix(admittanceMatrix) {
+    // Determine if the admittance matrix is three-phase
+    is_three_phase = (admittanceMatrix.nrows() == 3 && admittanceMatrix.ncols() == 3);
+
+    // Print information based on the type of Admittance created
+    if (is_three_phase) {
+        std::cout << "Three-phase Admittance created for element: " << symbol << std::endl;
+    }
+    else {
+        std::cout << "Single-phase Admittance created for element: " << symbol << std::endl;
+    }
+}
 
 // Destructor
 Admittance::~Admittance() {
-    // No need for manual memory management
+    // No need for manual memory management for DenseMatrix or other standard library components
+    std::cout << "Admittance object for " << getElementSymbol() << " destroyed." << std::endl;
 }
 
-// Method to compute Y-parameters
+// Method to compute Y-parameters (symbolic representation)
 void Admittance::compute_y_parameters(double frequency) {
-    // Output the symbolic representation of the Y-parameters
-    cout << "Y-parameters for Admittance (symbolic representation):" << endl;
+    std::cout << "Y-parameters for Admittance element (" << getElementSymbol() << "):" << std::endl;
+
+    // Print the Y-matrix for the Admittance element
     for (size_t i = 0; i < Y_matrix.nrows(); ++i) {
         for (size_t j = 0; j < Y_matrix.ncols(); ++j) {
-            cout << Y_matrix.get(i, j)->__str__() << " ";
+            std::cout << Y_matrix.get(i, j)->__str__() << " ";
         }
-        cout << endl;
+        std::cout << std::endl;
     }
 }
 
-Admittance::~Admittance() {
-    // No need to manually free memory for std::vector or DenseMatrix
-    std::cout << "Admittance object for destroyed." << std::endl;
+// Static helper function to create a zero matrix
+DenseMatrix Admittance::createZeroMatrix(int size) {
+    DenseMatrix zeroMatrix(size, size);
+    for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+            zeroMatrix.set(i, j, zero); // Use SymEngine's symbolic `zero`
+        }
+    }
+    return zeroMatrix;
 }
+
