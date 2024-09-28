@@ -8,11 +8,8 @@
 #include <stdexcept>
 #include <iostream>
 
-#include "Element.h"
-#include "Bus.h"
-
-//class Bus;
-//class Element;
+class Bus;
+class Element;
 
 // Type alias for a pair of element designator and pin name
 using Net = std::unordered_map<Bus*, std::vector<Element*>>;
@@ -23,10 +20,12 @@ private:
     std::unordered_map<std::string, Element*> elements;  // Map of designators to elements
     std::unordered_map<Bus*, std::vector<Element*>> connections; // Connections between buses and elements
 
+    // for equivalent admittance/impedance calculation to keep number of pins
+    int pins;
 public:
 
 	// Constructor
-	Network() {}
+	Network():pins(0) {}
 
     // Destructor
     ~Network();
@@ -50,7 +49,7 @@ public:
     void addElement(const std::string& designator, Element* elem);
 
     // Function to connect an element to a bus
-    void connectElementToBus(Element* elem, Bus* bus);
+    void connectElementToBus(Element* elem, int terminal, Bus* bus);
 
     // Function to delete an element from the network
     void deleteElement(const std::string& designator);

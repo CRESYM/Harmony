@@ -20,6 +20,9 @@
 
 using namespace SymEngine; // Use the SymEngine namespace
 
+// Declarations 
+class Bus;
+
 class Element {
 public:
      // Unified constructor for universal number of phases
@@ -35,6 +38,11 @@ public:
     int getInputPins() const { return input_pins; }
     int getOutputPins() const { return output_pins; }
     std::string getElementSymbol() const { return element_symbol; }
+    std::vector<Bus*> getBuses();
+    std::vector<Bus*> getOtherBuses(Bus*);
+
+    // Attach bus pointer to the proper terminal
+    void attachBus(Bus*, int);
 
     // Print element information
     void printElementInfo() const {

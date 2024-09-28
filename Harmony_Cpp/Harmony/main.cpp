@@ -3,7 +3,7 @@
 //#include "Generator.h"
 //#include "Load.h"
 //#include "Transformer.h"
-//#include "Bus.h"
+#include "Bus.h"
 //#include "Impedance.h"
 #include "network.h"
 #include "Admittance.h"
@@ -35,14 +35,19 @@ using namespace SymEngine;
 
 int main() {
 
-	SymEngine::vec_basic elems{integer(10), symbol("s"), integer(20) };
-	SymEngine::DenseMatrix A = SymEngine::DenseMatrix(1, 3, elems);
+	SymEngine::vec_basic elems{ symbol("y2"), integer(-1), zero, zero, integer(1), zero, zero, symbol("V"), zero, zero, symbol("y1"), zero};
+	SymEngine::DenseMatrix A = SymEngine::DenseMatrix(3, 4, elems);
+	DenseMatrix B = DenseMatrix(3, 4);
+	vec_uint pivot_cols;
+	reduced_row_echelon_form(A, B, pivot_cols);
 
-	for (int i = 0; i < A.nrows(); i++)
+	for (int i = 0; i < A.nrows(); i++) {
 		for (int j = 0; j < A.ncols(); j++)
-			std::cout << A.get(i, j)->__str__() << endl;
+			std::cout << B.get(i, j)->__str__() << " ";
+		std::cout << endl;
+	}
 
-	Admittance* y = new Admittance("y1", 3, A);
+	Admittance* y = new Admittance("y1", 3, DenseMatrix(1, 1, { integer(1) }));
 	y->printElementValues();
 
 	Network* myNetwork = new Network();
@@ -60,11 +65,20 @@ int main() {
 	myNetwork->addBus("gnd", gnd);
 
 	// Connect elements to buses
-	myNetwork->connectElementToBus(y, bus1);
-	myNetwork->connectElementToBus(y, gnd);
+	myNetwork->connectElementToBus(y, 1, bus1);
+	myNetwork->connectElementToBus(y, 2, gnd);
 
 	// Print the connections to verify the network
 	myNetwork->printConnections();
+
+	vector<Bus*> start_buses;
+	vector<Bus*> end_buses;
+	vector<Element*> elem;
+	start_buses.push_back(bus1);
+	end_buses.push_back(gnd);
+
+
+	myNetwork->compute_equivalent_impedance(start_buses, end_buses, elem);
 
 	delete myNetwork;
 

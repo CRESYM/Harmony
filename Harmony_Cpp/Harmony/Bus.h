@@ -18,8 +18,9 @@ public:
     // Destructor
     ~Bus();
 
-    // Get bus name
+    // Getters
     std::string getBusName() { return busName; }
+    int getPinNumber() { return numberPins; }
 
     // Function to attach an element to the bus
     void attachElement(Element* elem);

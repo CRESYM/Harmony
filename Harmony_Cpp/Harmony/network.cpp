@@ -17,11 +17,13 @@ Network::~Network() {
 // Function to add a bus to the network
 void Network::addBus(Bus* bus) {
     buses[bus->getBusName()] = bus;
+    pins += bus->getPinNumber();
 }
 
 // Function to add a bus to the network
 void Network::addBus(const std::string& busName, Bus* bus) {
     buses[busName] = bus;
+    pins += bus->getPinNumber();
 }
 
 // Function to add an element to the network
@@ -35,8 +37,9 @@ void Network::addElement(const std::string& designator, Element* elem) {
 }
 
 // Function to connect an element to a bus
-void Network::connectElementToBus(Element* elem, Bus* bus) {
+void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
     connections[bus].push_back(elem);
+    elem->attachBus(bus, terminal);
     bus->attachElement(elem);  // Attach the element to the bus
 }
 
@@ -53,6 +56,7 @@ void Network::deleteElement(const std::string& designator) {
 // Function to delete a bus from the network
 void Network::deleteBus(const std::string& busName) {
     if (buses.find(busName) != buses.end()) {
+        pins -= buses[busName]->getPinNumber();
         buses.erase(busName);
     }
     else {
@@ -67,8 +71,8 @@ void Network::printConnections() {
         std::cout << "Bus " << bus->getBusName() << " has the following elements attached:\n";
         for (Element* elem : connection.second) {
             std::cout << "  - " << elem->getElementSymbol() << std::endl; // Use the getter method
-            //std::cout << "  - " << elem->element_symbol << std::endl;
         }
+        std::cout << "Total number of pins is " << pins << std::endl;
     }
 }
 
@@ -79,44 +83,29 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
         exit(1);
     }
     // erase duplicates in start and end buses
+    // make a summary of bus inputs, outputs
     sort(start_buses.begin(), start_buses.end());
     start_buses.erase(unique(start_buses.begin(), start_buses.end()), start_buses.end());
 
     sort(end_buses.begin(), end_buses.end());
     end_buses.erase(unique(end_buses.begin(), end_buses.end()), end_buses.end());
 
-    // make a summary of bus inputs, outputs and grounds
+    // check the equivalent matrix size
+    int size = pins;
+    for (auto& bus : start_buses) {
+        size += bus->getPinNumber(); // adding equations for input currents
+    }
+    for (auto& bus : end_buses) {
+        size += bus->getPinNumber(); // adding equations for input currents
+    }
+    DenseMatrix Y = DenseMatrix(size, size+1);
 
-    // make a summary of elements to be used in calculations and buses to which they are connected
+    // make MNA with excuded elements
+    // go through buses and add element Y parameters if the element should not be skipped
+    // reduced_row_echelon_form
 
 }
     
 
 
-    //for (auto& start_bus : start_buses) {
-    //    if (std::find(end_buses.begin(), end_buses.end(), start_bus) == end_buses.end())
-    //        continue;
     
-    //for node_name in start_pins
-    //    if occursin("gnd", string(node_name))
-    /*        if !in(node_name, dict[:output_list])
-                push!(dict[:output_list], node_name)
-                continue
-                end
-            else
-                # add nodes to the node list
-                !in(node_name, dict[:node_list]) && push!(dict[:node_list], node_name)
-                end
-
-                # find all elements inside the port connected to the node
-                elements_pins = filter(p ->  !in(p[1], elim_elements) && !in(p[1], dict[:element_list]), node)
-
-                for (element, pin) in elements_pins
-                    push!(dict[:element_list], element) # add element's symbol to the list
-                    other_nodes = get_nodes(net.elements[element], pin) # get the pins from the other side of element
-                    make_lists(net, dict, elim_elements, other_nodes, end_pins)
-                    end
-                    end
-
-}
-};*/
