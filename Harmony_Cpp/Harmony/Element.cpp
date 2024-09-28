@@ -40,4 +40,8 @@ void Element::compute_y_parameters(double frequency) {
     std::cout << "This should be overridden in derived classes." << std::endl;
 }
 
+void Element::compute_y_parameters() {
+    std::cout << "This should be overridden in derived classes." << std::endl;
+}
+
 void Element::printElementValues() {}

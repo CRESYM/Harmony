@@ -65,16 +65,6 @@ public:
     const std::unordered_map<std::string, Element*>& getElements() const { return elements; }
     const std::unordered_map<Bus*, std::vector<Element*>>& getConnections() const { return connections; }
 
-   /*
-    // Function to get the net name by a designator
-    std::string getNetName(const std::string& name) const;
-
-    // Function to get the net name for a pin
-    std::string getNetName(const std::tuple<std::string, std::string>& pin) const;*/
-
-    // Function to connect all elements' pins with their nets
-    //void connectPins();
-
     void compute_equivalent_impedance(std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements);
     
 };

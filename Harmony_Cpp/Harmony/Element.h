@@ -53,6 +53,7 @@ public:
 
     // Virtual function to compute Y-parameters (to be implemented by derived classes)
     virtual void compute_y_parameters(double frequency) = 0;
+    virtual DenseMatrix compute_y_parameters() { return Y_matrix; };
 
     virtual void printElementValues()=0;
 

@@ -17,13 +17,15 @@ Network::~Network() {
 // Function to add a bus to the network
 void Network::addBus(Bus* bus) {
     buses[bus->getBusName()] = bus;
-    pins += bus->getPinNumber();
+    if (bus->getBusName() != "gnd")
+        pins += bus->getPinNumber();
 }
 
 // Function to add a bus to the network
 void Network::addBus(const std::string& busName, Bus* bus) {
     buses[busName] = bus;
-    pins += bus->getPinNumber();
+    if (busName != "gnd")
+        pins += bus->getPinNumber();
 }
 
 // Function to add an element to the network
@@ -82,13 +84,42 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
         throw std::invalid_argument("There is no start buses.");
         exit(1);
     }
+
     // erase duplicates in start and end buses
-    // make a summary of bus inputs, outputs
     sort(start_buses.begin(), start_buses.end());
     start_buses.erase(unique(start_buses.begin(), start_buses.end()), start_buses.end());
 
     sort(end_buses.begin(), end_buses.end());
     end_buses.erase(unique(end_buses.begin(), end_buses.end()), end_buses.end());
+
+    // add other buses
+    std::vector<Bus*> other_buses;
+    for (const auto& bus : buses) {
+        if(std::find(start_buses.begin(), start_buses.end(), bus.second) == start_buses.end()
+            && std::find(end_buses.begin(), end_buses.end(), bus.second) == end_buses.end())
+            other_buses.push_back(bus.second);
+    }
+
+    // check bus positions in matrix
+    int pos = 0;
+    int pos_current = 0;
+    std::vector<int> positions;
+    for (auto& bus : start_buses) {
+        positions.push_back(pos);
+        pos += bus->getPinNumber();
+        pos_current += bus->getPinNumber();
+    }
+    pos += pos_current; pos_current = 0;
+    for (auto& bus : end_buses) {
+        positions.push_back(pos);
+        pos += bus->getPinNumber();
+        pos_current += bus->getPinNumber();
+    }
+    pos += pos_current;
+    for (auto& bus : other_buses) {
+        positions.push_back(pos);
+        pos += bus->getPinNumber();
+    }
 
     // check the equivalent matrix size
     int size = pins;
@@ -99,9 +130,26 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
         size += bus->getPinNumber(); // adding equations for input currents
     }
     DenseMatrix Y = DenseMatrix(size, size+1);
+    for (int i = 0; i < size; i++)
+        for (int j = 0; j < size + 1; j++)
+            Y.set(i, j, zero);
 
-    // make MNA with excuded elements
-    // go through buses and add element Y parameters if the element should not be skipped
+    // Make MNA with excuded elements
+    // Go through buses (connections) and add element Y parameters 
+    // if the element should not be skipped.
+    // Order for writing equations input voltage and current,
+    // then output voltage and current, and then other voltages.
+    for (auto& bus : start_buses) {
+        int pins = bus->getPinNumber();
+        for (auto& element : connections[bus]) {
+            DenseMatrix element_Y_matrix = element->compute_y_parameters();
+
+            for (int i = position; i < position + pins; i++)
+                for (int j = position; j < position + pins; j++)
+                    continue;
+        }
+    }
+
     // reduced_row_echelon_form
 
 }
