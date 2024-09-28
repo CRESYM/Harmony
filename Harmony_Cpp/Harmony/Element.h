@@ -54,6 +54,7 @@ protected:
     std::string element_symbol;
     int input_pins;
     int output_pins;
+    std::map<int, Bus*> connections;
 
     DenseMatrix Y_matrix; // Matrix representation of admittance
 

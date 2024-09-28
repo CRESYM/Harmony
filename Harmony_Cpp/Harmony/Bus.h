@@ -13,7 +13,7 @@ class Bus {
 public:
 
     // Constructor
-    Bus(const std::string& name);
+    Bus(const std::string& name, int number);
 
     // Destructor
     ~Bus();
@@ -29,6 +29,7 @@ public:
 
 private:
     std::string busName;
+    int numberPins; // Definition of number of phases/pins/terminals
     std::vector<Element*> connectedElements;  // Elements connected to this bus
 
 };

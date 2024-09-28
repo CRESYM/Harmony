@@ -6,7 +6,7 @@
 #include <symengine/printers.h>  // Correct header for printing
 
 // Constructor for Bus
-Bus::Bus(const std::string& name) : busName(name) {}
+Bus::Bus(const std::string& name, int number) : busName(name), numberPins(number) {}
 
 // Destructor
 Bus::~Bus() {

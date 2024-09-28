@@ -48,8 +48,8 @@ int main() {
 	Network* myNetwork = new Network();
 
 	// Create Bus objects
-	Bus* bus1 = new Bus("Bus1");
-	Bus* gnd = new Bus("gnd");
+	Bus* bus1 = new Bus("Bus1", 3);
+	Bus* gnd = new Bus("gnd", 3);
 
 	// Add elements to the network
 	myNetwork->addElement(y->getElementSymbol(), y);
