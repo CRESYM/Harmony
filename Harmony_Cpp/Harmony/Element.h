@@ -48,6 +48,8 @@ public:
 
     virtual void printElementValues()=0;
 
+    DenseMatrix read_y_matrix() { return Y_matrix; }
+
 protected:
     std::string element_symbol;
     int input_pins;

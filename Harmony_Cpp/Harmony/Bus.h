@@ -11,14 +11,15 @@ class Element;  // Forward declaration
 
 class Bus {
 public:
-    std::string busName;
-    std::vector<Element*> connectedElements;  // Elements connected to this bus
 
     // Constructor
     Bus(const std::string& name);
 
     // Destructor
     ~Bus();
+
+    // Get bus name
+    std::string getBusName() { return busName; }
 
     // Function to attach an element to the bus
     void attachElement(Element* elem);
@@ -27,8 +28,8 @@ public:
     void printConnectedElements();
 
 private:
-    //int numBuses;
-   // int numBranches;
+    std::string busName;
+    std::vector<Element*> connectedElements;  // Elements connected to this bus
 
 };
 

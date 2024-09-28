@@ -49,7 +49,7 @@ int main() {
 
 	// Create Bus objects
 	Bus* bus1 = new Bus("Bus1");
-	Bus* bus2 = new Bus("Bus2");
+	Bus* gnd = new Bus("gnd");
 
 	// Add elements to the network
 	myNetwork->addElement(y->getElementSymbol(), y);
@@ -57,18 +57,16 @@ int main() {
 
 	// Add buses to the network
 	myNetwork->addBus("Bus1", bus1);
-	myNetwork->addBus("Bus2", bus2);
+	myNetwork->addBus("gnd", gnd);
 
 	// Connect elements to buses
 	myNetwork->connectElementToBus(y, bus1);
-	myNetwork->connectElementToBus(y, bus2);
+	myNetwork->connectElementToBus(y, gnd);
 
 	// Print the connections to verify the network
 	myNetwork->printConnections();
 
 	delete myNetwork;
-
-
 
 	//// Frequency for Y-parameter computation
 	//double frequency = 50.0; // Example frequency in Hz

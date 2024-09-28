@@ -28,10 +28,8 @@ public:
 	// Constructor
 	Network() {}
 
+    // Destructor
     ~Network();
-
-    // Function to add a node (element) to the network
-    //void addNode(const std::string& nodeName);
 
     // Function to connect two elements in the network
     //void connect(const std::string& source, const std::string& destination);
@@ -39,17 +37,14 @@ public:
     // Overloaded function to connect multiple elements to a single destination
     //void connect(const std::vector<std::string>& sources, const std::string& destination);
 
-    // Function to add an element (with an Element object) and get a unique designator
-    //std::string addElement(Element& elem);
-
-    // Function to add an element by a specified designator
-   // void addElement(const std::string& designator, Element& elem);
-
-    // Function to delete an element from the network
-   // void deleteElement(const std::string& designator);
+    // Function to add a bus to the network
+    void addBus(Bus* bus);
 
     // Function to add a bus to the network
     void addBus(const std::string& busName, Bus* bus);
+
+    // Function to add an element (with an Element object) and get a unique designator
+    void addElement(Element* elem);
 
     // Function to add an element to the network
     void addElement(const std::string& designator, Element* elem);
@@ -71,12 +66,7 @@ public:
     const std::unordered_map<std::string, Element*>& getElements() const { return elements; }
     const std::unordered_map<Bus*, std::vector<Element*>>& getConnections() const { return connections; }
 
-   /* // Function to add a pin to the network
-    void addPin(const std::tuple<std::string, std::string>& pin);
-
-    // Overloaded function to add a pin to a specific net
-    void addPin(const std::tuple<std::string, std::string>& pin, const std::string& netName);
-
+   /*
     // Function to get the net name by a designator
     std::string getNetName(const std::string& name) const;
 
@@ -85,6 +75,9 @@ public:
 
     // Function to connect all elements' pins with their nets
     //void connectPins();
+
+    void compute_equivalent_impedance(std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements);
+    
 };
 
 #endif // NETWORK_H
