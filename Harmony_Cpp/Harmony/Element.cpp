@@ -1,10 +1,7 @@
 ﻿// element.cpp
 
-#include "Element.h"
+# include "Element.h"
 #include "Constants.h"
-#include "Load.h"
-#include "Generator.h"
-#include "Impedance.h"
 #include <iostream>
 #include <vector>
 

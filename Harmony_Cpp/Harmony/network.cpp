@@ -4,6 +4,16 @@
 #include <algorithm>
 #include <stdexcept>
 
+Network::~Network() {
+    for (std::unordered_map<std::string, Bus*>::iterator i = buses.begin(); i != buses.end(); i++)
+        delete i->second;
+    buses.clear();
+    for (std::unordered_map<std::string, Element*>::iterator i = elements.begin(); i != elements.end(); i++)
+        delete i->second;
+    elements.clear();
+    connections.clear();
+}
+
 // Function to add a bus to the network
 void Network::addBus(const std::string& busName, Bus* bus) {
     buses[busName] = bus;

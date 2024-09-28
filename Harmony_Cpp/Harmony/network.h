@@ -28,6 +28,8 @@ public:
 	// Constructor
 	Network() {}
 
+    ~Network();
+
     // Function to add a node (element) to the network
     //void addNode(const std::string& nodeName);
 

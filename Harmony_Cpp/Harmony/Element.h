@@ -16,22 +16,17 @@
 #include <symengine/complex_double.h>
 #include <symengine/expression.h>
 #include <symengine/symengine_config.h>
+#include <SymEngine/Matrix.h> // Ensure you include the necessary SymEngine headers
+
+using namespace SymEngine; // Use the SymEngine namespace
 
 class Element {
 public:
-    // Constructor for single-phase systems
-    //Element(const std::string& symbol, int inputPins, int outputPins)
-      //  : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins), is_three_phase(false) {}
-
-    // Constructor for three-phase systems (3x3 impedance/admittance matrix)
-    //Element(const std::string& symbol, int inputPins, int outputPins, const std::vector<std::vector<double>>& matrix)
-       // : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins), impedance_matrix(matrix), is_three_phase(true) {}
-
-     // Unified constructor for both single-phase and three-phase systems
-    Element(const std::string& symbol, int inputPins, int outputPins,
-        const std::vector<std::vector<double>>& matrix = std::vector<std::vector<double>>())
-        : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins),
-          is_three_phase(false) {}
+     // Unified constructor for universal number of phases
+    Element(const std::string& symbol, int inputPins, int outputPins)
+        : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins) {
+        Y_matrix = createZeroMatrix(inputPins, outputPins);
+    }
 
     // Destructor
     virtual ~Element();
@@ -46,16 +41,6 @@ public:
         std::cout << "Element Symbol: " << element_symbol
             << ", Input Pins: " << input_pins
             << ", Output Pins: " << output_pins << std::endl;
-
-        if (is_three_phase) {
-            std::cout << "Three-phase Impedance/Admittance Matrix: \n";
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    std::cout << impedance_matrix[i][j] << " ";
-                }
-                std::cout << std::endl;
-            }
-        }
     }
 
     // Virtual function to compute Y-parameters (to be implemented by derived classes)
@@ -68,11 +53,18 @@ protected:
     int input_pins;
     int output_pins;
 
-    // For three-phase systems
-    std::vector<std::vector<double>> impedance_matrix; // 3x3 matrix for three-phase impedance/admittance
-    bool is_three_phase;  // Flag to determine if this is a three-phase system
+    DenseMatrix Y_matrix; // Matrix representation of admittance
 
-    //void* element_value;  // Placeholder for single-phase element values (could be removed)
+    // Static helper function to create a zero matrix
+    DenseMatrix createZeroMatrix(int size1, int size2) {
+        DenseMatrix zeroMatrix(size1, size2);
+        for (int i = 0; i < size1; ++i) {
+            for (int j = 0; j < size2; ++j) {
+                zeroMatrix.set(i, j, zero); // Use SymEngine's symbolic `zero`
+            }
+        }
+        return zeroMatrix;
+    }
 };
 
 #endif // ELEMENT_H

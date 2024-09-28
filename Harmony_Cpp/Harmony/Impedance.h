@@ -23,16 +23,6 @@ public:
         const DenseMatrix& impedanceMatrix = createZeroMatrix(1))
         : Element(symbol, inputPins, outputPins), Z_matrix(impedanceMatrix) {
 
-        // Check if the impedanceMatrix is three-phase
-        is_three_phase = (impedanceMatrix.nrows() == 3 && impedanceMatrix.ncols() == 3);
-
-        // Print information based on the type of Impedance created
-        if (is_three_phase) {
-            std::cout << "Three-phase Impedance created for element: " << symbol << std::endl;
-        }
-        else {
-            std::cout << "Single-phase Impedance created for element: " << symbol << std::endl;
-        }
     }
 
     // Destructor
