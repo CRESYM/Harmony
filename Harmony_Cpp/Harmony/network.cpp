@@ -85,68 +85,80 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
         exit(1);
     }
 
-    // erase duplicates in start and end buses
-    sort(start_buses.begin(), start_buses.end());
-    start_buses.erase(unique(start_buses.begin(), start_buses.end()), start_buses.end());
+    // erase duplicates in start and end buses, remove gnd from the list of buses
+    sort(start_buses.begin(), start_buses.end()); start_buses.erase(unique(start_buses.begin(), start_buses.end()), start_buses.end());
+    sort(end_buses.begin(), end_buses.end()); end_buses.erase(unique(end_buses.begin(), end_buses.end()), end_buses.end());
+    // Remove the element using erase function and iterators
+    for (int i = 0; i < start_buses.capacity(); i++) {
+        if (start_buses[i]->getBusName() == "gnd") { // leave the function
+            throw std::invalid_argument("Ground cannot be a start bus.");
+            exit(1);
+        }        
+    }
 
-    sort(end_buses.begin(), end_buses.end());
-    end_buses.erase(unique(end_buses.begin(), end_buses.end()), end_buses.end());
-
-    // add other buses
-    std::vector<Bus*> other_buses;
+    // check bus positions in matrix, add only buses which are not gnd
+    int pos = 0; 
+    std::vector<int> positions_currents;
+    std::unordered_map<Bus*, int> all_buses;
+    for (auto& bus : start_buses) {
+        all_buses[bus] = pos; pos += bus->getPinNumber();
+        positions_currents.push_back(pos);
+        pos += bus->getPinNumber();
+    }
+    for (auto& bus : end_buses) {
+        if (bus->getBusName() != "gnd") {
+            all_buses[bus] = pos; pos += bus->getPinNumber();
+            positions_currents.push_back(pos);
+            pos += bus->getPinNumber();
+        }
+    }
     for (const auto& bus : buses) {
-        if(std::find(start_buses.begin(), start_buses.end(), bus.second) == start_buses.end()
-            && std::find(end_buses.begin(), end_buses.end(), bus.second) == end_buses.end())
-            other_buses.push_back(bus.second);
+        if (std::find(start_buses.begin(), start_buses.end(), bus.second) == start_buses.end()
+            && std::find(end_buses.begin(), end_buses.end(), bus.second) == end_buses.end()) {
+            if (bus.second->getBusName() != "gnd") {
+                all_buses[bus.second] = pos;
+                pos += bus.second->getPinNumber();
+            }
+        }
     }
 
-    // check bus positions in matrix
-    int pos = 0;
-    int pos_current = 0;
-    std::vector<int> positions;
-    for (auto& bus : start_buses) {
-        positions.push_back(pos);
-        pos += bus->getPinNumber();
-        pos_current += bus->getPinNumber();
-    }
-    pos += pos_current; pos_current = 0;
-    for (auto& bus : end_buses) {
-        positions.push_back(pos);
-        pos += bus->getPinNumber();
-        pos_current += bus->getPinNumber();
-    }
-    pos += pos_current;
-    for (auto& bus : other_buses) {
-        positions.push_back(pos);
-        pos += bus->getPinNumber();
-    }
 
-    // check the equivalent matrix size
-    int size = pins;
-    for (auto& bus : start_buses) {
-        size += bus->getPinNumber(); // adding equations for input currents
-    }
-    for (auto& bus : end_buses) {
-        size += bus->getPinNumber(); // adding equations for input currents
-    }
-    DenseMatrix Y = DenseMatrix(size, size+1);
-    for (int i = 0; i < size; i++)
-        for (int j = 0; j < size + 1; j++)
-            Y.set(i, j, zero);
+    // make the equivalent matrix as zero matrix
+    DenseMatrix Y = createZeroMatrix(pos, pos + 1);
 
     // Make MNA with excuded elements
     // Go through buses (connections) and add element Y parameters 
     // if the element should not be skipped.
     // Order for writing equations input voltage and current,
     // then output voltage and current, and then other voltages.
-    for (auto& bus : start_buses) {
-        int pins = bus->getPinNumber();
-        for (auto& element : connections[bus]) {
+    for (auto& bus : all_buses) {
+        for (auto& element : connections[bus.first]) {
             DenseMatrix element_Y_matrix = element->compute_y_parameters();
 
-            for (int i = position; i < position + pins; i++)
-                for (int j = position; j < position + pins; j++)
-                    continue;
+            // add element_Y_matrix
+            int pins = bus.first->getPinNumber();
+            int position = bus.second;
+            for (int i = 0; i < pins; i++) {
+                for (int j = 0; j < pins; j++) {
+                    Y.set(position + i, position + j, add(Y.get(position + i, position + j),
+                        element_Y_matrix.get(i, j)));
+                }
+            }
+
+            // get the other bus and add -element_Y_matrix
+            Bus* other_bus = element->getOtherBus(bus.first);
+            if (other_bus->getBusName() != "gnd") {
+                int pins = other_bus->getPinNumber();
+                int position = all_buses[other_bus];
+                for (int i = 0; i < pins; i++) {
+                    for (int j = 0; j < pins; j++) {
+                        Y.set(position + i, position + j, sub(Y.get(position + i, position + j),
+                            element_Y_matrix.get(i, j)));
+                    }
+                }
+            }
+
+            // check if there is current associated to bus
         }
     }
 

@@ -1,24 +1,7 @@
 #ifndef ELEMENT_H
 #define ELEMENT_H
 
-#include <string>
-#include <iostream>
-#include <vector> // For handling matrices in multi-phase systems
-
-#include <symengine/symbol.h>
-#include <symengine/add.h>
-#include <symengine/mul.h>
-#include <symengine/pow.h>
-#include <symengine/real_double.h>
-#include <symengine/eval.h>
-#include <symengine/functions.h>
-#include <symengine/complex.h>
-#include <symengine/complex_double.h>
-#include <symengine/expression.h>
-#include <symengine/symengine_config.h>
-#include <SymEngine/Matrix.h> // Ensure you include the necessary SymEngine headers
-
-using namespace SymEngine; // Use the SymEngine namespace
+#include "Constants.h"
 
 // Declarations 
 class Bus;
@@ -39,7 +22,7 @@ public:
     int getOutputPins() const { return output_pins; }
     std::string getElementSymbol() const { return element_symbol; }
     std::vector<Bus*> getBuses();
-    std::vector<Bus*> getOtherBuses(Bus*);
+    Bus* getOtherBus(Bus*);
 
     // Attach bus pointer to the proper terminal
     void attachBus(Bus*, int);
@@ -66,17 +49,6 @@ protected:
     std::map<int, Bus*> connections;
 
     DenseMatrix Y_matrix; // Matrix representation of admittance
-
-    // Static helper function to create a zero matrix
-    DenseMatrix createZeroMatrix(int size1, int size2) {
-        DenseMatrix zeroMatrix(size1, size2);
-        for (int i = 0; i < size1; ++i) {
-            for (int j = 0; j < size2; ++j) {
-                zeroMatrix.set(i, j, zero); // Use SymEngine's symbolic `zero`
-            }
-        }
-        return zeroMatrix;
-    }
 };
 
 #endif // ELEMENT_H

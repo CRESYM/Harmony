@@ -10,28 +10,7 @@
 //#include "AC_source.h"
 
 
-#include <symengine/symbol.h>
-#include <symengine/add.h>
-#include <symengine/mul.h>
-#include <symengine/pow.h>
-#include <symengine/real_double.h>
-#include <symengine/eval.h>
-#include <symengine/functions.h>
-#include <symengine/complex.h>
-#include <symengine/complex_double.h>
-#include <symengine/expression.h>
-#include <symengine/symengine_config.h>
-#include <SymEngine/Matrix.h> // Ensure you include the necessary SymEngine headers
-#include <symengine/expression.h>
-#include <symengine/eval_double.h>
-#include <symengine/symengine_config.h>
 
-#include <iostream>
-#include <complex>
-#include <vector>
-
-using namespace std;
-using namespace SymEngine;
 
 int main() {
 
@@ -47,14 +26,14 @@ int main() {
 		std::cout << endl;
 	}
 
-	Admittance* y = new Admittance("y1", 3, DenseMatrix(1, 1, { integer(1) }));
+	Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { symbol("y")}));
 	y->printElementValues();
 
 	Network* myNetwork = new Network();
 
 	// Create Bus objects
-	Bus* bus1 = new Bus("Bus1", 3);
-	Bus* gnd = new Bus("gnd", 3);
+	Bus* bus1 = new Bus("Bus1", 1);
+	Bus* gnd = new Bus("gnd", 1);
 
 	// Add elements to the network
 	myNetwork->addElement(y->getElementSymbol(), y);

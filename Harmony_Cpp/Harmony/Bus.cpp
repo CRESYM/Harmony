@@ -14,6 +14,11 @@ Bus::~Bus() {
     std::cout << "Bus " << busName << " is deleted.\n";
 }
 
+// Compare
+bool Bus::operator==(const char* name) {
+    return (busName == name);
+}
+
 // Function to attach an element to the bus
 void Bus::attachElement(Element* elem) {
     connectedElements.push_back(elem);

@@ -22,6 +22,9 @@ public:
     std::string getBusName() { return busName; }
     int getPinNumber() { return numberPins; }
 
+    // Compare
+    bool operator==(const char* name);
+
     // Function to attach an element to the bus
     void attachElement(Element* elem);
 
