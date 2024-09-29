@@ -127,43 +127,72 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
     DenseMatrix Y = createZeroMatrix(pos, pos + 1);
 
     // Make MNA with excuded elements
-    // Go through buses (connections) and add element Y parameters 
-    // if the element should not be skipped.
-    // Order for writing equations input voltage and current,
-    // then output voltage and current, and then other voltages.
+    // Go through buses (connections) and add element Y parameters the element should not be skipped.
+    // Order for writing equations input voltage and current, then output voltage and current, and then other voltages.
+    pos = 0; // position in positions_currents
     for (auto& bus : all_buses) {
         for (auto& element : connections[bus.first]) {
-            DenseMatrix element_Y_matrix = element->compute_y_parameters();
+            if (std::find(skip_elements.begin(), skip_elements.end(), element) == skip_elements.end()) {
+                DenseMatrix element_Y_matrix = element->compute_y_parameters();
 
-            // add element_Y_matrix
-            int pins = bus.first->getPinNumber();
-            int position = bus.second;
-            for (int i = 0; i < pins; i++) {
-                for (int j = 0; j < pins; j++) {
-                    Y.set(position + i, position + j, add(Y.get(position + i, position + j),
-                        element_Y_matrix.get(i, j)));
-                }
-            }
-
-            // get the other bus and add -element_Y_matrix
-            Bus* other_bus = element->getOtherBus(bus.first);
-            if (other_bus->getBusName() != "gnd") {
-                int pins = other_bus->getPinNumber();
-                int position = all_buses[other_bus];
+                // add element_Y_matrix
+                int pins = bus.first->getPinNumber();
+                int position = bus.second;
                 for (int i = 0; i < pins; i++) {
                     for (int j = 0; j < pins; j++) {
-                        Y.set(position + i, position + j, sub(Y.get(position + i, position + j),
+                        Y.set(position + i, position + j, add(Y.get(position + i, position + j),
                             element_Y_matrix.get(i, j)));
                     }
                 }
-            }
 
-            // check if there is current associated to bus
+                // get the other bus and add -element_Y_matrix
+                Bus* other_bus = element->getOtherBus(bus.first);
+                if (other_bus->getBusName() != "gnd") {
+                    int pins_other = other_bus->getPinNumber();
+                    int position_other = all_buses[other_bus];
+                    for (int i = 0; i < pins_other; i++) {
+                        for (int j = 0; j < pins_other; j++) {
+                            Y.set(position_other + i, position_other + j, sub(Y.get(position_other + i, position_other + j),
+                                element_Y_matrix.get(i, j)));
+                        }
+                    }
+                }
+            }
+            
         }
+        // check if there is current associated to bus
+        int position = bus.second; int pins = bus.first->getPinNumber();
+        if (pos < positions_currents.capacity()) {
+            // check it if belongs to start_buses
+            if (pos < start_buses.capacity()) {
+                for (int i = 0; i < pins; i++) {
+                    Y.set(position + i, positions_currents[pos] + i, integer(-1));
+                    Y.set(positions_currents[pos] + i, position + i, integer(1));
+                    Y.set(positions_currents[pos] + i, Y.ncols() - 1, symbol("V" + std::to_string(pos+i)));
+                }
+            }
+            else { // it belongs to end buses
+                for (int i = 0; i < pins; i++) {
+                    Y.set(position + i, positions_currents[pos] + i, integer(1));
+                    Y.set(positions_currents[pos] + i, position + i, integer(1));
+                    Y.set(positions_currents[pos] + i, Y.ncols() - 1, symbol("V" + std::to_string(pos+i)));
+                }
+            }
+        }
+        pos++;
     }
 
     // reduced_row_echelon_form
+    vec_uint pivot_cols;
+    reduced_row_echelon_form(Y, Y, pivot_cols);
 
+    for (int i = 0; i < Y.nrows(); i++) {
+        for (int j = 0; j < Y.ncols(); j++)
+            std::cout << Y.get(i, j)->__str__() << " ";
+        std::cout << endl;
+    }
+
+    // equivalent impedance
 }
     
 

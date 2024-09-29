@@ -14,26 +14,14 @@
 
 int main() {
 
-	SymEngine::vec_basic elems{ symbol("y2"), integer(-1), zero, zero, integer(1), zero, zero, symbol("V"), zero, zero, symbol("y1"), zero};
-	SymEngine::DenseMatrix A = SymEngine::DenseMatrix(3, 4, elems);
-	DenseMatrix B = DenseMatrix(3, 4);
-	vec_uint pivot_cols;
-	reduced_row_echelon_form(A, B, pivot_cols);
-
-	for (int i = 0; i < A.nrows(); i++) {
-		for (int j = 0; j < A.ncols(); j++)
-			std::cout << B.get(i, j)->__str__() << " ";
-		std::cout << endl;
-	}
-
-	Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { symbol("y")}));
+	Admittance* y = new Admittance("y1", 3, DenseMatrix(1, 1, { symbol("y")}));
 	y->printElementValues();
 
 	Network* myNetwork = new Network();
 
 	// Create Bus objects
-	Bus* bus1 = new Bus("Bus1", 1);
-	Bus* gnd = new Bus("gnd", 1);
+	Bus* bus1 = new Bus("Bus1", 3);
+	Bus* gnd = new Bus("gnd", 3);
 
 	// Add elements to the network
 	myNetwork->addElement(y->getElementSymbol(), y);

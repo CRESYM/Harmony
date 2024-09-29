@@ -28,7 +28,7 @@ std::vector<Bus*> Element::getBuses() {
 Bus* Element::getOtherBus(Bus* bus) {
     for (std::map<int, Bus*>::iterator it = connections.begin(); it != connections.end(); ++it) {
         if (bus != it->second)
-            return bus;
+            return it->second;
     }
 }
 
