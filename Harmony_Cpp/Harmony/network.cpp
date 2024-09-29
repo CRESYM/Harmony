@@ -105,6 +105,7 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
         positions_currents.push_back(pos);
         pos += bus->getPinNumber();
     }
+    int equivalent_impedance_size = pos/2;
     for (auto& bus : end_buses) {
         if (bus->getBusName() != "gnd") {
             all_buses[bus] = pos; pos += bus->getPinNumber();
@@ -186,6 +187,7 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
     vec_uint pivot_cols;
     reduced_row_echelon_form(Y, Y, pivot_cols);
 
+    std::cout << "Reduced row echelon form gives: " << std::endl;
     for (int i = 0; i < Y.nrows(); i++) {
         for (int j = 0; j < Y.ncols(); j++)
             std::cout << Y.get(i, j)->__str__() << " ";
@@ -193,6 +195,22 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
     }
 
     // equivalent impedance
+    DenseMatrix equivalent_impedance = createZeroMatrix(equivalent_impedance_size, 1);
+    pos = 0;
+    for (auto& bus : start_buses) {
+        int pos_voltage = all_buses[bus]; int position_current = positions_currents[pos];
+        int pins = bus->getPinNumber();
+        for (int i = 0; i < pins; i++) {
+            equivalent_impedance.set(pos_voltage + i, 0, div(Y.get(pos_voltage + i, Y.ncols() - 1), Y.get(position_current + i, Y.ncols() - 1)));
+        }
+        pos++;
+    }
+
+    std::cout << "Equivalent impedance is: " << std::endl;
+    for (int i = 0; i < equivalent_impedance.nrows(); i++) {
+            std::cout << equivalent_impedance.get(i, 0)->__str__() << " ";
+        std::cout << endl;
+    }
 }
     
 
