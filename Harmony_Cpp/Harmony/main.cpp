@@ -43,8 +43,7 @@ int main() {
 
 	// Frequency for Y-parameter computation
 	double frequency = 50.0; // Example frequency in Hz
-	// Compute Y-parameters for the transformer
-	transformer->compute_y_parameters(frequency);
+
 
 	vector<Bus*> start_buses;
 	vector<Bus*> end_buses;

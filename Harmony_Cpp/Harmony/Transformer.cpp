@@ -27,9 +27,6 @@ Transformer::Transformer(const std::string& symbol, int pins, const std::vector<
     }
 
     // Y matrix
-    // Calculate the imaginary unit 'j' and the angular frequency 'omega = 2 * pi * frequency'
-    RCP<Basic> omega = symbol("w");
-    RCP<const Basic> j = I;  // Imaginary unit
 
     // Define symbolic resistances and reactances for primary and secondary windings
     // Primary side
@@ -55,7 +52,6 @@ Transformer::Transformer(const std::string& symbol, int pins, const std::vector<
     // Compute Y-parameters
     Y_matrix.set(0, 0, Y_p);  // Y11
     Y_matrix.set(0, 1, mul(real_double(-a), Y_p));  // Y12
-    //Y_matrix.set(0, 1, neg(mul(a_val, Y_s)));  // Y12
     Y_matrix.set(1, 0, Y_matrix.get(0, 1));  // Y21 (symmetrical to Y12)
     Y_matrix.set(1, 1, Y_s);  // Y22
 
@@ -71,7 +67,7 @@ void Transformer::compute_y_parameters(double frequency) {
     std::cout << "Computing Y-parameters for a transformer...\n";
     std::cout << "Computing Y-parameters for Transformer (" << getElementSymbol() << ") at " << frequency << " Hz:" << std::endl;
 
-    RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
+    //RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
 
     std::cout << "Y_matrix dimensions2: " << Y_matrix.nrows() << " x " << Y_matrix.ncols() << std::endl;
 

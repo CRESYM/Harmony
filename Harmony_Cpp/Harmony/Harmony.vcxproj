@@ -139,7 +139,6 @@
     <ClCompile Include="Impedance.cpp" />
     <ClCompile Include="Load.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="abcd_parameters.cpp" />
     <ClCompile Include="network.cpp" />
     <ClCompile Include="overhead_line.cpp" />
     <ClCompile Include="Eval_parameter.cpp" />
@@ -157,7 +156,6 @@
     <ClInclude Include="Cable.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="Element.h" />
-    <ClInclude Include="abcd_parameters.h" />
     <ClInclude Include="eval_parameter.h" />
     <ClInclude Include="Impedance.h" />
     <ClInclude Include="AC_source.h" />

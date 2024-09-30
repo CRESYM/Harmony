@@ -32,6 +32,10 @@ extern const RCP<const Basic> PI;
 // Define a constant for π (pi) using standard C++
 extern const double M_PI ;
 
+// Define imaginery unit and symbol for angular frequency
+extern RCP<const Basic> j;  // Imaginary unit
+extern RCP<const Basic> omega;
+
 extern DenseMatrix createZeroMatrix(int size1, int size2);
 
 #endif // CONSTANTS_H

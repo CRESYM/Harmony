@@ -87,9 +87,6 @@
     <ClCompile Include="Cable.cpp">
       <Filter>Source Files\Elements\Transmission_line</Filter>
     </ClCompile>
-    <ClCompile Include="abcd_parameters.cpp">
-      <Filter>Source Files\Elements\Tools</Filter>
-    </ClCompile>
     <ClCompile Include="overhead_line.cpp">
       <Filter>Source Files\Elements\Transmission_line</Filter>
     </ClCompile>
@@ -135,6 +132,9 @@
     <ClCompile Include="AC_source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AC_source.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Impedance.h">
@@ -142,9 +142,6 @@
     </ClInclude>
     <ClInclude Include="Cable.h">
       <Filter>Header Files\Elements\Transmission_line</Filter>
-    </ClInclude>
-    <ClInclude Include="abcd_parameters.h">
-      <Filter>Header Files\Elements\Tools</Filter>
     </ClInclude>
     <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
@@ -195,6 +192,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include_components.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AC_source.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AC_source.h">
