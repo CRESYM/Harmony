@@ -152,6 +152,7 @@
     <ClInclude Include="Admittance.h" />
     <ClInclude Include="Bus.h" />
     <ClInclude Include="Generator.h" />
+    <ClInclude Include="Include_components.h" />
     <ClInclude Include="Load.h" />
     <ClInclude Include="Cable.h" />
     <ClInclude Include="Constants.h" />

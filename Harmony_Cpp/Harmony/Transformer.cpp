@@ -60,39 +60,48 @@ void Transformer::compute_y_parameters(double frequency) {
     RCP<const Basic> X_s = real_double(X[1]);
     RCP<const Basic> a_val = real_double(a); // Turns ratio symbol
 
+    // Check if any resistance or reactance is equivalent to zero
+    RCP<const Basic> zero = integer(0);
+    if (eval_double(*R_p) == 0 || eval_double(*X_p) == 0 || eval_double(*R_s) == 0 || eval_double(*X_s) == 0) {
+        std::cerr << "Error: Zero impedance encountered!" << std::endl;
+        return; // Early exit to avoid further computation
+    }
+
+
     // Compute the primary and secondary admittances
-    //RCP<const Basic> Y_p = div(real_double(1), add(R_p, mul(j, X_p)));
-    //RCP<const Basic> Y_s = div(real_double(1), add(R_s, mul(j, X_s)));
+    RCP<const Basic> Y_p = div(real_double(1), add(R_p, mul(j, X_p)));
+    RCP<const Basic> Y_s = div(real_double(1), add(R_s, mul(j, X_s)));
     // 
     // Compute primary and secondary impedances: Z_p = R_p + j * X_p
-    RCP<const Basic> Z_p = add(R_p, mul(j, X_p));
-    RCP<const Basic> Z_s = add(R_s, mul(j, X_s));
+    //RCP<const Basic> Z_p = add(R_p, mul(j, X_p));
+    //RCP<const Basic> Z_s = add(R_s, mul(j, X_s));
 
     // Compute admittances: Y_p = 1 / Z_p, Y_s = 1 / Z_s
-    RCP<const Basic> Y_p = div(one, Z_p);
-    RCP<const Basic> Y_s = div(one, Z_s);
+    //RCP<const Basic> Y_p = div(one, Z_p);
+    //RCP<const Basic> Y_s = div(one, Z_s);
 
     // Y11 = Y_primary + a^2 * Y_s
-    RCP<const Basic> Y11 = add(Y_p, mul(pow(a_val, real_double(2)), Y_s));
+    //RCP<const Basic> Y11 = add(Y_p, mul(pow(a_val, real_double(2)), Y_s));
 
     // Y12 = Y21 = -a * Y_s
-    RCP<const Basic> Y12 = neg(mul(a_val, Y_s));
-    RCP<const Basic> Y21 = Y12;
+    //RCP<const Basic> Y12 = neg(mul(a_val, Y_s));
+    //RCP<const Basic> Y21 = Y12;
 
     // Y22 = Y_s
-    RCP<const Basic> Y22 = Y_s;
+    //RCP<const Basic> Y22 = Y_s;
 
     // Compute Y-parameters
-   // Y_matrix.set(0, 0, Y_p);  // Y11
-    //Y_matrix.set(0, 1, mul(real_double(-a), Y_p));  // Y12
-    //Y_matrix.set(1, 0, Y_matrix.get(0, 1));  // Y21 (symmetrical to Y12)
-    //Y_matrix.set(1, 1, Y_s);  // Y22
+    Y_matrix.set(0, 0, Y_p);  // Y11
+    Y_matrix.set(0, 1, mul(real_double(-a), Y_p));  // Y12
+    //Y_matrix.set(0, 1, neg(mul(a_val, Y_s)));  // Y12
+    Y_matrix.set(1, 0, Y_matrix.get(0, 1));  // Y21 (symmetrical to Y12)
+    Y_matrix.set(1, 1, Y_s);  // Y22
 
     // Assign the computed Y-parameters to the transformer Y-matrix
-    Y_matrix.set(0, 0, Y11);  // Y11
-    Y_matrix.set(0, 1, Y12);  // Y12
-    Y_matrix.set(1, 0, Y21);  // Y21 (symmetrical to Y12)
-    Y_matrix.set(1, 1, Y22);  // Y22
+    //Y_matrix[0][0] = Y_p;  // Y11
+    //Y_matrix[0][1] = mul(real_double(-a), Y_p);  // Y12
+    //Y_matrix[1][0] = Y_matrix[0][1];  // Y21 (symmetrical to Y12)
+    //Y_matrix[1][1] = Y_s;  // Y22
     std::cout << "Y_matrix dimensions2: " << Y_matrix.nrows() << " x " << Y_matrix.ncols() << std::endl;
 
 
