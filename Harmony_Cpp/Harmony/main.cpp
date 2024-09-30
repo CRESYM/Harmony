@@ -1,21 +1,13 @@
-#include "Element.h"
-//#include "TransmissionLine.h"
-//#include "Generator.h"
-//#include "Load.h"
-//#include "Transformer.h"
-#include "Bus.h"
-//#include "Impedance.h"
 #include "network.h"
-#include "Admittance.h"
-//#include "AC_source.h"
-
-
-
+#include "Bus.h"
+#include "Include_components.h"
 
 int main() {
 
 	Admittance* y = new Admittance("y1", 3, DenseMatrix(1, 1, { symbol("y")}));
-	y->printElementValues();
+	//y->printElementValues();
+
+	AC_source* ac = new AC_source("ac", 3, DenseMatrix(1, 1, { integer(10) }));
 
 	Network* myNetwork = new Network();
 
@@ -24,7 +16,8 @@ int main() {
 	Bus* gnd = new Bus("gnd", 3);
 
 	// Add elements to the network
-	myNetwork->addElement(y->getElementSymbol(), y);
+	myNetwork->addElement(y);
+	myNetwork->addElement(ac);
 
 
 	// Add buses to the network
@@ -34,6 +27,8 @@ int main() {
 	// Connect elements to buses
 	myNetwork->connectElementToBus(y, 1, bus1);
 	myNetwork->connectElementToBus(y, 2, gnd);
+	myNetwork->connectElementToBus(ac, 1, bus1);
+	myNetwork->connectElementToBus(ac, 2, gnd);
 
 	// Print the connections to verify the network
 	myNetwork->printConnections();
@@ -43,7 +38,7 @@ int main() {
 	vector<Element*> elem;
 	start_buses.push_back(bus1);
 	end_buses.push_back(gnd);
-
+	elem.push_back(ac);
 
 	myNetwork->compute_equivalent_impedance(start_buses, end_buses, elem);
 

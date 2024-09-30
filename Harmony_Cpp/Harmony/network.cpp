@@ -40,9 +40,27 @@ void Network::addElement(const std::string& designator, Element* elem) {
 
 // Function to connect an element to a bus
 void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
-    connections[bus].push_back(elem);
-    elem->attachBus(bus, terminal);
-    bus->attachElement(elem);  // Attach the element to the bus
+    int pins;
+    if (terminal == 1) {
+        pins = elem->getInputPins();
+    }
+    else if (terminal == 2) {
+        pins = elem->getOutputPins();
+    }
+    else {
+        throw invalid_argument("Invalid terminal number.");
+        exit(1);
+    }
+
+    if (pins == bus->getPinNumber()) {
+        connections[bus].push_back(elem);
+        elem->attachBus(bus, terminal);
+        bus->attachElement(elem);  // Attach the element to the bus
+    }
+    else {
+        throw invalid_argument("Invalid connection, number of bus and element pins different.");
+        exit(1);
+    }
 }
 
 // Function to delete an element from the network
