@@ -7,11 +7,8 @@
 using namespace SymEngine;
 
 // Constructor
-//Transformer::Transformer(const std::string& symbol, int pins, std::vector<double> values) : Element(symbol, pins, pins) {
 Transformer::Transformer(const std::string& symbol, int pins, const std::vector<double>& values)
     : Element(symbol, pins, pins) {
-    if (pins != 2)  // Typically a transformer has 2 pins (primary and secondary)
-        throw std::invalid_argument("Invalid number of pins, transformer must have 2 pins!");
 
     if (values.size() == 5) {
         R = { values[0], values[2] };  // Primary and secondary resistances
@@ -32,8 +29,6 @@ Transformer::Transformer(const std::string& symbol, int pins, const std::vector<
             std::cerr << "Transformer parameters initialized correctly for winding " << i + 1 << "!" << std::endl;
         }
     }
-    // Initialize Y_matrix with 2x2 dimensions
-     Y_matrix = DenseMatrix(2, 2);  // Initializes a 2x2 matrix with default zero values
 }
 
 // Destructor
@@ -67,28 +62,9 @@ void Transformer::compute_y_parameters(double frequency) {
         return; // Early exit to avoid further computation
     }
 
-
     // Compute the primary and secondary admittances
     RCP<const Basic> Y_p = div(real_double(1), add(R_p, mul(j, X_p)));
     RCP<const Basic> Y_s = div(real_double(1), add(R_s, mul(j, X_s)));
-    // 
-    // Compute primary and secondary impedances: Z_p = R_p + j * X_p
-    //RCP<const Basic> Z_p = add(R_p, mul(j, X_p));
-    //RCP<const Basic> Z_s = add(R_s, mul(j, X_s));
-
-    // Compute admittances: Y_p = 1 / Z_p, Y_s = 1 / Z_s
-    //RCP<const Basic> Y_p = div(one, Z_p);
-    //RCP<const Basic> Y_s = div(one, Z_s);
-
-    // Y11 = Y_primary + a^2 * Y_s
-    //RCP<const Basic> Y11 = add(Y_p, mul(pow(a_val, real_double(2)), Y_s));
-
-    // Y12 = Y21 = -a * Y_s
-    //RCP<const Basic> Y12 = neg(mul(a_val, Y_s));
-    //RCP<const Basic> Y21 = Y12;
-
-    // Y22 = Y_s
-    //RCP<const Basic> Y22 = Y_s;
 
     // Compute Y-parameters
     Y_matrix.set(0, 0, Y_p);  // Y11
@@ -97,22 +73,8 @@ void Transformer::compute_y_parameters(double frequency) {
     Y_matrix.set(1, 0, Y_matrix.get(0, 1));  // Y21 (symmetrical to Y12)
     Y_matrix.set(1, 1, Y_s);  // Y22
 
-    // Assign the computed Y-parameters to the transformer Y-matrix
-    //Y_matrix[0][0] = Y_p;  // Y11
-    //Y_matrix[0][1] = mul(real_double(-a), Y_p);  // Y12
-    //Y_matrix[1][0] = Y_matrix[0][1];  // Y21 (symmetrical to Y12)
-    //Y_matrix[1][1] = Y_s;  // Y22
     std::cout << "Y_matrix dimensions2: " << Y_matrix.nrows() << " x " << Y_matrix.ncols() << std::endl;
 
-
-
-    // Print the Y-parameters
-    for (int i = 0; i < 2; ++i) {
-        for (int j = 0; j < 2; ++j) {
-            double Y_val_abs = eval_double(*abs(Y_matrix.get(i, j)));
-            std::cout << "|Transformer Y" << (i + 1) << (j + 1) << "|: " << Y_val_abs << " S" << std::endl;
-        }
-    }
 }
 
  
