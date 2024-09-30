@@ -22,6 +22,23 @@ public:
     Impedance(const std::string& symbol, int inputPins, int outputPins,
         const DenseMatrix& impedanceMatrix = createZeroMatrix(1))
         : Element(symbol, inputPins, outputPins), Z_matrix(impedanceMatrix) {
+        // Ensure Z_matrix is initialized
+        if (Z_matrix.nrows() == 0 || Z_matrix.ncols() == 0) {
+            throw std::runtime_error("Impedance matrix is not initialized.");
+        }
+
+        // Inverting the impedance matrix to compute the Y parameters
+        DenseMatrix Y_matrix(Z_matrix.nrows(), Z_matrix.ncols());
+        Z_matrix.inv(Y_matrix); // Use the inv method of DenseMatrix to invert
+
+        // Output the computed Y-parameters
+        std::cout << "Y-parameters for Impedance (symbolic representation):" << std::endl;
+        for (size_t i = 0; i < Y_matrix.nrows(); ++i) {
+            for (size_t j = 0; j < Y_matrix.ncols(); ++j) {
+                std::cout << Y_matrix.get(i, j)->__str__() << " ";
+            }
+            std::cout << std::endl;
+        }
 
     }
 
@@ -29,7 +46,7 @@ public:
     ~Impedance();
 
     // Method to compute Y-parameters
-    void compute_y_parameters(double frequency) override;
+    //void compute_y_parameters(double frequency) override;
 
 private:
     DenseMatrix Z_matrix; // Matrix representation of impedance

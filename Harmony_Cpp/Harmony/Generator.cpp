@@ -5,10 +5,10 @@
 
 using namespace SymEngine;
 
-//// Generator-specific Y-parameters for Single-phase
-void Generator::compute_y_parameters(double frequency) {
+// Constructor
+Generator::Generator(const std::string& symbol, int inputPins, int outputPins)
+    : Element(symbol, inputPins, outputPins) {
     // Use the constant PI from Constants.h
-    RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
 
     RCP<const Basic> s = mul(I, omega);
 

@@ -76,6 +76,12 @@
     <Filter Include="Source Files\Elements\Source">
       <UniqueIdentifier>{8f2539f8-ec43-419a-8667-90bc20294b17}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Elements\Transformer">
+      <UniqueIdentifier>{8dd45a96-fb85-467c-9cb4-a98fa6f2a461}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Transformer">
+      <UniqueIdentifier>{bd2551ed-9232-4979-ae56-da8134956604}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -105,9 +111,6 @@
     <ClCompile Include="Load.cpp">
       <Filter>Source Files\Elements\Generator</Filter>
     </ClCompile>
-    <ClCompile Include="Transformer.cpp">
-      <Filter>Source Files\Elements\Generator</Filter>
-    </ClCompile>
     <ClCompile Include="Constants.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -124,16 +127,19 @@
       <Filter>Source Files\Elements\Source</Filter>
     </ClCompile>
     <ClCompile Include="AC_source.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AC_source.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AC_source.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Transformer.cpp">
+      <Filter>Source Files\Elements\Transformer</Filter>
+    </ClCompile>
+    <ClCompile Include="AC_source.cpp">
       <Filter>Source Files\Elements\Source</Filter>
-    </ClCompile>
-    <ClCompile Include="AC_source.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AC_source.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AC_source.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -170,17 +176,11 @@
     <ClInclude Include="Load.h">
       <Filter>Header Files\Elements\Generator</Filter>
     </ClInclude>
-    <ClInclude Include="Transformer.h">
-      <Filter>Header Files\Elements\Generator</Filter>
-    </ClInclude>
     <ClInclude Include="Bus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Admittance.h">
       <Filter>Header Files\Elements\Admittance</Filter>
-    </ClInclude>
-    <ClInclude Include="AC_source.h">
-      <Filter>Header Files\Elements</Filter>
     </ClInclude>
     <ClInclude Include="AC_source.h">
       <Filter>Header Files\Elements\Source</Filter>
@@ -199,6 +199,12 @@
     </ClInclude>
     <ClInclude Include="AC_source.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Transformer.h">
+      <Filter>Header Files\Elements\Transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="AC_source.h">
+      <Filter>Header Files\Elements\Source</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

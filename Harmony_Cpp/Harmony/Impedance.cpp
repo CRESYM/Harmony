@@ -59,25 +59,9 @@ Impedance::~Impedance() {
     //}
     // 
 //Three-phase
-void Impedance::compute_y_parameters(double frequency) {
-    // Compute angular frequency
-    double omega = 2 * M_PI * frequency;
-
-    // Ensure Z_matrix is initialized
-    if (Z_matrix.nrows() == 0 || Z_matrix.ncols() == 0) {
-        throw std::runtime_error("Impedance matrix is not initialized.");
-    }
-
-    // Inverting the impedance matrix to compute the Y parameters
-    DenseMatrix Y_matrix(Z_matrix.nrows(), Z_matrix.ncols());
-    Z_matrix.inv(Y_matrix); // Use the inv method of DenseMatrix to invert
-
-    // Output the computed Y-parameters
-    std::cout << "Y-parameters for Impedance (symbolic representation):" << std::endl;
-    for (size_t i = 0; i < Y_matrix.nrows(); ++i) {
-        for (size_t j = 0; j < Y_matrix.ncols(); ++j) {
-            std::cout << Y_matrix.get(i, j)->__str__() << " ";
-        }
-        std::cout << std::endl;
-    }
-}
+//void Impedance::compute_y_parameters(double frequency) {
+//    // Compute angular frequency
+//    //double omega = 2 * M_PI * frequency;
+//
+//    
+//}

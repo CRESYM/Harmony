@@ -8,8 +8,7 @@ class Generator : public Element {
 public:
 
   //Single-phase
-    Generator(const std::string& symbol, int inputPins, int outputPins)
-        : Element(symbol, inputPins, outputPins) {}
+    Generator(const std::string& symbol, int inputPins, int outputPins);
 
     /*Generator(const std::string& symbol, int inputPins, int outputPins)
         : Element(symbol, inputPins, outputPins),
@@ -20,7 +19,7 @@ public:
 
     ~Generator() {}
 
-    void compute_y_parameters(double frequency) override; // Correct virtual function override
+    //void compute_y_parameters(double frequency) override; // Correct virtual function override
 
 private:
     double R_f = 1.0;  // Default value

@@ -15,10 +15,12 @@
 #include <symengine/expression.h>
 #include <symengine/symengine_config.h>
 #include <SymEngine/Matrix.h> // Ensure you include the necessary SymEngine headers
+#include <SymEngine/subs.h>
 
 #include <cmath>  // Include cmath for std::acos
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <vector> // For handling matrices in multi-phase systems
 #include <complex>
 

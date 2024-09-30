@@ -20,10 +20,6 @@ public:
 
     //void addPowerFlowData();
 
-    // Function to create Y parameters
-    void compute_y_parameters(double frequency) {
-    }
-
     // Function to print AC source values
     void printElementValues();
 

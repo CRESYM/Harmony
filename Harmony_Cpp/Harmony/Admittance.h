@@ -22,7 +22,7 @@ public:
 
     ~Admittance() override;
 
-    void compute_y_parameters(double frequency) override;
+    //void compute_y_parameters(double frequency) override;
     //void compute_y_parameters() override;
 
     // Print Admittance values

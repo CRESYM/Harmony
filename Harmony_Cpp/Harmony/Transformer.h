@@ -15,7 +15,7 @@ public:
 
     ~Transformer() override; 
 
-    void compute_y_parameters(double frequency) override;
+    //void compute_y_parameters(double frequency) override;
 
     // Print the Y-parameter matrix values
     void printElementValues() override {

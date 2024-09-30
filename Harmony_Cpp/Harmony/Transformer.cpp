@@ -63,14 +63,14 @@ Transformer::~Transformer() {
 }
 
 // Y-parameter computation using SymEngine
-void Transformer::compute_y_parameters(double frequency) {
-    std::cout << "Computing Y-parameters for a transformer...\n";
-    std::cout << "Computing Y-parameters for Transformer (" << getElementSymbol() << ") at " << frequency << " Hz:" << std::endl;
-
-    //RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
-
-    std::cout << "Y_matrix dimensions2: " << Y_matrix.nrows() << " x " << Y_matrix.ncols() << std::endl;
-
-}
+//void Transformer::compute_y_parameters(double frequency) {
+//    std::cout << "Computing Y-parameters for a transformer...\n";
+//    std::cout << "Computing Y-parameters for Transformer (" << getElementSymbol() << ") at " << frequency << " Hz:" << std::endl;
+//
+//    //RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
+//
+//    std::cout << "Y_matrix dimensions2: " << Y_matrix.nrows() << " x " << Y_matrix.ncols() << std::endl;
+//
+//}
 
  

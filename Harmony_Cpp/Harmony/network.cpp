@@ -51,7 +51,7 @@ void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
         throw invalid_argument("Invalid terminal number.");
         exit(1);
     }
-    std::cout << "Connecting element with " << pins << " pins to bus with " << bus->getPinNumber() << " pins." << std::endl;
+    //std::cout << "Connecting element with " << pins << " pins to bus with " << bus->getPinNumber() << " pins." << std::endl;
 
     if (pins == bus->getPinNumber()) {
         connections[bus].push_back(elem);
@@ -206,12 +206,12 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
     vec_uint pivot_cols;
     reduced_row_echelon_form(Y, Y, pivot_cols);
 
-    std::cout << "Reduced row echelon form gives: " << std::endl;
-    for (int i = 0; i < Y.nrows(); i++) {
-        for (int j = 0; j < Y.ncols(); j++)
-            std::cout << Y.get(i, j)->__str__() << " ";
-        std::cout << endl;
-    }
+    //std::cout << "Reduced row echelon form gives: " << std::endl;
+    //for (int i = 0; i < Y.nrows(); i++) {
+    //    for (int j = 0; j < Y.ncols(); j++)
+    //        std::cout << Y.get(i, j)->__str__() << " ";
+    //    std::cout << endl;
+    //}
 
     // equivalent impedance
     DenseMatrix equivalent_impedance = createZeroMatrix(equivalent_impedance_size, 1);

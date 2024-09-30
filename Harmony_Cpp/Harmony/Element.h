@@ -32,21 +32,19 @@ public:
         std::cout << "Element Symbol: " << element_symbol
             << ", Input Pins: " << input_pins
             << ", Output Pins: " << output_pins << std::endl;
-
-        // Print the Y-parameters
-        for (int i = 0; i < 2; ++i) {
-            for (int j = 0; j < 2; ++j) {
-                double Y_val_abs = eval_double(*abs(Y_matrix.get(i, j)));
-                std::cout << "| Y" << (i + 1) << (j + 1) << "|: " << Y_val_abs << " S" << std::endl;
-            }
-        }
     }
 
+    // Print all element values, addition to printElementInfo
+    virtual void printElementValues() = 0;
+
+    // Print Y matrix in file
+    void writeFile();
+
     // Virtual function to compute Y-parameters (to be implemented by derived classes)
-    virtual void compute_y_parameters(double frequency) = 0;
+    virtual std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency);
     virtual DenseMatrix compute_y_parameters() { return Y_matrix; };
 
-    virtual void printElementValues()=0;
+    
 
     DenseMatrix read_y_matrix() { return Y_matrix; }
 

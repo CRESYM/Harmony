@@ -35,23 +35,9 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
             std::cerr << "Load parameters initialized correctly for phase " << i + 1 << "!" << std::endl;
         }
     }
-}
-    
-void Load::printElementValues() {
-        printElementInfo();
-        for (int i = 0; i < input_pins; i++) {
-            std::cout << "Resistance connected to pin " << i + 1 << " is: " << R[i] << std::endl;
-            std::cout << "Inductance connected to pin " << i + 1 << " is: " << L[i] << std::endl;
-            std::cout << "Capacitance connected to pin " << i + 1 << " is: " << C[i] << std::endl;
-        }
-}
 
-// Load-specific Y-parameters for three-phase
-void Load::compute_y_parameters(double frequency) {
-    std::cout << "Computing Y-parameters for a three-phase load...\n";
-
-    RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
-    RCP<const Basic> j = I;
+    //RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
+    //RCP<const Basic> j = I;
 
     // Matrix for three-phase Y-parameters
     std::vector<std::vector<RCP<const Basic>>> Y_matrix(3, std::vector<RCP<const Basic>>(3));
@@ -93,4 +79,14 @@ void Load::compute_y_parameters(double frequency) {
         }
     }
 }
+    
+void Load::printElementValues() {
+        printElementInfo();
+        for (int i = 0; i < input_pins; i++) {
+            std::cout << "Resistance connected to pin " << i + 1 << " is: " << R[i] << std::endl;
+            std::cout << "Inductance connected to pin " << i + 1 << " is: " << L[i] << std::endl;
+            std::cout << "Capacitance connected to pin " << i + 1 << " is: " << C[i] << std::endl;
+        }
+}
+
 
