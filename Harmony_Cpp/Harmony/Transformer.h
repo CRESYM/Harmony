@@ -10,12 +10,29 @@ using namespace SymEngine;
 
 class Transformer : public Element {
 public:
-    Transformer(const std::string& symbol, int pins, std::vector<double> values);  // Constructor with vector input for parameters
+    // Constructor to initialize the Transformer with a given symbol, number of pins, and values
+    Transformer(const std::string& symbol, int pins, const std::vector<double>& values);
 
-    ~Transformer() {}
+    ~Transformer() override; 
 
-    void compute_y_parameters(double frequency) override;  // Declaration for Y parameter computation
-    void printElementValues() override;  // Declaration for printing values
+    void compute_y_parameters(double frequency) override;
+
+    // Print the Y-parameter matrix values
+    void printElementValues() override {
+        std::cout << "Y-parameter Matrix for Transformer: " << getElementSymbol() << std::endl;
+        for (int i = 0; i < Y_matrix.nrows(); i++) {
+            for (int j = 0; j < Y_matrix.ncols(); j++) {
+                // Check the bounds before accessing
+                if (i < Y_matrix.nrows() && j < Y_matrix.ncols()) {
+                    std::cout << Y_matrix.get(i, j)->__str__() << " ";  // Print each matrix element
+                }
+                else {
+                    std::cerr << "Index out of bounds: (" << i << ", " << j << ")" << std::endl;
+                }
+            }
+            std::cout << std::endl;
+        }
+    }
 
     double getResistance(int winding) const {
         if (winding >= 0 && winding < R.size()) {
