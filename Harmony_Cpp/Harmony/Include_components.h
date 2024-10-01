@@ -6,7 +6,7 @@
 #include "AC_source.h"
 //#include "TransmissionLine.h"
 //#include "Generator.h"
-//#include "Load.h"
+#include "Load.h"
 #include "Transformer.h"
 #include "Impedance.h"
 

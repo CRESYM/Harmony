@@ -1,9 +1,6 @@
 ﻿// Load.cpp
 
-#include "Element.h"
 #include "Load.h"
-#include "Constants.h"
-#include <iostream>
 
 Load::Load(const std::string& symbol, int pins, std::vector<double> values) : Element(symbol, pins, pins) {
     if (pins == 0)
@@ -27,7 +24,7 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
     
     // Check for initialization
     for (int i = 0; i < pins; ++i) {
-        if (R[i] == 0 || L[i] == 0 || C[i] == 0) {
+        if (R[i] == 0 && L[i] == 0 && C[i] == 0) {
             std::cerr << "Load parameters not initialized correctly for phase " << i + 1 << "!" << std::endl;
             return;
         }
@@ -36,57 +33,25 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
         }
     }
 
-    //RCP<const Basic> omega = mul(real_double(2), mul(PI, real_double(frequency)));
-    //RCP<const Basic> j = I;
-
-    // Matrix for three-phase Y-parameters
-    std::vector<std::vector<RCP<const Basic>>> Y_matrix(3, std::vector<RCP<const Basic>>(3));
-
     // Loop over phases to compute Y-parameters
     for (int i = 0; i < input_pins; ++i) {
         RCP<const Basic> R_val = real_double(R[i]);
         RCP<const Basic> L_val = real_double(L[i]);
         RCP<const Basic> C_val = real_double(C[i]);
 
-        // Print debug info
-        std::cout << "Phase " << i + 1 << " -> R: " << eval_double(*R_val)
-            << ", L: " << eval_double(*L_val)
-            << ", C: " << eval_double(*C_val) << std::endl;
 
-        // jωL
+        // Calculate the impedance part from inductance: jωL
         RCP<const Basic> j_omega_L = mul(j, mul(omega, L_val));
-        // Calculate the capacitive reactance: j/(ωC)
+        // Calculate the capacitive impedance: j/(ωC)
         RCP<const Basic> j_omega_C = mul(j, div(real_double(-1), mul(omega, C_val)));
 
         // Impedance
         RCP<const Basic> Z_RLC = add(add(R_val, j_omega_L), j_omega_C);
 
-        // Ensure Z_RLC is not zero
-        if (Z_RLC.get() == nullptr || eval_double(*Z_RLC) == 0.0) {
-            std::cerr << "Z_RLC is zero for phase " << i + 1 << std::endl;
-            continue; // Skip to next phase
-        }
-
         // Admittance
-        Y_matrix[i][i] = div(real_double(1), Z_RLC);
-    }
-
-    // Print the Y-parameters for three-phase load
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            double Y_val_abs = eval_double(*abs(Y_matrix[i][j]));
-            std::cout << "|Three-phase Load Y" << (i + 1) << (j + 1) << "|: " << Y_val_abs << " S" << std::endl;
-        }
+        Y_matrix.set(i,i, div(real_double(1), Z_RLC));
     }
 }
     
-void Load::printElementValues() {
-        printElementInfo();
-        for (int i = 0; i < input_pins; i++) {
-            std::cout << "Resistance connected to pin " << i + 1 << " is: " << R[i] << std::endl;
-            std::cout << "Inductance connected to pin " << i + 1 << " is: " << L[i] << std::endl;
-            std::cout << "Capacitance connected to pin " << i + 1 << " is: " << C[i] << std::endl;
-        }
-}
 
 

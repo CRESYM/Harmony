@@ -34,24 +34,6 @@
     <Filter Include="Header Files\Elements\Transmission_line">
       <UniqueIdentifier>{0c069cf1-a49a-4bc4-8600-73ef65718a70}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Elements\Impedance\Resistor">
-      <UniqueIdentifier>{babea72a-6fe7-45ec-8a6b-c4403d515aa3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Elements\Impedance\Capacitor">
-      <UniqueIdentifier>{039f216c-b87b-4cd1-9921-01547314f0ed}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Elements\Impedance\Inductor">
-      <UniqueIdentifier>{44966e2d-feab-4f03-8b85-e557ff5e53b3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Elements\Impedance\Resistor">
-      <UniqueIdentifier>{7569b2f4-a67e-415a-b986-578fab5490b6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Elements\Impedance\Inductor">
-      <UniqueIdentifier>{b3f1ab28-6b71-45fa-9ac7-9f57e00f722e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Elements\Impedance\Capacitor">
-      <UniqueIdentifier>{c2699be7-5e70-45de-9725-47561daa0087}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Elements\Tools">
       <UniqueIdentifier>{81e7edd4-fe3d-42df-a2b3-a7e649b4df6a}</UniqueIdentifier>
     </Filter>
@@ -108,9 +90,6 @@
     <ClCompile Include="Generator.cpp">
       <Filter>Source Files\Elements\Generator</Filter>
     </ClCompile>
-    <ClCompile Include="Load.cpp">
-      <Filter>Source Files\Elements\Generator</Filter>
-    </ClCompile>
     <ClCompile Include="Constants.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -140,6 +119,9 @@
     </ClCompile>
     <ClCompile Include="AC_source.cpp">
       <Filter>Source Files\Elements\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Load.cpp">
+      <Filter>Source Files\Elements\Impedance</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -173,9 +155,6 @@
     <ClInclude Include="Generator.h">
       <Filter>Header Files\Elements\Generator</Filter>
     </ClInclude>
-    <ClInclude Include="Load.h">
-      <Filter>Header Files\Elements\Generator</Filter>
-    </ClInclude>
     <ClInclude Include="Bus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -205,6 +184,9 @@
     </ClInclude>
     <ClInclude Include="AC_source.h">
       <Filter>Header Files\Elements\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Load.h">
+      <Filter>Header Files\Elements\Impedance</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
