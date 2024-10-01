@@ -28,6 +28,10 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
             std::cerr << "Load parameters not initialized correctly for phase " << i + 1 << "!" << std::endl;
             return;
         }
+        else if (R[i] < 0 || L[i] < 0 || C[i] < 0) {
+            std::cerr << "Load parameters not initialized correctly for phase " << i + 1 << "!" << std::endl;
+            return;
+        }
         else {
             std::cerr << "Load parameters initialized correctly for phase " << i + 1 << "!" << std::endl;
         }
