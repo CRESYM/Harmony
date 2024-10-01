@@ -53,6 +53,8 @@ int main() {
 
 	myNetwork->compute_equivalent_impedance(start_buses, end_buses, elem);
 
+	y->writeFile(10.0, 1000.0, 3);
+
 	
 	// Clean up dynamically allocated memory
 	delete myNetwork;

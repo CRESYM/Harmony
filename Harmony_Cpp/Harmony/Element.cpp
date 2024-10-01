@@ -52,18 +52,28 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
 
 void Element::printElementValues() {}
 
-void Element::writeFile() {
+void Element::writeFile(double start_frequency, int end_frequency, int number_of_points) {
     std::ofstream myfile;
-    myfile.open("files/"+element_symbol);
+    myfile.open("files/"+element_symbol+".csv");
 
     // Print the Y-parameters in file
-
-    for (int i = 0; i < input_pins; ++i) {
-        for (int j = 0; j < output_pins; ++j) {
-            double Y_val_abs = eval_double(*abs(Y_matrix.get(i, j)));
-            std::cout << "| Y" << (i + 1) << (j + 1) << "|: " << Y_val_abs << " S" << std::endl;
+    double gap = (log10(end_frequency) - log10(start_frequency)) / (number_of_points - 1);
+    gap = pow(10, gap);
+    int frequency = start_frequency;
+    for (int p = 0; p < number_of_points; p++) {
+        std::vector<std::vector<complex<double>>> Y = compute_y_parameters(frequency);
+        
+        // write in file
+        myfile << frequency << ",";
+        for (int i = 0; i < input_pins; ++i) {
+            for (int j = 0; j < output_pins; ++j) {
+                myfile << Y[i][j] << ",";
+            }
         }
+        myfile << "\n";
+
+        frequency *= gap; // increase frequency
     }
-    myfile << "1,2,3.456\n";
+    
     myfile.close();
 }

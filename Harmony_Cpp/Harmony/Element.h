@@ -38,7 +38,7 @@ public:
     virtual void printElementValues() = 0;
 
     // Print Y matrix in file
-    void writeFile();
+    void writeFile(double start_frequency, int end_frequency, int number_of_points);
 
     // Virtual function to compute Y-parameters (to be implemented by derived classes)
     virtual std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency);
