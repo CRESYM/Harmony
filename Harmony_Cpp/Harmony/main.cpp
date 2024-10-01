@@ -10,6 +10,9 @@ int main() {
 	std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
 	TransmissionLine* t = new TransmissionLine("tl", 3, transmission_line_values);
 
+	std::vector<double> generator_values = { 1.0, 0.01, 1.0, 0.1 };
+	Generator* g = new Generator("gen", 3, generator_values);
+
 	vector<double> vec = {0, 0, 1};
 	Load* y = new Load("l1", 1, vec);
 	//Impedance* y = new Impedance("z1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) }));

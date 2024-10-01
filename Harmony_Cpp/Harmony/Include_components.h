@@ -10,7 +10,7 @@
 #include "Transformer.h"
 
 #include "AC_source.h"
-//#include "Generator.h"
+#include "Generator.h"
 
 #include "TransmissionLine.h"
 
