@@ -142,6 +142,7 @@
     <ClCompile Include="network.cpp" />
     <ClCompile Include="overhead_line.cpp" />
     <ClCompile Include="Eval_parameter.cpp" />
+    <ClCompile Include="Transformer_Delta_Delta.cpp" />
     <ClCompile Include="Transformer.cpp" />
     <ClCompile Include="Transmissionline.cpp" />
   </ItemGroup>
@@ -160,6 +161,7 @@
     <ClInclude Include="symengine_n.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="overhead_line.h" />
+    <ClInclude Include="Transformer_Delta_Delta.h" />
     <ClInclude Include="Transformer.h" />
     <ClInclude Include="Transmissionline.h" />
   </ItemGroup>

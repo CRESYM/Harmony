@@ -8,13 +8,14 @@
 #include "Load.h"
 
 #include "Transformer.h"
+#include "Transformer_Delta_Delta.h"
 
 #include "AC_source.h"
 #include "Generator.h"
 
 #include "TransmissionLine.h"
 
-#include "transformer delta delta.h"
+
 
 #endif // !INCLUDE_COMPONENTS_H
 
