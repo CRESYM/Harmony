@@ -14,6 +14,7 @@
 
 #include "TransmissionLine.h"
 
+#include "transformer delta delta.h"
 
 #endif // !INCLUDE_COMPONENTS_H
 
