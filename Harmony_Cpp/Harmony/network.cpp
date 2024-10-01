@@ -156,27 +156,26 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
                 DenseMatrix element_Y_matrix = element->compute_y_parameters();
 
                 // add element_Y_matrix
-                int pins = bus.first->getPinNumber();
+                std::map<Bus*, int> bus_map = element->getConnections();
+                int terminal = bus_map[bus.first] - 1; int pins = bus.first->getPinNumber();
                 int position = bus.second;
+                // get the other bus and add -element_Y_matrix
+                Bus* other_bus = element->getOtherBus(bus.first); 
+                int terminal_other = bus_map[other_bus] - 1; int pins_other = other_bus->getPinNumber();
+                int position_other = all_buses[other_bus];
                 for (int i = 0; i < pins; i++) {
                     for (int j = 0; j < pins; j++) {
                         Y.set(position + i, position + j, add(Y.get(position + i, position + j),
-                            element_Y_matrix.get(i, j)));
+                            element_Y_matrix.get(terminal * pins + i, terminal * pins + j)));
                     }
-                }
-
-                // get the other bus and add -element_Y_matrix
-                Bus* other_bus = element->getOtherBus(bus.first);
-                if (other_bus->getBusName() != "gnd") {
-                    int pins_other = other_bus->getPinNumber();
-                    int position_other = all_buses[other_bus];
-                    for (int i = 0; i < pins_other; i++) {
-                        for (int j = 0; j < pins_other; j++) {
-                            Y.set(position_other + i, position_other + j, sub(Y.get(position_other + i, position_other + j),
-                                element_Y_matrix.get(i, j)));
+                    for (int j = 0; j < pins_other; j++) {
+                        if (other_bus->getBusName() != "gnd") {
+                            Y.set(position + i, position_other + j, add(Y.get(position_other + i, position_other + j),
+                                element_Y_matrix.get(terminal * pins + i, terminal_other * pins_other + j)));
                         }
                     }
-                }
+                }          
+                
             }
             
         }

@@ -11,7 +11,7 @@ public:
      // Unified constructor for universal number of phases
     Element(const std::string& symbol, int inputPins, int outputPins)
         : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins) {
-        Y_matrix = createZeroMatrix(inputPins, outputPins);
+        Y_matrix = createZeroMatrix(2*inputPins, 2*outputPins);
     }
 
     // Destructor
@@ -23,6 +23,7 @@ public:
     std::string getElementSymbol() const { return element_symbol; }
     std::vector<Bus*> getBuses();
     Bus* getOtherBus(Bus*);
+    std::map<Bus*, int> getConnections() { return connections; }
 
     // Attach bus pointer to the proper terminal
     void attachBus(Bus*, int);
@@ -52,7 +53,7 @@ protected:
     std::string element_symbol;
     int input_pins;
     int output_pins;
-    std::map<int, Bus*> connections;
+    std::map<Bus* , int> connections;
 
     DenseMatrix Y_matrix; // Matrix representation of admittance
 };

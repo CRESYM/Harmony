@@ -55,6 +55,14 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
         // Admittance
         Y_matrix.set(i,i, div(real_double(1), Z_RLC));
     }
+
+    // Fill in the complete Y parameters
+    for (int i = 0; i < pins; i++)
+        for (int j = 0; j < pins; j++) {
+            Y_matrix.set(pins + i, j, sub(zero, Y_matrix.get(i, j)));
+            Y_matrix.set(pins + i, pins + j, Y_matrix.get(i, j));
+            Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
+        }
 }
     
 

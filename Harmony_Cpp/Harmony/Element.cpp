@@ -13,22 +13,22 @@ Element::~Element() {}
 
 // Attach terminal to the bus
 void Element::attachBus(Bus* bus, int terminal) {
-    connections[terminal] = bus;
+    connections[bus] = terminal;
 }
 
 // Getters
 std::vector<Bus*> Element::getBuses() {
     std::vector<Bus*> buses;
-    for (std::map<int, Bus*>::iterator it = connections.begin(); it != connections.end(); ++it) {
-        buses.push_back(it->second);
+    for (std::map<Bus*, int>::iterator it = connections.begin(); it != connections.end(); ++it) {
+        buses.push_back(it->first);
     }
     return buses;
 }
 
 Bus* Element::getOtherBus(Bus* bus) {
-    for (std::map<int, Bus*>::iterator it = connections.begin(); it != connections.end(); ++it) {
-        if (bus != it->second)
-            return it->second;
+    for (std::map<Bus*, int>::iterator it = connections.begin(); it != connections.end(); ++it) {
+        if (bus != it->first)
+            return it->first;
     }
 }
 

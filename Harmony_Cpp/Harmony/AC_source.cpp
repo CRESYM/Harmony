@@ -20,6 +20,14 @@ AC_source::AC_source(const std::string& symbol, int pins, DenseMatrix Z)
     }
     else
         throw invalid_argument("Invalid number of pins, must be greater than 0!");
+
+    // Fill in the complete Y parameters
+    for (int i = 0; i < pins; i++)
+        for (int j = 0; j < pins; j++) {
+            Y_matrix.set(pins + i, j, sub(zero, Y_matrix.get(i, j)));
+            Y_matrix.set(pins + i, pins + j, Y_matrix.get(i, j));
+            Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
+        }
 }
 
 // Destructor
