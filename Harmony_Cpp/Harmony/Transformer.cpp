@@ -19,13 +19,12 @@ Transformer::Transformer(const std::string& symbol, int pins, const std::vector<
             std::cerr << "Transformer parameters not initialized correctly for winding " << i + 1 << "!" << std::endl;
             return;
         }
-        else {
-            std::cerr << "Transformer parameters initialized correctly for winding " << i + 1 << "!" << std::endl;
-        }
+        //else {
+        //    std::cerr << "Transformer parameters initialized correctly for winding " << i + 1 << "!" << std::endl;
+        //}
     }
 
-    // Y matrix
-
+    // Y parameters matrix
     // Define symbolic resistances and reactances for primary and secondary windings
     // Primary side
     RCP<const Basic> R_p = real_double(R[0]);
@@ -36,22 +35,17 @@ Transformer::Transformer(const std::string& symbol, int pins, const std::vector<
     RCP<const Basic> X_s = real_double(X[1]);
     RCP<const Basic> a_val = real_double(a); // Turns ratio symbol
 
-    // Check if any resistance or reactance is equivalent to zero
-    RCP<const Basic> zero = integer(0);
-    if (eval_double(*R_p) == 0 || eval_double(*X_p) == 0 || eval_double(*R_s) == 0 || eval_double(*X_s) == 0) {
-        std::cerr << "Error: Zero impedance encountered!" << std::endl;
-        return; // Early exit to avoid further computation
-    }
-
     // Compute the primary and secondary admittances
     RCP<const Basic> Y_p = div(real_double(1), add(R_p, mul(j, X_p)));
     RCP<const Basic> Y_s = div(real_double(1), add(R_s, mul(j, X_s)));
 
     // Compute Y-parameters
-    Y_matrix.set(0, 0, Y_p);  // Y11
-    Y_matrix.set(0, 1, mul(real_double(-a), Y_p));  // Y12
-    Y_matrix.set(1, 0, Y_matrix.get(0, 1));  // Y21 (symmetrical to Y12)
-    Y_matrix.set(1, 1, Y_s);  // Y22
+    for (int i = 0; i < pins; i++) {
+        Y_matrix.set(i, i, Y_p);  // Y11
+        Y_matrix.set(i, pins + i, mul(real_double(-a), Y_p));  // Y12
+        Y_matrix.set(pins + i, i, Y_matrix.get(0, 1));  // Y21 (symmetrical to Y12)
+        Y_matrix.set(pins + i, pins + i, Y_s);  // Y22
+    }
 
 }
 

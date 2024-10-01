@@ -4,8 +4,8 @@
 
 int main() {
 	// Create Transformer object with 1 pin
-	//std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
-	//Transformer* transformer = new Transformer("T1", 2, transformer_values);
+	std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
+	Transformer* transformer = new Transformer("T1", 3, transformer_values);
 
 	vector<double> vec = {0, 0, 1};
 	Load* y = new Load("l1", 1, vec);
