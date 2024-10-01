@@ -12,7 +12,7 @@
 #include "AC_source.h"
 //#include "Generator.h"
 
-//#include "TransmissionLine.h"
+#include "TransmissionLine.h"
 
 
 #endif // !INCLUDE_COMPONENTS_H

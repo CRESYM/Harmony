@@ -4,8 +4,11 @@
 
 int main() {
 	// Create Transformer object with 1 pin
-	std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
-	Transformer* transformer = new Transformer("T1", 3, transformer_values);
+	//std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
+	//Transformer* transformer = new Transformer("T1", 3, transformer_values);
+
+	std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
+	TransmissionLine* t = new TransmissionLine("tl", 3, transmission_line_values);
 
 	vector<double> vec = {0, 0, 1};
 	Load* y = new Load("l1", 1, vec);
@@ -53,7 +56,7 @@ int main() {
 
 	myNetwork->compute_equivalent_impedance(start_buses, end_buses, elem);
 
-	y->writeFile(10.0, 1000.0, 3);
+	t->writeFile(10.0, 1000.0, 3);
 
 	
 	// Clean up dynamically allocated memory

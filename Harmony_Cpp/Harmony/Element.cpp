@@ -37,11 +37,11 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
     double angular_frequency = 2 * frequency * M_PI;
     map_basic_basic m;
     m[omega] = real_double(angular_frequency);
-    std::vector<std::vector<complex<double>>> Y_val_exact(input_pins);
-    for (int i = 0; i < input_pins; i++)
-        Y_val_exact[i].resize(output_pins);
-    for (int i = 0; i < input_pins; ++i) {
-        for (int j = 0; j < output_pins; ++j) {
+    std::vector<std::vector<complex<double>>> Y_val_exact(2 * input_pins);
+    for (int i = 0; i < 2 * input_pins; i++)
+        Y_val_exact[i].resize(2 * output_pins);
+    for (int i = 0; i < 2 * input_pins; ++i) {
+        for (int j = 0; j < 2 * output_pins; ++j) {
             RCP<const Basic> r = subs(Y_matrix.get(i, j), m);
             Y_val_exact[i][j] = eval_complex_double(*r); // eval_double(Y_matrix.get(i, j));
             //std::cout << Y_val_exact[i][j] << endl;
@@ -74,8 +74,8 @@ void Element::writeFile(double start_frequency, int end_frequency, int number_of
         
         // write in file
         myfile << frequency << ",";
-        for (int i = 0; i < input_pins; ++i) {
-            for (int j = 0; j < output_pins; ++j) {
+        for (int i = 0; i < 2 * input_pins; ++i) {
+            for (int j = 0; j < 2 * output_pins; ++j) {
                 myfile << Y[i][j] << ",";
             }
         }

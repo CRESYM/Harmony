@@ -7,12 +7,11 @@
 class TransmissionLine : public Element {
 public:
     // Parameterized constructor that calls the base class constructor
-   // TransmissionLine(const std::string& symbol, int inputPins, int outputPins)
-    //    : Element(symbol, inputPins, outputPins) {}
+	TransmissionLine(const std::string& symbol, int pins, const std::vector<double>&);
 
- //   ~TransmissionLine() {}
+    ~TransmissionLine() {}
 
-   // void compute_y_parameters(double R, double L, double G, double C, double length, double frequency);
+   // void compute_y_parameters(double R, double L, double G, double C, double length);
 private:
 	double R_tl = 0.01;       // Resistance per unit length (ohms/m)
 	double L_tl = 2.5e-7;     // Inductance per unit length (H/m)

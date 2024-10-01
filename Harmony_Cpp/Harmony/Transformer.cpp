@@ -19,9 +19,6 @@ Transformer::Transformer(const std::string& symbol, int pins, const std::vector<
             std::cerr << "Transformer parameters not initialized correctly for winding " << i + 1 << "!" << std::endl;
             return;
         }
-        //else {
-        //    std::cerr << "Transformer parameters initialized correctly for winding " << i + 1 << "!" << std::endl;
-        //}
     }
 
     // Y parameters matrix
