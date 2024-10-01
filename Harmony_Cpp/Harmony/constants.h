@@ -23,6 +23,7 @@
 #include <fstream>
 #include <vector> // For handling matrices in multi-phase systems
 #include <complex>
+#include <stdexcept>
 
 using namespace std;
 using namespace SymEngine; // Use the SymEngine namespace

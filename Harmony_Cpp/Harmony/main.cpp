@@ -7,10 +7,8 @@ int main() {
 	//std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
 	//Transformer* transformer = new Transformer("T1", 2, transformer_values);
 
-	RCP<const Basic> r = real_double(10.0);
-	double m = eval_double(*r);
-
-	Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
+	Impedance* y = new Impedance("z1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) }));
+	//Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
 	AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
 	Network* myNetwork = new Network();
 

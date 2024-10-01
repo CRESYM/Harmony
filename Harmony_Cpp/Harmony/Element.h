@@ -35,7 +35,7 @@ public:
     }
 
     // Print all element values, addition to printElementInfo
-    virtual void printElementValues() = 0;
+    virtual void printElementValues();
 
     // Print Y matrix in file
     void writeFile(double start_frequency, int end_frequency, int number_of_points);

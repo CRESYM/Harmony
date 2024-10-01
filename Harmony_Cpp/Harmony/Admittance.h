@@ -22,20 +22,6 @@ public:
 
     ~Admittance() override;
 
-    //void compute_y_parameters(double frequency) override;
-    //void compute_y_parameters() override;
-
-    // Print Admittance values
-    void printElementValues() override {
-        std::cout << "Admittance Matrix for element: " << getElementSymbol() << std::endl;
-        for (int i = 0; i < Y_matrix.nrows(); i++) {
-            for (int j = 0; j < Y_matrix.ncols(); j++) {
-                std::cout << Y_matrix.get(i, j)->__str__() << " "; // Use __str__() for output
-            }
-            std::cout << std::endl;
-        }
-    }
-
 private:
        
 };

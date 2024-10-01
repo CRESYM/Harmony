@@ -44,13 +44,22 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
         for (int j = 0; j < output_pins; ++j) {
             RCP<const Basic> r = subs(Y_matrix.get(i, j), m);
             Y_val_exact[i][j] = eval_complex_double(*r); // eval_double(Y_matrix.get(i, j));
-            std::cout << Y_val_exact[i][j] << endl;
+            //std::cout << Y_val_exact[i][j] << endl;
         }
     }
     return Y_val_exact;
 }
 
-void Element::printElementValues() {}
+void Element::printElementValues() {
+    std::cout << "Element : " << getElementSymbol() << std::endl;
+    std::cout << "Y matrix symbolic entries: " << endl; 
+    for (int i = 0; i < Y_matrix.nrows(); i++) {
+        for (int j = 0; j < Y_matrix.ncols(); j++) {
+            std::cout << Y_matrix.get(i, j)->__str__() << " "; // Use __str__() for output
+        }
+        std::cout << std::endl;
+    }
+}
 
 void Element::writeFile(double start_frequency, int end_frequency, int number_of_points) {
     std::ofstream myfile;
