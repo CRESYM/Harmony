@@ -1,7 +1,6 @@
 #ifndef SYMENGINE_N_H
 #define SYMENGINE_N_H
 
-#pragma once
 
 #include <basic.h>
 #include <complex>

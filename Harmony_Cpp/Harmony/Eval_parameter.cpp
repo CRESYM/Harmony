@@ -1,44 +1,6 @@
 ﻿#include "Cable.h"
 #include "eval_parameter.h"
-//#include "MySymbol.h" 
-//#include "MyBasic.h"
-//#include "MySymbolicType.h"
-#include "symengine_n.h"
-#include <symengine_exception.h>
-#include <symengine_config.h>
-#include <basic.h>
-#include <functions.h>
-#include <matrix.h>
-#include <matrix_expressions.h>
-#include <complex.h>
-#include <complex_double.h>
-#include <eval_mpc.h> // Include for mpc functions
-#include <complex_mpc.h>
-#include <eval_double.h>
-#include <add.h>
-#include <mul.h>
-#include <matrices/transpose.h>
-#include <subs.h>
-#include <symbol.h>
-#include <real_double.h>
-#include <rational.h>
-#include <iostream>
 
-using namespace SymEngine;
-
-using SymEngine::Basic;
-using SymEngine::Symbol;
-using SymEngine::FunctionSymbol;
-using SymEngine::add;
-using SymEngine::mul;
-using SymEngine::div;
-using SymEngine::eye;
-using SymEngine::transpose;
-using SymEngine::ComplexDouble;
-using SymEngine::Complex;
-using SymEngine::real_double;
-using SymEngine::conjugate;
-using SymEngine::I;
 
 
 //using SymEngine::linalg::inv; // Import the inv function from the linalg namespace

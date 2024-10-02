@@ -3,17 +3,10 @@
 
 //class CMapBasicBasic;
 
-#include <iostream>
-#include <vector>
+
 
 #include "Cable.h"
 #include "overhead_line.h"
-#include <symbol.h>
-#include <basic.h>
-#include <real_double.h>
-#include <complex.h>
-
-using namespace SymEngine;
 
 /*class Eval_parameter : public Element {
 public:

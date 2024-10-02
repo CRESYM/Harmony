@@ -1,15 +1,6 @@
 ﻿#include "overhead_line.h"
-#include "basic.h"
-#include "Constants.h"
 #include "Element.h"
 
-#include <stdexcept>
-#include <functional>
-#include <unordered_map>
-#include <cmath>
-#include <tuple>
-#include <vector>
-#include <string>
 
 
 /*

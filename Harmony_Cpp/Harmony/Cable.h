@@ -4,24 +4,7 @@
 #include "Transmissionline.h"
 #include "Element.h"
 
-#include <basic.h>
-#include <symbol.h>
-#include <complex.h>
-#include <rational.h>
-#include <dict.h>
-#include <eval_double.h>
-#include <unordered_map>
-#include <vector>
-#include <tuple>
-#include <string>
-#include <utility>
-#include <memory>
 
-using namespace SymEngine; 
-using SymEngine::symbol;
-using SymEngine::Basic;
-using SymEngine::RCP;
-using SymEngine::eval_double;
 
 // Define the Conductor class presents conducting layer
 class Conductor {

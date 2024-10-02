@@ -1,5 +1,4 @@
-#include "transformer Y Delta.h"
-#include <cmath>
+#include "transformer_Y_Delta.h"
 
 // Constructor
 TransformerYDelta::TransformerYDelta(const std::string& symbol, int pins, const std::vector<double>& values)

@@ -1,8 +1,8 @@
-#include "Transformer Delta Star.h"
-#include <cmath>
+#include "Transformer_Delta_Y.h"
+
 
 // Constructor
-TransformerDeltaStar::TransformerDeltaStar(const std::string& symbol, int pins, const std::vector<double>& values)
+TransformerDeltaY::TransformerDeltaY(const std::string& symbol, int pins, const std::vector<double>& values)
     : Element(symbol, pins, pins) {
 
     if (values.size() == 6) {
@@ -82,6 +82,6 @@ TransformerDeltaStar::TransformerDeltaStar(const std::string& symbol, int pins, 
 }
 
 // Destructor
-TransformerDeltaStar::~TransformerDeltaStar() {
-    std::cout << "TransformerDeltaStar object for " << getElementSymbol() << " destroyed." << std::endl;
+TransformerDeltaY::~TransformerDeltaY() {
+    std::cout << "Transformer Delta Y object for " << getElementSymbol() << " destroyed." << std::endl;
 }

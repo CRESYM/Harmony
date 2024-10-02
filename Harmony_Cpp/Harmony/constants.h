@@ -24,6 +24,8 @@
 #include <vector> // For handling matrices in multi-phase systems
 #include <complex>
 #include <stdexcept>
+#include <tuple>
+#include <variant>
 
 using namespace std;
 using namespace SymEngine; // Use the SymEngine namespace

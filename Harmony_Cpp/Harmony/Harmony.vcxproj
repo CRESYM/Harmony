@@ -88,14 +88,15 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\vcpkg\packages\symengine_x64-windows\include\symengine</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\vcpkg\installed\x64-windows\include;D:\vcpkg\packages\symengine_x64-windows\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DisableSpecificWarnings>4146</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>C:\vcpkg\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\vcpkg\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>symengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>4146</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -142,8 +143,8 @@
     <ClCompile Include="network.cpp" />
     <ClCompile Include="overhead_line.cpp" />
     <ClCompile Include="Eval_parameter.cpp" />
-    <ClCompile Include="Transformer Delta Star.cpp" />
-    <ClCompile Include="Transformer Y Delta.cpp" />
+    <ClCompile Include="Transformer_Delta_Y.cpp" />
+    <ClCompile Include="Transformer_Y_Delta.cpp" />
     <ClCompile Include="Transformer_Delta_Delta.cpp" />
     <ClCompile Include="Transformer.cpp" />
     <ClCompile Include="Transmissionline.cpp" />
@@ -163,8 +164,8 @@
     <ClInclude Include="symengine_n.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="overhead_line.h" />
-    <ClInclude Include="Transformer Delta Star.h" />
-    <ClInclude Include="Transformer Y Delta.h" />
+    <ClInclude Include="Transformer_Delta_Y.h" />
+    <ClInclude Include="Transformer_Y_Delta.h" />
     <ClInclude Include="Transformer_Delta_Delta.h" />
     <ClInclude Include="Transformer.h" />
     <ClInclude Include="Transmissionline.h" />

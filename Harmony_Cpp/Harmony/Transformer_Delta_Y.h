@@ -1,14 +1,14 @@
-#ifndef TRANSFORMER_DELTA_STAR_H
-#define TRANSFORMER_DELTA_STAR_H
+#ifndef TRANSFORMER_DELTA_Y_H
+#define TRANSFORMER_DELTA_Y_H
 
 #include "Element.h"
 
-class TransformerDeltaStar : public Element {
+class TransformerDeltaY : public Element {
 public:
     // Constructor to initialize the Transformer with a given symbol, number of pins, and values (with phase lag)
-    TransformerDeltaStar(const std::string& symbol, int pins, const std::vector<double>& values);
+    TransformerDeltaY(const std::string& symbol, int pins, const std::vector<double>& values);
 
-    ~TransformerDeltaStar() override;
+    ~TransformerDeltaY() override;
 
     double getResistance(int winding) const {
         if (winding >= 0 && winding < R.size()) {
@@ -35,5 +35,5 @@ private:
     double phaseLag;  // Phase lag to incorporate in the Y parameters
 };
 
-#endif // TRANSFORMER_DELTA_STAR_H
+#endif // TRANSFORMER_DELTA_Y_H
 #pragma once

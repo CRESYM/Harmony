@@ -126,10 +126,10 @@
     <ClCompile Include="Transformer_Delta_Delta.cpp">
       <Filter>Source Files\Elements\Transformer</Filter>
     </ClCompile>
-    <ClCompile Include="Transformer Y Delta.cpp">
+    <ClCompile Include="Transformer_Y_Delta.cpp">
       <Filter>Source Files\Elements\Transformer</Filter>
     </ClCompile>
-    <ClCompile Include="Transformer Delta Star.cpp">
+    <ClCompile Include="Transformer_Delta_Y.cpp">
       <Filter>Source Files\Elements\Transformer</Filter>
     </ClCompile>
   </ItemGroup>
@@ -200,10 +200,10 @@
     <ClInclude Include="Transformer_Delta_Delta.h">
       <Filter>Header Files\Elements\Transformer</Filter>
     </ClInclude>
-    <ClInclude Include="Transformer Y Delta.h">
+    <ClInclude Include="Transformer_Y_Delta.h">
       <Filter>Header Files\Elements\Transformer</Filter>
     </ClInclude>
-    <ClInclude Include="Transformer Delta Star.h">
+    <ClInclude Include="Transformer_Delta_Y.h">
       <Filter>Header Files\Elements\Transformer</Filter>
     </ClInclude>
   </ItemGroup>

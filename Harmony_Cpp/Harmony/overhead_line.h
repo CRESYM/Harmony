@@ -3,15 +3,7 @@
 
 #include "Element.h"
 #include "Transmissionline.h"
-//#include "symbol.h" // Include Symbol class declaration
-//#include "basic.h" //Include basic.h instead of redefining Basic struct 
 
-#include <vector>
-#include <tuple>
-#include <variant>
-#include <string>
-#include <symbol.h>
-#include <basic.h>
 
 class Conductors {
 public:

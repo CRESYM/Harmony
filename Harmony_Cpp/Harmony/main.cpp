@@ -8,7 +8,7 @@ int main() {
 	//Transformer* transformer = new Transformer("T1", 3, transformer_values);
 
 	std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0, 0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
-	TransformerDeltaDelta* transformer = new TransformerDeltaDelta("T1", 3, transformer_values);
+	TransformerYDelta* transformer = new TransformerYDelta("T1", 3, transformer_values);
 
 
 
