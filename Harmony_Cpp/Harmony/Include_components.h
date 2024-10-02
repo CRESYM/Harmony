@@ -9,6 +9,8 @@
 
 #include "Transformer.h"
 #include "Transformer_Delta_Delta.h"
+#include "Transformer Y Delta.h"
+#include "Transformer Delta Star.h"
 
 #include "AC_source.h"
 #include "Generator.h"

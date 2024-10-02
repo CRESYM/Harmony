@@ -1,0 +1,56 @@
+#include "transformer delta delta.h"
+#include <iostream>
+#include <stdexcept>
+
+// Constructor
+TransformerDeltaDelta::TransformerDeltaDelta(const std::string& symbol, int pins, const std::vector<double>& values)
+    : Element(symbol, pins, pins) {
+
+    if (values.size() == 5) {
+        R = { values[0], values[2] };  // Primary and secondary resistances
+        X = { values[1], values[3] };  // Primary and secondary reactances
+        a = values[4];  // Turns ratio
+    }
+    else {
+        throw std::invalid_argument("Invalid number of values, must be 5 (R_primary, X_primary, R_secondary, X_secondary, a)!");
+    }
+
+    // Check if the values are properly initialized
+    for (int i = 0; i < 2; ++i) {
+        if (R[i] == 0 || X[i] == 0 || a == 0) {
+            std::cerr << "Transformer parameters not initialized correctly for winding " << i + 1 << "!" << std::endl;
+            return;
+        }
+    }
+
+    // Y parameters matrix (Admittance matrix)
+    // Define symbolic resistances and reactances for primary and secondary windings
+    // Primary side
+    RCP<const Basic> R_p = real_double(R[0]);
+    RCP<const Basic> X_p = real_double(X[0]);
+
+    // Secondary side
+    RCP<const Basic> R_s = real_double(R[1]);
+    RCP<const Basic> X_s = real_double(X[1]);
+    RCP<const Basic> a_val = real_double(a); // Turns ratio symbol
+
+    // Compute the primary and secondary admittances
+    RCP<const Basic> Y_p = div(real_double(1), add(R_p, mul(j, X_p)));
+    RCP<const Basic> Y_s = div(real_double(1), add(R_s, mul(j, X_s)));
+
+    // Compute Y-parameters
+    // For a three-phase delta-delta transformer, you can add more logic to handle the connections.
+    // This is the symmetric Y matrix setup for the transformer model:
+    for (int i = 0; i < pins; ++i) {
+        Y_matrix.set(i, i, Y_p);  // Y11
+        Y_matrix.set(i, pins + i, mul(real_double(-a), Y_p));  // Y12
+        Y_matrix.set(pins + i, i, Y_matrix.get(0, 1));  // Y21 (symmetrical to Y12)
+        Y_matrix.set(pins + i, pins + i, Y_s);  // Y22
+    }
+
+}
+
+// Destructor
+TransformerDeltaDelta::~TransformerDeltaDelta() {
+    std::cout << "TransformerDeltaDelta object for " << getElementSymbol() << " destroyed." << std::endl;
+}

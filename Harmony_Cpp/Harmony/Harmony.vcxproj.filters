@@ -126,6 +126,12 @@
     <ClCompile Include="Transformer_Delta_Delta.cpp">
       <Filter>Source Files\Elements\Transformer</Filter>
     </ClCompile>
+    <ClCompile Include="Transformer Y Delta.cpp">
+      <Filter>Source Files\Elements\Transformer</Filter>
+    </ClCompile>
+    <ClCompile Include="Transformer Delta Star.cpp">
+      <Filter>Source Files\Elements\Transformer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Impedance.h">
@@ -192,6 +198,12 @@
       <Filter>Header Files\Elements\Impedance</Filter>
     </ClInclude>
     <ClInclude Include="Transformer_Delta_Delta.h">
+      <Filter>Header Files\Elements\Transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="Transformer Y Delta.h">
+      <Filter>Header Files\Elements\Transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="Transformer Delta Star.h">
       <Filter>Header Files\Elements\Transformer</Filter>
     </ClInclude>
   </ItemGroup>
