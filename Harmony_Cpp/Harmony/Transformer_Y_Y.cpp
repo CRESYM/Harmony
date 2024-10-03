@@ -1,4 +1,4 @@
-#include "Transformer YY.h"
+#include "Transformer_Y_Y.h"
 #include <cmath>
 
 // Constructor
