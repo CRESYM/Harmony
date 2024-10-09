@@ -1,6 +1,5 @@
 function [] = acmtdcpf (acFileName, mtdcFileName) 
 
-%% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% acmtdcpf can be used to do AC/MTDDC PF calcuation by solving OPF %%%%%%
 %%% model. Yalmip is for OPF formuation and Ipopt is the solver %%%%%%%%%%%
@@ -183,7 +182,7 @@ Ic = var_dc(2*nbuses_dc+10*nconvs+(1:nconvs), 1);
 convPloss = sdpvar(nconvs, 1);
 
 con_dc = [];
-con_dc = [con_dc; lb_dc <= var_dc <= ub_dc]; 
+con_dc = [con_dc; lb_dc <= var_dc <= ub_dc]; % boundary for primary variables
 
 %%  " Adding DC Grid and Converter Constraints " 
 for i= 1:nbuses_dc 
@@ -265,7 +264,7 @@ end
  % 3 nodal active power injection 
  % 4 nodal reactive power injection 
  % 5 active power flow used for calculate active power injection
- % 6 rective power flow used for calculate active power injection
+ % 6 active power flow used for calculate active power injection
  % 7 generator active power 
  % 8 generator reactive power 
  % 9 node voltage difference 
@@ -280,11 +279,6 @@ end
  qn_ac = cell(ngrids,1);
  pgen = cell(ngrids,1);
  qgen = cell(ngrids,1);
-
-%  PP = cell(ngrids,1);
-%  QQ = cell(ngrids,1);
-%  PPc = cell(ngrids,1);
-%  QQc = cell(ngrids,1);
 
  con_acdc = cell(ngrids,1);
  obj_acdc = cell(ngrids,1);
@@ -341,8 +335,8 @@ for i = 1:nconvs
     end
 end % ID of ac grid bus connected to converters
 
-% frombranchids = cell(nbuses_ac,1);
-% tobranchids = cell(nbuses_ac,1);
+ frombranchids = cell(nbuses_ac,1);
+ tobranchids = cell(nbuses_ac,1);
 anglelim_rad = zeros(nbranches_ac,2);
 for i=1:nbranches_ac
   minangle = branch_ac{ng}(i,12);
@@ -352,9 +346,8 @@ if (minangle==0 && maxangle==0) || (minangle==-360 && maxangle==360)
 end
   anglelim_rad(i,1) = pi*minangle/180;
   anglelim_rad(i,2) = pi*maxangle/180;
-%   frombranchids{IDtoCountmap(branch_ac{ng}(i,1))} = [frombranchids{IDtoCountmap(branch_ac{ng}(i,1))} i];
-%   tobranchids{IDtoCountmap(branch_ac{ng}(i,2))} = [tobranchids{IDtoCountmap(branch_ac{ng}(i,2))} i];
-end  % save ID of "frombus" and "tobus" for each branch
+
+end  
 
 [YY, ~, ~] = makeYbus(baseMVA, bus_ac{ng}, branch_ac{ng});
 GG = real(full(YY)); 
@@ -414,50 +407,9 @@ con_acdc{ng} = [];
 con_acdc{ng} = [con_acdc{ng}; lb_ac<= var_ac{ng} <=ub_ac]; 
 
 %%  " Building AC Grid Constraints "
-% PP{ng} = sdpvar(nbuses_ac, 1);
-% QQ{ng} = sdpvar(nbuses_ac, 1);
-% % Pij = sdpvar(nbuses_ac, nbuses_ac, 'full');
-% % Qij = sdpvar(nbuses_ac, nbuses_ac, 'full');
-% i=1;
-% for j = 1:nbuses_ac
-%     con_acdc{ng} = [con_acdc{ng}; PP{ng}(j) == vm_ac{ng}(i)*vm_ac{ng}(j)*(GG(i,j)*cos(va_ac{ng}(i)-va_ac{ng}(j))+BB(i,j)*sin(va_ac{ng}(i)-va_ac{ng}(j)))];
-%     con_acdc{ng} = [con_acdc{ng}; QQ{ng}(j) == vm_ac{ng}(i)*vm_ac{ng}(j)*(GG(i,j)*sin(va_ac{ng}(i)-va_ac{ng}(j))-BB(i,j)*cos(va_ac{ng}(i)-va_ac{ng}(j)))];
-% %         if i~=j 
-% %            con_acdc = [con_acdc; Pij(i,j) == (vm_ac(i)^2-vm_ac(i)*vm_ac(j)*cos(va_ac(i)-va_ac(j)))*(-1)*GG(i,j)-vm_ac(i)*vm_ac(j)*(-1)*BB(i,j)*sin(va_ac(i)-va_ac(j))];
-% %            con_acdc = [con_acdc; Qij(i,j) == -(vm_ac(i)^2-vm_ac(i)*vm_ac(j)*cos(va_ac(i)-va_ac(j)))*(-1)*BB(i,j)-vm_ac(i)*vm_ac(j)*(-1)*GG(i,j)*sin(va_ac(i)-va_ac(j))];
-% %         end 
-% end
-% con_acdc{ng} = [con_acdc{ng}; pn_ac{ng}(i) == sum(PP{ng})];
-% con_acdc{ng} = [con_acdc{ng}; qn_ac{ng}(i) == sum(QQ{ng})]; % constraints for ac power flow part 1
-% 
-% PPc{ng} = cell(nbuses_ac, 1);
-% QQc{ng} = cell(nbuses_ac, 1);
-% for i = 2: nbuses_ac  
-%       j = []; a=[]; b=[];
-%       j = [j; i];
-%     if length(frombranchids{i})
-%           k = frombranchids{i}; 
-%           j = [j; branch_ac{ng}(k,2)];
-%     end     
-%     if length(tobranchids{i})
-%           kk = tobranchids{i};
-%           j = [j; branch_ac{ng}(kk,1)];
-%     end
-%        PPc{ng}{i} = sdpvar(length(j),1); 
-%        QQc{ng}{i} = sdpvar(length(j),1); 
-% 
-%        con_acdc{ng} = [con_acdc{ng}; PPc{ng}{i} == vm_ac{ng}(i)*ones(length(j), 1).*vm_ac{ng}(j).*(GG(i,j)'.*cos(va_ac{ng}(i)-va_ac{ng}(j))+BB(i,j)'.*sin(va_ac{ng}(i)-va_ac{ng}(j)))];
-%        con_acdc{ng} = [con_acdc{ng}; QQc{ng}{i} == vm_ac{ng}(i)*ones(length(j), 1).*vm_ac{ng}(j).*(GG(i,j)'.*sin(va_ac{ng}(i)-va_ac{ng}(j))-BB(i,j)'.*cos(va_ac{ng}(i)-va_ac{ng}(j)))];
-%        con_acdc{ng} = [con_acdc{ng}; pn_ac{ng}(i) == sum(PPc{ng}{i})];
-%        con_acdc{ng} = [con_acdc{ng}; qn_ac{ng}(i) == sum(QQc{ng}{i})]; % constraints for power flow part 2
-% end
 
-va_ac_mat{ng} = repmat(va_ac{ng}, 1, nbuses_ac);
-va_ac_mat_t{ng} = repmat(va_ac{ng}.', nbuses_ac, 1);
-theta_diff{ng} = va_ac_mat{ng} - va_ac_mat_t{ng}; 
-vn_product{ng} = vm_ac{ng}*vm_ac{ng}.';
-pij_ac{ng} = vn_product{ng} .* (GG .* cos(theta_diff{ng}) + BB .* sin(theta_diff{ng}));
-qij_ac{ng} = vn_product{ng} .* (GG .* sin(theta_diff{ng}) - BB .* cos(theta_diff{ng}));
+pij_ac{ng} = vm_ac{ng}*vm_ac{ng}.' .* (GG .* cos( repmat(va_ac{ng}, 1, nbuses_ac) - repmat(va_ac{ng}.', nbuses_ac, 1)) + BB .* sin(repmat(va_ac{ng}, 1, nbuses_ac) - repmat(va_ac{ng}.', nbuses_ac, 1)));
+qij_ac{ng} = vm_ac{ng}*vm_ac{ng}.' .* (GG .* sin( repmat(va_ac{ng}, 1, nbuses_ac) - repmat(va_ac{ng}.', nbuses_ac, 1)) - BB .* cos(repmat(va_ac{ng}, 1, nbuses_ac) - repmat(va_ac{ng}.', nbuses_ac, 1)));
 con_acdc{ng} = [con_acdc{ng}; pn_ac{ng} == sum(pij_ac{ng}, 2)];
 con_acdc{ng} = [con_acdc{ng}; qn_ac{ng} == sum(qij_ac{ng}, 2)];
 
@@ -530,10 +482,10 @@ opfOut = optimize(Con, Obj, Opt);
 
 
 %%  " Showing Power Flow Results "
-fid = fopen('TestNonlin.txt', 'w');
+%fid = fopen('Power Flow Outputs.txt', 'w');
 fid = 1;
 fprintf(fid,'\n================================================================================');
-fprintf(fid,'\n|   AC Bus Power Flow Results                                                  |');
+fprintf(fid,'\n|   AC  Bus Data                                                                 |');
     fprintf(fid,'\n================================================================================');
     fprintf(fid,'\n Bus      Area      Voltage          Generation             Load        ');
     fprintf(fid,'\n #        #    Mag [pu] Ang [deg]   P [MW]   Q [MVAr]   P [MW]  Q [MVAr]');
@@ -551,10 +503,10 @@ fprintf(fid,'\n|   AC Bus Power Flow Results                                    
 
             if ismember(i,genindex)
                m = gen{ng}(:,1);
-               if i == refbuscount
+               if i == recRef(ng)
                   fprintf(fid,'%9.2f %9.2f', value(pgen{ng}(find(m== i), 1))*baseMVA, value(qgen{ng}(find(m== i), 1))*baseMVA );
                else
-                   fprintf(fid,'%10.2f %9.2f', value(pgen{ng}(find(m== i), 1))*baseMVA, value(qgen{ng}(find(m== i), 1))*baseMVA );
+                  fprintf(fid,'%10.2f %9.2f', value(pgen{ng}(find(m== i), 1))*baseMVA, value(qgen{ng}(find(m== i), 1))*baseMVA );
                end
                 fprintf(fid,'%10.2f %8.2f', value(pd{ng}(i)*baseMVA), value(qd{ng}(i)*baseMVA) );
             else
@@ -570,14 +522,14 @@ fprintf(fid,'\n|   AC Bus Power Flow Results                                    
         GenCostRes = GenCostRes+value(obj_acdc{ng});
     end 
  fprintf(fid,'\n-----   ----- --------  --------  --------  --------  -------- --------');
- fprintf(fid,'\n The total generation costs is ＄%.2f(€%.2f)',GenCostRes, GenCostRes/1.08);
+ fprintf(fid,'\n The total generation cost is ＄%.2f/MWh(€%.2f/MWh)',GenCostRes, GenCostRes/1.08);
  fprintf(fid,'\n');
  fprintf(fid,'\n');
 
 
 
 fprintf(fid, '\n================================================================================');
-fprintf(fid, '\n|     DC Bus Power Flow Results                                                |');
+fprintf(fid, '\n|     DC bus data                                                              |');
 fprintf(fid, '\n================================================================================');
 fprintf(fid, '\n Bus   Bus    AC   DC Voltage   DC Power   PCC Bus Injection   Converter loss');
 fprintf(fid, '\n DC #  AC #  Area   Vdc [pu]    Pdc [MW]   Ps [MW]  Qs [MVAr]  Conv_Ploss [MW]');
@@ -593,3 +545,5 @@ fprintf(fid, '\n-----  ----  ----  ---------    --------   -------  --------    
  fprintf(fid,'\n Power flow computation time is %.3fs',cputime);
  fprintf(fid,'\n');
  fprintf(fid,'\n');
+
+end
