@@ -7,33 +7,33 @@
 
 using namespace SymEngine;
 
-class Element;  // Forward declaration
+class Element;  // Forward declaration of the Element class
 
 class Bus {
 public:
 
-    // Constructor
+    // Constructor to initialize the bus with a name and number of pins/phases
     Bus(const std::string& name, int number);
 
-    // Destructor
+    // Destructor to clean up resources
     ~Bus();
 
-    // Getters
+    // Getters to access the bus name and the number of pins/phases
     std::string getBusName() { return busName; }
     int getPinNumber() { return numberPins; }
 
-    // Compare
+    //  Operator overload to compare the bus name with a string
     bool operator==(const char* name);
 
     // Function to attach an element to the bus
     void attachElement(Element* elem);
 
-    // Print elements connected to this bus
+    // Function to print all the elements connected to this bus
     void printConnectedElements();
 
 private:
-    std::string busName;
-    int numberPins; // Definition of number of phases/pins/terminals
+    std::string busName; // The name of the bus
+    int numberPins; // The number of pins (phases) of the bus
     std::vector<Element*> connectedElements;  // Elements connected to this bus
 
 };

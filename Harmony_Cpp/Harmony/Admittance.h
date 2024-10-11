@@ -17,13 +17,27 @@ diagonal admittance entries.
 
 class Admittance : public Element {
 public:
+    /*
+     * Constructor: Admittance
+     *
+     * Constructs the admittance model with the specified symbolic name, number of pins (phases),
+     * and a matrix of admittance values. The values can represent single-phase or multi-phase
+     * admittance depending on the input size.
+     *
+     * Parameters:
+     * - symbol: Symbolic identifier for the admittance element (e.g., Y1, Y2)
+     * - pins: Number of input/output pins (phases)
+     * - values: DenseMatrix representing the admittance values (numerical or symbolic)
+     */
+
     // Unified constructor for single-phase and three-phase systems
     Admittance(const std::string& symbol, int pins, DenseMatrix values);
 
+    // Destructor to handle clean-up tasks
     ~Admittance() override;
 
 private:
-       
+    // No additional private members; behavior is inherited from Element
 };
 
 #endif // _ADMITTANCE_H_

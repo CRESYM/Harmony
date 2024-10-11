@@ -3,8 +3,7 @@
 
 #include "Constants.h"
 
-// Declarations 
-class Bus;
+class Bus; // Forward declaration of Bus class
 
 class Element {
 public:
@@ -14,10 +13,10 @@ public:
         Y_matrix = createZeroMatrix(2*inputPins, 2*outputPins);
     }
 
-    // Destructor
+    // Virtual destructor for resource cleanup in derived classes
     virtual ~Element();
 
-    // Getters
+    // Getters for the number of input/output pins, element symbol, and connections
     int getInputPins() const { return input_pins; }
     int getOutputPins() const { return output_pins; }
     std::string getElementSymbol() const { return element_symbol; }
@@ -35,10 +34,10 @@ public:
             << ", Output Pins: " << output_pins << std::endl;
     }
 
-    // Print all element values, addition to printElementInfo
+    // Virtual function to print additional element values, can be overridden by derived classes (addition to printElementInfo)
     virtual void printElementValues();
 
-    // Print Y matrix in file
+    // Function to write the Y-parameter matrix to a file over a frequency range 
     void writeFile(double start_frequency, int end_frequency, int number_of_points);
 
     // Virtual function to compute Y-parameters (to be implemented by derived classes)
@@ -46,16 +45,16 @@ public:
     virtual DenseMatrix compute_y_parameters() { return Y_matrix; };
 
     
-
+    // Function to retrieve the Y-parameter matrix
     DenseMatrix read_y_matrix() { return Y_matrix; }
 
 protected:
-    std::string element_symbol;
-    int input_pins;
-    int output_pins;
-    std::map<Bus* , int> connections;
+    std::string element_symbol; // Element symbol (e.g., R, L, C)
+    int input_pins; // Number of input pins/phases
+    int output_pins;  // Number of output pins/phases
+    std::map<Bus* , int> connections; // Map of bus connections to the element's terminals
 
-    DenseMatrix Y_matrix; // Matrix representation of admittance
+    DenseMatrix Y_matrix; // Y-parameter matrix representing the admittance of the element
 };
 
 #endif // ELEMENT_H

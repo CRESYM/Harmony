@@ -14,7 +14,7 @@ Bus::~Bus() {
     std::cout << "Bus " << busName << " is deleted.\n";
 }
 
-// Compare
+// Overloaded equality operator to compare bus names
 bool Bus::operator==(const char* name) {
     return (busName == name);
 }

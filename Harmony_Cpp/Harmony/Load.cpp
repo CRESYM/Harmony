@@ -1,17 +1,26 @@
 ﻿// Load.cpp
-
 #include "Load.h"
 
+/*
+ * Load Constructor
+ *
+ * Initializes the load element based on the number of pins and the provided R, L, and C values.
+ * Depending on the input vector size, the constructor either initializes all phases with uniform values,
+ * or with phase-specific values for R, L, and C.
+ */
 Load::Load(const std::string& symbol, int pins, std::vector<double> values) : Element(symbol, pins, pins) {
     if (pins == 0)
         throw std::invalid_argument("Invalid number of pins, must be greater than 0!");
 
     int capacity = values.capacity();
+
+    // Case 1: Uniform R, L, C across all phases (3 values)
     if (capacity == 3) {
         R = std::vector<double>(pins, values[0]);
         L = std::vector<double>(pins, values[1]);
         C = std::vector<double>(pins, values[2]);
     }
+    // Case 2: Phase-specific R, L, C values (3 * pins values)
     else if (capacity == 3 * pins) {
         for (int i = 0; i < pins; i++) {
             R.push_back(values[i]);
@@ -56,7 +65,7 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
         Y_matrix.set(i,i, div(real_double(1), Z_RLC));
     }
 
-    // Fill in the complete Y parameters
+    // Fill in the complete Y parameters (for symmetrical matrix representation)
     for (int i = 0; i < pins; i++)
         for (int j = 0; j < pins; j++) {
             Y_matrix.set(pins + i, j, sub(zero, Y_matrix.get(i, j)));

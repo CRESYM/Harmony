@@ -8,7 +8,7 @@
 
 using namespace SymEngine;
 
-// Destructor
+// Destructor for Element
 Element::~Element() {}
 
 // Attach terminal to the bus
@@ -16,7 +16,7 @@ void Element::attachBus(Bus* bus, int terminal) {
     connections[bus] = terminal;
 }
 
-// Getters
+// Getters to retrieve connected Buses
 std::vector<Bus*> Element::getBuses() {
     std::vector<Bus*> buses;
     for (std::map<Bus*, int>::iterator it = connections.begin(); it != connections.end(); ++it) {
@@ -25,6 +25,7 @@ std::vector<Bus*> Element::getBuses() {
     return buses;
 }
 
+// Function to get the other Bus connected to the Element (not the one provided)
 Bus* Element::getOtherBus(Bus* bus) {
     for (std::map<Bus*, int>::iterator it = connections.begin(); it != connections.end(); ++it) {
         if (bus != it->first)
@@ -50,6 +51,7 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
     return Y_val_exact;
 }
 
+// Function to print the Element's values and Y_matrix entries
 void Element::printElementValues() {
     std::cout << "Element : " << getElementSymbol() << std::endl;
     std::cout << "Y matrix symbolic entries: " << endl; 
@@ -60,7 +62,7 @@ void Element::printElementValues() {
         std::cout << std::endl;
     }
 }
-
+// Function to write the Y-parameter matrix to a file over a frequency range
 void Element::writeFile(double start_frequency, int end_frequency, int number_of_points) {
     std::ofstream myfile;
     myfile.open("files/"+element_symbol+".csv");

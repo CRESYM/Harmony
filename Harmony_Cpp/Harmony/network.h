@@ -11,7 +11,7 @@
 class Bus;
 class Element;
 
-// Type alias for a pair of element designator and pin name
+// Type alias for a pair of element designator and pin name, used to map buses to connected elements in the network
 using Net = std::unordered_map<Bus*, std::vector<Element*>>;
 
 class Network {
@@ -20,14 +20,13 @@ private:
     std::unordered_map<std::string, Element*> elements;  // Map of designators to elements
     std::unordered_map<Bus*, std::vector<Element*>> connections; // Connections between buses and elements
 
-    // for equivalent admittance/impedance calculation to keep number of pins
-    int pins;
+    int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation
 public:
 
-	// Constructor
+	// Constructor to initialize the network with zero pins
 	Network():pins(0) {}
 
-    // Destructor
+    // Destructor to handle resource cleanup
     ~Network();
 
     // Function to connect two elements in the network
@@ -36,35 +35,36 @@ public:
     // Overloaded function to connect multiple elements to a single destination
     //void connect(const std::vector<std::string>& sources, const std::string& destination);
 
-    // Function to add a bus to the network
+    // Function to add a bus to the network using a bus object
     void addBus(Bus* bus);
 
-    // Function to add a bus to the network
+    // Function to add a bus to the network by providing a bus name and bus object
     void addBus(const std::string& busName, Bus* bus);
 
     // Function to add an element (with an Element object) and get a unique designator
     void addElement(Element* elem);
 
-    // Function to add an element to the network
+    // Function to add an element to the network using a specific designator
     void addElement(const std::string& designator, Element* elem);
 
-    // Function to connect an element to a bus
+    // Function to connect an element to a specific bus at a particular terminal
     void connectElementToBus(Element* elem, int terminal, Bus* bus);
 
-    // Function to delete an element from the network
+    // Function to delete an element from the network based on its designator
     void deleteElement(const std::string& designator);
 
-    // Function to delete a bus from the network
+    // Function to delete a bus from the network based on its name
     void deleteBus(const std::string& busName);
 
-    // Print the connections
+    // Print all the current connections between buses and elements in the network
     void printConnections();
 
-    // Getters for private members
+    // Getters for private members variables for buses, elements, and connections
     const std::unordered_map<std::string, Bus*>& getBuses() const { return buses; }
     const std::unordered_map<std::string, Element*>& getElements() const { return elements; }
     const std::unordered_map<Bus*, std::vector<Element*>>& getConnections() const { return connections; }
 
+    // Function to compute the equivalent impedance between buses, excluding certain elements
     void compute_equivalent_impedance(std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements);
     
 };

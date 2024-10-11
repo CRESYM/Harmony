@@ -12,11 +12,24 @@ values.
 */
 class Load : public Element {
 public:
-
+    /*
+    * Constructor: Load
+    *
+    * Constructs a Load element with the given symbol (name), number of pins (phases), and values for
+    * resistance (R), inductance (L), and capacitance (C). The values vector can contain either 3 values
+    * for uniform R, L, C across phases, or 3 * pins values for phase-specific R, L, and C.
+    *
+    * Parameters:
+    * - symbol: Symbolic identifier for the load element (e.g., Load1, Load2)
+    * - pins: Number of input/output pins (phases)
+    * - values: Vector of values containing either 3 entries or 3 * pins entries for R, L, and C.
+    */
     Load(const std::string& symbol, int pins, std::vector<double> values);
 
+    // Destructor
     ~Load() {}
-
+    
+    // Access functions for resistance, inductance, and capacitance values for each phase
     double getResistance(int phase) const {
         if (phase >= 0 && phase < R.size()) {
             return R[phase];

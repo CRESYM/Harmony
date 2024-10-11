@@ -4,19 +4,24 @@
 #include <algorithm>
 #include <stdexcept>
 
+
 Network::~Network() {
+    // Delete all Bus objects in the network
     for (std::unordered_map<std::string, Bus*>::iterator i = buses.begin(); i != buses.end(); i++)
         delete i->second;
     buses.clear();
+    // Delete all Element objects in the network
     for (std::unordered_map<std::string, Element*>::iterator i = elements.begin(); i != elements.end(); i++)
         delete i->second;
     elements.clear();
+    // Clear all connections
     connections.clear();
 }
 
 // Function to add a bus to the network
 void Network::addBus(Bus* bus) {
     buses[bus->getBusName()] = bus;
+    // Increment the total pin count if the bus is not ground
     if (bus->getBusName() != "gnd")
         pins += bus->getPinNumber();
 }
@@ -48,17 +53,22 @@ void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
         pins = elem->getOutputPins();
     }
     else {
+        // Throw an exception if the terminal number is invalid
         throw invalid_argument("Invalid terminal number.");
         exit(1);
     }
-    //std::cout << "Connecting element with " << pins << " pins to bus with " << bus->getPinNumber() << " pins." << std::endl;
-
+    
+    // Check if the number of pins matches between the element and the bus
     if (pins == bus->getPinNumber()) {
+        // Add the element to the connections map for this bus
         connections[bus].push_back(elem);
+        // Attach the bus to the element at the specified terminal
         elem->attachBus(bus, terminal);
+        // Attach the element to the bus
         bus->attachElement(elem);  // Attach the element to the bus
     }
     else {
+        // Throw an exception if the number of pins does not match
         throw invalid_argument("Invalid connection, number of bus and element pins different.");
         exit(1);
     }
@@ -77,6 +87,7 @@ void Network::deleteElement(const std::string& designator) {
 // Function to delete a bus from the network
 void Network::deleteBus(const std::string& busName) {
     if (buses.find(busName) != buses.end()) {
+        // Decrement the total pin count
         pins -= buses[busName]->getPinNumber();
         buses.erase(busName);
     }
@@ -104,11 +115,11 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
         exit(1);
     }
 
-    // erase duplicates in start and end buses, remove gnd from the list of buses
+    // Erase duplicates in start and end buses, remove gnd from the list of buses
     sort(start_buses.begin(), start_buses.end()); start_buses.erase(unique(start_buses.begin(), start_buses.end()), start_buses.end());
     sort(end_buses.begin(), end_buses.end()); end_buses.erase(unique(end_buses.begin(), end_buses.end()), end_buses.end());
     // Remove the element using erase function and iterators
-    for (int i = 0; i < start_buses.capacity(); i++) {
+    for (int i = 0; i < start_buses.capacity(); i++) {  // Ensure 'gnd' is not in start buses
         if (start_buses[i]->getBusName() == "gnd") { // leave the function
             throw std::invalid_argument("Ground cannot be a start bus.");
             exit(1);
@@ -119,12 +130,15 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
     int pos = 0; 
     std::vector<int> positions_currents;
     std::unordered_map<Bus*, int> all_buses;
+    // Assign positions to start buses
     for (auto& bus : start_buses) {
         all_buses[bus] = pos; pos += bus->getPinNumber();
         positions_currents.push_back(pos);
         pos += bus->getPinNumber();
     }
     int equivalent_impedance_size = pos/2;
+
+    // Assign positions to end buses
     for (auto& bus : end_buses) {
         if (bus->getBusName() != "gnd") {
             all_buses[bus] = pos; pos += bus->getPinNumber();
@@ -132,6 +146,8 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
             pos += bus->getPinNumber();
         }
     }
+
+    // Assign positions to other buses not in start or end buses
     for (const auto& bus : buses) {
         if (std::find(start_buses.begin(), start_buses.end(), bus.second) == start_buses.end()
             && std::find(end_buses.begin(), end_buses.end(), bus.second) == end_buses.end()) {
@@ -143,7 +159,7 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
     }
 
 
-    // make the equivalent matrix as zero matrix
+    // Initialize the admittance matrix Y as a zero matrix
     DenseMatrix Y = createZeroMatrix(pos, pos + 1);
 
     // Make MNA with excuded elements
@@ -152,7 +168,9 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
     pos = 0; // position in positions_currents
     for (auto& bus : all_buses) {
         for (auto& element : connections[bus.first]) {
+            // Skip elements that are in the skip_elements list
             if (std::find(skip_elements.begin(), skip_elements.end(), element) == skip_elements.end()) {
+                // Get the Y-parameter matrix of the element
                 DenseMatrix element_Y_matrix = element->compute_y_parameters();
 
                 // add element_Y_matrix
@@ -212,7 +230,7 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
     //    std::cout << endl;
     //}
 
-    // equivalent impedance
+    //Compute the equivalent impedance
     DenseMatrix equivalent_impedance = createZeroMatrix(equivalent_impedance_size, 1);
     pos = 0;
     for (auto& bus : start_buses) {
@@ -223,7 +241,7 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
         }
         pos++;
     }
-
+    // Print the equivalent impedance
     std::cout << "Equivalent impedance is: " << std::endl;
     for (int i = 0; i < equivalent_impedance.nrows(); i++) {
             std::cout << equivalent_impedance.get(i, 0)->__str__() << " ";
