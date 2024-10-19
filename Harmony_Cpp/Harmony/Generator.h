@@ -1,5 +1,5 @@
-#ifndef GENERATOR
-#define GENERATOR
+#ifndef GENERATOR_H
+#define GENERATOR_H
 
 #include "Element.h"
 #include <array>
