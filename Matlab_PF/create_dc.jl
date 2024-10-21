@@ -1,0 +1,175 @@
+"""
+define dc grid
+
+"""
+function create_dc(case_name::String)
+    
+    dc = Dict()
+
+   if case_name == "mtdc3slack"
+        # system MW base
+        dc["baseMW"] = 100.0
+        
+        # dc grid topology (1=monopolar grid, 2=bipolar grid)
+        dc["pol"] = 2
+        
+        # bus data
+        #	bus_i	type	Pd	Qd	Gs	Bs	area	Vm      Va	baseKV	zone	Vmax	Vmin
+        dc["bus"] = [
+            1  3  0  0  0  0  1  1  0  345  1  1.1  0.9
+            2  1  0  0  0  0  1  1  0  345  1  1.1  0.9
+            3  1  0  0  0  0  1  1  0  345  1  1.1  0.9
+        ]
+
+        # converters
+        #   busdc_i busac_i gridac    type_dc type_ac P_g   Q_g   Vtar    rtf     xtf     bf     rc     xc     basekVac    Vmmax   Vmmin   Imax    status   LossA LossB  LossCrec LossCinv  droop      Pdcset    Vdcset  dVdcset
+        dc["converter"] = [
+            1  2  1       1       1       -60    -40    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371  0  0  0  0
+            2  3  1       2       2         0      0    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371  0  0  0  0
+            3  5  1       1       1        35      5    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371  0  0  0  0
+        ]
+
+        # branch data
+        #	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status angmin	angmax
+        dc["branch"] = [
+            1  2  0.052  0  0  100  100  100  0  0  1  0  0
+            2  3  0.052  0  0  100  100  100  0  0  1  0  0
+            1  3  0.073  0  0  100  100  100  0  0  1  0  0
+        ]
+   end
+   
+   if case_name == "mtdc3slack_b"
+      # system MVA base
+      dc["baseMW"] = 100.0
+    
+      # dc grid topology (1=monopolar grid, 2=bipolar grid)
+       dc["pol"] = 2
+    
+      # bus data
+      #	bus_i	type	Pd	Qd	Gs	Bs	area	Vm      Va	baseKV	zone	Vmax	Vmin
+        dc["bus"] = [
+        1  3  0  0  0  0  1  1  0  345  1  1.1  0.9
+        2  1  0  0  0  0  1  1  0  345  1  1.1  0.9
+        3  1  0  0  0  0  1  1  0  345  1  1.1  0.9
+      ]
+
+      # converters
+      #   busdc_i busac_i gridac    type_dc type_ac P_g   Q_g   Vtar    rtf     xtf     bf     rc     xc     basekVac    Vmmax   Vmmin   Imax    status   LossA LossB  LossCrec LossCinv  droop      Pdcset    Vdcset  dVdcset
+       dc["converter"] = [
+        1  3  1       1       1       -60    -40    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371  0  0  0  0;
+        2  22  1       2       2         0      0    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371  0  0  0  0;
+        3  11  2       1       1        35      5    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371  0  0  0  0;
+       ]
+
+      # branch data
+      #	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status angmin	angmax
+       dc["branch"] = [
+        1       2       0.052   0   0    100     100     100      0       0       1   -0   0;
+        2       3       0.052   0   0    100     100     100      0       0       1   -0   0;
+        1       3       0.073   0   0    100     100     100     0       0       1   -0   0;
+       ]
+   end
+
+
+   if case_name == "mtdc3slack_a"
+    # system MVA base
+    dc["baseMW"] = 100.0
+  
+    # dc grid topology (1=monopolar grid, 2=bipolar grid)
+    dc["pol"] = 2
+  
+    # bus data
+    #	bus_i	type	Pd	Qd	Gs	Bs	area	Vm      Va	baseKV	zone	Vmax	Vmin
+    dc["bus"] = [
+      1  3  0  0  0  0  1  1  0  345  1  1.1  0.9
+      2  1  0  0  0  0  1  1  0  345  1  1.1  0.9
+      3  1  0  0  0  0  1  1  0  345  1  1.1  0.9
+      ]
+
+    # converters
+    #   busdc_i busac_i gridac    type_dc type_ac P_g   Q_g   Vtar    rtf     xtf     bf     rc     xc     basekVac    Vmmax   Vmmin   Imax    status   LossA LossB  LossCrec LossCinv  droop      Pdcset    Vdcset  dVdcset
+    dc["converter"] = [
+      1  2  1       1       1       -60    -40    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371  0  0  0  0
+      2  3  2       2       2         0      0    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371  0  0  0  0
+      3  8  2       1       1        35      5    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371  0  0  0  0
+      ]
+
+    # branch data
+    #	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status angmin	angmax
+    dc["branch"] = [
+      1  2  0.052  0  0  100  100  100  0  0  1  0  0
+      2  3  0.052  0  0  100  100  100  0  0  1  0  0
+      1  3  0.073  0  0  100  100  100  0  0  1  0  0
+       ]
+ end
+
+    if case_name == "mtdc3droop"
+      # system MVA base
+      dc["baseMW"] = 100.0
+    
+      # dc grid topology (1=monopolar grid, 2=bipolar grid)
+      dc["pol"] = 2
+    
+      # bus data
+      #	bus_i	type	Pd	Qd	Gs	Bs	area	Vm      Va	baseKV	zone	Vmax	Vmin
+      dc["bus"] = [
+        1  3  0  0  0  0  1  1  0  345  1  1.1  0.9
+        2  1  0  0  0  0  1  1  0  345  1  1.1  0.9
+        3  1  0  0  0  0  1  1  0  345  1  1.1  0.9
+      ]
+
+      # converters
+      #   busdc_i busac_i gridac    type_dc type_ac P_g   Q_g   Vtar    rtf     xtf     bf     rc     xc     basekVac    Vmmax   Vmmin   Imax    status   LossA LossB  LossCrec LossCinv  droop      Pdcset    Vdcset  dVdcset
+      dc["converter"] = [
+        1  2  1       3       1       -60    -40    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371   0.0050    -58.6274   1.0079   0;
+        2  3  1       3       2         0      0    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371   0.0070     21.9013   1.0000   0;
+        3  5  2       3       1        35      5    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371   0.0050     36.1856   0.9978   0;
+        ]
+
+      # branch data
+      #	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status angmin	angmax
+      dc["branch"] = [
+        1  2  0.052  0  0  100  100  100  0  0  1  0  0
+        2  3  0.052  0  0  100  100  100  0  0  1  0  0
+        1  3  0.073  0  0  100  100  100  0  0  1  0  0
+        ]
+    end
+
+    if case_name == "mtdc4lsack"
+      # system MVA base
+      dc["baseMW"] = 100.0
+    
+      # dc grid topology (1=monopolar grid, 2=bipolar grid)
+      dc["pol"] = 2
+    
+      # bus data
+      #	bus_i	type	Pd	Qd	Gs	Bs	area	Vm      Va	baseKV	zone	Vmax	Vmin
+      dc["bus"] = [
+        1       3       0	0	0   0   1    1	0	345     1       1.1     0.9;
+        2       1       0	0	0   0   1    1  0	345     1       1.1     0.9;
+        3       1       0	0	0   0   1    1  0	345     1       1.1     0.9;
+        4       1       0	0	0   0   1    1  0	345     1       1.1     0.9;
+      ]
+
+      # converters
+      #   busdc_i busac_i gridac    type_dc type_ac P_g   Q_g   Vtar    rtf     xtf     bf     rc     xc     basekVac    Vmmax   Vmmin   Imax    status   LossA LossB  LossCrec LossCinv  droop      Pdcset    Vdcset  dVdcset
+      dc["converter"] = [
+        1  2  1       1       1       -60    -40    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371  0  0  0  0;
+        2  4  2       2       2         0      0    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371  0  0  0  0;
+        3  3  2       1       1        35      5    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371  0  0  0  0;
+        4  5  3       1       1        10    -5    1     0.0015  0.1121  0.0887 0.0001   0.16428  345         1.1     0.9     1.2     1       1.103 0.887  2.885   4.371  0  0  0  0;
+        ]
+
+      # branch data
+      #	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status angmin	angmax
+      dc["branch"] = [
+        1       2       0.052   0   0    100     100     100      0       0       1   -0   0;
+        2       3       0.052   0   0    100     100     100      0       0       1   -0   0;
+        3       4       0.073   0   0    100     100     100     0       0       1   -0   0;
+        1       4       0.073   0   0    100     100     100     0       0       1   -0   0;
+        ]
+    end
+   
+    return dc
+    
+end
