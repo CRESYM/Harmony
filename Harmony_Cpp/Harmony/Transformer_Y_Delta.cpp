@@ -1,83 +1,101 @@
-#include "transformer_Y_Delta.h"
+#include "Transformer_Y_Delta.h"
 
 // Constructor
-TransformerYDelta::TransformerYDelta(const std::string& symbol, int pins, const std::vector<double>& values)
+TransformerYDelta::TransformerYDelta(const std::string& symbol, int pins, const std::vector<double>& values,
+    const std::vector<double>& mutualInductances, const std::vector<double>& couplingCoefficients)
     : Element(symbol, pins, pins) {
 
-    if (values.size() == 6) {
-        R = { values[0], values[2] };  // Primary (Y side) and secondary (Delta side) resistances
-        X = { values[1], values[3] };  // Primary (Y side) and secondary (Delta side) reactances
+    if (values.size() == 8) {
+        R = { values[0], values[2] };  // Primary (Star) and Secondary (Delta) resistances
+        X = { values[1], values[3] };  // Primary (Star) and Secondary (Delta) reactances
         a = values[4];  // Turns ratio
-        phaseLag = values[5];  // Phase lag
+        phaseLag = values[5];  // Phase lag in radians
+        M_star = values[6];  // Mutual reactance in Star winding
+        M_delta = values[7];  // Mutual reactance in Delta winding
     }
     else {
-        throw std::invalid_argument("Invalid number of values, must be 6 (R_primary, X_primary, R_secondary, X_secondary, a, phaseLag)!");
+        throw std::invalid_argument("Invalid number of values, must be 8 (R_primary, X_primary, R_secondary, X_secondary, a, phaseLag, M_star, M_delta)!");
     }
 
-    // Check if the values are properly initialized
-    for (int i = 0; i < 2; ++i) {
-        if (R[i] == 0 || X[i] == 0 || a == 0) {
-            std::cerr << "Transformer parameters not initialized correctly for winding " << i + 1 << "!" << std::endl;
-            return;
-        }
+    // Initialize mutual inductances and coupling coefficients
+    if (mutualInductances.size() != 6) {
+        throw std::invalid_argument("Invalid number of mutual inductances, must be 6!");
     }
+    mutualInd = mutualInductances;
 
-    // Y parameters matrix for the three-phase Y-Delta transformer
-    // We use a 6x6 Y matrix to represent the admittance between the 3 primary (Y) and 3 secondary (Delta) windings.
+    if (couplingCoefficients.size() != 6) {
+        throw std::invalid_argument("Invalid number of coupling coefficients, must be 6!");
+    }
+    couplingCoeff = couplingCoefficients;
 
-    RCP<const Basic> R_p = real_double(R[0]);  // Primary (Y side) resistance
-    RCP<const Basic> X_p = real_double(X[0]);  // Primary (Y side) reactance
-    RCP<const Basic> R_s = real_double(R[1]);  // Secondary (Delta side) resistance
-    RCP<const Basic> X_s = real_double(X[1]);  // Secondary (Delta side) reactance
+    // Y parameters for the grounded star-delta three-phase transformer
+    // We use a 6x6 Y matrix to represent the admittance between the 3 primary star windings and 3 secondary delta windings.
+
+    // Define basic components
+    RCP<const Basic> R_star = real_double(R[0]);
+    RCP<const Basic> X_star = real_double(X[0]);
+    RCP<const Basic> R_delta = real_double(R[1]);
+    RCP<const Basic> X_delta = real_double(X[1]);
+
     RCP<const Basic> a_val = real_double(a);  // Turns ratio
+    RCP<const Basic> phaseFactor = exp(mul(neg(j), real_double(phaseLag)));  // Phase shift factor (e^(-j*phaseLag))
 
-    // Compute primary and secondary admittances
-    RCP<const Basic> Y_p = div(real_double(1), add(R_p, mul(j, X_p)));  // Admittance for Y side
-    RCP<const Basic> Y_s = div(real_double(1), add(R_s, mul(j, X_s)));  // Admittance for Delta side
+    // Compute primary (Star) and secondary (Delta) admittances
+    RCP<const Basic> Y_star = div(real_double(1), add(R_star, mul(j, X_star)));
+    RCP<const Basic> Y_delta = div(real_double(1), add(R_delta, mul(j, X_delta)));
 
-    // Define the 3x3 submatrices for the primary Y side and the secondary Delta side.
-    DenseMatrix Y_y(3, 3);  // Primary Y side
-    DenseMatrix Y_delta(3, 3);  // Secondary Delta side
+    // Define the 3x3 submatrices for the star and delta connections
+    DenseMatrix Y_star_matrix(3, 3);
+    DenseMatrix Y_delta_matrix(3, 3);
 
-    // Populate Y matrix for primary (Y side)
-    Y_y.set(0, 0, Y_p);  // Y11
-    Y_y.set(0, 1, mul(real_double(-1), Y_p));  // Y12
-    Y_y.set(0, 2, real_double(0));  // No direct interaction between phase A and C
+    // Populate star side Y matrix (primary side)
+    Y_star_matrix.set(0, 0, Y_star);  // Y11 (Phase A)
+    Y_star_matrix.set(0, 1, neg(Y_star));  // Y12 (A to B)
+    Y_star_matrix.set(0, 2, Y_star);  // Y13 (A to C)
 
-    Y_y.set(1, 0, mul(real_double(-1), Y_p));  // Y21
-    Y_y.set(1, 1, Y_p);  // Y22
-    Y_y.set(1, 2, mul(real_double(-1), Y_p));  // Y23
+    Y_star_matrix.set(1, 0, neg(Y_star));  // Y21 (B to A)
+    Y_star_matrix.set(1, 1, Y_star);  // Y22 (Phase B)
+    Y_star_matrix.set(1, 2, neg(Y_star));  // Y23 (B to C)
 
-    Y_y.set(2, 0, real_double(0));  // No direct interaction between phase C and A
-    Y_y.set(2, 1, mul(real_double(-1), Y_p));  // Y32
-    Y_y.set(2, 2, Y_p);  // Y33
+    Y_star_matrix.set(2, 0, Y_star);  // Y31 (C to A)
+    Y_star_matrix.set(2, 1, neg(Y_star));  // Y32 (C to B)
+    Y_star_matrix.set(2, 2, Y_star);  // Y33 (Phase C)
 
-    // Populate Y matrix for secondary (Delta side)
-    Y_delta.set(0, 0, Y_s);  // Y11
-    Y_delta.set(0, 1, mul(real_double(-1), Y_s));  // Y12
-    Y_delta.set(0, 2, real_double(0));  // No direct interaction between phase A and C
+    // Populate delta side Y matrix (secondary side)
+    Y_delta_matrix.set(0, 0, Y_delta);  // Y11 (Phase A)
+    Y_delta_matrix.set(0, 1, neg(Y_delta));  // Y12 (A to B)
+    Y_delta_matrix.set(0, 2, Y_delta);  // Y13 (A to C)
 
-    Y_delta.set(1, 0, mul(real_double(-1), Y_s));  // Y21
-    Y_delta.set(1, 1, Y_s);  // Y22
-    Y_delta.set(1, 2, mul(real_double(-1), Y_s));  // Y23
+    Y_delta_matrix.set(1, 0, neg(Y_delta));  // Y21 (B to A)
+    Y_delta_matrix.set(1, 1, Y_delta);  // Y22 (Phase B)
+    Y_delta_matrix.set(1, 2, neg(Y_delta));  // Y23 (B to C)
 
-    Y_delta.set(2, 0, real_double(0));  // No direct interaction between phase C and A
-    Y_delta.set(2, 1, mul(real_double(-1), Y_s));  // Y32
-    Y_delta.set(2, 2, Y_s);  // Y33
+    Y_delta_matrix.set(2, 0, Y_delta);  // Y31 (C to A)
+    Y_delta_matrix.set(2, 1, neg(Y_delta));  // Y32 (C to B)
+    Y_delta_matrix.set(2, 2, Y_delta);  // Y33 (Phase C)
 
-    // Assign submatrices to Y_matrix (6x6 for 3 primary and 3 secondary windings)
-    // Top-left 3x3: Y (Y side)
+    // Assign submatrices to Y_matrix (6x6 for 3 primary and 3 secondary)
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            Y_matrix.set(i, j, Y_y.get(i, j));  // Primary Y elements
-            Y_matrix.set(i + 3, j + 3, Y_delta.get(i, j));  // Secondary Delta elements
-            Y_matrix.set(i, j + 3, mul(real_double(-a), Y_y.get(i, j)));  // Y12 interaction
-            Y_matrix.set(i + 3, j, mul(real_double(-1), Y_y.get(i, j)));  // Y21 interaction
+            Y_matrix.set(i, j + 3, Y_delta_matrix.get(i, j));  // Secondary winding (Delta side)
+            Y_matrix.set(i + 3, j, Y_star_matrix.get(i, j));  // Primary winding (Star side)
+
+            // Interaction between primary and secondary with phase shift and mutual couplings
+            RCP<const Basic> couplingA = mul(real_double(couplingCoeff[i * 3 + j]),
+                div(real_double(1), add(Y_star_matrix.get(i, j), Y_delta_matrix.get(j, j))));
+
+            Y_matrix.set(i, j, add(neg(mul(a_val, phaseFactor)), Y_delta_matrix.get(i, j)));  // Y12 interaction (primary to secondary with phase shift)
+            Y_matrix.set(i + 3, j + 3, add(neg(phaseFactor), Y_star_matrix.get(i, j)));  // Y21 interaction (secondary to primary with phase shift)
+
+            // Apply mutual couplings
+            Y_matrix.set(i, j, add(Y_matrix.get(i, j), couplingA)); // Add mutual coupling for primary to secondary
+            Y_matrix.set(i + 3, j + 3, add(Y_matrix.get(i + 3, j + 3), couplingA)); // Add mutual coupling for secondary to primary
         }
     }
 }
 
 // Destructor
 TransformerYDelta::~TransformerYDelta() {
-    std::cout << "TransformerYDelta object for " << getElementSymbol() << " destroyed." << std::endl;
+    std::cout << "Transformer Y Delta object for " << getElementSymbol() << " destroyed." << std::endl;
 }
+
