@@ -14,5 +14,5 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 - **Azadeh Kermansaravi**, development of the mathematical framework and the core of the toolbox, development of individual components, and their spectral representation
 - **Haixiao Li**, design of the power flow strategy, and formulation of the power flow solution
 - **Saif Alsarayreh**, dynamic phasor formulation, model design, and implementation
-- **Robert Dimitroski**, dynamic phasor formulation, and supervision
+- **Robert Dimitrovski**, dynamic phasor formulation, and supervision
 - **Aleksandra Lekić**, formulation and design of the toolbox, different functionality interconnections, harmonic stability solver, and acquiring of the funding
