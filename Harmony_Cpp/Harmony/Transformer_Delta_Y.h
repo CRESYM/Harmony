@@ -60,6 +60,3 @@ private:
 };
 
 #endif // TRANSFORMER_DELTA_Y_H
-
-#endif // TRANSFORMER_DELTA_Y_H
-#pragma once
