@@ -7,8 +7,8 @@ int main() {
 	//std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
 	//Transformer* transformer = new Transformer("T1", 3, transformer_values);
 
-	std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0, 0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
-	TransformerYDelta* transformer = new TransformerYDelta("T1", 3, transformer_values);
+	std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0, 2, 2.5, 1.5,2 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio, Phase-lag, Mutual couplings1 , Mutual couplings2
+        /*TransformerYDelta* transformer = new TransformerYDelta("T1", 9, transformer_values);*/
 
 
 
