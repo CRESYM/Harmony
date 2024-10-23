@@ -8,6 +8,6 @@ Install eigen with vcpkg
 2- vcpkg install eigen3:x64-windows
 3- Open your project in Visual Studio.
 4- Right-click your project in Solution Explorer, and select Properties.
-5- Under C/C++ -> General, add the path to the Eigen headers (vcpkg/installed/x64-windows/include) in the Additional Include Directories section.
+5- Under C/C++ -> General, add the path to the Eigen headers (vcpkg/installed/x64-windows/include/Eigen) in the Additional Include Directories section.
 
 #include <Eigen/Dense>
