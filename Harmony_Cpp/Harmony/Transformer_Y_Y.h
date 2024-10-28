@@ -11,7 +11,7 @@ public:
     // Constructor to initialize the Transformer with a given symbol, number of pins, values,
     // mutual inductances, and coupling coefficients.
     TransformerYY(const std::string& symbol, int pins, const std::vector<double>& values,
-        const std::vector<double>& mutualInductances, const std::vector<double>& couplingCoefficients);
+        const std::vector<double>& couplingCoefficients);
 
     ~TransformerYY() override;
 
@@ -33,12 +33,12 @@ public:
     double getPhaseLag() const { return phaseLag; }  // Method to get phase lag
 
     // Methods to get mutual inductance and coupling coefficients
-    double getMutualInductance(int winding1, int winding2) const {
-        if (winding1 >= 0 && winding1 < mutualInd.size() && winding2 >= 0 && winding2 < mutualInd.size()) {
-            return mutualInd[winding1 * mutualInd.size() + winding2];  // Assuming a 1D representation
-        }
-        throw std::out_of_range("Invalid winding indices");
-    }
+    //double getMutualInductance(int winding1, int winding2) const {
+    //    if (winding1 >= 0 && winding1 < mutualInd.size() && winding2 >= 0 && winding2 < mutualInd.size()) {
+    //        return mutualInd[winding1 * mutualInd.size() + winding2];  // Assuming a 1D representation
+    //    }
+    //    throw std::out_of_range("Invalid winding indices");
+    //}
 
     double getCouplingCoefficient(int winding1, int winding2) const {
         if (winding1 >= 0 && winding1 < couplingCoeff.size() && winding2 >= 0 && winding2 < couplingCoeff.size()) {
@@ -52,7 +52,6 @@ private:
     std::vector<double> X;                 // Reactances for primary and secondary windings
     double a;                               // Turns ratio
     double phaseLag;                        // Phase lag in radians
-    std::vector<double> mutualInd;         // Mutual inductances between windings
     std::vector<double> couplingCoeff;     // Coupling coefficients between windings
     double M_Y;                             // Mutual reactance in Y winding
   };

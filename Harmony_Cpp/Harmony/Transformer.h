@@ -18,9 +18,9 @@ public:
         throw std::out_of_range("Invalid winding index");
     }
 
-    double getReactance(int winding) const {
-        if (winding >= 0 && winding < X.size()) {
-            return X[winding];
+    double getInductance(int winding) const {
+        if (winding >= 0 && winding < L.size()) {
+            return L[winding];
         }
         throw std::out_of_range("Invalid winding index");
     }
@@ -29,7 +29,7 @@ public:
 
 private:
     std::vector<double> R;  // Resistances for primary and secondary windings
-    std::vector<double> X;  // Reactances for primary and secondary windings
+    std::vector<double> L;  // Inductances for primary and secondary windings
     double a;  // Turns ratio
 };
 

@@ -1,8 +1,7 @@
 #include "Transformer_Y_Y.h"
 
 // Constructor
-TransformerYY::TransformerYY(const std::string& symbol, int pins, const std::vector<double>& values,
-    const std::vector<double>& mutualInductances, const std::vector<double>& couplingCoefficients)
+TransformerYY::TransformerYY(const std::string& symbol, int pins, const std::vector<double>& values, const std::vector<double>& couplingCoefficients)
     : Element(symbol, pins, pins) {
 
     if (values.size() == 8) {
@@ -17,18 +16,12 @@ TransformerYY::TransformerYY(const std::string& symbol, int pins, const std::vec
         throw std::invalid_argument("Invalid number of values, must be 8 (R_primary, X_primary, R_secondary, X_secondary, a, phaseLag, M_star, M_delta)!");
     }
 
-    // Initialize mutual inductances and coupling coefficients
-    if (mutualInductances.size() != 6) {
-        throw std::invalid_argument("Invalid number of mutual inductances, must be 6!");
-    }
-    mutualInd = mutualInductances;
-
     if (couplingCoefficients.size() != 6) {
         throw std::invalid_argument("Invalid number of coupling coefficients, must be 6!");
     }
     couplingCoeff = couplingCoefficients;
 
-    // Y parameters for the grounded Wye-Wye three-phase transformer
+    // Y parameters for the grounded Y-Y three-phase transformer
     // We use a 6x6 Y matrix to represent the admittance between the 3 primary windings and 3 secondary windings.
 
     // Define basic components
