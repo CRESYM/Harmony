@@ -135,6 +135,9 @@
     <ClCompile Include="Transformer_Y_Y.cpp">
       <Filter>Source Files\Elements\Transformer</Filter>
     </ClCompile>
+    <ClCompile Include="Transformer_base.cpp">
+      <Filter>Source Files\Elements\Transformer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Impedance.h">
@@ -210,6 +213,9 @@
       <Filter>Header Files\Elements\Transformer</Filter>
     </ClInclude>
     <ClInclude Include="Transformer_Y_Y.h">
+      <Filter>Header Files\Elements\Transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="Transformer_base.h">
       <Filter>Header Files\Elements\Transformer</Filter>
     </ClInclude>
   </ItemGroup>

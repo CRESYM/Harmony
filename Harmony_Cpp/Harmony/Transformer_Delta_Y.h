@@ -15,22 +15,6 @@ public:
 
     ~TransformerDeltaY() override;
 
-    // Getters for resistance and reactance of specific windings
-    double getResistance(int winding) const {
-        if (winding >= 0 && winding < R.size()) {
-            return R[winding];
-        }
-        throw std::out_of_range("Invalid winding index");
-    }
-
-    double getReactance(int winding) const {
-        if (winding >= 0 && winding < X.size()) {
-            return X[winding];
-        }
-        throw std::out_of_range("Invalid winding index");
-    }
-
-    double getTurnsRatio() const { return a; }
     double getPhaseLag() const { return phaseLag; }  // Method to get phase lag
 
     // Methods to get mutual inductance and coupling coefficients
@@ -41,12 +25,6 @@ public:
         throw std::out_of_range("Invalid winding indices");
     }
 
-    double getCouplingCoefficient(int winding1, int winding2) const {
-        if (winding1 >= 0 && winding1 < couplingCoeff.size() && winding2 >= 0 && winding2 < couplingCoeff.size()) {
-            return couplingCoeff[winding1 * couplingCoeff.size() + winding2];  // Assuming a 1D representation
-        }
-        throw std::out_of_range("Invalid winding indices");
-    }
 
 private:
     std::vector<double> R;                 // Resistances for primary (Delta side) and secondary (Star side) windings

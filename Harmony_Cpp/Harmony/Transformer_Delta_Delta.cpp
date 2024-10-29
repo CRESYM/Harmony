@@ -2,8 +2,7 @@
 
 // Constructor
 TransformerDeltaDelta::TransformerDeltaDelta(const std::string& symbol, int pins, const std::vector<double>& values,
-    const std::vector<double>& mutualInductances, const std::vector<double>& couplingCoefficients,
-    double M_delta)
+    const std::vector<double>& couplingCoefficients, double M_delta)
     : Element(symbol, pins, pins), M_delta(M_delta) {  // Initialize M_delta
 
     if (values.size() == 8) {
@@ -17,11 +16,6 @@ TransformerDeltaDelta::TransformerDeltaDelta(const std::string& symbol, int pins
         throw std::invalid_argument("Invalid number of values, must be 8 (R_primary, X_primary, R_secondary, X_secondary, a, phaseLag, M_delta)!");
     }
 
-    // Initialize mutual inductances and coupling coefficients
-    if (mutualInductances.size() != 6) {
-        throw std::invalid_argument("Invalid number of mutual inductances, must be 6!");
-    }
-    mutualInd = mutualInductances;
 
     if (couplingCoefficients.size() != 6) {
         throw std::invalid_argument("Invalid number of coupling coefficients, must be 6!");

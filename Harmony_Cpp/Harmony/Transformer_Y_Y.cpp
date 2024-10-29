@@ -6,7 +6,7 @@ TransformerYY::TransformerYY(const std::string& symbol, int pins, const std::vec
 
     if (values.size() == 8) {
         R = { values[0], values[2] };  // Primary and secondary resistances
-        X = { values[1], values[3] };  // Primary and secondary reactances
+        L = { values[1], values[3] };  // Primary and secondary reactances
         a = values[4];  // Turns ratio
         phaseLag = values[5];  // Phase lag in radians
         M_Y = values[6];  // Mutual reactance in Star winding
