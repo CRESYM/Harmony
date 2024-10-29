@@ -4,18 +4,6 @@
 TransformerYY::TransformerYY(const std::string& symbol, int pins, const std::vector<double>& values, const std::vector<double>& couplingCoefficients)
     : Element(symbol, pins, pins) {
 
-    if (values.size() == 8) {
-        R = { values[0], values[2] };  // Primary and secondary resistances
-        L = { values[1], values[3] };  // Primary and secondary reactances
-        a = values[4];  // Turns ratio
-        phaseLag = values[5];  // Phase lag in radians
-        M_Y = values[6];  // Mutual reactance in Star winding
-        M_Y = values[7];  // Mutual reactance in Delta winding
-    }
-    else {
-        throw std::invalid_argument("Invalid number of values, must be 8 (R_primary, X_primary, R_secondary, X_secondary, a, phaseLag, M_star, M_delta)!");
-    }
-
     if (couplingCoefficients.size() != 6) {
         throw std::invalid_argument("Invalid number of coupling coefficients, must be 6!");
     }
