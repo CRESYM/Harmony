@@ -1,14 +1,13 @@
 #ifndef TRANSFORMER_Y_Y_H
 #define TRANSFORMER_Y_Y_H
 
-#include "Transformer.h"
+#include "Transformer_classic.h"
 
-class TransformerYY : public Transformer {
+class TransformerYY : public Transformer_classic {
 public:
     // Constructor to initialize the Transformer with a given symbol, number of pins, values,
     // mutual inductances, and coupling coefficients.
-    TransformerYY(const std::string& symbol, int pins, const std::vector<double>& values,
-        const std::vector<double>& couplingCoefficients);
+    TransformerYY(const std::string& symbol, int pins, const std::vector<double>& values);
 
     ~TransformerYY() override;
 
