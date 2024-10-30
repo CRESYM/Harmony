@@ -13,8 +13,11 @@ public:
 
     double getTurnsRatio() const { return a; }
 
+    double getPhaseLag() const { return phi; }  // Method to get phase lag
+
 private:
     double a;  // Turns ratio
+    double phi; // Phase shift
 };
 
 #endif // TRANSFORMER_REAL_H

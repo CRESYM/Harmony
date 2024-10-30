@@ -5,19 +5,21 @@ Transformer_real::Transformer_real(const std::string& symbol, int pins, const st
     : Transformer_base(symbol, pins, values) {
     RCP<const Basic> Y_m = zero; // magnetization admittance
 
-    if (values.size() == 5) {
+    if (values.size() == 6) {
         R = { values[0], values[2] };  // Primary and secondary resistances
         L = { values[1], values[3] };  // Primary and secondary reactances
         a = values[4];  // Turns ratio
+        phi = values[5]; // Phase shift
     }
-    else if (values.size() == 7) {
+    else if (values.size() == 8) {
         R = { values[0], values[2], values[4] };  // Primary and secondary resistances
         L = { values[1], values[3], values[5] };  // Primary and secondary reactances
         a = values[6];  // Turns ratio
+        phi = values[7]; // Phase shift
         Y_m = add(div(integer(1), real_double(R[2])), div(integer(1), mul(j, mul(omega, real_double(L[2])))));
     }
     else {
-        throw std::invalid_argument("Invalid number of values, must be 5 (R_P, L_P, R_S, L_S, a) or 7 (R_P, L_P, R_S, L_S, a, R_m, L_m)!");
+        throw std::invalid_argument("Invalid number of values, must be 6 (R_P, L_P, R_S, L_S, a, phi) or 8 (R_P, L_P, R_S, L_S, R_m, L_m, a, phi)!");
     }
 
     // Check if the values are properly initialized
@@ -33,7 +35,8 @@ Transformer_real::Transformer_real(const std::string& symbol, int pins, const st
     // and calculate primary and secondary side impedances
     RCP<const Basic> Z_p = add(real_double(R[0]), mul(j,mul(omega, real_double(L[0]))));
     RCP<const Basic> Z_s = add(real_double(R[1]), mul(j, mul(omega, real_double(L[1]))));
-    RCP<const Basic> a_val = real_double(a); // Turns ratio symbol
+    RCP<const Basic> phaseFactor = exp(mul(neg(j), real_double(phi)));  // Phase shift factor
+    RCP<const Basic> a_val = mul(real_double(a), phaseFactor); // Turns ratio symbol
 
     RCP<const Basic> Y_11 = div(integer(1), add(Z_p, div(integer(1), add(Y_m, div(integer(1), mul(a_val, mul(a_val, Z_s)))))));
     RCP<const Basic> Y_12 = div(neg(a_val), add(Z_p, mul(mul(a_val, mul(a_val, Z_s)), add(mul(Y_m, Z_p), integer(1)))));

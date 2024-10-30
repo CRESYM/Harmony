@@ -1,25 +1,11 @@
 #include "Transformer_Y_Y.h"
 
 // Constructor
-TransformerYY::TransformerYY(const std::string& symbol, int pins, const std::vector<double>& values, const std::vector<double>& couplingCoefficients)
+TransformerYY::TransformerYY(const std::string& symbol, int pins, const std::vector<double>& values)
     : Element(symbol, pins, pins) {
 
-    if (couplingCoefficients.size() != 6) {
-        throw std::invalid_argument("Invalid number of coupling coefficients, must be 6!");
-    }
-    couplingCoeff = couplingCoefficients;
-
     // Y parameters for the grounded Y-Y three-phase transformer
-    // We use a 6x6 Y matrix to represent the admittance between the 3 primary windings and 3 secondary windings.
-
-    // Define basic components
-    RCP<const Basic> R_primary = real_double(R[0]);
-    RCP<const Basic> X_primary = real_double(X[0]);
-    RCP<const Basic> R_secondary = real_double(R[1]);
-    RCP<const Basic> X_secondary = real_double(X[1]);
-
-    RCP<const Basic> a_val = real_double(a);  // Turns ratio
-    RCP<const Basic> phaseFactor = exp(mul(neg(j), real_double(phaseLag)));  // Phase shift factor
+    // We use a 6x6 Y matrix to represent the admittance between the 3 primary windings and 3 secondary windings.    
 
     // Compute primary (Y side) and secondary (Y side) admittances
     RCP<const Basic> Y_primary = div(real_double(1), add(R_primary, mul(j, X_primary)));
