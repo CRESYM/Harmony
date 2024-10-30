@@ -3,6 +3,7 @@
 // Constructor
 TransformerYY::TransformerYY(const std::string& symbol, int pins, const std::vector<double>& values)
     : Transformer_classic(symbol, pins, values) {
+
 }
 
 // Destructor

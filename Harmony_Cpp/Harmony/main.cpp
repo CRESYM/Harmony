@@ -3,17 +3,28 @@
 #include "Include_components.h"
 
 int main() {
+	//auto A = identity_matrix(integer(2));
+	//auto M = DenseMatrix(3, 3, { integer(1), zero, integer(-1), integer(-1), integer(1), zero, zero, integer(-1), integer(1) });
+	//mul_dense_scalar(M, real_double(1.0 / sqrt(3)), M);
+	//for (int i = 0; i < 3; i++)
+	//	for (int j = 0; j < 3; j++)
+	//		cout << M.get(i, j)->__str__() << " ";
+
 	// Create Transformer object with 1 pin
-	std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0, 0.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
-	Transformer_real* transformer = new Transformer_real("T1", 1, transformer_values);
-	transformer->printElementValues();
+	//std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0, 0.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
+	//Transformer_real* transformer = new Transformer_real("T1", 1, transformer_values);
+	//transformer->printElementValues();
 
-	std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
-	TransmissionLine* t = new TransmissionLine("tl", 3, transmission_line_values);
+	std::vector<double> transformer_values = { 1.0, 1.0, 2.0, 2.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
+	TransformerYDelta* transformer = new TransformerYDelta("T1", 3, transformer_values);
+	//transformer->printElementValues();
+
+	//std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
+	//TransmissionLine* t = new TransmissionLine("tl", 3, transmission_line_values);
 
 
-	std::vector<double> generator_values = { 1.0, 0.01, 1.0, 0.1 };
-	Generator* g = new Generator("gen", 3, generator_values);
+	//std::vector<double> generator_values = { 1.0, 0.01, 1.0, 0.1 };
+	//Generator* g = new Generator("gen", 3, generator_values);
 
 	vector<double> vec = {0, 0, 1};
 	Load* y = new Load("l1", 1, vec);
@@ -61,7 +72,7 @@ int main() {
 
 	myNetwork->compute_equivalent_impedance(start_buses, end_buses, elem);
 
-	t->writeFile(10.0, 1000.0, 3);
+	//t->writeFile(10.0, 1000.0, 3);
 
 	
 	// Clean up dynamically allocated memory

@@ -57,7 +57,7 @@ void Element::printElementValues() {
     std::cout << "Y matrix symbolic entries: " << endl; 
     for (int i = 0; i < Y_matrix.nrows(); i++) {
         for (int j = 0; j < Y_matrix.ncols(); j++) {
-            std::cout << Y_matrix.get(i, j)->__str__() << " "; // Use __str__() for output
+            std::cout << simplify(Y_matrix.get(i, j))->__str__() << " "; // Use __str__() for output
         }
         std::cout << std::endl;
     }

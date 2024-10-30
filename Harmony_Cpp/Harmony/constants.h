@@ -16,6 +16,10 @@
 #include <symengine/symengine_config.h>
 #include <SymEngine/Matrix.h> // Ensure you include the necessary SymEngine headers
 #include <SymEngine/subs.h>
+#include <symengine/simplify.h>
+// Functions for matrices
+#include <symengine/matrices/identity_matrix.h> // identity matrix
+#include <symengine/matrices/matrix_mul.h> // matrix multiplications
 
 #include <cmath>  // Include cmath for std::acos
 #include <string>

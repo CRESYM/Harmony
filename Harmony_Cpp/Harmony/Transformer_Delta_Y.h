@@ -1,40 +1,19 @@
 #ifndef TRANSFORMER_DELTA_Y_H
 #define TRANSFORMER_DELTA_Y_H
 
-#include "Element.h"
-#include <vector>
-#include <stdexcept>
-#include <iostream>
+#include "Transformer_classic.h"
 
-class TransformerDeltaY : public Element {
+class TransformerDeltaY : public Transformer_classic {
 public:
     // Constructor to initialize the Transformer with a given symbol, number of pins, values,
     // mutual inductances, and coupling coefficients.
-    TransformerDeltaY(const std::string& symbol, int pins, const std::vector<double>& values,
-        const std::vector<double>& mutualInductances, const std::vector<double>& couplingCoefficients);
+    TransformerDeltaY(const std::string& symbol, int pins, const std::vector<double>& values);
 
     ~TransformerDeltaY() override;
 
-    double getPhaseLag() const { return phaseLag; }  // Method to get phase lag
-
-    // Methods to get mutual inductance and coupling coefficients
-    double getMutualInductance(int winding1, int winding2) const {
-        if (winding1 >= 0 && winding1 < mutualInd.size() && winding2 >= 0 && winding2 < mutualInd.size()) {
-            return mutualInd[winding1 * mutualInd.size() + winding2];  // Assuming a 1D representation
-        }
-        throw std::out_of_range("Invalid winding indices");
-    }
-
 
 private:
-    std::vector<double> R;                 // Resistances for primary (Delta side) and secondary (Star side) windings
-    std::vector<double> X;                 // Reactances for primary and secondary windings
-    double a;                               // Turns ratio
-    double phaseLag;                        // Phase lag in radians
-    std::vector<double> mutualInd;         // Mutual inductances between windings
-    std::vector<double> couplingCoeff;     // Coupling coefficients between windings
-    double M_delta;                         // Mutual reactance in Delta winding
-    double M_star;                          // Mutual reactance in Star winding
+    // inherited from parent class
 };
 
 #endif // TRANSFORMER_DELTA_Y_H
