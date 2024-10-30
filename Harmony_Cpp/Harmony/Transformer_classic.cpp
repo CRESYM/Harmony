@@ -12,10 +12,9 @@ Transformer_classic::Transformer_classic(const std::string& symbol, int pins, co
     }
 
     // Define basic components
-    RCP<const Basic> Z_p = real_double(R[0]) + mul(j, mul(omega, real_double(L[0])));
-    RCP<const Basic> Z_s = real_double(R[1]) + mul(j, mul(omega, real_double(L[1])));
+    RCP<const Basic> Z_p = add(real_double(R[0]), mul(j, mul(omega, real_double(L[0]))));
+    RCP<const Basic> Z_s = add(real_double(R[1]), mul(j, mul(omega, real_double(L[1]))));
     RCP<const Basic> Z_m = mul(j, mul(omega, real_double(M)));
-    RCP<const Basic> phaseFactor = exp(mul(neg(j), real_double(phaseLag)));  // Phase shift factor
 
     // Denominator
     RCP<const Basic> denominator = sub(mul(Z_p, Z_s), mul(Z_m, Z_m));

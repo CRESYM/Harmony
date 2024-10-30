@@ -4,7 +4,7 @@
 
 int main() {
 	// Create Transformer object with 1 pin
-	std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
+	std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0, 0.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
 	Transformer_real* transformer = new Transformer_real("T1", 1, transformer_values);
 	transformer->printElementValues();
 

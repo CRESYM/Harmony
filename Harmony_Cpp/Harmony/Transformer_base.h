@@ -1,5 +1,5 @@
 #ifndef TRANSFORMER_BASE_H
-#define TRANSFORMER_H
+#define TRANSFORMER_BASE_H
 
 #include "Element.h"
 
@@ -9,7 +9,7 @@ public:
     // Constructor to initialize the Transformer with a given symbol, number of pins, and values
     Transformer_base(const std::string& symbol, int pins, const std::vector<double>& values);
 
-    ~Transformer_base() override;
+    ~Transformer_base();
 
     double getResistance(int winding) const {
         if (winding >= 0 && winding < R.size()) {
@@ -25,7 +25,7 @@ public:
         throw std::out_of_range("Invalid winding index");
     }
 
-private:
+protected:
     std::vector<double> R;  // Resistances for primary and secondary windings, and for magnetization resistance if given
     std::vector<double> L;  // Inductances for primary and secondary windings, and for the magnetization inductance if given
 };

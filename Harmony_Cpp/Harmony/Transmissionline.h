@@ -3,7 +3,6 @@
 
 #include "Element.h"
 
-
 class TransmissionLine : public Element {
 public:
     // Parameterized constructor that calls the base class constructor

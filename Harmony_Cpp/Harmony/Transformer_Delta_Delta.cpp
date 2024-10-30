@@ -1,9 +1,8 @@
 #include "Transformer_Delta_Delta.h"
 
 // Constructor
-TransformerDeltaDelta::TransformerDeltaDelta(const std::string& symbol, int pins, const std::vector<double>& values,
-    const std::vector<double>& couplingCoefficients, double M_delta)
-    : Element(symbol, pins, pins), M_delta(M_delta) {  // Initialize M_delta
+TransformerDeltaDelta::TransformerDeltaDelta(const std::string& symbol, int pins, const std::vector<double>& values)
+    : Element(symbol, pins, pins){  // Initialize M_delta
 
     if (values.size() == 8) {
         R = { values[0], values[2] };  // Primary and secondary resistances
