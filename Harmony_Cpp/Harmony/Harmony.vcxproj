@@ -145,11 +145,12 @@
     <ClCompile Include="overhead_line.cpp" />
     <ClCompile Include="Eval_parameter.cpp" />
     <ClCompile Include="Transformer_base.cpp" />
+    <ClCompile Include="Transformer_classic.cpp" />
     <ClCompile Include="Transformer_Y_Y.cpp" />
     <ClCompile Include="Transformer_Delta_Y.cpp" />
     <ClCompile Include="Transformer_Y_Delta.cpp" />
     <ClCompile Include="Transformer_Delta_Delta.cpp" />
-    <ClCompile Include="Transformer.cpp" />
+    <ClCompile Include="Transformer_real.cpp" />
     <ClCompile Include="Transmissionline.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -168,11 +169,12 @@
     <ClInclude Include="network.h" />
     <ClInclude Include="overhead_line.h" />
     <ClInclude Include="Transformer_base.h" />
+    <ClInclude Include="Transformer_classic.h" />
     <ClInclude Include="Transformer_Y_Y.h" />
     <ClInclude Include="Transformer_Delta_Y.h" />
     <ClInclude Include="Transformer_Y_Delta.h" />
     <ClInclude Include="Transformer_Delta_Delta.h" />
-    <ClInclude Include="Transformer.h" />
+    <ClInclude Include="Transformer_real.h" />
     <ClInclude Include="Transmissionline.h" />
   </ItemGroup>
   <ItemGroup>

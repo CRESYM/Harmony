@@ -114,7 +114,7 @@
     <ClCompile Include="AC_source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Transformer.cpp">
+    <ClCompile Include="Transformer_real.cpp">
       <Filter>Source Files\Elements\Transformer</Filter>
     </ClCompile>
     <ClCompile Include="AC_source.cpp">
@@ -136,6 +136,9 @@
       <Filter>Source Files\Elements\Transformer</Filter>
     </ClCompile>
     <ClCompile Include="Transformer_base.cpp">
+      <Filter>Source Files\Elements\Transformer</Filter>
+    </ClCompile>
+    <ClCompile Include="Transformer_classic.cpp">
       <Filter>Source Files\Elements\Transformer</Filter>
     </ClCompile>
   </ItemGroup>
@@ -194,7 +197,7 @@
     <ClInclude Include="AC_source.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Transformer.h">
+    <ClInclude Include="Transformer_real.h">
       <Filter>Header Files\Elements\Transformer</Filter>
     </ClInclude>
     <ClInclude Include="AC_source.h">
@@ -216,6 +219,9 @@
       <Filter>Header Files\Elements\Transformer</Filter>
     </ClInclude>
     <ClInclude Include="Transformer_base.h">
+      <Filter>Header Files\Elements\Transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="Transformer_classic.h">
       <Filter>Header Files\Elements\Transformer</Filter>
     </ClInclude>
   </ItemGroup>

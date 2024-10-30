@@ -11,7 +11,7 @@ public:
 
     ~TransformerYY() override;
 
-    double getPhaseLag() const { return phaseLag; }  // Method to get phase lag
+    
 
     double getCouplingCoefficient(int winding1, int winding2) const {
         if (winding1 >= 0 && winding1 < couplingCoeff.size() && winding2 >= 0 && winding2 < couplingCoeff.size()) {
