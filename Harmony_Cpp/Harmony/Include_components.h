@@ -10,9 +10,9 @@
 #include "Transformer_base.h"
 #include "Transformer_real.h"
 #include "Transformer_classic.h"
-//#include "Transformer_Delta_Delta.h"
+#include "Transformer_Delta_Delta.h"
 #include "Transformer_Y_Delta.h"
-//#include "Transformer_Delta_Y.h"
+#include "Transformer_Delta_Y.h"
 #include "Transformer_Y_Y.h"
 
 #include "AC_source.h"
