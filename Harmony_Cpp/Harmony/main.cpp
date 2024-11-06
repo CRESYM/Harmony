@@ -9,6 +9,11 @@ int main() {
 	//Transformer_real* transformer = new Transformer_real("T1", 1, transformer_values);
 	//transformer->printElementValues();
 
+	std::vector<double> distances = { 11.8, 27.5 };
+	std::vector<int> numbers = { 2, 2 };
+	Overhead_Line* ohl = new Overhead_Line("ohl", 100.0, make_tuple(1.0, 1.0, 1.0),
+		make_tuple("flat", numbers, distances, 0.01436, 0.06266, 10.0, 0.4572));
+
 	std::vector<double> transformer_values = { 1.0, 1.0, 2.0, 2.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
 	TransformerDeltaY* transformer = new TransformerDeltaY("T1", 3, transformer_values);
 	//transformer->printElementValues();

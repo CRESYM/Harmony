@@ -1,74 +1,188 @@
 ﻿#include "overhead_line.h"
 
-/*
-Basic::Basic(double value) : ptr(nullptr) {
-	// Allocate memory for a double and store the value
-	double* doublePtr = new double(value);
-	// Assign the allocated memory to ptr
-	ptr = static_cast<void*>(doublePtr);
+
+// Define constructors for Conductors
+Overhead_Line::Conductors::Conductors(std::string organization, std::vector<int>& numbers, std::vector<double>& values_distances, double rc, double Rdc, double dsag, double dsb = 0, std::tuple<std::vector<double>, std::vector<double>> positions = { {},{} })
+	: organization(organization), rc(rc), Rdc(Rdc), dsb(dsb), dsag(dsag) {
+	if (numbers.size() == 1)
+		number_bundles = numbers[0];
+	else if (numbers.size() == 2) {
+		number_bundles = numbers[0];
+		number_conductors_bundle = numbers[1];
+	}
+	else { // illegal number of parameters
+		throw std::invalid_argument("It is possible to add up to 2 arguments: number of conductor bundles and number of subconductors per bundle.");
+		exit(2);
+	}
+
+	if (values_distances.size() == 2) {
+		deltaXbc = values_distances[0]; ybc = values_distances[1];
+		deltaYbc = 0; deltaTildeXbc = 0;
+	}
+	else if (values_distances.size() == 3) {
+		deltaXbc = values_distances[0]; ybc = values_distances[1];
+		deltaYbc = values_distances[2]; deltaTildeXbc = 0;
+	}
+	else if (values_distances.size() == 4) {
+		deltaXbc = values_distances[0]; ybc = values_distances[1];
+		deltaYbc = values_distances[2]; deltaTildeXbc = values_distances[2];
+	}
+	else {
+		throw std::invalid_argument("Illegal number of distance parameters.");
+		exit(2);
+	}
+
+	if (organization == "flat") {
+		estimate_flat();
+	}
+
+
 }
 
-// Define a type for the function pointer
-using EstimateFunction = std::function<std::tuple<double, double>(Conductors&)>;
+//check definitions and calculate parameters
+void Overhead_Line::Conductors::estimate_flat() {
 
-void overhead_Line :: overhead_line(overhead_Line& tl, std::unordered_map<std::string, std::variant<int, double, std::tuple<std::vector<double>, std::vector<double>>, Symbol>>& kwargs) {
-	bool transformation = false;
+	if (number_bundles == 2) {
+		positions = { {-deltaXbc / 2, deltaXbc / 2}, {ybc, ybc} };
+	}
+	else if (number_bundles == 3) {
+		positions = { {-deltaXbc, 0, deltaXbc}, {ybc, ybc, ybc} };
+	}
+	else if (number_bundles == 6) {
+		positions = { {-deltaXbc, 0, deltaXbc, -deltaXbc, 0, deltaXbc}, {ybc, ybc, ybc, ybc + deltaYbc, ybc + deltaYbc, ybc + deltaYbc} };
+	}
+	else {
+		throw std::invalid_argument("Invalid definition of flat conductor organization.");
+		exit(2);
+	}
+}
 
-	// Define the unordered_map of organization functions
-	std::unordered_map<std::string, std::function<std::tuple<std::vector<double>, std::vector<double>>(const Conductors&)>> dict_organization = {
-		{"flat", &overhead_Line::estimate_flat},
-		{"vertical", &overhead_Line::estimate_vertical},
-		{"delta", &overhead_Line::estimate_delta},
-		{"concentric", &overhead_Line::estimate_concentric},
-		{"offset", &overhead_Line::estimate_offset},
-		{tl.conductors.organization.name, [&tl](const Conductors& c) { return std::make_tuple(std::vector<double>{0}, std::vector<double>{c.ybc}); }}
-	};
-
-	for (const auto&[key, val] : kwargs) {
-		if (dict_organization.find(key) != dict_organization.end()) {
-			auto& func = dict_organization[key];
-			auto result = func(tl.conductors); // Call the function with the Conductors object
-			// Process result...
+void Overhead_Line::Conductors::estimate_vertical() {
+	if (number_bundles == 3) {
+		std::vector<double> x;
+		std::vector<double> y;
+		for (int i = 1; i <= number_bundles; ++i) {
+			x.push_back(deltaXbc / 2);
+			y.push_back(ybc + i * deltaYbc);
 		}
-		else {
-			throw std::invalid_argument("Unknown organization: " + key);
+		positions =  std::make_tuple(x, y);
+	}
+	else if (number_bundles == 6) {
+		std::vector<double> x = { deltaXbc / 2, deltaXbc / 2, deltaXbc / 2, -deltaXbc / 2, -deltaXbc / 2, -deltaXbc / 2 };
+		std::vector<double> y = { ybc, ybc + deltaYbc, ybc + 2 * deltaYbc, ybc, ybc + deltaYbc, ybc + 2 * deltaYbc };
+		positions = std::make_tuple(x, y);
+	}
+	else {
+		throw std::invalid_argument("Invalid definition of vertical conductor organization.");
+		exit(2);
+	}
+}
+
+void Overhead_Line::Conductors::estimate_delta() {
+	if (number_bundles % 3 == 0) {
+		if (number_bundles == 3) {
+			std::vector<double> x = { -deltaXbc / 2, deltaXbc / 2, 0 };
+			std::vector<double> y = { ybc, ybc + deltaYbc, ybc };
+			positions = std::make_tuple(x, y);
+		}
+		else if (number_bundles == 6) {
+			std::vector<double> x = { -deltaXbc / 2 - deltaTildeXbc, -deltaXbc / 2 - deltaTildeXbc / 2, -deltaXbc / 2,
+									  deltaXbc / 2, deltaXbc / 2 + deltaTildeXbc / 2, deltaXbc / 2 + deltaTildeXbc };
+			std::vector<double> y = { ybc, ybc + deltaYbc, ybc, ybc, ybc + deltaYbc, ybc };
+			positions = std::make_tuple(x, y);
 		}
 	}
-	for (const auto&[key, val] : kwargs) {
-		if (key == "length" || key == "eliminate") {
-			if (key == "length") {
-				tl.length = std::get<double>(val);
-			}
-			else { // key == "eliminate"
-				tl.eliminate = std::get<int>(val);
-			}
-		} //check definitions and calculate parameters
-		else if (key == "conductors") {
-			Conductors& c = tl.conductors;
-			const auto& [nb, nsb, ybc, deltaYbc, deltaXbc, deltaTildeXbc, dsag, dsb, rc, RdC, gc, murc, positions, organization] = std::get<std::tuple<int, int, double, double, double, double, double, double, double, double, double, double, std::tuple<std::vector<double>, std::vector<double>>, Symbol>>(val);
-			c.nb = nb;
-			c.nsb = nsb;
-			c.ybc = ybc;
-			c.deltaYbc = deltaYbc;
-			c.deltaXbc = deltaXbc;
-			c.deltaTildeXbc = deltaTildeXbc;
-			c.dsag = dsag;
-			c.dsb = dsb;
-			c.rc = rc;
-			c.RdC = RdC;
-			c.gc = gc;
-			c.murc = murc;
-			c.positions = positions;
-			c.organization = organization;
+	else {
+		throw std::invalid_argument("Delta cannot be constructed from " + std::to_string(number_bundles) + " conductors.");
+		exit(2);
+	}
+}
 
-			Conductors conductors = std::get<Conductors>(val);
-			auto[flat_x, flat_y] = overhead_Line::estimate_flat(conductors);
-			auto[vertical_x, vertical_y] = overhead_Line::estimate_vertical(conductors);
-			auto[delta_x, delta_y] = overhead_Line::estimate_delta(conductors);
-			auto[concentric_x, concentric_y] = overhead_Line::estimate_concentric(conductors);
-			auto[offset_x, offset_y] = overhead_Line::estimate_offset(conductors);
+void Overhead_Line::Conductors::estimate_concentric() {
+	if (number_bundles % 3 == 0) {
+		if (number_bundles == 3) {
+			std::vector<double> x = { -deltaTildeXbc, 0, 0 };
+			std::vector<double> y = { ybc + deltaYbc, ybc, ybc + 2 * deltaYbc };
+			positions = std::make_tuple(x, y);
 		}
-		else if (key == "groundwires") {
+		else if (number_bundles == 6) {
+			std::vector<double> x = { -deltaXbc / 2 - deltaTildeXbc, -deltaXbc / 2, -deltaXbc / 2,
+									  deltaXbc / 2, deltaXbc / 2, deltaXbc / 2 + deltaTildeXbc };
+			std::vector<double> y = { ybc + deltaYbc, ybc, ybc + 2 * deltaYbc,
+									  ybc, ybc + 2 * deltaYbc, ybc + deltaYbc };
+			positions = std::make_tuple(x, y);
+		}
+	}
+	else {
+		throw std::invalid_argument("Delta cannot be constructed from " + std::to_string(number_bundles) + " conductors.");
+		exit(2);
+	}
+}
+
+void Overhead_Line::Conductors::estimate_offset() {
+	if (number_bundles % 3 == 0) {
+		if (number_bundles == 3) {
+			std::vector<double> x = { -deltaTildeXbc, 0, 0 };
+			std::vector<double> y = { ybc + deltaYbc, ybc, ybc + 2 * deltaYbc };
+			positions = std::make_tuple(x, y);
+		}
+		else if (number_bundles == 6) {
+			std::vector<double> x = { -deltaXbc / 2 - deltaTildeXbc, -deltaXbc / 2, -deltaXbc / 2,
+									  deltaXbc / 2, deltaXbc / 2, deltaXbc / 2 + deltaTildeXbc };
+			std::vector<double> y = { ybc + deltaYbc, ybc, ybc + 2 * deltaYbc,
+									  ybc, ybc + 2 * deltaYbc, ybc + deltaYbc };
+			positions = std::make_tuple(x, y);
+		}
+	}
+	else {
+		throw std::invalid_argument("Delta cannot be constructed from " + std::to_string(number_bundles) + " conductors.");
+		exit(2);
+	}
+}
+
+std::tuple<std::vector<double>, std::vector<double>> Overhead_Line::bundle_position(int n, double d) {
+	if (n == 1) {
+		return std::make_tuple(std::vector<double>{0}, std::vector<double>{0});
+	}
+	else {
+		const double phi = 2 * M_PI / n;
+		const double r = d / 2 / sin(phi / 2);
+		double phi_s = M_PI / 2;
+		if (n % 2 == 0) {
+			phi_s += phi / 2;
+		}
+
+		std::vector<double> xsb;
+		std::vector<double> ysb;
+		for (int i = 0; i < n; ++i) {
+			xsb.push_back(r * cos(phi_s));
+			ysb.push_back(r * sin(phi_s));
+			phi_s += phi;
+		}
+
+		return std::make_tuple(xsb, ysb);
+	}
+}
+
+
+
+Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<double, double, double> earth,
+	std::tuple<std::string, std::vector<int>, std::vector<double>, double, double, double, double> conductor)
+	: length(len), earthParameters(earth), Element(symbol, 1, 1) {
+	bool transformation = false;
+
+	//const auto& [organization, numbers, values_distance, Rdc, rc, dsb] = std::get<std::tuple<std::string, std::vector<int>&, std::vector<double>&, double, double, double>>(conductor);
+	conductors = new Conductors(std::get<0>(conductor), std::get<1>(conductor), std::get<2>(conductor), std::get<3>(conductor), std::get<4>(conductor), std::get<5>(conductor));
+
+
+
+
+}
+
+/*
+			Conductors& c = tl.conductors;
+			const auto& [number_bundles, number_conductors_bundle, ybc, deltaYbc, deltaXbc, deltaTildeXbc, dsag, dsb, rc, RdC, gc, murc, positions, organization] = std::get<std::tuple<int, int, double, double, double, double, double, double, double, double, double, double, std::tuple<std::vector<double>, std::vector<double>>, std::string>>(conductor);
+
 			Groundwires& g = tl.groundwires;
 			const auto&[ng, deltaXg, deltaYg, rg, dgSag, RdG, mug, positions] = std::get<std::tuple<int, double, double, double, double, double, double, std::tuple<std::vector<double>, std::vector<double>>>>(val);
 			g.ng = ng;
@@ -79,30 +193,9 @@ void overhead_Line :: overhead_line(overhead_Line& tl, std::unordered_map<std::s
 			g.RdG = RdG;
 			g.mug = mug;
 			g.positions = positions;
-		}
-		else if (key == "earthParameters") {
-			tl.earthParameters = std::get<std::tuple<int, int, int>>(val);
-		}
-		else if (key == "P") {
-			tl.P = std::get<std::vector<Basic>>(val);
-		}
-		else if (key == "Z") {
-			tl.Z = std::get<std::vector<Basic>>(val);
-		}
-		else if (key == "transformation") {
-			transformation = std::get<int>(val);
-		}
-		else {
-			throw std::invalid_argument("Unknown property " + key + " of the overhead line.");
-		}
-	}
 
 	// Extract earth parameters from tl
-	auto[mur_earth, epsilonr_earth, resistivity_earth] = tl.earthParameters;
-
-	// Constants
-	double mu_0 = 4 * M_PI * 1e-7;
-	double epsilon = 8.85e-12;
+	auto[mur_earth, epsilonr_earth, resistivity_earth] = earthParameters;
 
 	// Calculate earth parameters
 	double mu_earth = mur_earth * mu_0;
@@ -133,9 +226,9 @@ void overhead_Line :: overhead_line(overhead_Line& tl, std::unordered_map<std::s
 			std::tie(x, y) = tl.conductors.positions;
 		}
 
-		auto[xsb, ysb] = overhead_Line::bundle_position(tl.conductors.nsb, tl.conductors.dsb);
+		auto[xsb, ysb] = overhead_Line::bundle_position(tl.conductors.number_conductors_bundle, tl.conductors.dsb);
 		for (int i = 0; i < tl.conductors.nb; ++i) {
-			for (int j = 0; j < tl.conductors.nsb; ++j) {
+			for (int j = 0; j < tl.conductors.number_conductors_bundle; ++j) {
 				x_array.push_back(x[i] + xsb[j]);
 				y_array.push_back(y[i] + ysb[j] - 2.0 / 3.0 * tl.conductors.dsag);
 				r_array.push_back(tl.conductors.rc);
@@ -146,7 +239,7 @@ void overhead_Line :: overhead_line(overhead_Line& tl, std::unordered_map<std::s
 	}
 
 	// Calculate the number of elements in the matrices
-	int Num = tl.conductors.nb * tl.conductors.nsb + tl.groundwires.ng;
+	int Num = tl.conductors.number_bundles * tl.conductors.number_conductors_bundle + tl.groundwires.ng;
 	std::vector<std::vector<Basic>> P(Num, std::vector<Basic>(Num));
 	std::vector<std::vector<Basic>> Z(Num, std::vector<Basic>(Num));
 
@@ -183,15 +276,15 @@ void overhead_Line :: overhead_line(overhead_Line& tl, std::unordered_map<std::s
 	// Assuming tl.P and tl.Z are defined as std::vector<std::vector<Basic>>
 // If not, replace the type accordingly
 
-	if (tl.conductors.nsb != 0) {
-		std::vector<int> cond_noElim(tl.conductors.nb);
-		for (int i = 0; i < tl.conductors.nb; ++i) {
-			cond_noElim[i] = (i * tl.conductors.nsb) + 1;
+	if (tl.conductors.number_conductors_bundle != 0) {
+		std::vector<int> cond_noElim(tl.conductors.number_bundles);
+		for (int i = 0; i < tl.conductors.number_bundles; ++i) {
+			cond_noElim[i] = (i * tl.conductors.number_conductors_bundle) + 1;
 		}
 
-		for (int iPhase = 0; iPhase < tl.conductors.nb; ++iPhase) {
+		for (int iPhase = 0; iPhase < tl.conductors.number_bundles; ++iPhase) {
 			int cond_noElim_curr = cond_noElim[iPhase];
-			for (int iCond = (tl.conductors.nsb * (iPhase + 1)) + 1; iCond <= tl.conductors.nsb * (iPhase + 1); ++iCond) {
+			for (int iCond = (tl.conductors.number_conductors_bundle * (iPhase + 1)) + 1; iCond <= tl.conductors.number_conductors_bundle * (iPhase + 1); ++iCond) {
 				// Subtract Z[:,iCond] from Z[:,cond_noElim_curr]
 				for (int i = 0; i < Num; ++i) {
 					Z[i][iCond] -= Z[i][cond_noElim_curr];
@@ -217,126 +310,8 @@ void overhead_Line :: overhead_line(overhead_Line& tl, std::unordered_map<std::s
 	tl.setP(P); // Assign P matrix to tl.P
 	tl.setZ(Z); // Assign Z matrix to tl.Z
 
-	Element elem(tl.conductors.nb, tl.conductors.nb, tl, transformation);
+	
 
-}
-
-//check definitions and calculate parameters
-std::tuple<std::vector<double>, std::vector<double>> overhead_Line::estimate_flat(const Conductors& c) {
-	if (c.nb == 2) {
-		return { {-c.deltaXbc / 2, c.deltaXbc / 2}, {c.ybc, c.ybc} };
-	}
-	else if (c.nb == 3) {
-		return { {-c.deltaXbc, 0, c.deltaXbc}, {c.ybc, c.ybc, c.ybc} };
-	}
-	else if (c.nb == 6) {
-		return { {-c.deltaXbc, 0, c.deltaXbc, -c.deltaXbc, 0, c.deltaXbc}, {c.ybc, c.ybc, c.ybc, c.ybc + c.deltaYbc, c.ybc + c.deltaYbc, c.ybc + c.deltaYbc} };
-	}
-	else {
-		throw std::invalid_argument("Invalid definition of flat conductor organization.");
-	}
-}
-
-std::tuple<std::vector<double>, std::vector<double>> overhead_Line::estimate_vertical(const Conductors& c) {
-	if (c.nb == 3) {
-		std::vector<double> x;
-		std::vector<double> y;
-		for (int i = 1; i <= c.nb; ++i) {
-			x.push_back(c.deltaXbc / 2);
-			y.push_back(c.ybc + i * c.deltaYbc);
-		}
-		return std::make_tuple(x, y);
-	}
-	else if (c.nb == 6) {
-		std::vector<double> x = { c.deltaXbc / 2, c.deltaXbc / 2, c.deltaXbc / 2, -c.deltaXbc / 2, -c.deltaXbc / 2, -c.deltaXbc / 2 };
-		std::vector<double> y = { c.ybc, c.ybc + c.deltaYbc, c.ybc + 2 * c.deltaYbc, c.ybc, c.ybc + c.deltaYbc, c.ybc + 2 * c.deltaYbc };
-		return std::make_tuple(x, y);
-	}
-	else {
-		throw std::invalid_argument("Invalid definition of vertical conductor organization.");
-	}
-}
-
-std::tuple<std::vector<double>, std::vector<double>> overhead_Line::estimate_delta(const Conductors& c) {
-	if (c.nb % 3 == 0) {
-		if (c.nb == 3) {
-			std::vector<double> x = { -c.deltaXbc / 2, c.deltaXbc / 2, 0 };
-			std::vector<double> y = { c.ybc, c.ybc + c.deltaYbc, c.ybc };
-			return std::make_tuple(x, y);
-		}
-		else if (c.nb == 6) {
-			std::vector<double> x = { -c.deltaXbc / 2 - c.deltaTildeXbc, -c.deltaXbc / 2 - c.deltaTildeXbc / 2, -c.deltaXbc / 2,
-									  c.deltaXbc / 2, c.deltaXbc / 2 + c.deltaTildeXbc / 2, c.deltaXbc / 2 + c.deltaTildeXbc };
-			std::vector<double> y = { c.ybc, c.ybc + c.deltaYbc, c.ybc, c.ybc, c.ybc + c.deltaYbc, c.ybc };
-			return std::make_tuple(x, y);
-		}
-	}
-	else {
-		throw std::invalid_argument("Delta cannot be constructed from " + std::to_string(c.nb) + " conductors.");
-	}
-}
-
-std::tuple<std::vector<double>, std::vector<double>> overhead_Line::estimate_concentric(const Conductors& c) {
-	if (c.nb % 3 == 0) {
-		if (c.nb == 3) {
-			std::vector<double> x = { -c.deltaTildeXbc, 0, 0 };
-			std::vector<double> y = { c.ybc + c.deltaYbc, c.ybc, c.ybc + 2 * c.deltaYbc };
-			return std::make_tuple(x, y);
-		}
-		else if (c.nb == 6) {
-			std::vector<double> x = { -c.deltaXbc / 2 - c.deltaTildeXbc, -c.deltaXbc / 2, -c.deltaXbc / 2,
-									  c.deltaXbc / 2, c.deltaXbc / 2, c.deltaXbc / 2 + c.deltaTildeXbc };
-			std::vector<double> y = { c.ybc + c.deltaYbc, c.ybc, c.ybc + 2 * c.deltaYbc,
-									  c.ybc, c.ybc + 2 * c.deltaYbc, c.ybc + c.deltaYbc };
-			return std::make_tuple(x, y);
-		}
-	}
-	else {
-		throw std::invalid_argument("Delta cannot be constructed from " + std::to_string(c.nb) + " conductors.");
-	}
-}
-
-std::tuple<std::vector<double>, std::vector<double>> overhead_Line::estimate_offset(const Conductors& c) {
-	if (c.nb % 3 == 0) {
-		if (c.nb == 3) {
-			std::vector<double> x = { -c.deltaTildeXbc, 0, 0 };
-			std::vector<double> y = { c.ybc + c.deltaYbc, c.ybc, c.ybc + 2 * c.deltaYbc };
-			return std::make_tuple(x, y);
-		}
-		else if (c.nb == 6) {
-			std::vector<double> x = { -c.deltaXbc / 2 - c.deltaTildeXbc, -c.deltaXbc / 2, -c.deltaXbc / 2,
-									  c.deltaXbc / 2, c.deltaXbc / 2, c.deltaXbc / 2 + c.deltaTildeXbc };
-			std::vector<double> y = { c.ybc + c.deltaYbc, c.ybc, c.ybc + 2 * c.deltaYbc,
-									  c.ybc, c.ybc + 2 * c.deltaYbc, c.ybc + c.deltaYbc };
-			return std::make_tuple(x, y);
-		}
-	}
-	else {
-		throw std::invalid_argument("Delta cannot be constructed from " + std::to_string(c.nb) + " conductors.");
-	}
-}
-
-std::tuple<std::vector<double>, std::vector<double>> overhead_Line::bundle_position(int n, double d) {
-	if (n == 1) {
-		return std::make_tuple(std::vector<double>{0}, std::vector<double>{0});
-	}
-	else {
-		const double phi = 2 * M_PI / n;
-		const double r = d / 2 / sin(phi / 2);
-		double phi_s = M_PI / 2;
-		if (n % 2 == 0) {
-			phi_s += phi / 2;
-		}
-
-		std::vector<double> xsb;
-		std::vector<double> ysb;
-		for (int i = 0; i < n; ++i) {
-			xsb.push_back(r * cos(phi_s));
-			ysb.push_back(r * sin(phi_s));
-			phi_s += phi;
-		}
-
-		return std::make_tuple(xsb, ysb);
-	}
 }
 */
+
