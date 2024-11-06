@@ -78,7 +78,7 @@ void Element::writeFile(double start_frequency, int end_frequency, int number_of
         myfile << frequency << ",";
         for (int i = 0; i < 2 * input_pins; ++i) {
             for (int j = 0; j < 2 * output_pins; ++j) {
-                myfile << Y[i][j] << ",";
+                myfile << Y[i][j].real() << "+1i*(" << Y[i][j].imag() << "),";
             }
         }
         myfile << "\n";

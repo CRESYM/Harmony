@@ -5,10 +5,10 @@ Generator::Generator(const std::string& symbol, int pins, const std::vector<doub
     : Element(symbol, pins, pins) {
 
     if (values.size() == 4) {
-        R_f = values[0]; // 
-        L_f = values[1]; // 
-        X_d = values[2]; // 
-        T_f = values[3]; // 
+        R_f = values[0]; 
+        L_f = values[1];  
+        X_d = values[2]; 
+        T_f = values[3];  
     }
     else {
         throw std::invalid_argument("Invalid number of values for generator, must be 4!");

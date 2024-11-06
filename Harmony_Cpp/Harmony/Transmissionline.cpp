@@ -31,12 +31,13 @@ TransmissionLine::TransmissionLine(const std::string& symbol, int pins, const st
     RCP<const Basic> cosh_gamma_l = cosh(gamma_l);
     RCP<const Basic> sinh_gamma_l = sinh(gamma_l);
     RCP<const Basic> Z0_sinh_gamma_l = mul(Z0, sinh_gamma_l);
+    RCP<const Basic> Z0_tanh_gamma_l = div(Z0_sinh_gamma_l, cosh_gamma_l);
 
     // Compute Y-parameters
-    RCP<const Basic> Y11 = div(neg(cosh_gamma_l), Z0_sinh_gamma_l);
-    RCP<const Basic> Y12 = div(real_double(1), Z0_sinh_gamma_l);
-    RCP<const Basic> Y21 = div(real_double(1), Z0_sinh_gamma_l);
-    RCP<const Basic> Y22 = div(cosh_gamma_l, Z0_sinh_gamma_l);
+    RCP<const Basic> Y11 = div(integer(1), Z0_tanh_gamma_l);
+    RCP<const Basic> Y12 = div(real_double(-1), Z0_sinh_gamma_l);
+    RCP<const Basic> Y21 = Y12;
+    RCP<const Basic> Y22 = Y11;
     for (int i = 0; i < pins; i++) {
         Y_matrix.set(i, i, Y11);  // Y11
         Y_matrix.set(i, pins + i, Y12);  // Y12

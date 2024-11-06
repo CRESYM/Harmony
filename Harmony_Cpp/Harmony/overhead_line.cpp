@@ -1,7 +1,4 @@
 ﻿#include "overhead_line.h"
-#include "Element.h"
-
-
 
 /*
 Basic::Basic(double value) : ptr(nullptr) {
@@ -341,4 +338,5 @@ std::tuple<std::vector<double>, std::vector<double>> overhead_Line::bundle_posit
 
 		return std::make_tuple(xsb, ysb);
 	}
-}*/
+}
+*/
