@@ -30,6 +30,11 @@
 #include <stdexcept>
 #include <tuple>
 #include <variant>
+#include <algorithm>
+#include <sstream>
+#include <any>
+#include <map>
+#include <cctype> // Include the header for std::tolower
 
 // Eigen library for linear algebra
 #include <Eigen/Dense>

@@ -143,7 +143,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="network.cpp" />
     <ClCompile Include="overhead_line.cpp" />
-    <ClCompile Include="Eval_parameter.cpp" />
     <ClCompile Include="Transformer_base.cpp" />
     <ClCompile Include="Transformer_classic.cpp" />
     <ClCompile Include="Transformer_Y_Y.cpp" />

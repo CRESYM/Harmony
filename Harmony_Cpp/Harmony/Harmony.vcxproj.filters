@@ -81,9 +81,6 @@
     <ClCompile Include="Transmissionline.cpp">
       <Filter>Source Files\Elements\Transmission_line</Filter>
     </ClCompile>
-    <ClCompile Include="Eval_parameter.cpp">
-      <Filter>Source Files\Elements\Transmission_line</Filter>
-    </ClCompile>
     <ClCompile Include="Element.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
