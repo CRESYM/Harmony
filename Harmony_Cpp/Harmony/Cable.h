@@ -1,9 +1,7 @@
 ﻿#ifndef _CABLE_H_
 #define _CABLE_H_
 
-#include "Transmissionline.h"
 #include "Element.h"
-
 
 
 // Define the Conductor class presents conducting layer
@@ -12,13 +10,6 @@ public:
 	// Constructor
 	Conductor(double ri = 0, double ro = 0, double resistivity = 0, double permeability = 1, double area = 0)
 		: ri(ri), ro(ro), resistivity(resistivity), permeability(permeability), area(area) {}
-
-	// Member variables
-	double ri; //conductor inner radius
-	double ro; //conductor outer radius
-	double resistivity; //conductor resistivity ρ [Ωm]
-	double permeability;  //relative permeability μᵣ
-	double area; //nominal area
 
 	// Getter functions
 	double getInnerRadius() const { return ri; }
@@ -31,6 +22,13 @@ public:
 	void setResistivity(double newResistivity) {
 		resistivity = newResistivity;
 	}
+
+	// Member variables
+	double ri; //conductor inner radius
+	double ro; //conductor outer radius
+	double resistivity; //conductor resistivity ρ [Ωm]
+	double permeability;  //relative permeability μᵣ
+	double area; //nominal area
 };
 
 // Define the Insulator class presents insulating layer
@@ -83,10 +81,6 @@ public:
 	void setTransformation(const bool value) { transformation = value; }
 	void setEliminate(bool value) { eliminate = value; } //to change the value of eliminate
 
-
-	// Setters for P and Z matrices
-	void setP(const std::vector<std::vector<double>>& newP) { P = newP; }
-	void setZ(const std::vector<std::vector<double>>& newZ) { Z = newZ; }
 
 
 	// Setter for s
@@ -188,17 +182,10 @@ private:
 	std::string configuration;//Configuration is a datatype symbol with value coaxial Symbol -> Type of data. Symbols can be entered using the quote operator ":"
 	std::string type;
 	bool eliminate = true;
-	//std::string transformation;
 	bool transformation;
 
-	// Define variables for real and imaginary parts
-	SymEngine::rational_class real_part;
-	SymEngine::rational_class imag_part;
-
-	const SymEngine::Complex* s; // Store pointer to SymEngine::Complex
-
-	std::vector<std::vector<RCP<const Basic>>> CZ;
-	std::vector<std::vector<RCP<const Basic>>> CP;
+	DenseMatrix CZ;
+	DenseMatrix CP;
 };*/
 
 #endif

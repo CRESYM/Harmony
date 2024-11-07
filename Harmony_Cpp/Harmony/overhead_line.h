@@ -60,7 +60,8 @@ private:
 
 	// Earth parameters are defined as (mu_r, epsilon_r, resistivity)
 	std::tuple<double, double, double> earthParameters = std::make_tuple(1, 1, 1); // (μᵣ_earth, ϵᵣ_earth, ρ_earth) in units ([], [], [Ωm])
-	DenseMatrix P;
+	MatrixXd P;
+	DenseMatrix Y;
 	DenseMatrix Z;
 
 	bool eliminate = true;

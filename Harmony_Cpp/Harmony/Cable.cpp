@@ -1,10 +1,6 @@
 ﻿/*#include "Element.h"
 #include "Transmissionline.h"
 #include "cable.h"
-#include "Constants.h"
-
-//#pragma comment(lib, "symengine.lib") 
-#include <symengine/eval_double.h> // For evaluating SymEngine objects to double
 
 #include <cmath> // Include cmath for mathematical functions like log, sqrt, etc.
 #include <algorithm>

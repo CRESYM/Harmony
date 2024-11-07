@@ -17,7 +17,6 @@
 #include <SymEngine/Matrix.h> // Ensure you include the necessary SymEngine headers
 #include <SymEngine/subs.h>
 #include <symengine/simplify.h>
-// Functions for matrices
 #include <symengine/matrices/identity_matrix.h> // identity matrix
 #include <symengine/matrices/matrix_mul.h> // matrix multiplications
 #include <symengine/matrices/matrix_add.h>
@@ -32,9 +31,12 @@
 #include <tuple>
 #include <variant>
 
+// Eigen library for linear algebra
+#include <Eigen/Dense>
+
 using namespace std;
 using namespace SymEngine; // Use the SymEngine namespace
-// using SymEngine::linalg::inv; // Import the inv function from the linalg namespace
+using namespace Eigen;
 
 
 // Define a constant for π (pi) using SymEngine

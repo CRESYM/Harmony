@@ -2,6 +2,9 @@
 #include "Bus.h"
 #include "Include_components.h"
 
+#include <Eigen/Dense>
+using namespace Eigen;
+
 int main() {
 
 	// Create Transformer object with 1 pin

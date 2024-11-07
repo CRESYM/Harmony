@@ -227,7 +227,7 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 	std::tuple<std::string, std::vector<int>, std::vector<double>, double, double, double, double> conductor,
 	std::tuple<int, std::vector<double>, double> groundwire) : length(len), earthParameters(earth), Element(symbol, 1, 1) {
 
-	conductors = new Conductors(std::get<0>(conductor), std::get<1>(conductor), std::get<2>(conductor), std::get<3>(conductor), std::get<4>(conductor), std::get<5>(conductor));
+	conductors = new Conductors(std::get<0>(conductor), std::get<1>(conductor), std::get<2>(conductor), std::get<3>(conductor), std::get<4>(conductor), std::get<5>(conductor), std::get<6>(conductor));
 	groundwires = new Groundwires(std::get<0>(groundwire), std::get<1>(groundwire), conductors->ybc, std::get<2>(groundwire));
 
 	// Calculate earth parameters
@@ -266,11 +266,12 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 	
 	// Calculate the number of elements in the matrices
 	int Num = conductors->number_bundles * conductors->number_conductors_bundle + groundwires->ng;
-	P = createZeroMatrix(Num, Num);
+	Y = createZeroMatrix(Num, Num);
+	P.resize(Num, Num);
 	Z = createZeroMatrix(Num, Num);
 
 	RCP<const Basic> de = sqrt(div(integer(1), mul(mul(s, mu_earth), add(sigma_earth, mul(s, epsilon_earth))))); // depth of penetration
-	cout << de->__str__() << endl;
+	// cout << de->__str__() << endl;
 	
 	// Loop over each phase and groundwire
 	for (int iPhase = 0; iPhase < Num; ++iPhase) {
@@ -292,7 +293,8 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 			if (iPhase != jPhase) {
 				RCP<const Basic> Z0 = mul(mul(s, log(div(tildeDi_j, real_double(di_j)))), real_double(mu_0 / (2 * M_PI)));
 				Z.set(iPhase, jPhase, add(Z.get(iPhase, jPhase), Z0));
-				P.set(iPhase, jPhase, real_double(1 / (2 * M_PI * epsilon_0) * log(Di_j / di_j)));
+				// P.set(iPhase, jPhase, real_double(1 / (2 * M_PI * epsilon_0) * log(Di_j / di_j)));
+				P(iPhase, jPhase) = 1 / (2 * M_PI * epsilon_0) * log(Di_j / di_j);
 			}
 			else {
 				double exp_help = 0.3179 * rho / (M_PI * r_i * r_i);
@@ -300,7 +302,8 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 				Zi = add(Zi, real_double(exp_help));
 				RCP<const Basic> Z0 = mul(mul(s, log(div(tildeDi_j, real_double(r_i)))), real_double(mu_0 / (2 * M_PI)));
 				Z.set(iPhase, jPhase, add(Z.get(iPhase, jPhase), add(Zi, Z0)));
-				P.set(iPhase, jPhase, real_double(1 / (2 * M_PI * epsilon_0) * log(Di_j / r_i)));
+				// P.set(iPhase, jPhase, real_double(1 / (2 * M_PI * epsilon_0) * log(Di_j / r_i)));
+				P(iPhase, jPhase) = 1 / (2 * M_PI * epsilon_0) * log(Di_j / r_i);
 			}
 		}
 	}	
@@ -316,18 +319,30 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 				// Subtract Z/P[:,iCond] from Z/P[:,cond_noElim_curr]
 				for (int i = 0; i < Num; ++i) {
 					Z.set(i, iCond, sub(Z.get(i, iCond), Z.get(i, cond_noElim_curr)));
-					P.set(i, iCond, sub(P.get(i, iCond), P.get(i, cond_noElim_curr)));
+					// P.set(i, iCond, sub(P.get(i, iCond), P.get(i, cond_noElim_curr)));
+					P(i, iCond) -= P(i, cond_noElim_curr);
 				}
 				// Subtract Z/P[iCond,:] from Z/P[cond_noElim_curr,:]
 				for (int j = 0; j < Num; ++j) {
 					Z.set(iCond, j, sub(Z.get(iCond, j), Z.get(cond_noElim_curr, j)));
-					P.set(iCond, j, sub(P.get(iCond, j), P.get(cond_noElim_curr, j)));
+					//P.set(iCond, j, sub(P.get(iCond, j), P.get(cond_noElim_curr, j)));
+					P(iCond, j) -= P(cond_noElim_curr, j);
 				}
 			}
 		}
 	}
 
-	//inv(P);
+	P = P.inverse();
+	// cout << P << endl;
+
+	for (int i = 0; i < Num; i++)
+		for (int j = 0; j < Num; j++) {
+			Y.set(i, j, mul(s, real_double(P(i,j))));
+			if ((i == j) && (i < conductors->number_bundles)) {
+				Y.set(i, j, add(Y.get(i, j), real_double(conductors->gc)));
+			}
+		}
+
 }
 
 
