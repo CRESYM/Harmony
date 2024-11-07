@@ -44,3 +44,14 @@ double eval_basic(const RCP<const Basic>& expr) {
 	}
 }
 
+//function kron(matrix::Array{ Complex }, no_eliminate::Array{ Int })
+//n = size(matrix, 1)
+//eliminate = setdiff(1:n, no_eliminate)
+//matrix = matrix [[no_eliminate; eliminate], :]
+//matrix = matrix[:, [no_eliminate; eliminate]]
+//
+//n_noElim = length(no_eliminate)
+//matrix = matrix[1:n_noElim, 1 : n_noElim] - matrix[1:n_noElim, 1 + n_noElim : end] *
+//inv(matrix[1 + n_noElim:end, 1 + n_noElim : end]) * matrix[1 + n_noElim:end, 1 : n_noElim]
+//end
+
