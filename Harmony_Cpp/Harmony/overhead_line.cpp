@@ -2,7 +2,7 @@
 
 
 // Define constructors for Conductors
-Overhead_Line::Conductors::Conductors(std::string organization, std::vector<int>& numbers, std::vector<double>& values_distances, double rc, double Rdc, double dsag, double dsb = 0, std::tuple<std::vector<double>, std::vector<double>> positions = { {},{} })
+Overhead_Line::Conductors::Conductors(std::string organization, std::vector<int>& numbers, std::vector<double>& values_distances, double rc, double Rdc, double dsag, double dsb = 0, std::tuple<std::vector<double>, std::vector<double>> pos = { {},{} })
 	: organization(organization), rc(rc), Rdc(Rdc), dsb(dsb), dsag(dsag) {
 	if (numbers.size() == 1)
 		number_bundles = numbers[0];
@@ -53,6 +53,26 @@ Overhead_Line::Conductors::Conductors(std::string organization, std::vector<int>
 		throw std::invalid_argument("Unknown conductor bundle organization.");
 		exit(2);
 	}
+
+	std::vector<double> x;
+	std::vector<double> y;
+	std::tie(x, y) = positions;
+
+	std::vector<double> xsb;
+	std::vector<double> ysb;
+	std::tie(xsb, ysb) = bundle_position();
+
+	std::vector<double> x_array;
+	std::vector<double> y_array;
+
+	for (int i = 0; i < number_bundles; ++i) {
+		for (int j = 0; j < number_conductors_bundle; ++j) {
+			x_array.push_back(x[i] + xsb[j]);
+			y_array.push_back(y[i] + ysb[j] - 2.0 / 3.0 * dsag);
+		}
+	}
+
+	positions = make_tuple(x_array, y_array);
 }
 
 //check definitions and calculate parameters
@@ -156,8 +176,32 @@ void Overhead_Line::Conductors::estimate_offset() {
 	}
 }
 
+std::tuple<std::vector<double>, std::vector<double>> Overhead_Line::Conductors::bundle_position() {
+	if (number_bundles == 1) {
+		return std::make_tuple(std::vector<double>{0}, std::vector<double>{0});
+	}
+	else {
+		const double phi = 2 * M_PI / number_bundles;
+		const double r = dsb / 2 / sin(phi / 2);
+		double phi_s = M_PI / 2;
+		if (number_bundles % 2 == 0) {
+			phi_s += phi / 2;
+		}
+
+		std::vector<double> xsb;
+		std::vector<double> ysb;
+		for (int i = 0; i < number_bundles; ++i) {
+			xsb.push_back(r * cos(phi_s));
+			ysb.push_back(r * sin(phi_s));
+			phi_s += phi;
+		}
+
+		return std::make_tuple(xsb, ysb);
+	}
+}
+
 // Groundwires definition
-Overhead_Line::Groundwires::Groundwires(int ng, std::vector<double>& values, double mu_g = 1.0, std::tuple<std::vector<double>, std::vector<double>> positions = { {},{} })
+Overhead_Line::Groundwires::Groundwires(int ng, std::vector<double>& values, double ybc, double mu_g = 1.0, std::tuple<std::vector<double>, std::vector<double>> pos = { {},{} })
 	: ng(ng), mu_g(mu_g)
 {
 	if (values.size() < 4) {
@@ -172,37 +216,11 @@ Overhead_Line::Groundwires::Groundwires(int ng, std::vector<double>& values, dou
 	std::vector<double> x;
 	std::vector<double> y;
 	for (int i = 0; i < ng; i++) {
-	//for (double i = ; i < (ng - 1) / 2; i++) {
-		x.push_back(deltaXg * (-(ng - 1) / 2 + i));
-		y.push_back(deltaYg); // + ybc
+		x.push_back(deltaXg * (-(ng - 1.0) / 2 + i));
+		y.push_back(deltaYg + ybc -2.0 / 3.0 * dgsag); 
 	}
-	positions = {x, y};
+	positions = std::make_tuple(x, y);
 }
-
-std::tuple<std::vector<double>, std::vector<double>> Overhead_Line::bundle_position(int n, double d) {
-	if (n == 1) {
-		return std::make_tuple(std::vector<double>{0}, std::vector<double>{0});
-	}
-	else {
-		const double phi = 2 * M_PI / n;
-		const double r = d / 2 / sin(phi / 2);
-		double phi_s = M_PI / 2;
-		if (n % 2 == 0) {
-			phi_s += phi / 2;
-		}
-
-		std::vector<double> xsb;
-		std::vector<double> ysb;
-		for (int i = 0; i < n; ++i) {
-			xsb.push_back(r * cos(phi_s));
-			ysb.push_back(r * sin(phi_s));
-			phi_s += phi;
-		}
-
-		return std::make_tuple(xsb, ysb);
-	}
-}
-
 
 
 Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<double, double, double> earth,
@@ -210,7 +228,7 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 	std::tuple<int, std::vector<double>, double> groundwire) : length(len), earthParameters(earth), Element(symbol, 1, 1) {
 
 	conductors = new Conductors(std::get<0>(conductor), std::get<1>(conductor), std::get<2>(conductor), std::get<3>(conductor), std::get<4>(conductor), std::get<5>(conductor));
-	groundwires = new Groundwires(std::get<0>(groundwire), std::get<1>(groundwire), std::get<2>(groundwire));
+	groundwires = new Groundwires(std::get<0>(groundwire), std::get<1>(groundwire), conductors->ybc, std::get<2>(groundwire));
 
 	// Calculate earth parameters
 	RCP<const Basic> mu_earth = real_double(std::get<0>(earthParameters) * mu_0);
@@ -228,27 +246,31 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 	std::vector<double> y;
 	std::tie(x, y) = conductors->positions;
 
-	std::vector<double> xsb;
-	std::vector<double> ysb;
-	std::tie(xsb, ysb) = bundle_position(conductors->number_conductors_bundle, conductors->dsb);
-	for (int i = 0; i < conductors->number_bundles; ++i) {
-		for (int j = 0; j < conductors->number_conductors_bundle; ++j) {
-			x_array.push_back(x[i] + xsb[j]);
-			y_array.push_back(y[i] + ysb[j] - 2.0 / 3.0 * conductors->dsag);
-			r_array.push_back(conductors->rc);
-			rho_array.push_back(conductors->Rdc * 1e-3);
-			mu_array.push_back(conductors->mu_rc * mu_0);
-		}
+	
+	for (int i = 0; i < conductors->number_bundles * conductors->number_conductors_bundle; ++i) {
+		x_array.push_back(x[i]);
+		y_array.push_back(y[i]);
+		r_array.push_back(conductors->rc);
+		rho_array.push_back(conductors->Rdc * 1e-3);
+		mu_array.push_back(conductors->mu_rc * mu_0);
 	}
 
 	std::tie(x, y) = groundwires->positions;
+	for (int i = 0; i < groundwires->ng; ++i) {
+		x_array.push_back(x[i]);
+		y_array.push_back(y[i]);
+		r_array.push_back(conductors->rc);
+		rho_array.push_back(conductors->Rdc * 1e-3);
+		mu_array.push_back(conductors->mu_rc * mu_0);
+	}
 	
 	// Calculate the number of elements in the matrices
 	int Num = conductors->number_bundles * conductors->number_conductors_bundle + groundwires->ng;
 	P = createZeroMatrix(Num, Num);
 	Z = createZeroMatrix(Num, Num);
 
-	RCP<const Basic> de = sqrt(div(integer(1), mul(mul(s, mu_earth), add(sigma_earth, mul(s, epsilon_earth))))); // depth of penetration
+	RCP<const Basic> de_mul2 = sqrt(div(integer(4), mul(mul(s, mu_earth), add(sigma_earth, mul(s, epsilon_earth))))); // depth of penetration
+	cout << de_mul2->__str__() << endl;
 	
 	// Loop over each phase and groundwire
 	for (int iPhase = 0; iPhase < Num; ++iPhase) {
@@ -263,8 +285,7 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 			double x_j = x_array[jPhase];
 			double y_j = y_array[jPhase];
 			double Di_j = sqrt(pow((x_i - x_j), 2) + pow((y_i + y_j), 2));
-			RCP<const Basic> tildeDi_j = sqrt(real_double(pow((x_i - x_j), 2)));
-			// RCP<const Basic> tildeDi_j = sqrt(add(real_double(pow((x_i - x_j), 2)), pow(add(real_double(y_i + y_j), mul(integer(2), de)), integer(2))));
+			RCP<const Basic> tildeDi_j = sqrt(add(real_double(pow((x_i - x_j), 2)), pow(add(real_double(y_i + y_j), de_mul2), integer(2))));
 			double di_j = sqrt(pow((x_i - x_j), 2) + pow((y_i - y_j), 2));
 	
 			if (iPhase != jPhase) {

@@ -36,6 +36,8 @@ private:
 		void estimate_delta();
 		void estimate_concentric();
 		void estimate_offset();
+
+		std::tuple<std::vector<double>, std::vector<double>> bundle_position();
 	};
 
 	class Groundwires {
@@ -47,9 +49,9 @@ private:
 		double dgsag = 0; // sag offset [m] dgsag
 		double Rgdc = 0; // groundwire DC resistance [Ω/m] Rgdc
 		double mu_g = 1; // relative groundwire permeability μᵣ
-		std::tuple<std::vector<double>, std::vector<double>> positions = { {},{} }; // add absolute positions manually
+		std::tuple<std::vector<double>, std::vector<double>> positions; // add absolute positions manually
 
-		Groundwires(int, std::vector<double>&, double, std::tuple<std::vector<double>, std::vector<double>>);
+		Groundwires(int, std::vector<double>&, double, double, std::tuple<std::vector<double>, std::vector<double>>);
 	};
 
 	double length = 0;  // line length [km]
@@ -69,7 +71,7 @@ private:
 
 	// Static member functions for estimating conductor configurations
 	
-	static std::tuple<std::vector<double>, std::vector<double>> bundle_position(int n, double d);
+	
 
 public:
 	Overhead_Line(const std::string& symbol, double length, std::tuple<double, double, double> earth,
