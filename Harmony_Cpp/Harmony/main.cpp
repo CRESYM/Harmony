@@ -2,11 +2,11 @@
 #include "Bus.h"
 #include "Include_components.h"
 
-#include <Eigen/Dense>
-using namespace Eigen;
+
+// using number = SymEngine::Expression;
+// using matrix = Eigen::Matrix<number, 3, 3>;
 
 int main() {
-
 	// Create Transformer object with 1 pin
 	//std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0, 0.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
 	//Transformer_real* transformer = new Transformer_real("T1", 1, transformer_values);
