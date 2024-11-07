@@ -35,8 +35,24 @@ Overhead_Line::Conductors::Conductors(std::string organization, std::vector<int>
 	if (organization == "flat") {
 		estimate_flat();
 	}
-
-
+	else if (organization == "vertical")
+		estimate_vertical();
+	else if (organization == "delta")
+		estimate_delta();
+	else if (organization == "concentric")
+		estimate_concentric();
+	else if (organization == "offset")
+		estimate_offset();
+	else if (organization == "absolute") {
+		if (std::get<0>(positions).size() != number_bundles) {
+			throw std::invalid_argument("Uncorrect absolute positions. Number of positions does not match the number of bundles.");
+			exit(2);
+		}
+	}
+	else {
+		throw std::invalid_argument("Unknown conductor bundle organization.");
+		exit(2);
+	}
 }
 
 //check definitions and calculate parameters
@@ -140,6 +156,20 @@ void Overhead_Line::Conductors::estimate_offset() {
 	}
 }
 
+// Groundwires definition
+Overhead_Line::Groundwires::Groundwires(int ng, std::vector<double>& values, double mu_g = 1.0, std::tuple<std::vector<double>, std::vector<double>> positions = { {},{} })
+	: ng(ng), mu_g(mu_g)
+{
+	if (values.size() < 4) {
+		throw std::invalid_argument("Illegal number of parameters. It must be at least 5 (Rgdc, rg, dgsag, DeltaYg) with additional parameters (DeltaXg, mu_g)");
+		exit(2);
+	}
+
+	Rgdc = values[0]; rg = values[1];
+	dgsag = values[2]; deltaYg = values[3];
+	deltaXg = (values.size() == 5) ? values[4] : 0;
+}
+
 std::tuple<std::vector<double>, std::vector<double>> Overhead_Line::bundle_position(int n, double d) {
 	if (n == 1) {
 		return std::make_tuple(std::vector<double>{0}, std::vector<double>{0});
@@ -167,40 +197,16 @@ std::tuple<std::vector<double>, std::vector<double>> Overhead_Line::bundle_posit
 
 
 Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<double, double, double> earth,
-	std::tuple<std::string, std::vector<int>, std::vector<double>, double, double, double, double> conductor)
-	: length(len), earthParameters(earth), Element(symbol, 1, 1) {
-	bool transformation = false;
+	std::tuple<std::string, std::vector<int>, std::vector<double>, double, double, double, double> conductor,
+	std::tuple<int, std::vector<double>, double> groundwire) : length(len), earthParameters(earth), Element(symbol, 1, 1) {
 
-	//const auto& [organization, numbers, values_distance, Rdc, rc, dsb] = std::get<std::tuple<std::string, std::vector<int>&, std::vector<double>&, double, double, double>>(conductor);
 	conductors = new Conductors(std::get<0>(conductor), std::get<1>(conductor), std::get<2>(conductor), std::get<3>(conductor), std::get<4>(conductor), std::get<5>(conductor));
-
-
-
-
-}
-
-/*
-			Conductors& c = tl.conductors;
-			const auto& [number_bundles, number_conductors_bundle, ybc, deltaYbc, deltaXbc, deltaTildeXbc, dsag, dsb, rc, RdC, gc, murc, positions, organization] = std::get<std::tuple<int, int, double, double, double, double, double, double, double, double, double, double, std::tuple<std::vector<double>, std::vector<double>>, std::string>>(conductor);
-
-			Groundwires& g = tl.groundwires;
-			const auto&[ng, deltaXg, deltaYg, rg, dgSag, RdG, mug, positions] = std::get<std::tuple<int, double, double, double, double, double, double, std::tuple<std::vector<double>, std::vector<double>>>>(val);
-			g.ng = ng;
-			g.deltaXg = deltaXg;
-			g.deltaYg = deltaYg;
-			g.rg = rg;
-			g.dgSag = dgSag;
-			g.RdG = RdG;
-			g.mug = mug;
-			g.positions = positions;
-
-	// Extract earth parameters from tl
-	auto[mur_earth, epsilonr_earth, resistivity_earth] = earthParameters;
+	groundwires = new Groundwires(std::get<0>(groundwire), std::get<1>(groundwire), std::get<2>(groundwire));
 
 	// Calculate earth parameters
-	double mu_earth = mur_earth * mu_0;
-	double epsilon_earth = epsilonr_earth * epsilon;
-	double sigma_earth = 1 / resistivity_earth;
+	RCP<const Basic> mu_earth = real_double(std::get<0>(earthParameters) * mu_0);
+	RCP<const Basic> epsilon_earth = real_double(std::get<1>(earthParameters) * epsilon_0);
+	RCP<const Basic> sigma_earth = real_double(1 / std::get<2>(earthParameters));
 
 	// Initialize arrays
 	std::vector<double> x_array;
@@ -209,43 +215,30 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 	std::vector<double> rho_array;
 	std::vector<double> mu_array;
 
-	//calculate conductor positions
-	if (dict_organization.find(tl.conductors.organization.name) == dict_organization.end() ||
-		(std::get<0>(tl.conductors.positions).size() == 0 && std::get<1>(tl.conductors.positions).size() == 0)) {
-		throw std::invalid_argument("Conductor positions are not defined.");
-	}
-	else {
-		std::vector<double> x;
-		std::vector<double> y;
-		if (dict_organization.find(tl.conductors.organization.name) != dict_organization.end()) {
-			auto[x_, y_] = dict_organization[tl.conductors.organization.name](tl.conductors);
-			x = x_;
-			y = y_;
-		}
-		else {
-			std::tie(x, y) = tl.conductors.positions;
-		}
+	std::vector<double> x;
+	std::vector<double> y;
+	std::tie(x, y) = conductors->positions;
 
-		auto[xsb, ysb] = overhead_Line::bundle_position(tl.conductors.number_conductors_bundle, tl.conductors.dsb);
-		for (int i = 0; i < tl.conductors.nb; ++i) {
-			for (int j = 0; j < tl.conductors.number_conductors_bundle; ++j) {
-				x_array.push_back(x[i] + xsb[j]);
-				y_array.push_back(y[i] + ysb[j] - 2.0 / 3.0 * tl.conductors.dsag);
-				r_array.push_back(tl.conductors.rc);
-				rho_array.push_back(tl.conductors.RdC * 1e-3);
-				mu_array.push_back(tl.conductors.murc * mu_0);
-			}
+	std::vector<double> xsb;
+	std::vector<double> ysb;
+	std::tie(xsb, ysb) = bundle_position(conductors->number_conductors_bundle, conductors->dsb);
+	for (int i = 0; i < conductors->number_bundles; ++i) {
+		for (int j = 0; j < conductors->number_conductors_bundle; ++j) {
+			x_array.push_back(x[i] + xsb[j]);
+			y_array.push_back(y[i] + ysb[j] - 2.0 / 3.0 * conductors->dsag);
+			r_array.push_back(conductors->rc);
+			rho_array.push_back(conductors->Rdc * 1e-3);
+			mu_array.push_back(conductors->mu_rc * mu_0);
 		}
 	}
-
+	
 	// Calculate the number of elements in the matrices
-	int Num = tl.conductors.number_bundles * tl.conductors.number_conductors_bundle + tl.groundwires.ng;
-	std::vector<std::vector<Basic>> P(Num, std::vector<Basic>(Num));
-	std::vector<std::vector<Basic>> Z(Num, std::vector<Basic>(Num));
+	int Num = conductors->number_bundles * conductors->number_conductors_bundle + groundwires->ng;
+	P = createZeroMatrix(Num, Num);
+	Z = createZeroMatrix(Num, Num);
 
-	double s = 0.0; // Define s, the symbol
-	double de = sqrt(1 / (s * mu_earth * (sigma_earth + s * epsilon_earth))); // depth of penetration
-
+	RCP<const Basic> de = sqrt(div(integer(1), mul(mul(s, mu_earth), add(sigma_earth, mul(s, epsilon_earth))))); // depth of penetration
+	
 	// Loop over each phase and groundwire
 	for (int iPhase = 0; iPhase < Num; ++iPhase) {
 		double x_i = x_array[iPhase];
@@ -253,65 +246,58 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 		double r_i = r_array[iPhase];
 		double rho = rho_array[iPhase] * (M_PI * r_i * r_i);
 		double mu = mu_array[iPhase];
-		double m = sqrt(s * mu / rho);
-
+		// double m = sqrt(s * mu / rho);
+	
 		for (int jPhase = 0; jPhase < Num; ++jPhase) {
 			double x_j = x_array[jPhase];
 			double y_j = y_array[jPhase];
 			double Di_j = sqrt(pow((x_i - x_j), 2) + pow((y_i + y_j), 2));
-			double D̂i_j = sqrt(pow((x_i - x_j), 2) + pow((y_i + y_j + 2 * de), 2));
+			// double D̂i_j = sqrt(pow((x_i - x_j), 2) + pow((y_i + y_j + 2 * de), 2));
 			double di_j = sqrt(pow((x_i - x_j), 2) + pow((y_i - y_j), 2));
-
+	
 			if (iPhase != jPhase) {
-				Z[iPhase][jPhase] += Basic(s * log(D̂i_j / di_j) * mu_0 / (2 * M_PI));
-				P[iPhase][jPhase] += Basic(1 / (2 * M_PI * epsilon) * log(Di_j / di_j));
+				// Z[iPhase][jPhase] += Basic(s * log(D̂i_j / di_j) * mu_0 / (2 * M_PI));
+				// P[iPhase][jPhase] += Basic(1 / (2 * M_PI * epsilon) * log(Di_j / di_j));
 			}
 			else {
-				Z[iPhase][jPhase] += s * mu_0 / (2 * M_PI) * log(D̂i_j / r_i) + m * rho / (2 * M_PI * r_i) * 1.0 / tanh(0.733 * m * r_i) + 0.3179 * rho / (M_PI * r_i * r_i);
-				P[iPhase][jPhase] = 1 / (2 * M_PI * epsilon) * log(Di_j / r_i);
+				// Z[iPhase][jPhase] += s * mu_0 / (2 * M_PI) * log(D̂i_j / r_i) + m * rho / (2 * M_PI * r_i) * 1.0 / tanh(0.733 * m * r_i) + 0.3179 * rho / (M_PI * r_i * r_i);
+				// P[iPhase][jPhase] = 1 / (2 * M_PI * epsilon) * log(Di_j / r_i);
 			}
 		}
 	}
+	//
+	//
+	//	if (conductors.number_conductors_bundle != 0) {
+	//		std::vector<int> cond_noElim(conductors.number_bundles);
+	//		for (int i = 0; i < conductors.number_bundles; ++i) {
+	//			cond_noElim[i] = (i * conductors.number_conductors_bundle) + 1;
+	//		}
+	//
+	//		for (int iPhase = 0; iPhase < tl.conductors.number_bundles; ++iPhase) {
+	//			int cond_noElim_curr = cond_noElim[iPhase];
+	//			for (int iCond = (tl.conductors.number_conductors_bundle * (iPhase + 1)) + 1; iCond <= tl.conductors.number_conductors_bundle * (iPhase + 1); ++iCond) {
+	//				// Subtract Z[:,iCond] from Z[:,cond_noElim_curr]
+	//				for (int i = 0; i < Num; ++i) {
+	//					Z[i][iCond] -= Z[i][cond_noElim_curr];
+	//				}
+	//				// Subtract Z[iCond,:] from Z[cond_noElim_curr,:]
+	//				for (int j = 0; j < Num; ++j) {
+	//					Z[iCond][j] -= Z[cond_noElim_curr][j];
+	//				}
+	//
+	//				// Subtract P[:,iCond] from P[:,cond_noElim_curr]
+	//				for (int i = 0; i < Num; ++i) {
+	//					P[i][iCond] -= P[i][cond_noElim_curr];
+	//				}
+	//				// Subtract P[iCond,:] from P[cond_noElim_curr,:]
+	//				for (int j = 0; j < Num; ++j) {
+	//					P[iCond][j] -= P[cond_noElim_curr][j];
+	//				}
+	//			}
+	//		}
+	//	}
+}
 
-	// Assuming tl.P and tl.Z are defined as std::vector<std::vector<Basic>>
-// If not, replace the type accordingly
-
-	if (tl.conductors.number_conductors_bundle != 0) {
-		std::vector<int> cond_noElim(tl.conductors.number_bundles);
-		for (int i = 0; i < tl.conductors.number_bundles; ++i) {
-			cond_noElim[i] = (i * tl.conductors.number_conductors_bundle) + 1;
-		}
-
-		for (int iPhase = 0; iPhase < tl.conductors.number_bundles; ++iPhase) {
-			int cond_noElim_curr = cond_noElim[iPhase];
-			for (int iCond = (tl.conductors.number_conductors_bundle * (iPhase + 1)) + 1; iCond <= tl.conductors.number_conductors_bundle * (iPhase + 1); ++iCond) {
-				// Subtract Z[:,iCond] from Z[:,cond_noElim_curr]
-				for (int i = 0; i < Num; ++i) {
-					Z[i][iCond] -= Z[i][cond_noElim_curr];
-				}
-				// Subtract Z[iCond,:] from Z[cond_noElim_curr,:]
-				for (int j = 0; j < Num; ++j) {
-					Z[iCond][j] -= Z[cond_noElim_curr][j];
-				}
-
-				// Subtract P[:,iCond] from P[:,cond_noElim_curr]
-				for (int i = 0; i < Num; ++i) {
-					P[i][iCond] -= P[i][cond_noElim_curr];
-				}
-				// Subtract P[iCond,:] from P[cond_noElim_curr,:]
-				for (int j = 0; j < Num; ++j) {
-					P[iCond][j] -= P[cond_noElim_curr][j];
-				}
-			}
-		}
-	}
-
-	// Assign Z and P to tl.P and tl.Z respectively
-	tl.setP(P); // Assign P matrix to tl.P
-	tl.setZ(Z); // Assign Z matrix to tl.Z
 
 	
-
-}
-*/
 

@@ -42,11 +42,12 @@ extern const RCP<const Basic> PI;
 extern const double M_PI ;
 
 extern const double mu_0;
-extern const double epsilon;
+extern const double epsilon_0;
 
 // Define imaginery unit and symbol for angular frequency
 extern RCP<const Basic> j;  // Imaginary unit
 extern RCP<const Basic> omega;
+extern RCP<const Basic> s; // s = j * omega
 
 extern DenseMatrix createZeroMatrix(int size1, int size2);
 

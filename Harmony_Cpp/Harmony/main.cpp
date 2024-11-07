@@ -1,4 +1,4 @@
-#include "network.h"
+﻿#include "network.h"
 #include "Bus.h"
 #include "Include_components.h"
 
@@ -11,8 +11,10 @@ int main() {
 
 	std::vector<double> distances = { 11.8, 27.5 };
 	std::vector<int> numbers = { 2, 2 };
+	std::vector<double> values_g = { 0.9196, 0.0062, 10.0, 7.5, 6.5 };
 	Overhead_Line* ohl = new Overhead_Line("ohl", 100.0, make_tuple(1.0, 1.0, 1.0),
-		make_tuple("flat", numbers, distances, 0.01436, 0.06266, 10.0, 0.4572));
+		make_tuple("flat", numbers, distances, 0.01436, 0.06266, 10.0, 0.4572),
+		make_tuple(2, values_g, 1.0));
 
 	std::vector<double> transformer_values = { 1.0, 1.0, 2.0, 2.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
 	TransformerDeltaY* transformer = new TransformerDeltaY("T1", 3, transformer_values);
