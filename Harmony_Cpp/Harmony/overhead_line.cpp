@@ -269,8 +269,8 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 	P = createZeroMatrix(Num, Num);
 	Z = createZeroMatrix(Num, Num);
 
-	RCP<const Basic> de_mul2 = sqrt(div(integer(4), mul(mul(s, mu_earth), add(sigma_earth, mul(s, epsilon_earth))))); // depth of penetration
-	cout << de_mul2->__str__() << endl;
+	RCP<const Basic> de = sqrt(div(integer(1), mul(mul(s, mu_earth), add(sigma_earth, mul(s, epsilon_earth))))); // depth of penetration
+	cout << de->__str__() << endl;
 	
 	// Loop over each phase and groundwire
 	for (int iPhase = 0; iPhase < Num; ++iPhase) {
@@ -280,58 +280,54 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 		double rho = rho_array[iPhase] * (M_PI * r_i * r_i);
 		double mu = mu_array[iPhase];
 		RCP<const Basic> m = sqrt(mul(s, real_double(mu / rho))); // symbolic variable
+		// cout << m->__str__() << endl;
 	
 		for (int jPhase = 0; jPhase < Num; ++jPhase) {
 			double x_j = x_array[jPhase];
 			double y_j = y_array[jPhase];
 			double Di_j = sqrt(pow((x_i - x_j), 2) + pow((y_i + y_j), 2));
-			RCP<const Basic> tildeDi_j = sqrt(add(real_double(pow((x_i - x_j), 2)), pow(add(real_double(y_i + y_j), de_mul2), integer(2))));
+			RCP<const Basic> tildeDi_j = sqrt(add(real_double(pow((x_i - x_j), 2)), pow(add(real_double(y_i + y_j), mul(integer(2), de)), integer(2))));
 			double di_j = sqrt(pow((x_i - x_j), 2) + pow((y_i - y_j), 2));
 	
 			if (iPhase != jPhase) {
-				Z.set(iPhase, jPhase, add(Z.get(iPhase, jPhase), mul(mul(s, log(div(tildeDi_j, real_double(di_j)))), real_double(mu_0 / (2 * M_PI)))));
+				RCP<const Basic> Z0 = mul(mul(s, log(div(tildeDi_j, real_double(di_j)))), real_double(mu_0 / (2 * M_PI)));
+				Z.set(iPhase, jPhase, add(Z.get(iPhase, jPhase), Z0));
 				P.set(iPhase, jPhase, real_double(1 / (2 * M_PI * epsilon_0) * log(Di_j / di_j)));
 			}
 			else {
-				RCP<const Basic> exp = real_double(0.3179 * rho / (M_PI * r_i * r_i));
-				// exp = add(exp, mul(mul(m, real_double(rho / (2 * M_PI * r_i))), div(integer(1), tanh(mul(m, real_double(0.733 * r_i))))));
-				exp = add(mul(mul(s, log(div(tildeDi_j, real_double(r_i)))), real_double(mu_0 / (2 * M_PI))), exp);
-				Z.set(iPhase, jPhase, add(Z.get(iPhase, jPhase), exp));
+				double exp_help = 0.3179 * rho / (M_PI * r_i * r_i);
+				RCP<const Basic> Zi = div(mul(m, real_double(rho / (2 * M_PI * r_i))), tanh(mul(m, real_double(0.733 * r_i))));
+				Zi = add(Zi, real_double(exp_help));
+				RCP<const Basic> Z0 = mul(mul(s, log(div(tildeDi_j, real_double(r_i)))), real_double(mu_0 / (2 * M_PI)));
+				Z.set(iPhase, jPhase, add(Z.get(iPhase, jPhase), add(Zi, Z0)));
 				P.set(iPhase, jPhase, real_double(1 / (2 * M_PI * epsilon_0) * log(Di_j / r_i)));
 			}
 		}
+	}	
+	
+	if (conductors->number_conductors_bundle != 0) {
+		std::vector<int> cond_noElim(conductors->number_bundles);
+		for (int i = 0; i < conductors->number_bundles; ++i) {
+			cond_noElim[i] = (i * conductors->number_conductors_bundle) + 1;
+		}
+		for (int iPhase = 0; iPhase < conductors->number_bundles; ++iPhase) {
+			int cond_noElim_curr = cond_noElim[iPhase];
+			for (int iCond = (conductors->number_conductors_bundle * (iPhase + 1)) + 1; iCond <= conductors->number_conductors_bundle * (iPhase + 1); ++iCond) {
+				// Subtract Z/P[:,iCond] from Z/P[:,cond_noElim_curr]
+				for (int i = 0; i < Num; ++i) {
+					Z.set(i, iCond, sub(Z.get(i, iCond), Z.get(i, cond_noElim_curr)));
+					P.set(i, iCond, sub(P.get(i, iCond), P.get(i, cond_noElim_curr)));
+				}
+				// Subtract Z/P[iCond,:] from Z/P[cond_noElim_curr,:]
+				for (int j = 0; j < Num; ++j) {
+					Z.set(iCond, j, sub(Z.get(iCond, j), Z.get(cond_noElim_curr, j)));
+					P.set(iCond, j, sub(P.get(iCond, j), P.get(cond_noElim_curr, j)));
+				}
+			}
+		}
 	}
-	//
-	//
-	//	if (conductors.number_conductors_bundle != 0) {
-	//		std::vector<int> cond_noElim(conductors.number_bundles);
-	//		for (int i = 0; i < conductors.number_bundles; ++i) {
-	//			cond_noElim[i] = (i * conductors.number_conductors_bundle) + 1;
-	//		}
-	//
-	//		for (int iPhase = 0; iPhase < tl.conductors.number_bundles; ++iPhase) {
-	//			int cond_noElim_curr = cond_noElim[iPhase];
-	//			for (int iCond = (tl.conductors.number_conductors_bundle * (iPhase + 1)) + 1; iCond <= tl.conductors.number_conductors_bundle * (iPhase + 1); ++iCond) {
-	//				// Subtract Z[:,iCond] from Z[:,cond_noElim_curr]
-	//				for (int i = 0; i < Num; ++i) {
-	//					Z[i][iCond] -= Z[i][cond_noElim_curr];
-	//				}
-	//				// Subtract Z[iCond,:] from Z[cond_noElim_curr,:]
-	//				for (int j = 0; j < Num; ++j) {
-	//					Z[iCond][j] -= Z[cond_noElim_curr][j];
-	//				}
-	//
-	//				// Subtract P[:,iCond] from P[:,cond_noElim_curr]
-	//				for (int i = 0; i < Num; ++i) {
-	//					P[i][iCond] -= P[i][cond_noElim_curr];
-	//				}
-	//				// Subtract P[iCond,:] from P[cond_noElim_curr,:]
-	//				for (int j = 0; j < Num; ++j) {
-	//					P[iCond][j] -= P[cond_noElim_curr][j];
-	//				}
-	//			}
-	//		}
-	//	}
+
+	//inv(P);
 }
 
 

@@ -20,6 +20,7 @@
 // Functions for matrices
 #include <symengine/matrices/identity_matrix.h> // identity matrix
 #include <symengine/matrices/matrix_mul.h> // matrix multiplications
+#include <symengine/matrices/matrix_add.h>
 
 #include <cmath>  // Include cmath for std::acos
 #include <string>
@@ -33,6 +34,7 @@
 
 using namespace std;
 using namespace SymEngine; // Use the SymEngine namespace
+// using SymEngine::linalg::inv; // Import the inv function from the linalg namespace
 
 
 // Define a constant for π (pi) using SymEngine
@@ -50,5 +52,9 @@ extern RCP<const Basic> omega;
 extern RCP<const Basic> s; // s = j * omega
 
 extern DenseMatrix createZeroMatrix(int size1, int size2);
+
+extern RCP<const Basic> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value);
+
+extern 	double eval_basic(const RCP<const Basic>& expr);
 
 #endif // CONSTANTS_H

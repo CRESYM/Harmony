@@ -9,7 +9,7 @@ const double epsilon_0 = 8.85e-12; // Standard epsilon_0
 
 RCP<const Basic> j = I;  // Imaginary unit
 RCP<const Basic> omega = symbol("w");
-RCP<const Basic> s = mul(j, omega);
+RCP<const Basic> s = symbol("s"); // mul(j, omega);
 
 // Static helper function to create a zero matrix
 DenseMatrix createZeroMatrix(int size1, int size2) {
@@ -21,3 +21,26 @@ DenseMatrix createZeroMatrix(int size1, int size2) {
     }
     return zeroMatrix;
 }
+
+RCP<const Basic> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value) {
+	RCP<const Symbol> symbol = SymEngine::symbol(symbol_name);
+	RCP<const Basic> value_expr = real_double(value);
+	map_basic_basic subs_map;
+	subs_map[symbol] = value_expr;
+	return expr->subs(subs_map);
+}
+
+double eval_basic(const RCP<const Basic>& expr) {
+	try {
+		return eval_double(*expr);
+	}
+	catch (const SymEngineException& e) {
+		std::cerr << "SymEngineException: " << e.what() << std::endl;
+		throw;
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Standard exception: " << e.what() << std::endl;
+		throw;
+	}
+}
+

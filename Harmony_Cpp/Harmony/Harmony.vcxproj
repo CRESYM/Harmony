@@ -88,7 +88,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\vcpkg\packages\symengine_x64-windows\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\eigen-3.4.0;C:\vcpkg\packages\symengine_x64-windows\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DisableSpecificWarnings>4146</DisableSpecificWarnings>
     </ClCompile>
@@ -163,7 +163,6 @@
     <ClInclude Include="Cable.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="Element.h" />
-    <ClInclude Include="eval_parameter.h" />
     <ClInclude Include="Impedance.h" />
     <ClInclude Include="symengine_n.h" />
     <ClInclude Include="network.h" />

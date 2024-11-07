@@ -161,9 +161,6 @@
     <ClInclude Include="symengine_n.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="eval_parameter.h">
-      <Filter>Header Files\Elements\Transmission_line</Filter>
-    </ClInclude>
     <ClInclude Include="Transmissionline.h">
       <Filter>Header Files\Elements\Transmission_line</Filter>
     </ClInclude>

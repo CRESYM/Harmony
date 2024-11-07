@@ -1,42 +1,7 @@
-﻿#include "Cable.h"
-#include "eval_parameter.h"
+﻿#
+//
 
-
-
-//using SymEngine::linalg::inv; // Import the inv function from the linalg namespace
-
-/*std::vector<std::vector<SymEngine::RCP<const SymEngine::Basic>>> convert_to_symengine_matrix(const std::vector<std::vector<std::complex<double>>>& input_matrix) {
-	std::vector<std::vector<SymEngine::RCP<const SymEngine::Basic>>> sym_matrix;
-
-	for (const auto& row : input_matrix) {
-		std::vector<SymEngine::RCP<const SymEngine::Basic>> sym_row;
-
-		for (const auto& elem : row) {
-			// Construct SymEngine::Complex object from real and imaginary parts
-			SymEngine::RealDouble real_part(elem.real());
-			SymEngine::RealDouble imag_part(elem.imag());
-
-			// Construct SymEngine::Complex object from rational_class parts
-			auto complex_num = SymEngine::Complex::from_two_nums(real_part, imag_part);
-			// Add the constructed SymEngine::Complex object to the row
-			sym_row.push_back(complex_num);
-		}
-
-		// Add the row to the matrix
-		sym_matrix.push_back(sym_row);
-	}
-
-	return sym_matrix;
-}
-
-// Function to substitute a symbol with a numerical value
-RCP<const Basic> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value) {
-	RCP<const Symbol> symbol = SymEngine::symbol(symbol_name);
-	RCP<const Basic> value_expr = real_double(value);
-	map_basic_basic subs_map;
-	subs_map[symbol] = value_expr;
-	return expr->subs(subs_map);
-}
+/*
 
 std::pair<std::vector<std::vector<std::complex<double>>>, std::vector<std::vector<std::complex<double>>>> Eval_parameter :: eval_parameters(const Cable& c, const std::complex<double>& s_param) {
 	try {
