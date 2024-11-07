@@ -168,6 +168,15 @@ Overhead_Line::Groundwires::Groundwires(int ng, std::vector<double>& values, dou
 	Rgdc = values[0]; rg = values[1];
 	dgsag = values[2]; deltaYg = values[3];
 	deltaXg = (values.size() == 5) ? values[4] : 0;
+
+	std::vector<double> x;
+	std::vector<double> y;
+	for (int i = 0; i < ng; i++) {
+	//for (double i = ; i < (ng - 1) / 2; i++) {
+		x.push_back(deltaXg * (-(ng - 1) / 2 + i));
+		y.push_back(deltaYg); // + ybc
+	}
+	positions = {x, y};
 }
 
 std::tuple<std::vector<double>, std::vector<double>> Overhead_Line::bundle_position(int n, double d) {
@@ -231,6 +240,8 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 			mu_array.push_back(conductors->mu_rc * mu_0);
 		}
 	}
+
+	std::tie(x, y) = groundwires->positions;
 	
 	// Calculate the number of elements in the matrices
 	int Num = conductors->number_bundles * conductors->number_conductors_bundle + groundwires->ng;
@@ -246,22 +257,26 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 		double r_i = r_array[iPhase];
 		double rho = rho_array[iPhase] * (M_PI * r_i * r_i);
 		double mu = mu_array[iPhase];
-		// double m = sqrt(s * mu / rho);
+		RCP<const Basic> m = sqrt(mul(s, real_double(mu / rho))); // symbolic variable
 	
 		for (int jPhase = 0; jPhase < Num; ++jPhase) {
 			double x_j = x_array[jPhase];
 			double y_j = y_array[jPhase];
 			double Di_j = sqrt(pow((x_i - x_j), 2) + pow((y_i + y_j), 2));
-			// double D̂i_j = sqrt(pow((x_i - x_j), 2) + pow((y_i + y_j + 2 * de), 2));
+			RCP<const Basic> tildeDi_j = sqrt(real_double(pow((x_i - x_j), 2)));
+			// RCP<const Basic> tildeDi_j = sqrt(add(real_double(pow((x_i - x_j), 2)), pow(add(real_double(y_i + y_j), mul(integer(2), de)), integer(2))));
 			double di_j = sqrt(pow((x_i - x_j), 2) + pow((y_i - y_j), 2));
 	
 			if (iPhase != jPhase) {
-				// Z[iPhase][jPhase] += Basic(s * log(D̂i_j / di_j) * mu_0 / (2 * M_PI));
-				// P[iPhase][jPhase] += Basic(1 / (2 * M_PI * epsilon) * log(Di_j / di_j));
+				Z.set(iPhase, jPhase, add(Z.get(iPhase, jPhase), mul(mul(s, log(div(tildeDi_j, real_double(di_j)))), real_double(mu_0 / (2 * M_PI)))));
+				P.set(iPhase, jPhase, real_double(1 / (2 * M_PI * epsilon_0) * log(Di_j / di_j)));
 			}
 			else {
-				// Z[iPhase][jPhase] += s * mu_0 / (2 * M_PI) * log(D̂i_j / r_i) + m * rho / (2 * M_PI * r_i) * 1.0 / tanh(0.733 * m * r_i) + 0.3179 * rho / (M_PI * r_i * r_i);
-				// P[iPhase][jPhase] = 1 / (2 * M_PI * epsilon) * log(Di_j / r_i);
+				RCP<const Basic> exp = real_double(0.3179 * rho / (M_PI * r_i * r_i));
+				// exp = add(exp, mul(mul(m, real_double(rho / (2 * M_PI * r_i))), div(integer(1), tanh(mul(m, real_double(0.733 * r_i))))));
+				exp = add(mul(mul(s, log(div(tildeDi_j, real_double(r_i)))), real_double(mu_0 / (2 * M_PI))), exp);
+				Z.set(iPhase, jPhase, add(Z.get(iPhase, jPhase), exp));
+				P.set(iPhase, jPhase, real_double(1 / (2 * M_PI * epsilon_0) * log(Di_j / r_i)));
 			}
 		}
 	}
