@@ -44,14 +44,68 @@ double eval_basic(const RCP<const Basic>& expr) {
 	}
 }
 
-//function kron(matrix::Array{ Complex }, no_eliminate::Array{ Int })
-//n = size(matrix, 1)
-//eliminate = setdiff(1:n, no_eliminate)
-//matrix = matrix [[no_eliminate; eliminate], :]
-//matrix = matrix[:, [no_eliminate; eliminate]]
-//
-//n_noElim = length(no_eliminate)
-//matrix = matrix[1:n_noElim, 1 : n_noElim] - matrix[1:n_noElim, 1 + n_noElim : end] *
-//inv(matrix[1 + n_noElim:end, 1 + n_noElim : end]) * matrix[1 + n_noElim:end, 1 : n_noElim]
-//end
+MatrixXd kron_reduction(MatrixXd matrix, vector<int> no_eliminate) {
+	vector<int> eliminate;
+	for (int i = 0; i < matrix.rows(); i++) {
+		if (std::find(no_eliminate.begin(), no_eliminate.end(), i) == no_eliminate.end())
+			eliminate.push_back(i);
+	}
+	MatrixXd M = matrix(no_eliminate, no_eliminate) - matrix(no_eliminate, eliminate) * matrix(eliminate, eliminate).inverse() * matrix(eliminate, no_eliminate);
+
+	return M;
+}
+
+DenseMatrix kron_reduction(DenseMatrix matrix, vector<int> no_eliminate) {
+	vector<int> eliminate;
+	for (int i = 0; i < matrix.nrows(); i++) {
+		if (std::find(no_eliminate.begin(), no_eliminate.end(), i) == no_eliminate.end())
+			eliminate.push_back(i);
+	}
+	DenseMatrix M1 = createZeroMatrix(no_eliminate.size(), no_eliminate.size());
+	DenseMatrix M2 = createZeroMatrix(no_eliminate.size(), eliminate.size());
+	DenseMatrix M3 = createZeroMatrix(eliminate.size(), eliminate.size());
+	DenseMatrix M4 = createZeroMatrix(eliminate.size(), no_eliminate.size());
+
+	int i_no_eliminate_curr = 0, i_eliminate_curr = 0;
+	int j_no_eliminate_curr = 0, j_eliminate_curr = 0;
+	for (int i = 0; i < matrix.nrows(); i++) {
+		if (std::find(no_eliminate.begin(), no_eliminate.end(), i) != no_eliminate.end()) { // if it is the row that should not be eliminated
+			j_no_eliminate_curr = 0; j_eliminate_curr = 0;
+			for (int j = 0; j < matrix.nrows(); j++) {
+				if (std::find(no_eliminate.begin(), no_eliminate.end(), j) != no_eliminate.end()) {  // if it is the column that should not be eliminated
+					M1.set(i_no_eliminate_curr, j_no_eliminate_curr, matrix.get(i, j));
+					j_no_eliminate_curr++;
+				}
+				else { // this column should be eliminated
+					M2.set(i_no_eliminate_curr, j_eliminate_curr, matrix.get(i, j));
+					j_eliminate_curr++;
+				}
+			}
+			i_no_eliminate_curr += 1;
+		}
+		else {
+			j_no_eliminate_curr = 0; j_eliminate_curr = 0;
+			for (int j = 0; j < matrix.nrows(); j++) {
+				if (std::find(no_eliminate.begin(), no_eliminate.end(), j) != no_eliminate.end()) {  // if it is the column that should not be eliminated
+					M4.set(i_eliminate_curr, j_no_eliminate_curr, matrix.get(i, j));
+					j_no_eliminate_curr++;
+				}
+				else { // this column should be eliminated
+					M3.set(i_eliminate_curr, j_eliminate_curr, matrix.get(i, j));
+					j_eliminate_curr++;
+				}
+			}
+			i_eliminate_curr++;
+		}
+	}
+	
+	DenseMatrix C1 = createZeroMatrix(no_eliminate.size(), eliminate.size());
+	DenseMatrix C2 = createZeroMatrix(no_eliminate.size(), no_eliminate.size());
+	inverse_LU(M3, M3);
+	mul_dense_dense(M2, M3, C1);
+	mul_dense_dense(C1, M4, C2);
+	add_dense_dense(M1, C2, C2);
+
+	return C2;
+}
 

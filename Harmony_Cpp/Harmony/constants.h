@@ -20,6 +20,11 @@
 #include <symengine/matrices/identity_matrix.h> // identity matrix
 #include <symengine/matrices/matrix_mul.h> // matrix multiplications
 #include <symengine/matrices/matrix_add.h>
+#include <Symengine/matrix_expressions.h>
+#include <symengine/matrices/immutable_dense_matrix.h>
+#include <symengine/polys/basic_conversions.h>
+
+#include <intrin.h>
 
 #include <cmath>  // Include cmath for std::acos
 #include <string>
@@ -38,6 +43,7 @@
 
 // Eigen library for linear algebra
 #include <Eigen/Dense>
+#include <unsupported/Eigen/MatrixFunctions>
 
 using namespace std;
 using namespace SymEngine; // Use the SymEngine namespace
@@ -63,5 +69,8 @@ extern DenseMatrix createZeroMatrix(int size1, int size2);
 extern RCP<const Basic> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value);
 
 extern 	double eval_basic(const RCP<const Basic>& expr);
+
+extern MatrixXd kron_reduction(MatrixXd, vector<int>);
+extern DenseMatrix kron_reduction(DenseMatrix, vector<int>);
 
 #endif // CONSTANTS_H

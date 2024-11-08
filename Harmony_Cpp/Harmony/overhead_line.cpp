@@ -271,7 +271,6 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 	Z = createZeroMatrix(Num, Num);
 
 	RCP<const Basic> de = sqrt(div(integer(1), mul(mul(s, mu_earth), add(sigma_earth, mul(s, epsilon_earth))))); // depth of penetration
-	// cout << de->__str__() << endl;
 	
 	// Loop over each phase and groundwire
 	for (int iPhase = 0; iPhase < Num; ++iPhase) {
@@ -308,10 +307,11 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 		}
 	}	
 	
+	// Kron reduction preparation
+	std::vector<int> cond_noElim;
 	if (conductors->number_conductors_bundle != 0) {
-		std::vector<int> cond_noElim(conductors->number_bundles);
 		for (int i = 0; i < conductors->number_bundles; ++i) {
-			cond_noElim[i] = (i * conductors->number_conductors_bundle) + 1;
+			cond_noElim.push_back((i * conductors->number_conductors_bundle) + 1);
 		}
 		for (int iPhase = 0; iPhase < conductors->number_bundles; ++iPhase) {
 			int cond_noElim_curr = cond_noElim[iPhase];
@@ -319,30 +319,32 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 				// Subtract Z/P[:,iCond] from Z/P[:,cond_noElim_curr]
 				for (int i = 0; i < Num; ++i) {
 					Z.set(i, iCond, sub(Z.get(i, iCond), Z.get(i, cond_noElim_curr)));
-					// P.set(i, iCond, sub(P.get(i, iCond), P.get(i, cond_noElim_curr)));
 					P(i, iCond) -= P(i, cond_noElim_curr);
 				}
 				// Subtract Z/P[iCond,:] from Z/P[cond_noElim_curr,:]
 				for (int j = 0; j < Num; ++j) {
 					Z.set(iCond, j, sub(Z.get(iCond, j), Z.get(cond_noElim_curr, j)));
-					//P.set(iCond, j, sub(P.get(iCond, j), P.get(cond_noElim_curr, j)));
 					P(iCond, j) -= P(cond_noElim_curr, j);
 				}
 			}
 		}
 	}
 
-	P = P.inverse();
-	// cout << P << endl;
+	// Invoke kron reduction
+	P = kron_reduction(P, cond_noElim);
+	Z = kron_reduction(Z, cond_noElim);
 
-	for (int i = 0; i < Num; i++)
-		for (int j = 0; j < Num; j++) {
+	// Determine Y matrix
+	P = P.inverse();
+	for (int i = 0; i < conductors->number_conductors_bundle; i++)
+		for (int j = 0; j < conductors->number_conductors_bundle; j++) {
 			Y.set(i, j, mul(s, real_double(P(i,j))));
-			if ((i == j) && (i < conductors->number_bundles)) {
+			if (i == j) {
 				Y.set(i, j, add(Y.get(i, j), real_double(conductors->gc)));
 			}
 		}
 
+	// Calculate Y parameters part
 }
 
 
