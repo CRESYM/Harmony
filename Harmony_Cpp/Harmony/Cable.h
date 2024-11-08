@@ -3,74 +3,59 @@
 
 #include "Element.h"
 
-
-// Define the Conductor class presents conducting layer
-class Conductor {
+// Define the Cable class as a subtype (<:) of abstract type Element
+class Cable : public Element {
 public:
+
+	// Define the Conductor class presents conducting layer
+	class Conductor {
+	public:
+		// Constructor
+		Conductor(double ri = 0, double ro = 0, double resistivity = 0, double permeability = 1, double area = 0)
+			: ri(ri), ro(ro), resistivity(resistivity), permeability(permeability), area(area) {}
+
+		// Getter functions
+		double getInnerRadius() const { return ri; }
+		double getOuterRadius() const { return ro; }
+		double getResistivity() const { return resistivity; }
+		double getPermeability() const { return permeability; }
+		double getArea() const { return area; }
+
+		// Setter function for resistivity
+		void setResistivity(double newResistivity) {
+			resistivity = newResistivity;
+		}
+
+		// Member variables
+		double ri; //conductor inner radius
+		double ro; //conductor outer radius
+		double resistivity; //conductor resistivity ρ [Ωm]
+		double permeability;  //relative permeability μᵣ
+		double area; //nominal area
+	};
+
+	// Define the Insulator class presents insulating layer
+	class Insulator {
+	public:
+		// Constructor
+		Insulator(double ri = 0, double ro = 0, double permittivity = 1, double permeability = 1, double innerSemiConductorOuterRadius = 0, double outerSemiConductorInnerRadius = 0)
+			: ri(ri), ro(ro), permittivity(permittivity), permeability(permeability), innerSemiConductorOuterRadius(innerSemiConductorOuterRadius), outerSemiConductorInnerRadius(outerSemiConductorInnerRadius) {}
+
+		// Member variables
+		double ri;  //insulator inner radius
+		double ro;  //insulator outer radius
+		double permittivity; //relative permittivity ϵᵣ
+		double permeability; //relative permeability μᵣ
+		//If a semiconductor is present, in an insulator, we have: rᵢ < semiconductor < a + a < insulator < b + b < semiconductor < rₒ
+
+		double innerSemiConductorOuterRadius;
+		double outerSemiConductorInnerRadius;
+		double a; //inner semiconductor outer radius -> Inner semiconductor rᵢ < r < a
+		double b; //outer semiconductor inner radius -> Outer semiconductor b < r < rₒ
+	};
+
 	// Constructor
-	Conductor(double ri = 0, double ro = 0, double resistivity = 0, double permeability = 1, double area = 0)
-		: ri(ri), ro(ro), resistivity(resistivity), permeability(permeability), area(area) {}
-
-	// Getter functions
-	double getInnerRadius() const { return ri; }
-	double getOuterRadius() const { return ro; }
-	double getResistivity() const { return resistivity; }
-	double getPermeability() const { return permeability; }
-	double getArea() const { return area; }
-
-	// Setter function for resistivity
-	void setResistivity(double newResistivity) {
-		resistivity = newResistivity;
-	}
-
-	// Member variables
-	double ri; //conductor inner radius
-	double ro; //conductor outer radius
-	double resistivity; //conductor resistivity ρ [Ωm]
-	double permeability;  //relative permeability μᵣ
-	double area; //nominal area
-};
-
-// Define the Insulator class presents insulating layer
-class Insulator {
-public:
-	// Constructor
-	Insulator(double ri = 0, double ro = 0, double permittivity = 1, double permeability = 1, double innerSemiConductorOuterRadius = 0, double outerSemiConductorInnerRadius = 0)
-		: ri(ri), ro(ro), permittivity(permittivity), permeability(permeability), innerSemiConductorOuterRadius(innerSemiConductorOuterRadius), outerSemiConductorInnerRadius(outerSemiConductorInnerRadius) {}
-
-	// Member variables
-	double ri;  //insulator inner radius
-	double ro;  //insulator outer radius
-	double permittivity; //relative permittivity ϵᵣ
-	double permeability; //relative permeability μᵣ
-	//If a semiconductor is present, in an insulator, we have: rᵢ < semiconductor < a + a < insulator < b + b < semiconductor < rₒ
-
-	double innerSemiConductorOuterRadius;
-	double outerSemiConductorInnerRadius;
-	double a; //inner semiconductor outer radius -> Inner semiconductor rᵢ < r < a
-	double b; //outer semiconductor inner radius -> Outer semiconductor b < r < rₒ
-};
-
-// Define the Cable class as a subtype (<:) of abstract type Transmission_line
-/*class Cable : public TransmissionLine {
-public:
-	// Constructor
-	Cable() :
-		length(0),
-		configuration("coaxial"),
-		type("underground"),
-		transformation(false),
-		eliminate(true),
-		real_part(0), // Initialize real part to 0
-		imag_part(0),
-		//s(SymEngine::Complex(0, 0)) // Initialize s with default value
-		s(nullptr)
-	{}
-
-
-	// Public member functions
-	std::vector<std::vector<double>> P;
-	std::vector<std::vector<double>> Z;
+	Cable() : Element("cable", 1, 1), length(0), configuration("coaxial"), type("underground"), eliminate(true) {};
 
 	void setLength(double newLength) { length = newLength; }
 	void addConductor(const std::string& key, const Conductor& conductor) { conductors[key] = conductor; }
@@ -78,20 +63,8 @@ public:
 	void addPosition(double x, double y) { positions.emplace_back(x, y); }
 	void setEarthParameters(double mu, double epsilon, double rho) { earth_parameters = std::make_tuple(mu, epsilon, rho); }
 	void setConfiguration(const std::string& newConfig) { configuration = newConfig; }
-	void setTransformation(const bool value) { transformation = value; }
 	void setEliminate(bool value) { eliminate = value; } //to change the value of eliminate
 
-
-
-	// Setter for s
-	void setSymbolS(const SymEngine::Complex* symbol) {
-		s = symbol;
-	}
-
-	// Getter for s
-	const SymEngine::Complex* getSymbolS() const {
-		return s;
-	}
 
 	// Getter methods
 	double getLength() const { return length; }
@@ -100,12 +73,6 @@ public:
 	const std::string& getConfiguration() const { return configuration; }
 	const std::string& getType() const { return type; }
 	bool getEliminate() const { return eliminate; }
-
-	// Getters for symbolic matrices
-	std::vector<std::vector<RCP<const Basic>>> getCZ() const { return CZ; }
-	std::vector<std::vector<RCP<const Basic>>> getCP() const { return CP; }
-
-	//const Complex& getSymbolS() const { return s; }
 
 	Conductor* getConductor(const std::string& key) {
 		auto it = conductors.find(key);
@@ -152,14 +119,6 @@ public:
 	bool isConductor(const std::string& key) { return (conductors.find(key) != conductors.end()); }
 	bool isInsulator(const std::string& key) { return (insulators.find(key) != insulators.end()); }
 
-	void setCZ(const std::vector<std::vector<RCP<const Basic>>>& cz) {
-		CZ = cz;
-	}
-
-	void setCP(const std::vector<std::vector<RCP<const Basic>>>& cp) {
-		CP = cp;
-	}
-
 	friend void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs);
 
 	// Destructor
@@ -169,24 +128,23 @@ private:
 	// Private member variables
 	double length;   //line length [m]
 	//dictionary with a particular order. Key: Symbol-> C1, C2, C3 and C4. Value: Conductor-> Mutable Struct Conductor, defined above
-	std::unordered_map<std::string, Conductor> conductors = { {"Symbol", Conductor(/* Constructor arguments for Conductor)},
-															  {"Conductor", Conductor(/* Constructor arguments for Conductor)} };
+	// entries are "Symbol" of the conductor and pointer to the conductor	
+	std::unordered_map<std::string, Conductor> conductors;
 	//dictionary with a particular order. Key: Symbol-> I1, I2, I3 and I4. Value: Insulator-> Mutable Struct Insulator, defined above
-	std::unordered_map<std::string, Insulator> insulators = { {"Symbol", Insulator(/* Constructor arguments for Conductor)},
-															  {"Conductor", Insulator(/* Constructor arguments for Conductor)} };
+	// entries are "Symbol" of the insulator and pointer to the insulator
+	std::unordered_map<std::string, Insulator> insulators;
 	//indicates all variables are real number, vector composed by tuple of real numbers. e.g. positions=[(0,0),(1,1)]. Cables positions 1st:x=0, y=0. 2nd: x=1, y=1.
 	std::vector<std::pair<double, double>> positions;
 	//(μᵣ, ϵᵣ, ρ) in units ([], [], [Ωm]) compact way of representing the type for a tuple of length N where all elements are of type Int or Float64.
 	std::tuple<double, double, double> earth_parameters;
 
-	std::string configuration;//Configuration is a datatype symbol with value coaxial Symbol -> Type of data. Symbols can be entered using the quote operator ":"
+	std::string configuration; // Configuration is a datatype symbol with value coaxial Symbol -> Type of data. Symbols can be entered using the quote operator ":"
 	std::string type;
 	bool eliminate = true;
-	bool transformation;
 
-	DenseMatrix CZ;
-	DenseMatrix CP;
-};*/
+	DenseMatrix Z;
+	DenseMatrix P;
+};
 
 #endif
 
