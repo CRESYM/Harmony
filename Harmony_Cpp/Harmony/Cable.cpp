@@ -1,48 +1,6 @@
 ﻿#include "cable.h"
 
 
-//using PropertyValue = boost::variant<std::vector<std::pair<double, double>>, std::string>; // Define PropertyValue type
-
-
-// Define a union type to hold different property values
-union PropertyValue {
-	std::vector<std::pair<double, double>> positions;
-	Conductor conductor;
-	Insulator insulator;
-	std::string transformationStr;
-
-	// Constructor and destructor to manage memory properly
-	PropertyValue() {}
-	~PropertyValue() {}
-};
-
-// Define an enum to indicate the type of property value
-enum class PropertyType {
-	Positions,
-	Conductor,
-	Insulator,
-	Transformation
-};
-
-bool convertToBoolean(const std::string& value) {
-	// Convert string to lowercase for case-insensitive comparison
-	std::string lowercaseValue = value;
-	std::transform(lowercaseValue.begin(), lowercaseValue.end(), lowercaseValue.begin(),
-		[](unsigned char c) { return std::tolower(c); });
-
-	// Check if the string represents true or false
-	if (lowercaseValue == "true" || lowercaseValue == "1") {
-		return true;
-	}
-	else if (lowercaseValue == "false" || lowercaseValue == "0") {
-		return false;
-	}
-	else {
-		// Handle invalid input
-		throw std::invalid_argument("Invalid boolean value: " + value);
-	}
-}
-
 // Function to set a property with the given key and value
 void Cable::setProperty(const std::string& key, const std::string& value) {
 	// handle setting properties based on the key and value here
@@ -60,59 +18,31 @@ void Cable::setProperty(const std::string& key, const std::string& value) {
 		// Set the type
 		type = value;
 	}
-	else if (key == "transformation") {
-		// Set the transformation
-		//transformation = value;
-		// Set the transformation based on the string value
-		if (value == "true") {
-			transformation = true;
-		}
-		else if (value == "false") {
-			transformation = false;
-		}
-		else {
-			// Handle invalid input
-			throw std::invalid_argument("Invalid value for transformation: " + value);
-		}
-	}
 	else {
 		// Handle other properties as needed
 		// For example:
 		throw std::invalid_argument("Unknown property name.");
 	}
-
 }
 
 // Function to handle properties
-void handleProperty(Cable& c, const std::string& key, const std::vector<std::pair<double, double>>& value) {
+void Cable::handleProperty(const std::string& key, const std::vector<std::pair<double, double>>& value) {
 
 	if (key == "positions") {
 		for (const auto& pos : value) {
-			c.addPosition(pos.first, pos.second);
+			addPosition(pos.first, pos.second);
 		}
 	}
-	else if (c.isConductor(key)) {
-		Conductor conductor; // Create a Conductor object
+	else if (isConductor(key)) {
+		Cable::Conductor* conductor = new Conductor(); // Create a Conductor object
 		// Populate the conductor object using the provided value
-		c.addConductor(key, conductor); // Add the conductor to the Cable object
+		addConductor(key, conductor); // Add the conductor to the Cable object
 	}
-	else if (c.isInsulator(key)) {
+	else if (isInsulator(key)) {
 		// Handle insulator property
 		// Assuming addInsulator accepts a single Insulator object
-		Insulator insulator;
-		c.addInsulator(key, insulator);
-	}
-	else if (key == "transformation") {
-		// Handle transformation property
-		//bool transformationValue = convertToBoolean(value);
-		//c.setTransformation(transformationValue);
-		if (value.size() == 1) {
-			bool transformationValue = value[0].first != 0.0 || value[0].second != 0.0;
-			c.setTransformation(transformationValue);
-		}
-		else {
-			throw std::invalid_argument("Invalid value for transformation property: not a boolean string.");
-		}
+		Cable::Insulator* insulator = new Insulator();
+		addInsulator(key, insulator);
 	}
 	else {
 		throw std::invalid_argument("Unknown cable property name.");
@@ -120,24 +50,20 @@ void handleProperty(Cable& c, const std::string& key, const std::vector<std::pai
 }
 
 
-void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vector<std::vector<double>>& Z, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs) {
-
-
+void cable(Cable& c, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs) {
 	 // Evaluate PI to a double
 	double pi_value = rcp_static_cast<const RealDouble>(PI)->as_double();
 
 	// Iterate through kwargs
 	for (const auto& pair : kwargs) {
 		const std::string& key = pair.first;
-		//const std::vector<std::pair<double, double>>& value = pair.second;
 		const auto& value = pair.second;
 
-		handleProperty(c, key, value);
-
+		c.handleProperty(key, value);
 
 		if (key == "C1") {
 			// Access and modify the conductor from the Cable object
-			Conductor* conductorPtr = c.getConductor("C1");
+			Cable::Conductor* conductorPtr = c.getConductor("C1");
 			if (conductorPtr != nullptr) {
 				double area = conductorPtr->getArea();
 				if (area != 0) {
@@ -148,7 +74,6 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 				}
 			}
 		}
-
 		// add metalic screen conversions, equivalent sheat layer
 		else if (key == "SC") {
 			// Conversion procedure for metalic screen (SC) and equivalent sheath layer (C2)
@@ -201,7 +126,6 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 		}
 
 		// Semiconductor configuration
-
 		if (c.getInsulator("I1") && c.getInsulator("I1")->ro != 0) {
 			double x = log(c.getInsulator("I1")->ro / c.getInsulator("I1")->ri) / log(c.getInsulator("I1")->b / c.getInsulator("I1")->a);
 			c.getInsulator("I1")->permittivity *= x;
@@ -210,15 +134,16 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 			c.getInsulator("I1")->permeability *= (1 + 2 * pi_value * pi_value * N * N * (c.getInsulator("I1")->ro * c.getInsulator("I1")->ro - c.getInsulator("I1")->ri * c.getInsulator("I1")->ri) / log(c.getInsulator("I1")->ro / c.getInsulator("I1")->ri));
 		}
 	}
+}
+
+
+Cable::Cable() {
 	// Ground parameters
-	double mu_0 = 4 * pi_value * 1e-7; // Vacuum permeability
-	double epsilon_0 = 8.85e-12;    // Vacuum permittivity
 	auto earthParams = c.getEarthParameters(); //(μᵣ, ϵᵣ, ρ) in units([], [], [Ωm]) compact way of representing the type for a tuple of length N where all elements are of type Int or Float64.
 	double mu_g = std::get<0>(earthParams) * mu_0; // Ground permittivity
 	double epsilon_g = std::get<1>(earthParams) * epsilon_0; // Ground permeability
 	double sigma_g = 1 / std::get<2>(earthParams); // Ground conductivity
 	double rho_g = 1 / sigma_g; // Ground resistivity
-	double gamma = 0.5772156649;
 	double g = 1e-11;
 
 
@@ -238,8 +163,6 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 
 	size_t i = 0; // External indicator
 
-	double s_value = 1.0; // Default value for the symbolic variable 's'
-
 	for (const auto& pair : conductors) {
 		const auto& conductor = pair.second;
 		double r_i = conductor.ri;
@@ -247,85 +170,51 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 		double mu = conductor.permeability * mu_0;
 		double rho = conductor.resistivity;
 
-		// Define symbols
-		SymEngine::Symbol s("s");
-		SymEngine::Symbol symbolic_mu("mu");
-		SymEngine::Symbol symbolic_rho("rho");
-
-		// Create symbolic expressions for each symbol
-		auto sym_s = SymEngine::symbol(s.get_name());
-		auto sym_mu = SymEngine::symbol(symbolic_mu.get_name());
-		auto sym_rho = SymEngine::symbol(symbolic_rho.get_name());
-
-		// Compute the product of s, symbolic_mu, and symbolic_rho
-		auto product = SymEngine::mul({ sym_s, sym_mu, sym_rho });
-
-		// Define a map to hold the values of symbolic variables
-		std::map<std::string, double> symbols;
 
 
+		double m = std::sqrt(s_value * mu / rho); // Calculate m
+		double delta_r = r_o - r_i; // Calculate Δr
+		double Z_aa, Z_bb, Z_ab;
 
-		// Set the values of symbolic variables in the map
-		symbols[s.get_name()] = s_value; // Assuming s_value is the value of the symbol 's'
-		symbols[symbolic_mu.get_name()] = mu; // Assuming mu is the permeability value
-		symbols[symbolic_rho.get_name()] = rho; // Assuming rho is the resistivity value
+		if (r_i != 0) {
+			Z_aa = rho * m / (2 * pi_value * r_i) * std::tanh(m * delta_r) - rho / (2 * pi_value * r_i * (r_i + r_o));
+			Z_bb = rho * m / (2 * pi_value * r_o) * std::tanh(m * delta_r) + rho / (2 * pi_value * r_o * (r_i + r_o));
+		}
+		else {
+			Z_bb = rho * m / (2 * pi_value * r_o) * std::tanh(0.733 * m * r_o) + 0.3179 * rho / (pi_value * r_o * r_o);
+		}
+		Z_ab = rho * m / (pi_value * (r_o + r_i)) * (1.0 / sinh(m * delta_r));
 
-		// Evaluate the product expression with the symbol values
-		try {
-			std::cout << "Expression to be evaluated: " << *product << std::endl;
+		c.Z[i][i] += Z_bb;
+		//i++;
 
-			double product_value = SymEngine::eval_double(*product);
-			double m = std::sqrt(s_value * mu / rho); // Calculate m
-			double delta_r = r_o - r_i; // Calculate Δr
-			double Z_aa, Z_bb, Z_ab;
 
-			if (r_i != 0) {
-				Z_aa = rho * m / (2 * pi_value * r_i) * std::tanh(m * delta_r) - rho / (2 * pi_value * r_i * (r_i + r_o));
-				Z_bb = rho * m / (2 * pi_value * r_o) * std::tanh(m * delta_r) + rho / (2 * pi_value * r_o * (r_i + r_o));
+		if (i > 0) {
+			c.Z[i][i - 1] += -Z_ab; // Eq. 44 from simulator tutorial, not considering the insulator material Zi
+			c.Z[i - 1][i] += -Z_ab;
+			c.Z[i - 1][i - 1] += Z_aa;
+		}
+		if (i == n_l - 1) {
+
+			double m = sqrt(s_value * mu_g / rho_g); // same as row 156, this time with ground permeability μᵍ and resistivity ρᵍ
+			double H = 2 * positions[0].second;
+			double d_ij = 0; // Calculate dᵢⱼ from both conductors and insulators
+
+			// Iterate over conductors to find maximum radius
+			for (const auto& conductor : conductors) {
+				d_ij = std::max(d_ij, conductor.second.ro);
 			}
-			else {
-				Z_bb = rho * m / (2 * pi_value * r_o) * std::tanh(0.733 * m * r_o) + 0.3179 * rho / (pi_value * r_o * r_o);
+
+			// Iterate over insulators to find maximum radius
+			for (const auto& insulator : insulators) {
+				d_ij = std::max(d_ij, insulator.second.ro);
 			}
-			Z_ab = rho * m / (pi_value * (r_o + r_i)) * (1.0 / sinh(m * delta_r));
 
-			c.Z[i][i] += Z_bb;
-			//i++;
+			double x = d_ij;
+			double Z_g = s_value * mu_g / (2 * pi_value) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
+			c.Z[i][i] += Z_g;
 
-
-			if (i > 0) {
-				c.Z[i][i - 1] += -Z_ab; // Eq. 44 from simulator tutorial, not considering the insulator material Zi
-				c.Z[i - 1][i] += -Z_ab;
-				c.Z[i - 1][i - 1] += Z_aa;
-			}
-			if (i == n_l - 1) {
-
-				double m = sqrt(s_value * mu_g / rho_g); // same as row 156, this time with ground permeability μᵍ and resistivity ρᵍ
-				double H = 2 * positions[0].second;
-				double d_ij = 0; // Calculate dᵢⱼ from both conductors and insulators
-
-				// Iterate over conductors to find maximum radius
-				for (const auto& conductor : conductors) {
-					d_ij = std::max(d_ij, conductor.second.ro);
-				}
-
-				// Iterate over insulators to find maximum radius
-				for (const auto& insulator : insulators) {
-					d_ij = std::max(d_ij, insulator.second.ro);
-				}
-
-				double x = d_ij;
-				double Z_g = s_value * mu_g / (2 * pi_value) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
-				c.Z[i][i] += Z_g;
-			}
 			i++;
-		}
-		catch (const SymEngine::SymEngineException &e) {
-			// Catch any SymEngine exceptions and print the error message
-			std::cerr << "SymEngine exception caught: " << e.what() << std::endl;
-		}
-		catch (const std::exception &e) {
-			// Catch any other exceptions and print the error message
-			std::cerr << "Exception caught: " << e.what() << std::endl;
 		}
 	}
 
@@ -452,39 +341,12 @@ void cable(Cable& c, const std::vector<std::vector<double>>& P, const std::vecto
 
 	// Assuming c.P and c.Z are matrices in C++
 	// Copy P and Z matrices to c.P and c.Z
-	c.setP(P); // Assign P matrix to c.P
-	c.setZ(Z); // Assign Z matrix to c.Z
-
-	std::unordered_map<std::string, std::string> args;
-	args["symbol"] = "some_symbol";       // Set the symbol
-	args["input_pins"] = "4";             // Set the number of input pins
-	args["output_pins"] = "2";            // Set the number of output pins
-	args["element_value"] = "42";         // Optional: Example value for element_value
-
-	//args["transformation"] = "true";
-
-	//Element elem(args);
-
-	// Assuming `c` is an instance of the `Cable` class and `elem` is an instance of the `Element` class
-	//Element elem(args);
-		// Create an Element object using the map
-	try {
-		// Create an Element object using the map
-		Element elem(args);
-
-		// Access element_value if needed, safely cast to the expected type
-		if (elem.element_value != nullptr) {
-			int* val = static_cast<int*>(elem.element_value);
-			std::cout << "Element Value: " << *val << std::endl;
-		}
-
-		elem.printElementInfo();  // Print the element's info to verify it's correct
-	}
-	catch (const std::exception& e) {
-		std::cerr << "Error while creating Element: " << e.what() << std::endl;
-	}
+	c.P = P; // Assign P matrix to c.P
+	c.Z = Z; // Assign Z matrix to c.Z
 
 }
+
+
 // Destructor definition
 Cable::~Cable() {
 	// Implement the destructor if needed

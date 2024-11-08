@@ -56,10 +56,11 @@ extern const RCP<const Basic> PI;
 // Define a constant for π (pi) using standard C++
 extern const double M_PI ;
 
-extern const double mu_0;
-extern const double epsilon_0;
+extern const double mu_0; // vacuum permitivity
+extern const double epsilon_0; // vacuum permeability
+extern const double gamma;
 
-// Define imaginery unit and symbol for angular frequency
+// Define imaginary unit and symbol for angular frequency
 extern RCP<const Basic> j;  // Imaginary unit
 extern RCP<const Basic> omega;
 extern RCP<const Basic> s; // s = j * omega

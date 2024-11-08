@@ -6,6 +6,7 @@ const double M_PI = std::acos(-1.0);                        // Standard C++ π
 // Constants
 const double mu_0 = 4 * M_PI * 1e-7; // Standard mu_0
 const double epsilon_0 = 8.85e-12; // Standard epsilon_0
+const double gamma = 0.5772156649;
 
 RCP<const Basic> j = I;  // Imaginary unit
 RCP<const Basic> omega = symbol("w");
@@ -109,3 +110,21 @@ DenseMatrix kron_reduction(DenseMatrix matrix, vector<int> no_eliminate) {
 	return C2;
 }
 
+bool convertToBoolean(const std::string& value) {
+	// Convert string to lowercase for case-insensitive comparison
+	std::string lowercaseValue = value;
+	std::transform(lowercaseValue.begin(), lowercaseValue.end(), lowercaseValue.begin(),
+		[](unsigned char c) { return std::tolower(c); });
+
+	// Check if the string represents true or false
+	if (lowercaseValue == "true" || lowercaseValue == "1") {
+		return true;
+	}
+	else if (lowercaseValue == "false" || lowercaseValue == "0") {
+		return false;
+	}
+	else {
+		// Handle invalid input
+		throw std::invalid_argument("Invalid boolean value: " + value);
+	}
+}
