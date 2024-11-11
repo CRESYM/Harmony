@@ -126,30 +126,30 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 		Z.set(i, i, add(Z.get(i, i), Z_bb));
 
 
-		if (i > 0) {
-			c.Z[i][i - 1] += -Z_ab; // Eq. 44 from simulator tutorial, not considering the insulator material Zi
-			c.Z[i - 1][i] += -Z_ab;
-			c.Z[i - 1][i - 1] += Z_aa;
+		if (i > 0) { // if there is more than one conducting layer -> enter
+			Z.set(i, i - 1, sub(Z.get(i, i - 1), Z_ab));
+			Z.set(i - 1, i, sub(Z.get(i - 1, i), Z_ab));
+			Z.set(i - 1, i - 1, add(Z.get(i - 1, i - 1), Z_aa));
 		}
 		if (i == n_l - 1) {
 
-			double m = sqrt(s_value * mu_g / rho_g); // same as row 156, this time with ground permeability μᵍ and resistivity ρᵍ
+			RCP<const Basic> m = sqrt(mul(s, real_double(mu_g / rho_g))); // with ground permeability μᵍ and resistivity ρᵍ
 			double H = 2 * positions[0].second;
 			double d_ij = 0; // Calculate dᵢⱼ from both conductors and insulators
 
 			// Iterate over conductors to find maximum radius
 			for (const auto& conductor : conductors) {
-				d_ij = std::max(d_ij, conductor.second.ro);
+				d_ij = max(d_ij, conductor.second->ro);
 			}
 
 			// Iterate over insulators to find maximum radius
 			for (const auto& insulator : insulators) {
-				d_ij = std::max(d_ij, insulator.second.ro);
+				d_ij = max(d_ij, insulator.second->ro);
 			}
 
 			double x = d_ij;
-			double Z_g = s_value * mu_g / (2 * pi_value) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
-			c.Z[i][i] += Z_g;
+			double Z_g = s_value * mu_g / (2 * M_PI) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
+			Z[i][i] += Z_g;
 
 			i++;
 		}
@@ -169,17 +169,17 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 		double Z_i = s_value * mu / (2 * pi_value) * log(r_o / r_i); // Insulator layer impedance
 		double P_i = log(r_o / r_i) / (2 * pi_value * epsilon); // P expression
 
-		c.Z[insulatorIndex][insulatorIndex] += Z_i; // For the impedance matrix diagonal values, add also the insulator impedance
+		Z[insulatorIndex][insulatorIndex] += Z_i; // For the impedance matrix diagonal values, add also the insulator impedance
 		// Update the elements of P matrix for the current insulator
 		for (int j = 0; j <= i; j++) {
-			c.P[j][i] += P_i;
-			c.P[i][j] += P_i;
+			P[j][i] += P_i;
+			P[i][j] += P_i;
 		}
 
 		// Update the elements of P matrix in the submatrix P[1:i,1:i]
 		for (int j = 0; j < i; j++) {
 			for (int k = 0; k < i; k++) {
-				c.P[j][k] += P_i;
+				P[j][k] += P_i;
 			}
 		}
 	}
@@ -203,8 +203,8 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 				double x = abs(c.getPositions()[i].first - c.getPositions()[j].first);
 				double Z_g = s_value * mu_g / (2 * pi_value) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
 
-				c.Z[i * n_l][j * n_l] += Z_g;
-				c.Z[j * n_l][i * n_l] += Z_g;
+				Z[i * n_l][j * n_l] += Z_g;
+				Z[j * n_l][i * n_l] += Z_g;
 			}
 		}
 	}
