@@ -97,7 +97,7 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 	int Num = n_l * n;
 
 	Z = createZeroMatrix(Num, Num);
-	P = createZeroMatrix(Num, Num);
+	P.resize(Num, Num);
 
 	size_t i = 0; // External indicator
 
@@ -148,8 +148,8 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 			}
 
 			double x = d_ij;
-			double Z_g = s_value * mu_g / (2 * M_PI) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
-			Z[i][i] += Z_g;
+			RCP<const Basic> Z_g = mul(mul(s, real_double(mu_g / (2 * M_PI))), sub(sub(real_double(0.5), log(mul(m, real_double(gamma_num * d_ij / 2)))), mul(m, real_double(2 * H / 3))));
+			Z.set(i, i, add(Z.get(i, i), Z_g));
 
 			i++;
 		}
@@ -158,28 +158,27 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 	// make shunt admittance -> Insulator
 	// Define variables for shunt admittance calculation
 	int insulatorIndex = 0; // Re-assign the value 0 to i
-	for (const auto& insulatorPair : c.getCableInsulators()) {
-		const Insulator& insulator = insulatorPair.second;
-		double r_i = insulator.ri;
-		double r_o = insulator.ro;
-		double mu = insulator.permeability * mu_0;
-		double epsilon = insulator.permittivity * epsilon_0;
-		// Assuming P is declared as a 2D vector
+	for (const auto& insulatorPair : insulators) {
+		Insulator* insulator = insulatorPair.second;
+		double r_i = insulator->ri;
+		double r_o = insulator->ro;
+		double mu = insulator->permeability * mu_0;
+		double epsilon = insulator->permittivity * epsilon_0;
 
-		double Z_i = s_value * mu / (2 * pi_value) * log(r_o / r_i); // Insulator layer impedance
-		double P_i = log(r_o / r_i) / (2 * pi_value * epsilon); // P expression
+		RCP<const Basic> Z_i = mul(s, real_double(mu / (2 * M_PI) * log(r_o / r_i))); // Insulator layer impedance
+		double P_i = log(r_o / r_i) / (2 * M_PI * epsilon); // P expression
 
-		Z[insulatorIndex][insulatorIndex] += Z_i; // For the impedance matrix diagonal values, add also the insulator impedance
+		Z.set(insulatorIndex, insulatorIndex, add(Z.get(insulatorIndex, insulatorIndex), Z_i)); // For the impedance matrix diagonal values, add also the insulator impedance
 		// Update the elements of P matrix for the current insulator
 		for (int j = 0; j <= i; j++) {
-			P[j][i] += P_i;
-			P[i][j] += P_i;
+			P(j,i) += P_i;
+			P(i,j) += P_i;
 		}
 
 		// Update the elements of P matrix in the submatrix P[1:i,1:i]
 		for (int j = 0; j < i; j++) {
 			for (int k = 0; k < i; k++) {
-				P[j][k] += P_i;
+				P(j,k) += P_i;
 			}
 		}
 	}
@@ -189,22 +188,22 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 			// Copy and translate the same conductor impedance matrix
 			for (int k = 1; k <= n_l; ++k) {
 				for (int l = 1; l <= n_l; ++l) {
-					c.Z[(i - 1) * n_l + k][(j - 1) * n_l + l] = Z[k][l];
-					c.P[(i - 1) * n_l + k][(j - 1) * n_l + l] = P[k][l];
+					Z.set((i - 1) * n_l + k, (j - 1) * n_l + l, Z.get(k, l));
+					P((i - 1) * n_l + k,(j - 1) * n_l + l) = P(k,l);
 				}
 			}
 
 			// Adding earth return impedance and mutual impedance between cables
 			if (j > i) { // Only calculate for distinct pairs (i, j) where j > i
-				double m = sqrt(s_value * mu_g / rho_g);
-				double H = c.getPositions()[i].second + c.getPositions()[j].second;
-				double dᵢⱼ = sqrt(pow(c.getPositions()[i].first - c.getPositions()[j].first, 2) +
-					pow(c.getPositions()[i].second - c.getPositions()[j].second, 2));
-				double x = abs(c.getPositions()[i].first - c.getPositions()[j].first);
-				double Z_g = s_value * mu_g / (2 * pi_value) * (-log(gamma * m * d_ij / 2) + 0.5 - 2 * m * H / 3);
+				RCP<const Basic> m = sqrt(mul(s, real_double(mu_g / rho_g))); // with ground permeability μᵍ and resistivity ρᵍ
+				double H = getPositions()[i].second + getPositions()[j].second;
+				double dᵢⱼ = sqrt(pow(getPositions()[i].first - getPositions()[j].first, 2) +
+					pow(getPositions()[i].second - getPositions()[j].second, 2));
+				double x = abs(getPositions()[i].first - getPositions()[j].first);
+				RCP<const Basic> Z_g = mul(mul(s, real_double(mu_g / (2 * M_PI))), sub(sub(real_double(0.5), log(mul(m, real_double(gamma_num * d_ij / 2)))), mul(m, real_double(2 * H / 3))));
 
-				Z[i * n_l][j * n_l] += Z_g;
-				Z[j * n_l][i * n_l] += Z_g;
+				Z.set(i * n_l, j * n_l, add(Z.get(i * n_l, j * n_l), Z_g));
+				Z.set(j * n_l, i * n_l, add(Z.get(j * n_l, i * n_l), Z_g));
 			}
 		}
 	}
@@ -216,8 +215,7 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 				for (int j = 0; j <= i; ++j) {
 					// Update Z matrix
 					for (int p = 0; p < n_l; ++p) {
-						c.Z[l * n_l + p][(k * n_l) + j] += Z[l * n_l + p][(k * n_l) + i + 1];
-						//c.Z[static_cast<int>(l * n_l) + p][static_cast<int>(k * n_l) + j] += Z[static_cast<int>(l * n_l) + p][static_cast<int>(k * n_l) + i + 1];
+						Z.set(l* n_l + p, (k* n_l) + j, add(Z.get(l* n_l + p, (k* n_l) + j), Z.get(l* n_l + p, (k* n_l) + i + 1)));
 					}
 				}
 			}
@@ -226,7 +224,7 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 				for (int j = 0; j <= i; ++j) {
 					// Update Z matrix
 					for (int p = 0; p < n_l; ++p) {
-						c.Z[(k * n_l) + j][l * n_l + p] += Z[(k * n_l) + i + 1][l * n_l + p];
+						Z.set((k* n_l) + j, l* n_l + p, add(Z.get((k* n_l) + j, l* n_l + p), Z.get((k* n_l) + i + 1, l* n_l + p)));
 					}
 				}
 			}
@@ -235,12 +233,9 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 
 	//if (c.getType == "underground") {
 	std::string expectedType = "underground";
-	std::string cableType = c.getType();
+	std::string cableType = getType();
 
-	//if (c.getType() == "underground") {
 	if (cableType == expectedType) {
-		std::cout << "The cable type matches the expected value.\n";
-
 		for (int i = 1; i < n; ++i) {
 			for (int j = 0; j < n; ++j) {
 				double H = positions[i].second + positions[j].second; // H = sum of depth of ith and jth cables
@@ -250,32 +245,51 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 				if (i == j) {
 					double max_conductor_radius = 0;
 					for (const auto& conductor : conductors) {
-						max_conductor_radius = std::max(max_conductor_radius, conductor.second.ro);
+						max_conductor_radius = max(max_conductor_radius, conductor.second->ro);
 					}
 					double max_insulator_radius = 0;
 					for (const auto& insulator : insulators) {
-						max_insulator_radius = std::max(max_insulator_radius, insulator.second.ro);
+						max_insulator_radius = max(max_insulator_radius, insulator.second->ro);
 					}
-					D1 = std::max(max_conductor_radius, max_insulator_radius);
+					D1 = max(max_conductor_radius, max_insulator_radius);
 					D2 = H;
 				}
 				else {
 					D1 = sqrt(x * x + y * y);
 					D2 = sqrt(x * x + H * H);
 				}
-				double P_ij = log(D2 / D1) / (2 * pi_value * epsilon_0);
+				double P_ij = log(D2 / D1) / (2 * M_PI * epsilon_0);
 				for (int k = i * n_l; k < (i + 1) * n_l; ++k) {
 					for (int l = j * n_l; l < (j + 1) * n_l; ++l) {
-						c.P[k][l] += P_ij;
+						P(k,l) += P_ij;
 					}
 				}
 			}
 		}
 	}
-	else {
-		std::cout << "The cable type does not match the expected value.\n";
+
+	// Matrices Z, and P are created
+	// Next -> Kron reduction and determination of Y matrix
+
+	// Kron reduction preparation
+	std::vector<int> cond_noElim;
+	if (eliminate) {
+		for (int i = 0; i < n; ++i) {
+			cond_noElim.push_back((i-1)*n_l + 1);
+		}
+
+		// Invoke kron reduction
+		P = kron_reduction(P, cond_noElim);
+		Z = kron_reduction(Z, cond_noElim);
 	}
 
+	P = P.inverse();
+	Y = createZeroMatrix(Z.nrows(), Z.ncols());
+	for (int i = 0; i < Y.nrows(); i++)
+		for (int j = 0; j < Y.ncols(); j++) 
+			Y.set(i, j, mul(s, real_double(P(i, j))));
+
+	// Calculation of Y parameters
 }
 
 

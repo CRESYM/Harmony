@@ -58,7 +58,7 @@ extern const double M_PI ;
 
 extern const double mu_0; // vacuum permitivity
 extern const double epsilon_0; // vacuum permeability
-extern const double gamma;
+extern const double gamma_num;
 
 // Define imaginary unit and symbol for angular frequency
 extern RCP<const Basic> j;  // Imaginary unit

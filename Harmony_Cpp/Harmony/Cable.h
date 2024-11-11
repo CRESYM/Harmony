@@ -81,7 +81,7 @@ public:
 	Insulator* getInsulator(const std::string& key) {
 		auto it = insulators.find(key);
 		if (it != insulators.end()) {
-			return &(it->second);
+			return (it->second);
 		}
 		return nullptr; // Insulator not found
 	}
@@ -135,7 +135,8 @@ private:
 	bool eliminate = true;
 
 	DenseMatrix Z;
-	DenseMatrix P;
+	DenseMatrix Y;
+	MatrixXd P; //DenseMatrix P;
 };
 
 #endif

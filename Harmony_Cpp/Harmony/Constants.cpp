@@ -6,7 +6,7 @@ const double M_PI = std::acos(-1.0);                        // Standard C++ π
 // Constants
 const double mu_0 = 4 * M_PI * 1e-7; // Standard mu_0
 const double epsilon_0 = 8.85e-12; // Standard epsilon_0
-const double gamma = 0.5772156649;
+const double gamma_num = 0.5772156649;
 
 RCP<const Basic> j = I;  // Imaginary unit
 RCP<const Basic> omega = symbol("w");
