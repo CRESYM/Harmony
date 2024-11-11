@@ -14,17 +14,6 @@ public:
 		Conductor(double ri = 0, double ro = 0, double resistivity = 0, double permeability = 1, double area = 0)
 			: ri(ri), ro(ro), resistivity(resistivity), permeability(permeability), area(area) {}
 
-		// Getter functions
-		double getInnerRadius() const { return ri; }
-		double getOuterRadius() const { return ro; }
-		double getResistivity() const { return resistivity; }
-		double getPermeability() const { return permeability; }
-		double getArea() const { return area; }
-
-		// Setter function for resistivity
-		void setResistivity(double newResistivity) {
-			resistivity = newResistivity;
-		}
 
 		// Member variables
 		double ri; //conductor inner radius
@@ -56,7 +45,10 @@ public:
 	Cable() : Element("cable", 1, 1), length(0), configuration("coaxial"), type("underground"), eliminate(true) {};
 	
 	// Constructor filled in
-	Cable(const string&, int, map<string&, Conductor*>, map<string&, Insulator*>, int, string&, string&, tuple<double, double, double>);
+	Cable(const string& symbol, int pins, const string& type_constructor,
+		const string& configuration_constructor, double length_constructor, std::tuple<double, double, double> earth,
+		std::map<string, Conductor*> conductors_constructor, std::map<string, Insulator*> insulators_constructor,
+		std::vector<std::pair<double, double>> positions_constructor);
 
 	void setLength(double newLength) { length = newLength; }
 	void addConductor(const std::string& key, Conductor* conductor) { conductors[key] = conductor; }
@@ -105,19 +97,17 @@ public:
 	}
 
 	// Define a member function in the Cable class to access the conductors map
-	const std::unordered_map<std::string, Conductor*>& getCableConductors() const {
+	const std::map<std::string, Conductor*>& getCableConductors() const {
 		return conductors;
 	}
 
 	// Define a member function in the Cable class to access the insulators map
-	const std::unordered_map<std::string, Insulator*>& getCableInsulators() const {
+	const std::map<std::string, Insulator*>& getCableInsulators() const {
 		return insulators;
 	}
 
 	// Functions for handling properties
 	bool hasProperty(const std::string& key) { return (conductors.find(key) != conductors.end() || insulators.find(key) != insulators.end()); }
-	void setProperty(const std::string& key, const std::string& value);
-	void handleProperty(const std::string& key, const std::vector<std::pair<double, double>>& value);
 	bool isConductor(const std::string& key) { return (conductors.find(key) != conductors.end()); }
 	bool isInsulator(const std::string& key) { return (insulators.find(key) != insulators.end()); }
 
@@ -131,10 +121,10 @@ private:
 	double length;   //line length [m]
 	//dictionary with a particular order. Key: Symbol-> C1, C2, C3 and C4. Value: Conductor-> Mutable Struct Conductor, defined above
 	// entries are "Symbol" of the conductor and pointer to the conductor	
-	std::unordered_map<std::string, Conductor*> conductors;
+	std::map<std::string, Conductor*> conductors;
 	//dictionary with a particular order. Key: Symbol-> I1, I2, I3 and I4. Value: Insulator-> Mutable Struct Insulator, defined above
 	// entries are "Symbol" of the insulator and pointer to the insulator
-	std::unordered_map<std::string, Insulator*> insulators;
+	std::map<std::string, Insulator*> insulators;
 	//indicates all variables are real number, vector composed by tuple of real numbers. e.g. positions=[(0,0),(1,1)]. Cables positions 1st:x=0, y=0. 2nd: x=1, y=1.
 	std::vector<std::pair<double, double>> positions;
 	//(μᵣ, ϵᵣ, ρ) in units ([], [], [Ωm]) compact way of representing the type for a tuple of length N where all elements are of type Int or Float64.

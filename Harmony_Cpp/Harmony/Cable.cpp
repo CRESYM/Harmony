@@ -1,121 +1,67 @@
 ﻿#include "cable.h"
 
-
-// Function to set a property with the given key and value
-void Cable::setProperty(const std::string& key, const std::string& value) {
-	// handle setting properties based on the key and value here
-	// For example, you might want to set different properties based on the key
-
-	if (key == "length") {
-		// Convert the value string to double and set the length
-		length = std::stod(value);
-	}
-	else if (key == "configuration") {
-		// Set the configuration
-		configuration = value;
-	}
-	else if (key == "type") {
-		// Set the type
-		type = value;
-	}
-	else {
-		// Handle other properties as needed
-		// For example:
-		throw std::invalid_argument("Unknown property name.");
-	}
-}
-
-// Function to handle properties
-void Cable::handleProperty(const std::string& key, const std::vector<std::pair<double, double>>& value) {
-
-	if (key == "positions") {
-		for (const auto& pos : value) {
-			addPosition(pos.first, pos.second);
-		}
-	}
-	else if (isConductor(key)) {
-		Cable::Conductor* conductor = new Conductor(); // Create a Conductor object
-		// Populate the conductor object using the provided value
-		addConductor(key, conductor); // Add the conductor to the Cable object
-	}
-	else if (isInsulator(key)) {
-		// Handle insulator property
-		// Assuming addInsulator accepts a single Insulator object
-		Cable::Insulator* insulator = new Insulator();
-		addInsulator(key, insulator);
-	}
-	else {
-		throw std::invalid_argument("Unknown cable property name.");
-	}
-}
-
-
 void cable(Cable& c, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs) {
 	 // Evaluate PI to a double
 	double pi_value = rcp_static_cast<const RealDouble>(PI)->as_double();
 
-	// Iterate through kwargs
-	for (const auto& pair : kwargs) {
-		const std::string& key = pair.first;
-		const auto& value = pair.second;
+	}
 
-		c.handleProperty(key, value);
+
+Cable::Cable(const string& symbol, int pins, const string& type_constructor,
+	const string& configuration_constructor, double length_constructor, std::tuple<double, double, double> earth, 
+	std::map<string, Conductor*> conductors_constructor, std::map<string, Insulator*> insulators_constructor,
+	std::vector<std::pair<double, double>> positions_constructor)
+	: Element(symbol, pins, pins), earth_parameters(earth), configuration(configuration_constructor),
+	type(type_constructor), conductors(conductors_constructor), insulators(insulators_constructor), 
+	positions(positions_constructor), length(length_constructor)
+{
+
+	// Iterate through conductors and re-adjust values
+	for (const auto& pair : conductors) {
+		const std::string& key = pair.first;
+		const auto& conductor = pair.second;
 
 		if (key == "C1") {
 			// Access and modify the conductor from the Cable object
-			Cable::Conductor* conductorPtr = c.getConductor("C1");
-			if (conductorPtr != nullptr) {
-				double area = conductorPtr->getArea();
+			if (conductor != nullptr) {
+				double area = conductor->area;
 				if (area != 0) {
-					conductorPtr->setResistivity(conductorPtr->getResistivity() * pi_value * conductorPtr->getOuterRadius() * conductorPtr->getOuterRadius() / area);
+					conductor->resistivity = (conductor->resistivity * M_PI * pow(conductor->ro,2) / area);
 
 					// Update the conductor in the Cable object
-					c.updateConductor("C1", *conductorPtr);
+					updateConductor("C1", conductor);
 				}
 			}
 		}
-		// add metalic screen conversions, equivalent sheat layer
 		else if (key == "SC") {
-			// Conversion procedure for metalic screen (SC) and equivalent sheath layer (C2)
-			// add metalic screen conversions, equivalent sheat layer
-			// Check if SC conductor exists
-			auto conductorC1 = c.getConductor("C1");
-			if (conductorC1 && conductorC1->getArea() != 0) {
-				conductorC1->setResistivity(conductorC1->getResistivity() * pi_value * conductorC1->getOuterRadius() * conductorC1->getOuterRadius() / conductorC1->getArea());
-				c.updateConductor("C1", *conductorC1);
-			}
-		}
-		else if (key == "SC") {
-			auto conductorSC = c.getConductor("SC");
-			auto conductorC2 = c.getConductor("C2");
+			auto conductorSC = getConductor("SC");
+			auto conductorC2 = getConductor("C2");
 
 			if (conductorSC && conductorC2) {
-				if (conductorSC->getArea() != 0) {
-					c.getConductor("C2")->ri = std::sqrt(conductorSC->ro * conductorSC->ro - conductorSC->area / pi_value);
+				if (conductorSC->area != 0) {
+					getConductor("C2")->ri = sqrt(pow(conductorSC->ro,2) - conductorSC->area / M_PI);
 				}
 				else {
-					//conductorC2->setInnerRadius(conductorSC->getInnerRadius());
-					c.getConductor("C2")->ri = conductorSC->ri;
+					getConductor("C2")->ri = conductorSC->ri;
 				}
-		
-				double c2OuterRadius = std::sqrt((conductorC2->getOuterRadius() * conductorC2->getOuterRadius() - conductorSC->getOuterRadius() * conductorSC->getOuterRadius()) *
-					conductorSC->getResistivity() / conductorC2->getResistivity() + conductorSC->getOuterRadius() * conductorSC->getOuterRadius());
-				c.getConductor("C2")->ro = c2OuterRadius;
+
+				double c2OuterRadius = sqrt((pow(conductorC2->ro, 2) - pow(conductorSC->ro, 2)) *
+					conductorSC->resistivity / conductorC2->resistivity + pow(conductorSC->ro, 2));
+				getConductor("C2")->ro = c2OuterRadius;
 
 				// Remove the SC conductor
-				c.removeConductor("SC");
+				removeConductor("SC");
 
 				// Change Insulator 1
-				c.getInsulator("I1")->ro = c.getConductor("C2")->ri;
-				//c.getInsulator("I1")->setOuterRadius(conductorC2->getInnerRadius());
-				auto insulatorI2 = c.getInsulator("I2");
+				getInsulator("I1")->ro = getConductor("C2")->ri;
+				auto insulatorI2 = getInsulator("I2");
 
 				// Change Insulator 2 if present
-				if (c.getInsulator("I2") != nullptr) {
-					double x = log(c.getInsulator("I2")->ro / c.getConductor("C2")->ro) / log(c.getInsulator("I2")->ro / c.getInsulator("I2")->ri);
-					c.getInsulator("I2")->ri = c.getConductor("C2")->ro;
-					c.getInsulator("I2")->permittivity *= x; // Using 'permittivity' for dielectric constant
-					c.getInsulator("I2")->permeability /= x; // Assuming 'permeability' is the member representing permeability
+				if (insulatorI2 != nullptr) {
+					double x = log(insulatorI2->ro / conductorC2->ro) / log(insulatorI2->ro / insulatorI2->ri);
+					insulatorI2->ri = conductorC2->ro;
+					insulatorI2->permittivity *= x; // Using 'permittivity' for dielectric constant
+					insulatorI2->permeability /= x; // Assuming 'permeability' is the member representing permeability
 				}
 
 			}
@@ -126,67 +72,58 @@ void cable(Cable& c, const std::unordered_map<std::string, std::vector<std::pair
 		}
 
 		// Semiconductor configuration
-		if (c.getInsulator("I1") && c.getInsulator("I1")->ro != 0) {
-			double x = log(c.getInsulator("I1")->ro / c.getInsulator("I1")->ri) / log(c.getInsulator("I1")->b / c.getInsulator("I1")->a);
-			c.getInsulator("I1")->permittivity *= x;
+		if (getInsulator("I1") && getInsulator("I1")->a != 0) {
+			double x = log(getInsulator("I1")->ro / getInsulator("I1")->ri) / log(getInsulator("I1")->b / getInsulator("I1")->a);
+			getInsulator("I1")->permittivity *= x;
 			double N = 1.4;
 			// Assuming 'permeability' represents relative permeability
-			c.getInsulator("I1")->permeability *= (1 + 2 * pi_value * pi_value * N * N * (c.getInsulator("I1")->ro * c.getInsulator("I1")->ro - c.getInsulator("I1")->ri * c.getInsulator("I1")->ri) / log(c.getInsulator("I1")->ro / c.getInsulator("I1")->ri));
+			getInsulator("I1")->permeability *= (1 + 2 * pow(M_PI*N, 2) * (pow(getInsulator("I1")->ro, 2) - pow(getInsulator("I1")->ri, 2)) / log(getInsulator("I1")->ro / getInsulator("I1")->ri));
 		}
 	}
-}
 
 
-Cable::Cable() {
 	// Ground parameters
-	auto earthParams = c.getEarthParameters(); //(μᵣ, ϵᵣ, ρ) in units([], [], [Ωm]) compact way of representing the type for a tuple of length N where all elements are of type Int or Float64.
-	double mu_g = std::get<0>(earthParams) * mu_0; // Ground permittivity
-	double epsilon_g = std::get<1>(earthParams) * epsilon_0; // Ground permeability
-	double sigma_g = 1 / std::get<2>(earthParams); // Ground conductivity
+	double mu_g = std::get<0>(earth_parameters) * mu_0; // Ground permittivity
+	double epsilon_g = std::get<1>(earth_parameters) * epsilon_0; // Ground permeability
+	double sigma_g = 1 / std::get<2>(earth_parameters); // Ground conductivity
 	double rho_g = 1 / sigma_g; // Ground resistivity
 	double g = 1e-11;
-
-
-	// Define variables for frequency domain implementation
-	auto& conductors = c.getCableConductors();
-	auto& insulators = c.getCableInsulators();
-	auto& positions = c.getPositions();
 
 	double d_ij = 0; // Initialize d_ij
 
 	// Define variables for frequency domain implementation
 	size_t n_l = conductors.size(); // Number of cable layers
 	size_t n = positions.size();    // Number of cables
+	int Num = n_l * n;
 
-	// Create vec_basic objects for P and Z matrices
-	vec_basic P_values, Z_values;
+	Z = createZeroMatrix(Num, Num);
+	P = createZeroMatrix(Num, Num);
 
 	size_t i = 0; // External indicator
 
 	for (const auto& pair : conductors) {
 		const auto& conductor = pair.second;
-		double r_i = conductor.ri;
-		double r_o = conductor.ro;
-		double mu = conductor.permeability * mu_0;
-		double rho = conductor.resistivity;
+		double r_i = conductor->ri;
+		double r_o = conductor->ro;
+		double mu = conductor->permeability * mu_0;
+		double rho = conductor->resistivity;
 
-
-
-		double m = std::sqrt(s_value * mu / rho); // Calculate m
-		double delta_r = r_o - r_i; // Calculate Δr
-		double Z_aa, Z_bb, Z_ab;
+		RCP<const Basic> m = sqrt(mul(s, real_double(mu / rho))); // Calculate m as symbolic values
+		double delta_r = r_o - r_i; // Calculate Delta_r
+		RCP<const Basic> Z_aa, Z_bb, Z_ab;
 
 		if (r_i != 0) {
-			Z_aa = rho * m / (2 * pi_value * r_i) * std::tanh(m * delta_r) - rho / (2 * pi_value * r_i * (r_i + r_o));
-			Z_bb = rho * m / (2 * pi_value * r_o) * std::tanh(m * delta_r) + rho / (2 * pi_value * r_o * (r_i + r_o));
+			RCP<const Basic> exp = mul(m, tanh(mul(m, real_double(delta_r))));
+			Z_aa = sub(mul(real_double(rho / (2 * M_PI * r_i)), exp), real_double(rho / (2 * M_PI * r_i * (r_i + r_o))));
+			Z_bb = add(mul(real_double(rho / (2 * M_PI * r_o)), exp), real_double(rho / (2 * M_PI * r_o * (r_i + r_o))));
 		}
 		else {
-			Z_bb = rho * m / (2 * pi_value * r_o) * std::tanh(0.733 * m * r_o) + 0.3179 * rho / (pi_value * r_o * r_o);
+			RCP<const Basic> exp = mul(m, tanh(mul(m, real_double(0.733*r_o))));
+			Z_bb = add(mul(real_double(rho / (2 * M_PI * r_o)), exp), real_double(0.3179 * rho / (M_PI * r_o * r_o)));
 		}
-		Z_ab = rho * m / (pi_value * (r_o + r_i)) * (1.0 / sinh(m * delta_r));
+		Z_ab = mul(mul(m, real_double(rho / (M_PI * (r_o + r_i)))), div(integer(1), sinh(mul(m, real_double(delta_r)))));
 
-		c.Z[i][i] += Z_bb;
-		//i++;
+		Z.set(i, i, add(Z.get(i, i), Z_bb));
 
 
 		if (i > 0) {
@@ -338,11 +275,6 @@ Cable::Cable() {
 	else {
 		std::cout << "The cable type does not match the expected value.\n";
 	}
-
-	// Assuming c.P and c.Z are matrices in C++
-	// Copy P and Z matrices to c.P and c.Z
-	c.P = P; // Assign P matrix to c.P
-	c.Z = Z; // Assign Z matrix to c.Z
 
 }
 
