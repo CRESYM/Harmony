@@ -3,6 +3,7 @@
 #include "Include_components.h"
 
 
+
 using number = Expression;
 using matrix = Matrix<RCP<const Basic>, 2, 2>;
 
@@ -12,6 +13,31 @@ int main() {
 	//Transformer_real* transformer = new Transformer_real("T1", 1, transformer_values);
 	//transformer->printElementValues();
 
+	//test compute_yparameters_nums
+
+	Eigen::MatrixXd Z(3, 3);  // 3x3 impedance matrix
+	Eigen::MatrixXd Y(3, 3);  // 3x3 admittance matrix
+
+	// Fill Z and Y with appropriate values
+	Z << 1.0, 0.1, 0.2,
+		0.1, 1.0, 0.3,
+		0.2, 0.3, 1.0;
+
+	Y << 0.5, 0.2, 0.1,
+		0.2, 0.5, 0.3,
+		0.1, 0.3, 0.5;
+
+	double length = 10.0;  // Cable length (e.g., in meters)
+	double omega = 50.0;   // Angular frequency (e.g., in rad/s)
+
+	Cable cable;
+
+	// Compute the Y parameters
+	Eigen::MatrixXd Y_params = cable.compute_y_parameters_nums(Z, Y, length, omega);
+
+	std::cout << "Y parameters matrix:\n" << Y_params << std::endl;
+
+///
 
 	std::vector<double> distances = { 11.8, 27.5 };
 	std::vector<int> numbers = { 2, 2 };

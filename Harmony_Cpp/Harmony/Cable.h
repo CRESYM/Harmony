@@ -14,7 +14,6 @@ public:
 		Conductor(double ri = 0, double ro = 0, double resistivity = 0, double permeability = 1, double area = 0)
 			: ri(ri), ro(ro), resistivity(resistivity), permeability(permeability), area(area) {}
 
-
 		// Member variables
 		double ri; //conductor inner radius
 		double ro; //conductor outer radius
@@ -113,6 +112,15 @@ public:
 
 	friend void cable(Cable& c, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs);
 
+
+	// Function to compute Y parameters
+	Eigen::MatrixXd compute_y_parameters_nums(
+		const Eigen::MatrixXd& Z, // Impedance matrix
+		const Eigen::MatrixXd& Y, // Admittance matrix
+		double length,            // Length l of the cable
+		double omega              // Frequency omega
+	);
+
 	// Destructor
 	~Cable();
 
@@ -140,4 +148,3 @@ private:
 };
 
 #endif
-
