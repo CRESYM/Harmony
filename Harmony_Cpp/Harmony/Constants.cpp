@@ -12,24 +12,6 @@ RCP<const Basic> j = I;  // Imaginary unit
 RCP<const Basic> omega = symbol("w");
 RCP<const Basic> s = symbol("s"); // mul(j, omega);
 
-template <typename MatrixType>
-MatrixType coth(const MatrixType& matrix) {
-	const Eigen::MatrixExponentialReturnValue<MatrixType> expX = matrix.exp();
-	const Eigen::MatrixExponentialReturnValue<MatrixType> expNegX = (-matrix).exp();
-
-	return (expX + expNegX) / (expX - expNegX);
-}
-
-template <typename MatrixType>
-MatrixType cosech(const MatrixType& matrix) {
-	Eigen::MatrixExponentialReturnValue<MatrixType> expX = matrix.exp();
-	Eigen::MatrixExponentialReturnValue<MatrixType> expNegX = (-matrix).exp();
-	
-	// Compute sinh(X) = (exp(X) - exp(-X)) / 2
-	Eigen::MatrixXd sinhX = (expX - expNegX) / 2.0;
-
-	return sinhX.inverse();
-}
 
 // Static helper function to create a zero matrix
 DenseMatrix createZeroMatrix(int size1, int size2) {

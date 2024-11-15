@@ -66,13 +66,6 @@ extern RCP<const Basic> j;  // Imaginary unit
 extern RCP<const Basic> omega;
 extern RCP<const Basic> s; // s = j * omega
 
-// Helper function for calculation matrix hyperbolic functions
-template <typename MatrixType>
-extern MatrixType coth(const MatrixType& matrix);
-
-template <typename MatrixType>
-extern MatrixType cosech(const MatrixType& matrix);
-
 extern DenseMatrix createZeroMatrix(int size1, int size2);
 
 extern complex<double> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value);

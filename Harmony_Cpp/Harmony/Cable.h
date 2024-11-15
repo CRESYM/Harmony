@@ -112,7 +112,7 @@ public:
 
 
 	// Function to compute Y parameters
-	//Eigen::MatrixXcd compute_y_parameters_num(double omega) override;
+	virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num);
 
 	// Destructor
 	~Cable();
