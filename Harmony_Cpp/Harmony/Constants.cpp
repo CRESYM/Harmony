@@ -12,6 +12,25 @@ RCP<const Basic> j = I;  // Imaginary unit
 RCP<const Basic> omega = symbol("w");
 RCP<const Basic> s = symbol("s"); // mul(j, omega);
 
+template <typename MatrixType>
+MatrixType coth(const MatrixType& matrix) {
+	const Eigen::MatrixExponentialReturnValue<MatrixType> expX = matrix.exp();
+	const Eigen::MatrixExponentialReturnValue<MatrixType> expNegX = (-matrix).exp();
+
+	return (expX + expNegX) / (expX - expNegX);
+}
+
+template <typename MatrixType>
+MatrixType cosech(const MatrixType& matrix) {
+	Eigen::MatrixExponentialReturnValue<MatrixType> expX = matrix.exp();
+	Eigen::MatrixExponentialReturnValue<MatrixType> expNegX = (-matrix).exp();
+	
+	// Compute sinh(X) = (exp(X) - exp(-X)) / 2
+	Eigen::MatrixXd sinhX = (expX - expNegX) / 2.0;
+
+	return sinhX.inverse();
+}
+
 // Static helper function to create a zero matrix
 DenseMatrix createZeroMatrix(int size1, int size2) {
     DenseMatrix zeroMatrix(size1, size2);
@@ -23,13 +42,94 @@ DenseMatrix createZeroMatrix(int size1, int size2) {
     return zeroMatrix;
 }
 
-RCP<const Basic> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value) {
+// Functions for conversion between symbolic and complex or real double scalar/eigen matrix
+complex<double> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value) {
 	RCP<const Symbol> symbol = SymEngine::symbol(symbol_name);
 	RCP<const Basic> value_expr = real_double(value);
 	map_basic_basic subs_map;
-	subs_map[symbol] = value_expr;
-	return expr->subs(subs_map);
+	RCP<const Basic> r = expr->subs(subs_map);
+	return eval_complex_double(*r);
 }
+
+complex<double> substitute_symbol(const RCP<const Basic>& expr, RCP<const Basic> symbol, double value) {
+	RCP<const Basic> value_expr = real_double(value);
+	map_basic_basic subs_map;
+	subs_map[symbol] = value_expr;
+	RCP<const Basic> r = expr->subs(subs_map);
+	return eval_complex_double(*r);
+}
+
+complex<double> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, complex<double> value) {
+	RCP<const Symbol> symbol = SymEngine::symbol(symbol_name);
+	RCP<const Basic> value_expr = complex_double(value);
+	map_basic_basic subs_map;
+	RCP<const Basic> r = expr->subs(subs_map);
+	return eval_complex_double(*r);
+}
+
+complex<double> substitute_symbol(const RCP<const Basic>& expr, RCP<const Basic> symbol, complex<double> value) {
+	RCP<const Basic> value_expr = complex_double(value);
+	map_basic_basic subs_map;
+	subs_map[symbol] = value_expr;
+	RCP<const Basic> r = expr->subs(subs_map);
+	return eval_complex_double(*r);
+}
+
+
+MatrixXcd substitute_symbol(DenseMatrix M, const string& symbol_name, double value) {
+	RCP<const Symbol> symbol = SymEngine::symbol(symbol_name);
+	map_basic_basic m;
+	m[symbol] = real_double(value);
+	MatrixXcd N(M.nrows(), M.ncols());
+	for (int i = 0; i < M.nrows(); ++i) {
+		for (int j = 0; j < M.ncols(); ++j) {
+			RCP<const Basic> r = subs(M.get(i, j), m);
+			N(i,j) = eval_complex_double(*r); 
+		}
+	}
+	return N;
+}
+ 
+MatrixXcd substitute_symbol(DenseMatrix M, const string& symbol_name, complex<double> value) {
+	RCP<const Symbol> symbol = SymEngine::symbol(symbol_name);
+	map_basic_basic m;
+	m[symbol] = complex_double(value);
+	MatrixXcd N(M.nrows(), M.ncols());
+	for (int i = 0; i < M.nrows(); ++i) {
+		for (int j = 0; j < M.ncols(); ++j) {
+			RCP<const Basic> r = subs(M.get(i, j), m);
+			N(i, j) = eval_complex_double(*r); 
+		}
+	}
+	return N;
+}
+
+MatrixXcd substitute_symbol(DenseMatrix M, RCP<const Basic> symbol, double value) {
+	map_basic_basic m;
+	m[symbol] = real_double(value);
+	MatrixXcd N(M.nrows(), M.ncols());
+	for (int i = 0; i < M.nrows(); ++i) {
+		for (int j = 0; j < M.ncols(); ++j) {
+			RCP<const Basic> r = subs(M.get(i, j), m);
+			N(i, j) = eval_complex_double(*r);
+		}
+	}
+	return N;
+}
+
+MatrixXcd substitute_symbol(DenseMatrix M, RCP<const Basic> symbol, complex<double> value) {
+	map_basic_basic m;
+	m[symbol] = complex_double(value);
+	MatrixXcd N(M.nrows(), M.ncols());
+	for (int i = 0; i < M.nrows(); ++i) {
+		for (int j = 0; j < M.ncols(); ++j) {
+			RCP<const Basic> r = subs(M.get(i, j), m);
+			N(i, j) = eval_complex_double(*r);
+		}
+	}
+	return N;
+}
+
 
 double eval_basic(const RCP<const Basic>& expr) {
 	try {

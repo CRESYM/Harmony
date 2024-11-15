@@ -1,150 +1,4 @@
-﻿
-#include <complex>
-#include <Eigen/Dense>
-#include <unsupported/Eigen/MatrixFunctions>
-#include <cmath>
-#include "cable.h"
-
-
-//template <typename MatrixType>
-//MatrixType matrixCoth(const MatrixType& X)
-//{
-//	// Compute exp(X) and exp(-X) using Eigen's matrix exponential
-//	const Eigen::MatrixExponentialReturnValue<MatrixType> expX = X.exp();
-//	const Eigen::MatrixExponentialReturnValue<MatrixType> expNegX = (-X).exp();
-//
-//	// coth(X) = (exp(X) + exp(-X)) / (exp(X) - exp(-X))
-//	return (expX + expNegX) / (expX - expNegX);
-//}
-////
-//template <typename MatrixType>
-//MatrixType matrixCsc(const MatrixType& X)
-//{
-//	// Compute exp(X) and exp(-X) using Eigen's matrix exponential
-//	Eigen::MatrixExponentialReturnValue<MatrixType> expX = X.exp();
-//	Eigen::MatrixExponentialReturnValue<MatrixType> expNegX = (-X).exp();
-//
-//	// Compute sinh(X) = (exp(X) - exp(-X)) / 2
-//	Eigen::MatrixXd sinhX = (expX - expNegX) / 2.0;
-//
-//	// Compute csc(X) = 1 / sinh(X)
-//	return sinhX.cwiseInverse();  // Element-wise inverse
-//}
-//
-// //Function to compute Z and Y with frequency dependence
-//Eigen::MatrixXd compute_Z_with_frequency(const Eigen::MatrixXd& R, const Eigen::MatrixXd& L, double omega) {
-//	// Z = R + j * omega * L
-//	Eigen::MatrixXd Z = R + Eigen::MatrixXd::Identity(R.rows(), R.cols()) * omega * L;
-//	return Z;
-//}
-//
-//Eigen::MatrixXd compute_Y_with_frequency(const Eigen::MatrixXd& C, double omega) {
-//	// Y = j * omega * C
-//	Eigen::MatrixXd Y = Eigen::MatrixXd::Identity(C.rows(), C.cols()) * std::complex<double>(0, omega) * C;
-//	return Y;
-//}
-//
-//Eigen::MatrixXd Cable::compute_y_parameters_nums(const Eigen::MatrixXd& R, const Eigen::MatrixXd& L, const Eigen::MatrixXd& C, double l, double omega)
-//{
-//    // Step 1: Compute Z and Y matrices based on frequency
-//    Eigen::MatrixXd Z = compute_Z_with_frequency(R, L, omega);  // Frequency-dependent Z
-//    Eigen::MatrixXd Y = compute_Y_with_frequency(C, omega);     // Frequency-dependent Y
-//
-//    // Step 2: Compute Gamma = sqrt(Z * Y) using Eigen's matrix square root
-//    Eigen::MatrixXd ZY = Z * Y;  // Product of Z and Y
-//    Eigen::EigenSolver<Eigen::MatrixXd> solver(ZY);
-//    Eigen::MatrixXd Gamma = solver.eigenvalues().real().array().sqrt(); // Eigenvalues' square root as Gamma
-//
-//    // Step 3: Compute Yc = Z.inverse() * Gamma
-//    Eigen::MatrixXd Z_inv = Z.inverse();  // Inverse of Z
-//    Eigen::MatrixXd Yc = Z_inv * Gamma;  // Compute Yc
-//
-//    // Step 4: Initialize the Y parameter matrix
-//    int n = Yc.rows();  // Size of the original matrices
-//    Eigen::MatrixXd Y_params(2 * n, 2 * n);
-//    Y_params.setZero();  // Initialize with zeros
-//
-//    // Step 5: Compute Gamma_l = Gamma * length (element-wise multiplication)
-//    Eigen::MatrixXd Gamma_l = Gamma * l;
-//
-//    // Step 6: Calculate coth(Gamma_l) and csc(Gamma_l)
-//    Eigen::MatrixXd coth_Gamma_l = matrixCoth(Gamma_l);  // coth(Γl)
-//    Eigen::MatrixXd csc_Gamma_l = matrixCsc(Gamma_l);    // csc(Γl)
-//
-//    // Step 7: Fill in the Y parameters matrix
-//    Y_params.block(0, 0, n, n) = Yc * coth_Gamma_l;         // Yc * coth(Γl)
-//    Y_params.block(0, n, n, n) = -Yc * csc_Gamma_l;        // -Yc * csc(Γl)
-//    Y_params.block(n, 0, n, n) = -Yc * csc_Gamma_l;        // -Yc * csc(Γl)
-//    Y_params.block(n, n, n, n) = Yc * coth_Gamma_l;        // Yc * coth(Γl)
-//
-//    return Y_params;
-//}
-
-
-Eigen::MatrixXd coth(const Eigen::MatrixXd& matrix) {
-	Eigen::MatrixXd result(matrix.rows(), matrix.cols());
-	for (int i = 0; i < matrix.rows(); ++i) {
-		for (int j = 0; j < matrix.cols(); ++j) {
-			result(i, j) = std::cosh(matrix(i, j)) / std::sinh(matrix(i, j));
-		}
-	}
-	return result;
-}
-
-// Function to calculate cosech(x) element-wise for Eigen::MatrixXd
-Eigen::MatrixXd cosech(const Eigen::MatrixXd& matrix) {
-	Eigen::MatrixXd result(matrix.rows(), matrix.cols());
-	for (int i = 0; i < matrix.rows(); ++i) {
-		for (int j = 0; j < matrix.cols(); ++j) {
-			result(i, j) = 1.0 / std::sinh(matrix(i, j));
-		}
-	}
-	return result;
-}
-
-// Function to calculate the Y parameters
-Eigen::MatrixXd Cable::compute_y_parameters_nums(
-	const Eigen::MatrixXd& Z, // Impedance matrix
-	const Eigen::MatrixXd& Y, // Admittance matrix
-	double length,            // Length l of the cable
-	double omega              // Frequency omega
-) {
-	// Calculate gamma = sqrt(Z * Y) element-wise
-	//Eigen::MatrixXd gamma = (Z * Y).cwiseSqrt();  // Correct matrix multiplicatio
-	Eigen::MatrixXd gamma = (Z * Y).array().sqrt(); // element-wise sqrt after matrix multiplication
-
-	std::cout << "Gamma:\n" << gamma << std::endl;
-
-	// Calculate coth(gamma * length) and cosech(gamma * length)
-	Eigen::MatrixXd coth_gamma_length = coth(gamma * length);
-	Eigen::MatrixXd cosech_gamma_length = cosech(gamma * length);
-	std::cout << "Coth(gamma * length):\n" << coth_gamma_length << std::endl;
-	std::cout << "Cosech(gamma * length):\n" << cosech_gamma_length << std::endl;
-	// Calculate Yc = Z^(-1) * gamma
-	Eigen::MatrixXd Yc = Z.inverse() * gamma;
-
-	std::cout << "Yc:\n" << Yc << std::endl;
-
-	// Compute the final Y matrix
-	Eigen::MatrixXd Y_top_left = Yc.cwiseProduct(coth_gamma_length);
-	Eigen::MatrixXd Y_top_right = -Yc.cwiseProduct(cosech_gamma_length);
-	Eigen::MatrixXd Y_bottom_left = -Yc.cwiseProduct(cosech_gamma_length);
-	Eigen::MatrixXd Y_bottom_right = Yc.cwiseProduct(coth_gamma_length);
-
-	// Assemble the final Y matrix (should be 3x3, not 6x6)
-	Eigen::MatrixXd Y_final(3, 3);
-	Y_final << Y_top_left(0, 0), Y_top_right(0, 0), Y_top_right(0, 1),
-		Y_bottom_left(0, 0), Y_bottom_right(0, 0), Y_bottom_right(0, 1),
-		Y_top_left(1, 0), Y_top_right(1, 0), Y_top_right(1, 1);
-
-	return Y_final;
-}
-
-void cable(Cable& c, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs) {
-	 // Evaluate PI to a double
-	double pi_value = rcp_static_cast<const RealDouble>(PI)->as_double();
-
-	}
+﻿#include "cable.h"
 
 Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 	const string& configuration_constructor, double length_constructor, std::tuple<double, double, double> earth, 
@@ -436,4 +290,42 @@ Cable::~Cable() {
 	// Implement the destructor if needed
 }
 
+
+
+//Eigen::MatrixXcd Cable::compute_y_parameters_num(double omega_num)
+//{
+//    // Step 1: Compute Z and Y matrices based on frequency
+//	complex<double> s_num = 1i * complex<double>(2 * M_PI * omega_num);
+//	Eigen::MatrixXcd Z_num = substitute_symbol(Z, s, s_num);
+//    Eigen::MatrixXcd Y_num = substitute_symbol(Y, s, s_num);
+//
+//    // Step 2: Compute Gamma = sqrt(Z * Y) using Eigen's matrix square root
+//    Eigen::MatrixXcd ZY = Z_num * Y_num;  // Product of Z and Y
+//    Eigen::EigenSolver<Eigen::MatrixXcd> solver(ZY);
+//    Eigen::MatrixXd Gamma = solver.eigenvalues().real().array().sqrt(); // Eigenvalues' square root as Gamma
+//
+//    // Step 3: Compute Yc = Z.inverse() * Gamma
+//    Eigen::MatrixXcd Z_inv = Z_num.inverse();  // Inverse of Z
+//    Eigen::MatrixXcd Yc = Z_inv * Gamma;  // Compute Yc
+//
+//    // Step 4: Initialize the Y parameter matrix
+//    int n = Yc.rows();  // Size of the original matrices
+//    Eigen::MatrixXcd Y_params(2 * n, 2 * n);
+//    Y_params.setZero();  // Initialize with zeros
+//
+//    // Step 5: Compute Gamma_l = Gamma * length (element-wise multiplication)
+//    Eigen::MatrixXcd Gamma_l = Gamma * length;
+//
+//    // Step 6: Calculate coth(Gamma_l) and csc(Gamma_l)
+//    Eigen::MatrixXcd coth_Gamma_l = coth(Gamma_l);  // coth(Γl)
+//    Eigen::MatrixXcd csc_Gamma_l = cosech(Gamma_l);    // csc(Γl)
+//
+//    // Step 7: Fill in the Y parameters matrix
+//    Y_params.block(0, 0, n, n) = Yc * coth_Gamma_l;         // Yc * coth(Γl)
+//    Y_params.block(0, n, n, n) = -Yc * csc_Gamma_l;        // -Yc * csc(Γl)
+//    Y_params.block(n, 0, n, n) = -Yc * csc_Gamma_l;        // -Yc * csc(Γl)
+//    Y_params.block(n, n, n, n) = Yc * coth_Gamma_l;        // Yc * coth(Γl)
+//
+//    return Y_params;
+//}
 

@@ -46,6 +46,7 @@
 #include <unsupported/Eigen/MatrixFunctions>
 
 using namespace std;
+using namespace std::complex_literals;
 using namespace SymEngine; // Use the SymEngine namespace
 using namespace Eigen;
 
@@ -65,9 +66,24 @@ extern RCP<const Basic> j;  // Imaginary unit
 extern RCP<const Basic> omega;
 extern RCP<const Basic> s; // s = j * omega
 
+// Helper function for calculation matrix hyperbolic functions
+template <typename MatrixType>
+extern MatrixType coth(const MatrixType& matrix);
+
+template <typename MatrixType>
+extern MatrixType cosech(const MatrixType& matrix);
+
 extern DenseMatrix createZeroMatrix(int size1, int size2);
 
-extern RCP<const Basic> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value);
+extern complex<double> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value);
+extern complex<double> substitute_symbol(const RCP<const Basic>& expr, RCP<const Basic> symbol_name, double value);
+extern complex<double> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, complex<double> value);
+extern complex<double> substitute_symbol(const RCP<const Basic>& expr, RCP<const Basic> symbol_name, complex<double> value);
+
+extern MatrixXcd substitute_symbol(DenseMatrix, const string&, double);
+extern MatrixXcd substitute_symbol(DenseMatrix, const string&, complex<double>);
+extern MatrixXcd substitute_symbol(DenseMatrix, RCP<const Basic>, double);
+extern MatrixXcd substitute_symbol(DenseMatrix, RCP<const Basic>, complex<double>);
 
 extern 	double eval_basic(const RCP<const Basic>& expr);
 

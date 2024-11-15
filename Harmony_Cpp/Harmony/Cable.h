@@ -110,16 +110,9 @@ public:
 	bool isConductor(const std::string& key) { return (conductors.find(key) != conductors.end()); }
 	bool isInsulator(const std::string& key) { return (insulators.find(key) != insulators.end()); }
 
-	friend void cable(Cable& c, const std::unordered_map<std::string, std::vector<std::pair<double, double>>>& kwargs);
-
 
 	// Function to compute Y parameters
-	Eigen::MatrixXd compute_y_parameters_nums(
-		const Eigen::MatrixXd& Z, // Impedance matrix
-		const Eigen::MatrixXd& Y, // Admittance matrix
-		double length,            // Length l of the cable
-		double omega              // Frequency omega
-	);
+	//Eigen::MatrixXcd compute_y_parameters_num(double omega) override;
 
 	// Destructor
 	~Cable();

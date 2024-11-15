@@ -3,10 +3,6 @@
 #include "Include_components.h"
 
 
-
-using number = Expression;
-using matrix = Matrix<RCP<const Basic>, 2, 2>;
-
 int main() {
 	// Create Transformer object with 1 pin
 	//std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0, 0.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
@@ -27,17 +23,8 @@ int main() {
 		0.2, 0.5, 0.3,
 		0.1, 0.3, 0.5;
 
-	double length = 10.0;  // Cable length (e.g., in meters)
-	double omega = 50.0;   // Angular frequency (e.g., in rad/s)
-
-	Cable cable;
-
-	// Compute the Y parameters
-	Eigen::MatrixXd Y_params = cable.compute_y_parameters_nums(Z, Y, length, omega);
-
-	std::cout << "Y parameters matrix:\n" << Y_params << std::endl;
-
-///
+	Y = Y.sinh();
+	std::cout << "Y parameters matrix:\n" << Y << std::endl;
 
 	std::vector<double> distances = { 11.8, 27.5 };
 	std::vector<int> numbers = { 2, 2 };

@@ -88,7 +88,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Softwares\vcpkg\packages\eigen3_x64-windows\include\eigen3\unsupported\Eigen\src\MatrixFunctions;D:\Softwares\vcpkg\packages\eigen3_x64-windows\include\eigen3;D:\Softwares\vcpkg\packages\symengine_x64-windows\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\vcpkg\installed\x64-windows\include;D:\eigen-3.4.0;D:\Softwares\vcpkg\packages\symengine_x64-windows\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DisableSpecificWarnings>4146</DisableSpecificWarnings>
     </ClCompile>

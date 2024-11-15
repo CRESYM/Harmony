@@ -33,7 +33,7 @@ Bus* Element::getOtherBus(Bus* bus) {
     }
 }
 
-// Implementation of compute_y_parameters for single-phase (default implementation)
+// Implementation of compute_y_parameters 
 std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double frequency) {
     double angular_frequency = 2 * frequency * M_PI;
     map_basic_basic m;
@@ -45,7 +45,6 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
         for (int j = 0; j < 2 * output_pins; ++j) {
             RCP<const Basic> r = subs(Y_matrix.get(i, j), m);
             Y_val_exact[i][j] = eval_complex_double(*r); // eval_double(Y_matrix.get(i, j));
-            //std::cout << Y_val_exact[i][j] << endl;
         }
     }
     return Y_val_exact;
