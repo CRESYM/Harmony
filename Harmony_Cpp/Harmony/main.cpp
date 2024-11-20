@@ -9,28 +9,33 @@ int main() {
 	//Transformer_real* transformer = new Transformer_real("T1", 1, transformer_values);
 	//transformer->printElementValues();
 
-	std::vector<double> distances = { 11.8, 27.5 };
-	std::vector<int> numbers = { 2, 2 };
-	std::vector<double> values_g = { 0.9196, 0.0062, 10.0, 7.5, 6.5 };
-	Overhead_Line* ohl = new Overhead_Line("ohl", 100.0, make_tuple(1.0, 1.0, 1.0),
-		make_tuple("flat", numbers, distances, 0.01436, 0.06266, 10.0, 0.4572),
-		make_tuple(2, values_g, 1.0));
+	// OHL constructor check
+	//std::vector<double> distances = { 11.8, 27.5 };
+	//std::vector<int> numbers = { 2, 2 };
+	//std::vector<double> values_g = { 0.9196, 0.0062, 10.0, 7.5, 6.5 };
+	//Overhead_Line* ohl = new Overhead_Line("ohl", 100.0, make_tuple(1.0, 1.0, 1.0),
+	//	make_tuple("flat", numbers, distances, 0.01436, 0.06266, 10.0, 0.4572),
+	//	make_tuple(2, values_g, 1.0));
 
-	std::vector<double> transformer_values = { 1.0, 1.0, 2.0, 2.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
-	TransformerDeltaY* transformer = new TransformerDeltaY("T1", 3, transformer_values);
+
+	// Transformer constructor check
+	//std::vector<double> transformer_values = { 1.0, 1.0, 2.0, 2.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
+	//TransformerDeltaY* transformer = new TransformerDeltaY("T1", 3, transformer_values);
 	//transformer->printElementValues();
 
+	// TL constructor check
 	//std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
 	//TransmissionLine* t = new TransmissionLine("tl", 3, transmission_line_values);
 
 
+	// Generator constructor check
 	//std::vector<double> generator_values = { 1.0, 0.01, 1.0, 0.1 };
 	//Generator* g = new Generator("gen", 3, generator_values);
 
-	//vector<double> vec = {0, 0, 1};
+
 	//Load* y = new Load("l1", 1, vec);
-	//Impedance* y = new Impedance("z1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) }));
 	//Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
+	Impedance* y = new Impedance("z1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) }));
 	AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
 	Network* myNetwork = new Network();
 
@@ -39,8 +44,7 @@ int main() {
 	Bus* gnd = new Bus("gnd", 1);
 
 	// Add elements to the network
-	//myNetwork->addElement(y);
-	//myNetwork->addElement(transformer);  // Add the transformer to the network
+	myNetwork->addElement(y);
 	myNetwork->addElement(ac);
 
 	// Add buses to the network
@@ -48,19 +52,13 @@ int main() {
 	myNetwork->addBus("gnd", gnd);
 
 	// Connect elements to buses
-	//myNetwork->connectElementToBus(transformer, 1, bus1);  // Connect transformer to bus1
-	//myNetwork->connectElementToBus(transformer, 2, gnd);    // Connect transformer to ground
-	//myNetwork->connectElementToBus(y, 1, bus1);
-	//myNetwork->connectElementToBus(y, 2, gnd);
+	myNetwork->connectElementToBus(y, 1, bus1);
+	myNetwork->connectElementToBus(y, 2, gnd);
 	myNetwork->connectElementToBus(ac, 1, bus1);
 	myNetwork->connectElementToBus(ac, 2, gnd);
 
 	// Print the connections to verify the network
-	//myNetwork->printConnections();
-
-	// Frequency for Y-parameter computation
-	//double frequency = 50.0; // Example frequency in Hz
-	//y->compute_y_parameters(frequency);
+	myNetwork->printConnections();
 
 
 	vector<Bus*> start_buses;
@@ -74,13 +72,13 @@ int main() {
 
 
 	//y->writeFile(10.0, 1000.0, 3);
-	double omega_num = 2 * M_PI * 1000;
+	double omega_num = 1000;
 	//MatrixXcd Yparam = y->compute_y_parameters_num(omega_num);
 
 	//cout << Yparam << endl;
 
 	//Eigen::MatrixXcd equivalent_impedance;
-	//myNetwork->compute_equivalent_impedance(start_buses, end_buses, elem);
+	myNetwork->compute_equivalent_impedance(start_buses, end_buses, skip_elements);
 	
 	try {
 		// Compute equivalent impedance

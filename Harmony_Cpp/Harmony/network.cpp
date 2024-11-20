@@ -219,6 +219,7 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
         pos++;
     }
 
+
     // reduced_row_echelon_form
     vec_uint pivot_cols;
     reduced_row_echelon_form(Y, Y, pivot_cols);
@@ -229,6 +230,7 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
     //        std::cout << Y.get(i, j)->__str__() << " ";
     //    std::cout << endl;
     //}
+
 
     //Compute the equivalent impedance
     DenseMatrix equivalent_impedance = createZeroMatrix(equivalent_impedance_size, 1);
@@ -242,11 +244,12 @@ void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::v
         pos++;
     }
     // Print the equivalent impedance
-    std::cout << "Equivalent impedance is: " << std::endl;
+    std::cout << "Equivalent impedance symbolic is: " << std::endl;
     for (int i = 0; i < equivalent_impedance.nrows(); i++) {
             std::cout << equivalent_impedance.get(i, 0)->__str__() << " ";
         std::cout << endl;
     }
+    //cout << equivalent_impedance_size << endl;
 }
 
 void Network::compute_equivalent_impedance_nums(std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double omega_num)
@@ -309,7 +312,6 @@ void Network::compute_equivalent_impedance_nums(std::vector<Bus*> start_buses, s
     // Initialize the admittance matrix
     Eigen::MatrixXcd Y = Eigen::MatrixXcd::Zero(pos, pos + 1);
 
-    std::cout << "Initialized admittance matrix size: " << Y.rows() << "x" << Y.cols() << std::endl;
 
     // Populate the admittance matrix
     pos = 0;
@@ -367,20 +369,18 @@ void Network::compute_equivalent_impedance_nums(std::vector<Bus*> start_buses, s
         }
         pos++;
     }
+    //std::cout << "Admittance matrix:\n" << Y << std::endl;
 
     // Extract the reduced admittance matrix (block)
     Eigen::MatrixXcd reduced_Y = Y.block(0, 0, pos, pos);  // Extract the block
     Eigen::VectorXcd b = Y.block(0, pos, pos, 1);          // Extract the RHS vector
 
-    // Debugging output
-    std::cout << "Reduced admittance matrix:\n" << reduced_Y << std::endl;
-    std::cout << "Right-hand side vector:\n" << b << std::endl;
 
     // Solve the linear system Y * x = b
     Eigen::VectorXcd solution = reduced_Y.partialPivLu().solve(b);
 
-    // Debugging output
-    std::cout << "Solution to the system:\n" << solution << std::endl;
+    //// Debugging output
+    //std::cout << "Solution to the system:\n" << solution << std::endl;
 
     // Compute the equivalent impedance (numerical)
     Eigen::MatrixXcd equivalent_impedance = Eigen::MatrixXcd::Zero(equivalent_impedance_size, 1);
@@ -390,17 +390,18 @@ void Network::compute_equivalent_impedance_nums(std::vector<Bus*> start_buses, s
         int position_current = positions_currents[pos];
         int pins = bus->getPinNumber();
         for (int i = 0; i < pins; i++) {
-            equivalent_impedance(pos_voltage + i, 0) = Y(pos_voltage + i, Y.cols() - 1) / Y(position_current + i, Y.cols() - 1);
+            equivalent_impedance(pos_voltage + i, 0) = solution(pos_voltage + i) / solution(position_current + i);
         }
         pos++;
     }
 
     // Print the equivalent impedance
-    std::cout << "Equivalent impedance is: " << std::endl;
+    std::cout << "Equivalent impedance numeric is: " << std::endl;
     for (int i = 0; i < equivalent_impedance.rows(); i++) {
         std::cout << equivalent_impedance(i, 0) << " ";
     }
     std::cout << std::endl;
+    //cout << equivalent_impedance_size << endl;
 }
 
 
