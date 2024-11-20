@@ -9,23 +9,6 @@ int main() {
 	//Transformer_real* transformer = new Transformer_real("T1", 1, transformer_values);
 	//transformer->printElementValues();
 
-	//Eigen::MatrixXd Z(3, 3);  // 3x3 impedance matrix
-	//Eigen::MatrixXd Y(3, 3);  // 3x3 admittance matrix
-
-	//// Fill Z and Y with appropriate values
-	//Z << 1.0, 0.1, 0.2,
-	//	0.1, 1.0, 0.3,
-	//	0.2, 0.3, 1.0;
-
-	//Y << 0.5, 0.2, 0.1,
-	//	0.2, 0.5, 0.3,
-	//	0.1, 0.3, 0.5;
-
-	//Y = Y.sinh();
-	//std::cout << "Y parameters matrix:\n" << Y << std::endl;
-
-
-
 	std::vector<double> distances = { 11.8, 27.5 };
 	std::vector<int> numbers = { 2, 2 };
 	std::vector<double> values_g = { 0.9196, 0.0062, 10.0, 7.5, 6.5 };
