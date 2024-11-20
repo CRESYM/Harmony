@@ -66,6 +66,8 @@ public:
 
     // Function to compute the equivalent impedance between buses, excluding certain elements
     void compute_equivalent_impedance(std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements);
+
+    void compute_equivalent_impedance_nums(std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double omega_num);
     
 };
 
