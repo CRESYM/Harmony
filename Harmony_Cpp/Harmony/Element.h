@@ -49,13 +49,41 @@ public:
     // Function to retrieve the Y-parameter matrix
     DenseMatrix read_y_matrix() { return Y_matrix; }
 
+    // Add a sub-element (filter, controller, or other components)
+    void addSubElement(const std::string& name, std::shared_ptr<Element> subElement) {
+        subElements.push_back({ name, subElement }); // Now using vector to preserve order
+    }
+
+    // Retrieve a specific sub-element by name
+    std::shared_ptr<Element> getSubElement(const std::string& name) const {
+        for (const auto& pair : subElements) {
+            if (pair.first == name) {
+                return pair.second;
+            }
+        }
+        return nullptr;
+    }
+
+    // Print all sub-elements
+    virtual void printSubElements() const {
+        for (const auto& pair : subElements) {
+            const std::string& subElementName = pair.first; // Key
+            const std::shared_ptr<Element>& subElement = pair.second; // Value
+            std::cout << "Sub-Element: " << subElementName << std::endl;
+            subElement->printElementValues();
+        }
+    }
+
 protected:
     std::string element_symbol; // Element symbol (e.g., R, L, C)
     int input_pins; // Number of input pins/phases
     int output_pins;  // Number of output pins/phases
-    std::map<Bus* , int> connections; // Map of bus connections to the element's terminals
+    std::map<Bus* , int> connections; // Map of bus connections to the element's terminal
 
     DenseMatrix Y_matrix; // Y-parameter matrix representing the admittance of the element
+
+    // Sub-elements (e.g., filters or controllers)
+    std::vector<std::pair<std::string, std::shared_ptr<Element>>> subElements;
 };
 
 #endif // ELEMENT_H

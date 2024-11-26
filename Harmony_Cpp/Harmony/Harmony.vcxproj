@@ -156,6 +156,8 @@
     <ClInclude Include="AC_source.h" />
     <ClInclude Include="Admittance.h" />
     <ClInclude Include="Bus.h" />
+    <ClInclude Include="Controller.h" />
+    <ClInclude Include="Filter.h" />
     <ClInclude Include="Generator.h" />
     <ClInclude Include="Include_components.h" />
     <ClInclude Include="Load.h" />
@@ -163,7 +165,7 @@
     <ClInclude Include="Constants.h" />
     <ClInclude Include="Element.h" />
     <ClInclude Include="Impedance.h" />
-    <ClInclude Include="symengine_n.h" />
+    <ClInclude Include="MMC.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="overhead_line.h" />
     <ClInclude Include="Transformer_base.h" />

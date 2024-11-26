@@ -64,6 +64,9 @@
     <Filter Include="Header Files\Elements\Transformer">
       <UniqueIdentifier>{bd2551ed-9232-4979-ae56-da8134956604}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Elements\Converter">
+      <UniqueIdentifier>{55cede93-5e88-41b6-b28f-ded60bd07521}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -155,9 +158,6 @@
     <ClInclude Include="overhead_line.h">
       <Filter>Header Files\Elements\Transmission_line</Filter>
     </ClInclude>
-    <ClInclude Include="symengine_n.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Transmissionline.h">
       <Filter>Header Files\Elements\Transmission_line</Filter>
     </ClInclude>
@@ -217,6 +217,15 @@
     </ClInclude>
     <ClInclude Include="Transformer_classic.h">
       <Filter>Header Files\Elements\Transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="MMC.h">
+      <Filter>Header Files\Elements\Converter</Filter>
+    </ClInclude>
+    <ClInclude Include="Controller.h">
+      <Filter>Header Files\Elements\Converter</Filter>
+    </ClInclude>
+    <ClInclude Include="Filter.h">
+      <Filter>Header Files\Elements\Converter</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
