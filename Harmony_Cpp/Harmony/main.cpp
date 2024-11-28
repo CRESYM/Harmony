@@ -32,8 +32,21 @@ int main() {
 	//std::vector<double> generator_values = { 1.0, 0.01, 1.0, 0.1 };
 	//Generator* g = new Generator("gen", 3, generator_values);
 
+	std::vector<double> vec = {1,1,1}; 
+	Load* load = new Load("l1", 3, vec);
+	DenseMatrix Y = load->compute_y_parameters();
+	for (int i = 0; i < Y.nrows(); i++) {
+		for (int j = 0; j < Y.ncols(); j++) {
+			cout << Y.get(i, j)->__str__() << " ";
+		}
+		cout << endl;
+	}
+	cout << endl;
 
-	//Load* y = new Load("l1", 1, vec);
+	MatrixXcd Y_num = load->compute_y_parameters_num(10);
+	cout << Y_num << endl;
+
+
 	//Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
 	Impedance* y = new Impedance("z1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) }));
 	AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
