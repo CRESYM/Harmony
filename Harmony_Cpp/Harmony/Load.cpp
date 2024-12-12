@@ -9,8 +9,9 @@
  * or with phase-specific values for R, L, and C.
  */
 Load::Load(const std::string& symbol, int pins, std::vector<double> values) : Element(symbol, pins, pins) {
-    if (pins == 0)
+    if (pins <= 0){
         throw std::invalid_argument("Invalid number of pins, must be greater than 0!");
+    }
 
     int capacity = values.capacity();
 
