@@ -27,8 +27,10 @@ list(REMOVE_ITEM HARMONY_SOURCE_FILES "${CMAKE_SOURCE_DIR}/../Harmony/main.cpp")
 # Define an executable testharmony made up of various cpp files
 add_executable(
     testharmony
+    "testelement.cpp"
     testimpedance.cpp
     testload.cpp
+    utils.cpp
     ${HARMONY_SOURCE_FILES}
 )
 
@@ -52,6 +54,15 @@ target_link_libraries(
     flint                   # needed by symengine
     GTest::gtest_main       # GoogleTest library
 )
+
+# Specify the output directory where the test executable will be placed
+set_target_properties(testharmony PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build
+)
+
+# Create the 'files' directory needed by the Element::WriteValues function
+# The function should be modified to avoid hardcoding the output directory
+file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/build/files)
 
 # Enable CMake’s test runner to discover the tests included in the binary,
 # using the GoogleTest CMake module.
