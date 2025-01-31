@@ -70,9 +70,8 @@ private:
 	std::vector<double> organization_x_values;
 	std::vector<double> organization_y_values;
 
-	// Static member functions for estimating conductor configurations
-	
-	
+	// Function to compute Y parameters
+	virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num);	
 
 public:
 	Overhead_Line(const std::string& symbol, double length, std::tuple<double, double, double> earth,
