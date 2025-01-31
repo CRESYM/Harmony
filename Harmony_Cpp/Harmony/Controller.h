@@ -10,6 +10,7 @@ public:
         : Element(symbol, pins, pins), // Controllers typically have the same number of input and output pins
         Kp(Kp), Ki(Ki), zeta(zeta), bandwidth(bandwidth), reference(ref) {}
 
+
     // Override method to print element-specific values
     virtual void printElementValues() override {
         Element::printElementInfo();
@@ -24,6 +25,10 @@ public:
         }
         std::cout << std::endl;
     }
+
+    // Method to update controller parameters (if dynamic change is needed)
+    void updateParameters(double newKp, double newKi, double newZeta, double newBandwidth);
+
 
 private: 
     double Kp;                     // Proportional gain

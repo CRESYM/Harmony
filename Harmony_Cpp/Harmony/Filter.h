@@ -19,6 +19,10 @@ public:
             << "  Bandwidth: " << bandwidth << " Hz\n";
     }
 
+    // Method to update filter parameters (if dynamic change is needed)
+    void updateParameters(double newTimeConstant, double newZeta, double newBandwidth);
+
+
 private:
     double timeConstant; // Time constant
     double zeta;         // Damping ratio

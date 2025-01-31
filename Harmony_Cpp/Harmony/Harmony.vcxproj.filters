@@ -141,6 +141,15 @@
     <ClCompile Include="Transformer_classic.cpp">
       <Filter>Source Files\Elements\Transformer</Filter>
     </ClCompile>
+    <ClCompile Include="MMC.cpp">
+      <Filter>Source Files\Elements\Converter</Filter>
+    </ClCompile>
+    <ClCompile Include="Controller.cpp">
+      <Filter>Source Files\Elements\Converter</Filter>
+    </ClCompile>
+    <ClCompile Include="Filter.cpp">
+      <Filter>Source Files\Elements\Converter</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Impedance.h">
