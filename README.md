@@ -1,4 +1,4 @@
-# Harmony                  $~~~~~~~~~~~$                                ![alt text](cresym.png?raw=true)  
+# Harmony $~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~$    ![alt text](cresym.png?raw=true)  
 
 HARMONic stabilitY assessment of PE-penetrated power systems
 
