@@ -1,6 +1,4 @@
-![alt text](cresym.png?raw=true)        
-
-# Harmony
+# Harmony  ![alt text](cresym.png?raw=true)   
 HARMONic stabilitY assessment of PE-penetrated power systems
 
 As other power systems, the European grid experiences a massive RES development, bringing up many new challenges for system operation. One of such challenges is the massive penetration of Power Electronic (PE) converters (e.g. PV & wind generation units, batteries & chargers, HVDC connections, statcoms, etc.) on a large scale as they may cause instable system operation (resonance) or harmonic waves that can interfere and/or damage the neighbouring equipment. 
