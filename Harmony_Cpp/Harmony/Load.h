@@ -50,10 +50,30 @@ public:
         }
         throw std::out_of_range("Invalid phase index");
     }
+
+    //// Setters for voltages OPF
+    //void setVoltage(int phase, const std::complex<double>& voltage) {
+    //    if (phase >= 0 && phase < voltage_values.size()) {
+    //        voltage_values[phase] = voltage;
+    //    }
+    //    else {
+    //        throw std::out_of_range("Invalid phase index");
+    //    }
+    //}
+
+    //// Function to compute the power flow through the load for each phase
+    //std::complex<double> compute_power_flow(int phase);
+
+    //// Function to calculate the impedance for a given phase
+    //std::complex<double> get_impedance(int phase) const;
+
 private:
     // Values for resistance, inductance and capacitance
     std::vector<double> R;  // Resistance for each phase
     std::vector<double> L;  // Inductance for each phase
     std::vector<double> C;  // Capacitance for each phase
+
+    //// Voltage values for each phase (complex voltage) OPF
+    //std::vector<std::complex<double>> voltage_values;
 };
 #endif

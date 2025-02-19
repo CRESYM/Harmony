@@ -4,6 +4,9 @@
 #include <memory>
 #include <stdexcept>
 #include <vector>
+#include <Eigen/Dense>
+#include <cmath>
+#include <iostream>
 
 // Static method to initialize the MMC with converter parameters
 MMC MMC::init_MMC(const std::vector<double>& converter_params) {
@@ -37,9 +40,6 @@ void MMC::init_Controller(const std::vector<double>& converter_params) {
         throw std::invalid_argument("Insufficient converter parameters for Controller initialization.");
     }
     //Add a default controller using parameters
-    //Controller controller(
-    
-    // Create the Controller object dynamically
     auto controller = std::make_shared<Controller>(
         "Controller1",                         // Symbol for controller
         static_cast<int>(converter_params[18]), // Pins
@@ -60,8 +60,6 @@ void MMC::init_Filter(const std::vector<double>& converter_params) {
         throw std::invalid_argument("Insufficient converter parameters for Filter initialization.");
     }
     // Add a default filter using parameters
-    //Filter filter(
-    // Create the Controller object dynamically
     auto filter = std::make_shared<Filter>(
         "Filter1",                            // Symbol for filter
         static_cast<int>(converter_params[23]), // Pins (example value, adjust accordingly)
@@ -72,4 +70,31 @@ void MMC::init_Filter(const std::vector<double>& converter_params) {
 
     //filters["Filter1"] = filter;  // Add filter to the map
     filters[filter->getElementSymbol()] = filter;  // Add filter to the map
+}
+void MMC::update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc) {
+    this->V_m = Vm;
+    this->theta = theta;
+    this->V_dc = Vdc;
+    this->P = Pac;
+    this->Q = Qac;
+    this->P_dc = Pdc;
+}
+
+void MMC::solveEquilibrium() {
+    equilibrium_state = Eigen::VectorXd::Zero(13);
+}
+
+void MMC::computeJacobian() {
+    A_matrix = Eigen::MatrixXd::Zero(13, 13);
+    B_matrix = Eigen::MatrixXd::Zero(13, 3);
+}
+
+Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& state, const Eigen::VectorXd& inputs) {
+    Eigen::MatrixXd F = Eigen::MatrixXd::Zero(13, 1);
+    return F;
+}
+
+Eigen::MatrixXd MMC::computeJacobianNumerically(const Eigen::VectorXd& state, const Eigen::VectorXd& inputs) {
+    Eigen::MatrixXd J = Eigen::MatrixXd::Zero(13, 13);
+    return J;
 }

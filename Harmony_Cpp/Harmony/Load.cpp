@@ -73,6 +73,38 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
             Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
         }
 }
-    
+
+
+//// Function to calculate power flow through the load for each phase
+//std::complex<double> Load::compute_power_flow(int phase) {
+//    if (phase < 0 || phase >= R.size()) {
+//        throw std::out_of_range("Invalid phase index");
+//    }
+//
+//    // Calculate the impedance for the phase
+//    std::complex<double> impedance = get_impedance(phase);
+//
+//    // Compute the current for this phase: I = V / Z
+//    std::complex<double> current = voltage_values[phase] / impedance;
+//
+//    // Compute the power: S = V * I*
+//    return voltage_values[phase] * std::conj(current);
+//}
+//
+//// Function to calculate the impedance for a given phase
+//std::complex<double> Load::get_impedance(int phase) const {
+//    double R_value = getResistance(phase);
+//    double L_value = getInductance(phase);
+//    double C_value = getCapacitance(phase);
+//
+//    double omega = 2 * M_PI * 50;  // Example for 50 Hz frequency, change as needed
+//
+//    // Calculate impedance for R + jωL - j / ωC
+//    std::complex<double> impedance(R_value, omega * L_value);
+//    impedance -= std::complex<double>(0, 1.0 / (omega * C_value));
+//
+//    return impedance;
+//}
+//    
 
 

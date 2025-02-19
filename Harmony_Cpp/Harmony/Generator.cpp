@@ -5,10 +5,10 @@ Generator::Generator(const std::string& symbol, int pins, const std::vector<doub
     : Element(symbol, pins, pins) {
 
     if (values.size() == 4) {
-        R_f = values[0]; 
-        L_f = values[1];  
-        X_d = values[2]; 
-        T_f = values[3];  
+        R_f = values[0];
+        L_f = values[1];
+        X_d = values[2];
+        T_f = values[3];
     }
     else {
         throw std::invalid_argument("Invalid number of values for generator, must be 4!");
@@ -38,6 +38,37 @@ Generator::Generator(const std::string& symbol, int pins, const std::vector<doub
         Y_matrix.set(pins + i, i, Y21);  // Y21 (symmetrical to Y12)
         Y_matrix.set(pins + i, pins + i, Y22);  // Y22
     }
+
 }
+
+//std::complex<double> Generator::compute_power_flow(int phase)
+//{
+//    if (phase < 0 || phase >= voltage_values.size()) {
+//        throw std::out_of_range("Invalid phase index");
+//    }
+//
+//    // Get the impedance of the generator
+//    std::complex<double> impedance = get_impedance(phase);
+//
+//    // Compute the current using Ohm's law: I = V / Z
+//    std::complex<double> current = voltage_values[phase] / impedance;
+//
+//    // Compute the power flow (P = V * I^*)
+//    std::complex<double> power_flow = voltage_values[phase] * std::conj(current);
+//
+//    return power_flow;
+//}
+//
+//// Compute the impedance for the generator based on given parameters
+//std::complex<double> Generator::get_impedance(int phase) const {
+//    if (phase < 0 || phase >= R_f) {
+//        throw std::out_of_range("Invalid phase index");
+//    }
+//
+//    // Impedance for the generator based on the resistance and reactance
+//    std::complex<double> impedance(R_f, X_d);
+//
+//    return impedance;
+//}
 
 

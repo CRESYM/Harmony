@@ -62,11 +62,11 @@ public:
     void init_Controller(const std::vector<double>&converter_params);
     void init_Filter(const std::vector<double>& converter_params);
 
-    // Map to store controllers
-    //std::map<std::string, Controller> controls;
-
-    // Map to store filters
-    //std::map<std::string, Filter> filters;
+    void update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc);
+    void solveEquilibrium();
+    void computeJacobian();
+    Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& state, const Eigen::VectorXd& inputs);
+    Eigen::MatrixXd computeJacobianNumerically(const Eigen::VectorXd& state, const Eigen::VectorXd& inputs);
 
     // Add a filter or controller
     void addSubElement(const std::string& subElementName, const std::shared_ptr<Element>& subElement) {
@@ -143,6 +143,9 @@ private:
 
     std::map<std::string, std::shared_ptr<Controller>> controls;
     std::map<std::string, std::shared_ptr<Filter>> filters;
+
+    Eigen::VectorXd equilibrium_state;
+    Eigen::MatrixXd A_matrix, B_matrix, C_matrix, D_matrix;
 };
 
 #endif // MMC_H

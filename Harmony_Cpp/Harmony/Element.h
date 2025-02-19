@@ -74,6 +74,9 @@ public:
         }
     }
 
+    // Virtual Power Flow Computation
+    virtual void computePowerFlow() = 0;
+
 protected:
     std::string element_symbol; // Element symbol (e.g., R, L, C)
     int input_pins; // Number of input pins/phases

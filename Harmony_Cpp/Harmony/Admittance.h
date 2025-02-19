@@ -36,8 +36,16 @@ public:
     // Destructor to handle clean-up tasks
     ~Admittance() override;
 
+    // Power flow computations for AC and DC networks
+    void computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+        std::map<std::string, double>& globalParams) const;
+
+    void computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+        std::map<std::string, double>& globalParams) const;
+
 private:
     // No additional private members; behavior is inherited from Element
+    DenseMatrix Y_matrix; // Admittance matrix
 };
 
 #endif // _ADMITTANCE_H_
