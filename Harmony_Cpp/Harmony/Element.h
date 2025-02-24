@@ -75,7 +75,7 @@ public:
     }
 
     // Virtual Power Flow Computation
-    virtual void computePowerFlow() = 0;
+    //virtual void computePowerFlow() = 0;
 
 protected:
     std::string element_symbol; // Element symbol (e.g., R, L, C)

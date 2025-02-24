@@ -41,34 +41,35 @@ Generator::Generator(const std::string& symbol, int pins, const std::vector<doub
 
 }
 
-//std::complex<double> Generator::compute_power_flow(int phase)
-//{
-//    if (phase < 0 || phase >= voltage_values.size()) {
-//        throw std::out_of_range("Invalid phase index");
-//    }
-//
-//    // Get the impedance of the generator
-//    std::complex<double> impedance = get_impedance(phase);
-//
-//    // Compute the current using Ohm's law: I = V / Z
-//    std::complex<double> current = voltage_values[phase] / impedance;
-//
-//    // Compute the power flow (P = V * I^*)
-//    std::complex<double> power_flow = voltage_values[phase] * std::conj(current);
-//
-//    return power_flow;
-//}
-//
-//// Compute the impedance for the generator based on given parameters
-//std::complex<double> Generator::get_impedance(int phase) const {
-//    if (phase < 0 || phase >= R_f) {
-//        throw std::out_of_range("Invalid phase index");
-//    }
-//
-//    // Impedance for the generator based on the resistance and reactance
-//    std::complex<double> impedance(R_f, X_d);
-//
-//    return impedance;
-//}
+// Power flow computation for AC networks
+void Generator::computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+    std::map<std::string, double>& globalParams) const {
+    int key = branchData.size();  // Unique branch identifier
+    branchData[std::to_string(key)]["generator"] = 1;
+
+    // Compute generator impedance at operational frequency
+    std::complex<double> s = globalParams["omega"] * std::complex<double>(0, 1);
+    std::complex<double> Z_eq(R_f, X_d);  // Generator impedance
+
+    branchData[std::to_string(key)]["br_r"] = std::real(Z_eq);
+    branchData[std::to_string(key)]["br_x"] = std::imag(Z_eq);
+    branchData[std::to_string(key)]["g_fr"] = 0;
+    branchData[std::to_string(key)]["b_fr"] = 0;
+    branchData[std::to_string(key)]["g_to"] = 0;
+    branchData[std::to_string(key)]["b_to"] = 0;
+}
+
+// Power flow computation for DC networks
+void Generator::computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+    std::map<std::string, double>& globalParams) const {
+    int key = branchDCData.size();  // Unique DC branch identifier
+    branchDCData[std::to_string(key)]["l"] = 0.0;
+    branchDCData[std::to_string(key)]["c"] = 0.0;
+
+    // Compute generator impedance at DC (zero frequency)
+    std::complex<double> Z_eq(R_f, 0.0);  // DC resistance
+
+    branchDCData[std::to_string(key)]["r"] = std::real(Z_eq);
+}
 
 

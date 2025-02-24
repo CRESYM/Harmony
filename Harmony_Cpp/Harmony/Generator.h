@@ -28,6 +28,13 @@ public:
     //// Compute the impedance for the generator based on given parameters
     //std::complex<double> get_impedance(int phase) const;
 
+    // Power flow computations for AC and DC networks
+    void computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+        std::map<std::string, double>& globalParams) const;
+
+    void computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+        std::map<std::string, double>& globalParams) const;
+
 private:
     double R_f = 1.0;  // Default value
     double L_f = 0.01; // Default value

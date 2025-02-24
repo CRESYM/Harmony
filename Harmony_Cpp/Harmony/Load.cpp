@@ -75,36 +75,47 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
 }
 
 
-//// Function to calculate power flow through the load for each phase
-//std::complex<double> Load::compute_power_flow(int phase) {
-//    if (phase < 0 || phase >= R.size()) {
-//        throw std::out_of_range("Invalid phase index");
-//    }
-//
-//    // Calculate the impedance for the phase
-//    std::complex<double> impedance = get_impedance(phase);
-//
-//    // Compute the current for this phase: I = V / Z
-//    std::complex<double> current = voltage_values[phase] / impedance;
-//
-//    // Compute the power: S = V * I*
-//    return voltage_values[phase] * std::conj(current);
-//}
-//
-//// Function to calculate the impedance for a given phase
-//std::complex<double> Load::get_impedance(int phase) const {
-//    double R_value = getResistance(phase);
-//    double L_value = getInductance(phase);
-//    double C_value = getCapacitance(phase);
-//
-//    double omega = 2 * M_PI * 50;  // Example for 50 Hz frequency, change as needed
-//
-//    // Calculate impedance for R + jωL - j / ωC
-//    std::complex<double> impedance(R_value, omega * L_value);
-//    impedance -= std::complex<double>(0, 1.0 / (omega * C_value));
-//
-//    return impedance;
-//}
-//    
+// Power flow computation for AC networks
+void Load::computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+    std::map<std::string, double>& globalParams) const {
+    int key = branchData.size();  // Unique branch identifier
+    branchData[std::to_string(key)]["load"] = 1;
+
+    // Compute impedance at operational frequency
+    std::complex<double> s = globalParams["omega"] * std::complex<double>(0, 1);
+
+    std::complex<double> Z_eq(0, 0);
+    for (size_t i = 0; i < R.size(); i++) {
+        std::complex<double> Z_phase = std::complex<double>(R[i], globalParams["omega"] * L[i]);
+        if (C[i] != 0) {
+            Z_phase += std::complex<double>(0, -1.0 / (globalParams["omega"] * C[i]));
+        }
+        Z_eq += Z_phase;
+    }
+    Z_eq /= static_cast<double>(R.size());  // Averaging across phases
+
+    branchData[std::to_string(key)]["br_r"] = std::real(Z_eq);
+    branchData[std::to_string(key)]["br_x"] = std::imag(Z_eq);
+    branchData[std::to_string(key)]["g_fr"] = 0;
+    branchData[std::to_string(key)]["b_fr"] = 0;
+    branchData[std::to_string(key)]["g_to"] = 0;
+    branchData[std::to_string(key)]["b_to"] = 0;
+}
+
+// Power flow computation for DC networks
+void Load::computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+    std::map<std::string, double>& globalParams) const {
+    int key = branchDCData.size();  // Unique DC branch identifier
+    branchDCData[std::to_string(key)]["l"] = 0.0;
+    branchDCData[std::to_string(key)]["c"] = 0.0;
+
+    std::complex<double> Z_eq(0, 0);
+    for (size_t i = 0; i < R.size(); i++) {
+        Z_eq += std::complex<double>(R[i], 0.0);  // DC only considers resistance
+    }
+    Z_eq /= static_cast<double>(R.size());  // Averaging across phases
+
+    branchDCData[std::to_string(key)]["r"] = std::real(Z_eq);
+}
 
 

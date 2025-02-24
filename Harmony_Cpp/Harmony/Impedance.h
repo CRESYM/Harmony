@@ -45,5 +45,3 @@ private:
 };
 
 #endif // _IMPEDANCE_H_
-
-
