@@ -40,6 +40,8 @@
 #include <any>
 #include <map>
 #include <cctype> // Include the header for std::tolower
+#include <memory>
+
 
 // Eigen library for linear algebra
 #include <Eigen/Dense>

@@ -46,3 +46,55 @@ Impedance::~Impedance() {
     // Clean-up if needed (Smart pointers handle most memory management)
 }
 
+// Power flow computation for AC networks
+void Impedance::computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+    std::map<std::string, double>& globalParams) const {
+    int key = branchData.size();  // Unique branch identifier
+    branchData[std::to_string(key)]["transformer"] = 0;
+    branchData[std::to_string(key)]["tap"] = 1.0;
+    branchData[std::to_string(key)]["shift"] = 0.0;
+    branchData[std::to_string(key)]["c_rating_a"] = 1.0;
+
+    // Compute Y parameters at operational frequency
+    std::complex<double> s = globalParams["omega"] * std::complex<double>(0, 1);
+
+    // Convert SymEngine expression to double
+    double Y_00_real = SymEngine::eval_double(*Y_matrix.get(0, 0));
+    std::complex<double> Y_00(Y_00_real, 0.0);
+
+    if (Y_00 == std::complex<double>(0, 0)) {
+        throw std::runtime_error("Y_matrix(0,0) is zero, division by zero error.");
+    }
+
+    std::complex<double> Z_eq = std::complex<double>(1.0) / Y_00 / globalParams["Z_base"];
+
+    branchData[std::to_string(key)]["br_r"] = std::real(Z_eq);
+    branchData[std::to_string(key)]["br_x"] = std::imag(Z_eq);
+    branchData[std::to_string(key)]["g_fr"] = 0;
+    branchData[std::to_string(key)]["b_fr"] = 0;
+    branchData[std::to_string(key)]["g_to"] = 0;
+    branchData[std::to_string(key)]["b_to"] = 0;
+}
+
+// Power flow computation for DC networks
+void Impedance::computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+    std::map<std::string, double>& globalParams) const {
+    int key = branchDCData.size();  // Unique DC branch identifier
+    branchDCData[std::to_string(key)]["l"] = 0.0;
+    branchDCData[std::to_string(key)]["c"] = 0.0;
+
+    // Compute Y parameters at low frequency (DC)
+    std::complex<double> s = std::complex<double>(0, 1e-6);
+
+    // Convert SymEngine expression to double
+    double Y_00_real = SymEngine::eval_double(*Y_matrix.get(0, 0));
+    std::complex<double> Y_00(Y_00_real, 0.0);
+
+    if (Y_00 == std::complex<double>(0, 0)) {
+        throw std::runtime_error("Y_matrix(0,0) is zero, division by zero error.");
+    }
+
+    std::complex<double> Z_eq = std::complex<double>(1.0) / Y_00 / globalParams["Z_base"];
+
+    branchDCData[std::to_string(key)]["r"] = std::real(Z_eq);
+}

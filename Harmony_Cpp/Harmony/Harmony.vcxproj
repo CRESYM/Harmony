@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -88,7 +88,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\vcpkg\installed\x64-windows\include;D:\eigen-3.4.0;D:\Softwares\vcpkg\packages\symengine_x64-windows\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Softwares\ceres-solver\include\ceres;D:\vcpkg\installed\x64-windows\include;D:\eigen-3.4.0;D:\Softwares\vcpkg\packages\symengine_x64-windows\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DisableSpecificWarnings>4146</DisableSpecificWarnings>
     </ClCompile>
@@ -136,11 +136,14 @@
     <ClCompile Include="Bus.cpp" />
     <ClCompile Include="Cable.cpp" />
     <ClCompile Include="Constants.cpp" />
+    <ClCompile Include="Controller.cpp" />
     <ClCompile Include="Element.cpp" />
+    <ClCompile Include="Filter.cpp" />
     <ClCompile Include="Generator.cpp" />
     <ClCompile Include="Impedance.cpp" />
     <ClCompile Include="Load.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MMC.cpp" />
     <ClCompile Include="network.cpp" />
     <ClCompile Include="overhead_line.cpp" />
     <ClCompile Include="Transformer_base.cpp" />

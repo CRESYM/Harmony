@@ -102,9 +102,57 @@ int main() {
 		delete myNetwork;
 		return EXIT_FAILURE;
 	}
+	//Create and Test MMC**
+	MMC* myMMC = new MMC(
+		"MMC1",         // Symbol
+		2,              // Number of input pins
+		2,              // Number of output pins
+		1000.0,         // Omega (Nominal Frequency in rad/s)
+		100.0,          // Active Power (P) in MW
+		50.0,           // Reactive Power (Q) in MVA
+		500.0,          // DC Power (P_dc) in kW
+		-100.0,         // Min Active Power (P_min) in MW
+		200.0,          // Max Active Power (P_max) in MW
+		-50.0,          // Min Reactive Power (Q_min) in MVA
+		100.0,          // Max Reactive Power (Q_max) in MVA
+		0.0,            // Theta (Voltage Angle in rad)
+		330.0,          // AC Voltage (V_m) in kV
+		640.0,          // DC Voltage (V_dc) in kV
+		0.05,           // Arm Inductance (L_arm) in H
+		1.07,           // Arm Resistance (R_arm) in Ω
+		0.01,           // Capacitance per Submodule (C_arm) in F
+		400,            // Number of Submodules (N)
+		0.06,           // Reactor Inductance (L_reactor) in H
+		0.535,          // Reactor Resistance (R_reactor) in Ω
+		0.00015         // Time Delay (t_delay) in seconds
+	);
+
+	myNetwork->addElement(myMMC);
+
+	// Example MMC parameters (must match Controller constructor)
+	std::vector<double> converter_params = {
+		1000.0, 100.0, 50.0, 500.0, -100.0, 200.0, -50.0, 100.0, 314.16, 400,
+		1.07, 0.05, 0.01, 0.535, 0.06, 0.00015
+	};
+
+	std::cout << "Converter params size: " << converter_params.size() << std::endl;
+
+	try {
+		myMMC->init_Controller(converter_params);
+		std::cout << "MMC Controller initialized successfully!\n";
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Error initializing MMC Controller: " << e.what() << std::endl;
+		delete myMMC;
+		delete myNetwork;
+		return EXIT_FAILURE;
+	}
+
+	// Cleanup
+	
 
 	// Clean up dynamically allocated memory
-	delete myNetwork;
+	//delete myNetwork;
 	//delete transformer;  // Clean up transformer
 
 

@@ -5,9 +5,13 @@
 #include "Filter.h"
 #include "Controller.h"
 
+// Forward declarations
+class Controller;
+class Filter;
+
 class MMC : public Element {
 public:
-    // Constructor
+    // Constructor 
     MMC(const std::string& symbol, int inputPins, int outputPins,
         double omega, double activePower, double reactivePower, double dcPower,
         double minActivePower, double maxActivePower, double minReactivePower,
@@ -23,8 +27,46 @@ public:
         N(numSubmodules), L_reactor(reactorInductance),
         R_reactor(reactorResistance), t_delay(timeDelay) {}
 
+    // Constructor to initialize MMC with the converter_params (from init_MMC)
+    //MMC(const std::vector<double>& converter_params)
+    //    : Element("MMC", 100, 10),  // Replace with actual default values if needed
+    //    omega_0(converter_params[8]), P(100), Q(100), P_dc(100),  // Initial dummy values
+    //    P_min(-converter_params[8]), P_max(converter_params[8]),
+    //    Q_min(-converter_params[8]), Q_max(converter_params[8]),
+    //    theta(0), V_m(333), V_dc(640), L_arm(50e-3), R_arm(1.07),
+    //    C_arm(10e-3), N(400), L_reactor(60e-3), R_reactor(0.535),
+    //    t_delay(150e-6)
+    //{
+    //    // Initialize additional parameters based on converter_params
+    //    P_min = -converter_params[7];
+    //    P_max = converter_params[7];
+    //    Q_min = -converter_params[7];
+    //    Q_max = converter_params[7];
+    //    omega_0 = converter_params[8];
+    //    N = static_cast<int>(converter_params[9]);
+    //    R_arm = converter_params[10];
+    //    L_arm = converter_params[11];
+    //    C_arm = converter_params[12];
+    //    R_reactor = converter_params[13];
+    //    L_reactor = converter_params[14];
+    //    t_delay = converter_params[15];
+    //}
+
+
     // Destructor
     ~MMC() {}
+
+    static MMC init_MMC(const std::vector<double>& converter_params);
+    
+    // Method to initialize controllers and Filters in MMC
+    void init_Controller(const std::vector<double>&converter_params);
+    void init_Filter(const std::vector<double>& converter_params);
+
+    void update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc);
+    void solveEquilibrium();
+    void computeJacobian();
+    Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& state, const Eigen::VectorXd& inputs);
+    Eigen::MatrixXd computeJacobianNumerically(const Eigen::VectorXd& state, const Eigen::VectorXd& inputs);
 
     // Add a filter or controller
     void addSubElement(const std::string& subElementName, const std::shared_ptr<Element>& subElement) {
@@ -74,6 +116,8 @@ public:
         printSubElements();
     }
 
+
+
 private:
     double omega_0;  // Nominal frequency
     double P;        // Active power [MW]
@@ -96,6 +140,12 @@ private:
 
     // Sub-elements
     std::vector<std::pair<std::string, std::shared_ptr<Element>>> subElements;
+
+    std::map<std::string, std::shared_ptr<Controller>> controls;
+    std::map<std::string, std::shared_ptr<Filter>> filters;
+
+    Eigen::VectorXd equilibrium_state;
+    Eigen::MatrixXd A_matrix, B_matrix, C_matrix, D_matrix;
 };
 
 #endif // MMC_H

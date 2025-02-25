@@ -74,6 +74,49 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
             Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
         }
 }
-    
+
+
+// Power flow computation for AC networks
+void Load::computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+    std::map<std::string, double>& globalParams) const {
+    int key = branchData.size();  // Unique branch identifier
+    branchData[std::to_string(key)]["load"] = 1;
+
+    // Compute impedance at operational frequency
+    std::complex<double> s = globalParams["omega"] * std::complex<double>(0, 1);
+
+    std::complex<double> Z_eq(0, 0);
+    for (size_t i = 0; i < R.size(); i++) {
+        std::complex<double> Z_phase = std::complex<double>(R[i], globalParams["omega"] * L[i]);
+        if (C[i] != 0) {
+            Z_phase += std::complex<double>(0, -1.0 / (globalParams["omega"] * C[i]));
+        }
+        Z_eq += Z_phase;
+    }
+    Z_eq /= static_cast<double>(R.size());  // Averaging across phases
+
+    branchData[std::to_string(key)]["br_r"] = std::real(Z_eq);
+    branchData[std::to_string(key)]["br_x"] = std::imag(Z_eq);
+    branchData[std::to_string(key)]["g_fr"] = 0;
+    branchData[std::to_string(key)]["b_fr"] = 0;
+    branchData[std::to_string(key)]["g_to"] = 0;
+    branchData[std::to_string(key)]["b_to"] = 0;
+}
+
+// Power flow computation for DC networks
+void Load::computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+    std::map<std::string, double>& globalParams) const {
+    int key = branchDCData.size();  // Unique DC branch identifier
+    branchDCData[std::to_string(key)]["l"] = 0.0;
+    branchDCData[std::to_string(key)]["c"] = 0.0;
+
+    std::complex<double> Z_eq(0, 0);
+    for (size_t i = 0; i < R.size(); i++) {
+        Z_eq += std::complex<double>(R[i], 0.0);  // DC only considers resistance
+    }
+    Z_eq /= static_cast<double>(R.size());  // Averaging across phases
+
+    branchDCData[std::to_string(key)]["r"] = std::real(Z_eq);
+}
 
 

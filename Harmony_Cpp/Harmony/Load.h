@@ -50,10 +50,19 @@ public:
         }
         throw std::out_of_range("Invalid phase index");
     }
+
+    // Power flow calculations (AC and DC)
+    void computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+        std::map<std::string, double>& globalParams) const;
+
+    void computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+        std::map<std::string, double>& globalParams) const;
+
 private:
     // Values for resistance, inductance and capacitance
     std::vector<double> R;  // Resistance for each phase
     std::vector<double> L;  // Inductance for each phase
     std::vector<double> C;  // Capacitance for each phase
+
 };
 #endif

@@ -22,6 +22,10 @@
 #include "overhead_line.h"
 #include "Cable.h"
 
+#include "MMC.h"
+#include "Filter.h"
+#include "Controller.h"
+
 
 
 #endif // !INCLUDE_COMPONENTS_H

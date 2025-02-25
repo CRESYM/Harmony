@@ -25,9 +25,28 @@ public:
         throw std::out_of_range("Invalid winding index");
     }
 
+    //// Setters for voltages OPF
+    //void setPrimaryVoltage(const std::complex<double>& voltage) {
+    //    voltage_primary = voltage;
+    //}
+
+    //void setSecondaryVoltage(const std::complex<double>& voltage) {
+    //    voltage_secondary = voltage;
+    //}
+
+    //// Function to compute the power flow through the transformer
+    //std::complex<double> compute_power_flow();
+
+    //// Function to calculate transformer impedance (using resistance and inductance)
+    //std::complex<double> get_impedance() const;
+
 protected:
     std::vector<double> R;  // Resistances for primary and secondary windings, and for magnetization resistance if given
     std::vector<double> L;  // Inductances for primary and secondary windings, and for the magnetization inductance if given
+
+    //// Voltage variables for primary and secondary windings OPF
+    //std::complex<double> voltage_primary;   // Primary winding voltage
+    //std::complex<double> voltage_secondary; // Secondary winding voltage
 };
 
 #endif

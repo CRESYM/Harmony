@@ -31,10 +31,17 @@ public:
     // Destructor to handle any clean-up tasks
     ~Impedance();
 
+
+    // Power flow calculations (AC and DC)
+    void computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+        std::map<std::string, double>& globalParams) const;
+
+    void computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+        std::map<std::string, double>& globalParams) const;
+
 private:
     // No additional private members in this class, as the behavior is inherited from Element
+    DenseMatrix Y_matrix; // Admittance matrix
 };
 
 #endif // _IMPEDANCE_H_
-
-
