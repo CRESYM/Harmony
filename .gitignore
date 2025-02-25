@@ -265,3 +265,6 @@ __pycache__/
 *.asv
 *.autosave
 Harmony/.vs/Harmony/v15/.suo
+
+# Harmony output files
+src/files/
