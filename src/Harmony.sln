@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.34320.172
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Harmony", "Harmony\Harmony.vcxproj", "{400EABA6-3864-4933-B488-7BDF2884100E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Harmony", "Harmony.vcxproj", "{400EABA6-3864-4933-B488-7BDF2884100E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
