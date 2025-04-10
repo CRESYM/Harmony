@@ -1,0 +1,11 @@
+name: harmony
+channels:
+  - conda-forge
+dependencies:
+  - cmake
+  - eigen
+  - symengine
+  - casadi
+  - nlohmann_json
+  - doxygen
+
