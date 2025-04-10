@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 4.0)
 project(Harmony)
 
 # GoogleTest requires at least C++ 14
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find Eigen3 library on local system and include directories.
@@ -10,6 +10,7 @@ find_package(Eigen3 REQUIRED)
 include_directories("${EIGEN3_INCLUDE_DIR}")
 
 # Find symengine on local system and include directories.
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)   #symengine requires this
 find_package(Symengine CONFIG)
 set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} "-std=c++0x")
 include_directories(${SYMENGINE_INCLUDE_DIRS})
@@ -64,6 +65,34 @@ add_executable(
     src/Transmissionline.cpp
 )
 
+# Header files 
+set(HEADER_FILES_FOR_INSTALLER
+    src/AC_source.h
+    src/Admittance.h
+    src/Bus.h
+    src/Cable.h
+    src/constants.h
+    src/Controller.h
+    src/Element.h
+    src/Filter.h
+    src/Generator.h
+    src/Impedance.h
+    src/Include_components.h
+    src/Load.h
+    src/MMC.h
+    src/network.h
+    src/overhead_line.h
+    src/symengine_n.h
+    src/Transformer_base.h
+    src/Transformer_classic.h
+    src/Transformer_Delta_Delta.h
+    src/Transformer_Delta_Y.h
+    src/Transformer_real.h
+    src/Transformer_Y_Delta.h
+    src/Transformer_Y_Y.h
+    src/Transmissionline.h
+)
+
 # Specify libraries that need to be linked to the harmony executable
 target_link_libraries(
     Harmony
@@ -101,32 +130,7 @@ cmake_print_variables(SYMENGINE_INCLUDE_DIRS)
 #     GTest::gtest_main       # GoogleTest library
 # )
 
-set(HEADER_FILES_FOR_INSTALLER
-    src/AC_source.h
-    src/Admittance.h
-    src/Bus.h
-    src/Cable.h
-    src/constants.h
-    src/Controller.h
-    src/Element.h
-    src/Filter.h
-    src/Generator.h
-    src/Impedance.h
-    src/Include_components.h
-    src/Load.h
-    src/MMC.h
-    src/network.h
-    src/overhead_line.h
-    src/symengine_n.h
-    src/Transformer_base.h
-    src/Transformer_classic.h
-    src/Transformer_Delta_Delta.h
-    src/Transformer_Delta_Y.h
-    src/Transformer_real.h
-    src/Transformer_Y_Delta.h
-    src/Transformer_Y_Y.h
-    src/Transmissionline.h
-)
+
 
 
 install(TARGETS Harmony DESTINATION bin)
