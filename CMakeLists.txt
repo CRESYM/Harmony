@@ -1,7 +1,11 @@
+# This File will generate the Visual Studio Solution for Harmony.
+# The paths to the s
+
 cmake_minimum_required(VERSION 4.0)
 project(Harmony)
 
-# Set the C++ Standard (GoogleTest requires > 14)
+# Set the C++ Standard (GoogleTest requires >= 14)
+# std::variant included in Constants.h requires >= 17)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -17,24 +21,6 @@ include_directories(${SYMENGINE_INCLUDE_DIRS})
 
 # Find casadi on local system
 find_package(casadi CONFIG)
-
-
-# #######
-# Find the Conda environment path
-# execute_process(
-#     COMMAND conda info --base
-#     OUTPUT_VARIABLE CONDA_BASE_PATH
-#     OUTPUT_STRIP_TRAILING_WHITESPACE
-# )
-# set(CONDA_ENV_PATH "${CONDA_BASE_PATH}/envs/harmony")
-# message(STATUS ${CONDA_ENV_PATH})
-
-# Add the include directories and library paths for CasADi
-# include_directories(${CONDA_ENV_PATH}/include)
-# include_directories(${CONDA_ENV_PATH}/include/eigen3)
-# link_directories(${CONDA_ENV_PATH}/lib)
-# ########
-
 
 # Group header files
 set(Element_Header_Files src/Element.h)
@@ -154,42 +140,12 @@ add_executable(
 )
 
 # Specify libraries that need to be linked to the harmony executable
+# Note that Eigen doesn't need to be linked because it's a header-only lib
 target_link_libraries(
     Harmony
     casadi
     ${SYMENGINE_LIBRARIES}
 )
 
-message(STATUS "*** casadi ${casadi_IMPORT_PREFIX}")
-include(CMakePrintHelpers)
-#cmake_print_variables(casadi_LIBRARY)
-cmake_print_variables(SYMENGINE_CXX_FLAGS_RELEASE)
-cmake_print_variables(SYMENGINE_LIBRARIES)
-cmake_print_variables(SYMENGINE_INCLUDE_DIRS)
-
-# # Specify directories from which to import C++ header files
-# include_directories(
-#     ${CMAKE_SOURCE_DIR}/../Harmony
-#     ${CMAKE_SOURCE_DIR}/../../../eigen-3.4.0/eigen-3.4.0
-#     "D:/Softwares/vcpkg/installed/x64-windows/include"
-# )
-
-# # Specify directory from which to link dependencies (symengine, etc.)
-# target_link_directories(
-#     testharmony PUBLIC "D:/Softwares/vcpkg/installed/x64-windows/lib"
-#     testharmony PUBLIC "D:/Softwares/vcpkg/installed/x64-windows/bin"
-# )
-
-# # Specify libraries that need to be linked to the testharmony executable
-# target_link_libraries(
-#     testharmony
-#     symengine
-#     flint                   # needed by symengine
-#     GTest::gtest_main       # GoogleTest library
-# )
-
-
-install(TARGETS Harmony DESTINATION bin)
-install(FILES ${HEADER_FILES_FOR_INSTALLER} DESTINATION include)
 
 
