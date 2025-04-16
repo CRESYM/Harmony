@@ -1,5 +1,6 @@
 # This File will generate the Visual Studio Solution for Harmony.
-# The paths to the s
+# The paths to the dependencies (symengne, casadi, etc.) will be 
+# automatically configured by CMake
 
 cmake_minimum_required(VERSION 4.0)
 project(Harmony)
@@ -143,7 +144,7 @@ add_executable(
 # Note that Eigen doesn't need to be linked because it's a header-only lib
 target_link_libraries(
     Harmony
-    casadi
+    casadi::casadi
     ${SYMENGINE_LIBRARIES}
 )
 
