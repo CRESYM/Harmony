@@ -7,6 +7,7 @@
 #include <string>
 #include <stdexcept>
 #include <iostream>
+#include <map>
 
 class Bus;
 class Element;
@@ -64,11 +65,39 @@ public:
     const std::unordered_map<std::string, Element*>& getElements() const { return elements; }
     const std::unordered_map<Bus*, std::vector<Element*>>& getConnections() const { return connections; }
 
-    // Function to compute the equivalent impedance between buses, excluding certain elements
+    // Function to compute the equivalent impedance between buses, excluding certain elements  //network_stability.cpp
     void compute_equivalent_impedance(std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements);
 
     void compute_equivalent_impedance_nums(std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double omega_num);
-    
+
+    //Power flow computation //network_powerflow.cpp
+    std::map<std::string, double> PowerFlow();
+
+    // Power flow construction helpers
+    void addBusAC(std::vector<std::vector<std::string>>& dict_ac,
+        const std::vector<std::string>& bus_info);
+
+    void addBusDC(std::vector<std::vector<std::string>>& dict_dc,
+        const std::vector<std::string>& bus_info);
+
+    void make_BranchAC(Element* element,
+        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
+        std::map<std::string, double>& global_params);
+
+    void make_BranchDC(Element* element,
+        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
+        std::map<std::string, double>& global_params);
+
+    void make_Generator(Element* element,
+        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data);
+
+    void make_Converter(Element* element,
+        std::vector<std::vector<std::string>>& dict_dc,
+        std::vector<std::vector<std::string>>& dict_ac,
+        std::vector<std::string> new_i,
+        std::vector<std::string> new_o,
+        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
+        std::map<std::string, double>& global_params);
 };
 
 #endif // NETWORK_H

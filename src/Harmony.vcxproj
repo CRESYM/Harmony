@@ -145,6 +145,8 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MMC.cpp" />
     <ClCompile Include="network.cpp" />
+    <ClCompile Include="network_powerflow.cpp" />
+    <ClCompile Include="network_stability.cpp" />
     <ClCompile Include="overhead_line.cpp" />
     <ClCompile Include="Transformer_base.cpp" />
     <ClCompile Include="Transformer_classic.cpp" />
