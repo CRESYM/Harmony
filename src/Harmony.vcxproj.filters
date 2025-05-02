@@ -67,6 +67,18 @@
     <Filter Include="Header Files\Elements\Converter">
       <UniqueIdentifier>{55cede93-5e88-41b6-b28f-ded60bd07521}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Solvers">
+      <UniqueIdentifier>{3d44be87-4275-4a5d-83ad-8e9faf465adf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Solvers\Power_Flow">
+      <UniqueIdentifier>{c6834db6-669a-4274-b134-ab9d6a24da31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Solvers">
+      <UniqueIdentifier>{30b13ff9-203e-4079-aa3a-8af26d32f186}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Solvers\Power_Flow">
+      <UniqueIdentifier>{7ed0d96d-b5a5-423f-b44d-5911f46a053e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -149,6 +161,12 @@
     </ClCompile>
     <ClCompile Include="Filter.cpp">
       <Filter>Source Files\Elements\Converter</Filter>
+    </ClCompile>
+    <ClCompile Include="network_stability.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="network_powerflow.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

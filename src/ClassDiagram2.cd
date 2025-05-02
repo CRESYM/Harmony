@@ -17,7 +17,7 @@
   <Class Name="Element" Collapsed="true">
     <Position X="9.25" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AACAAEgDyAIAAAAABA4IECEACAQwACAAIAAAAAAABAg=</HashCode>
+      <HashCode>AACAAEgDwAIAAAAABA4IECEACAQwACAAIAAAAAAABAg=</HashCode>
       <FileName>Element.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -52,8 +52,8 @@
     <InheritanceLine Type="Element" FixedToPoint="true">
       <Path>
         <Point X="10" Y="1.062" />
-        <Point X="10" Y="1.302" />
-        <Point X="7.625" Y="1.302" />
+        <Point X="10" Y="1.25" />
+        <Point X="7.625" Y="1.25" />
         <Point X="7.625" Y="1.5" />
       </Path>
     </InheritanceLine>
@@ -70,19 +70,19 @@
       </InheritanceModifierLabel>
     </InheritanceLine>
     <TypeIdentifier>
-      <HashCode>AAAAACAAAAAQAAAAgiAgAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAACAAAAAQAAAAgiAgAAAAAAAAAAAAAAAAAAIBAAA=</HashCode>
       <FileName>Generator.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Load">
     <Position X="3.75" Y="1.5" Width="1.25" />
     <TypeIdentifier>
-      <HashCode>AAAAgAAAAAAAAIAAAAAAAAAIAAAgCAAAAAAAgAQAAQA=</HashCode>
+      <HashCode>AAAAgAAAAAAAAIAAAAAAAAAIAAAgCAAAAAAAgAYBAQA=</HashCode>
       <FileName>Load.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Overhead_Line">
-    <Position X="8.75" Y="1.5" Width="1.25" />
+    <Position X="9" Y="1.75" Width="1.25" />
     <NestedTypes>
       <Class Name="Overhead_Line::Conductors" Collapsed="true">
         <TypeIdentifier>

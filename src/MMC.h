@@ -15,7 +15,7 @@ public:
     MMC(const std::string& symbol, int inputPins, int outputPins,
         double omega, double activePower, double reactivePower, double dcPower,
         double minActivePower, double maxActivePower, double minReactivePower,
-        double maxReactivePower, double angle, double acVoltage, double dcVoltage,
+        double maxReactivePower, double angle, double acVoltage, double dcVoltage, // move to converter -> element (parent) class as a parent of mmc
         double armInductance, double armResistance, double armCapacitance,
         int numSubmodules, double reactorInductance, double reactorResistance,
         double timeDelay)
