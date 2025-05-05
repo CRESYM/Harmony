@@ -13,7 +13,7 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 
 ## Installation and Usage
 
-See detailed installation instructions here.
+See the [detailed installation instructions](docs/installation.md).
 
 ### Prerequisites 
 Harmony is currently only available on Windows.
