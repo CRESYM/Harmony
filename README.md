@@ -16,7 +16,7 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 See the [detailed installation instructions](docs/installation.md).
 
 ### Prerequisites 
-Harmony is currently only available on Windows (see #16).
+Harmony is currently only available on Windows (see [#16](https://github.com/CRESYM/Harmony/issues/16)).
 - [Visual Studio](https://visualstudio.microsoft.com) - version 2022 or newer, with a "Desktop Development for C++" workload installed (See [installation docs.](https://learn.microsoft.com/en-us/visualstudio/install/install-visual-studio?view=vs-2022))
 - [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python and other few packages. (You can also use Anaconda if it is already installed on your machine.)
 > [!WARNING]
