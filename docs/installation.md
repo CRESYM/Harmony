@@ -3,7 +3,7 @@
 This document describes how to setup a development environment that allows you to compile and run Harmony.
 
 ## Prerequisites 
-Harmony is currently only available on Windows.
+Harmony is currently only available on Windows (see #16).
 - [Visual Studio](https://visualstudio.microsoft.com) - version 2022 or newer, with a "Desktop Development for C++" workload installed (See [installation docs.](https://learn.microsoft.com/en-us/visualstudio/install/install-visual-studio?view=vs-2022))
 - [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python and other few packages. (You can also use Anaconda if it's already installed on your machine.)
 
