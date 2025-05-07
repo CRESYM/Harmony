@@ -1,4 +1,4 @@
-﻿#include "cable.h"
+﻿#include "Cable.h"
 
 Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 	const string& configuration_constructor, double length_constructor, std::tuple<double, double, double> earth, 

@@ -18,7 +18,7 @@
 #include "AC_source.h"
 #include "Generator.h"
 
-#include "TransmissionLine.h"
+#include "Transmissionline.h"
 #include "overhead_line.h"
 #include "Cable.h"
 
