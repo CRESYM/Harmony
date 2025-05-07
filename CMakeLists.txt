@@ -91,6 +91,8 @@ set(Source_Files
     src/Constants.cpp
     src/main.cpp
     src/network.cpp
+    src/network_powerflow.cpp
+    src/network_stability.cpp
 )
 
 
