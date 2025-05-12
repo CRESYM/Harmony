@@ -16,8 +16,8 @@ include_directories("${EIGEN3_INCLUDE_DIR}")
 
 # Find symengine on local system and include directories.
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)   #symengine requires this
-find_package(Symengine CONFIG)
-set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} "-std=c++0x")
+find_package(SymEngine CONFIG)
+set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
 include_directories(${SYMENGINE_INCLUDE_DIRS})
 
 # Find casadi on local system
@@ -95,27 +95,28 @@ set(Source_Files
     src/network_stability.cpp
 )
 
-
 # Add source_groups to create file filters (groups) in Visual Studio project
-source_group("Header Files" FILES ${Header_Files})
-source_group("Header Files\\Elements" FILES ${Element_Header_Files})
-source_group("Header Files\\Elements\\Admittance" FILES ${Element_Admittance_Header_Files})
-source_group("Header Files\\Elements\\Converter" FILES ${Element_Converter_Header_Files})
-source_group("Header Files\\Elements\\Generator" FILES ${Element_Generator_Header_Files})
-source_group("Header Files\\Elements\\Impedance" FILES ${Element_Impedance_Header_Files})
-source_group("Header Files\\Elements\\Source" FILES ${Element_Source_Header_Files})
-source_group("Header Files\\Elements\\Transformer" FILES ${Element_Transformer_Header_Files})
-source_group("Header Files\\Elements\\Transmission Line" FILES ${Element_Transmission_Line_Header_Files})
+if(WIN32) # workds for x64 as well
+    source_group("Header Files" FILES ${Header_Files})
+    source_group("Header Files\\Elements" FILES ${Element_Header_Files})
+    source_group("Header Files\\Elements\\Admittance" FILES ${Element_Admittance_Header_Files})
+    source_group("Header Files\\Elements\\Converter" FILES ${Element_Converter_Header_Files})
+    source_group("Header Files\\Elements\\Generator" FILES ${Element_Generator_Header_Files})
+    source_group("Header Files\\Elements\\Impedance" FILES ${Element_Impedance_Header_Files})
+    source_group("Header Files\\Elements\\Source" FILES ${Element_Source_Header_Files})
+    source_group("Header Files\\Elements\\Transformer" FILES ${Element_Transformer_Header_Files})
+    source_group("Header Files\\Elements\\Transmission Line" FILES ${Element_Transmission_Line_Header_Files})
 
-source_group("Source Files" FILES ${Source_Files})
-source_group("Source Files\\Elements" FILES ${Element_Source_Files})
-source_group("Source Files\\Elements\\Admittance" FILES ${Element_Admittance_Source_Files})
-source_group("Source Files\\Elements\\Converter" FILES ${Element_Converter_Source_Files})
-source_group("Source Files\\Elements\\Generator" FILES ${Element_Generator_Source_Files})
-source_group("Source Files\\Elements\\Impedance" FILES ${Element_Impedance_Source_Files})
-source_group("Source Files\\Elements\\Source" FILES ${Element_Source_Source_Files})
-source_group("Source Files\\Elements\\Transformer" FILES ${Element_Transformer_Source_Files})
-source_group("Source Files\\Elements\\Transmission_Line" FILES ${Element_Transmission_Line_Source_Files})
+    source_group("Source Files" FILES ${Source_Files})
+    source_group("Source Files\\Elements" FILES ${Element_Source_Files})
+    source_group("Source Files\\Elements\\Admittance" FILES ${Element_Admittance_Source_Files})
+    source_group("Source Files\\Elements\\Converter" FILES ${Element_Converter_Source_Files})
+    source_group("Source Files\\Elements\\Generator" FILES ${Element_Generator_Source_Files})
+    source_group("Source Files\\Elements\\Impedance" FILES ${Element_Impedance_Source_Files})
+    source_group("Source Files\\Elements\\Source" FILES ${Element_Source_Source_Files})
+    source_group("Source Files\\Elements\\Transformer" FILES ${Element_Transformer_Source_Files})
+    source_group("Source Files\\Elements\\Transmission_Line" FILES ${Element_Transmission_Line_Source_Files})
+endif()
 
 
 # Define an executable 'Harmony' made up of source and header files
