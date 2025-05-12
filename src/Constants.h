@@ -24,9 +24,8 @@
 #include <symengine/matrices/immutable_dense_matrix.h>
 #include <symengine/polys/basic_conversions.h>
 
-#include <intrin.h>
-
-#include <cmath>  // Include cmath for std::acos
+#define _USE_MATH_DEFINES
+#include <math.h> 
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -55,9 +54,6 @@ using namespace Eigen;
 
 // Define a constant for π (pi) using SymEngine
 extern const RCP<const Basic> PI;
-
-// Define a constant for π (pi) using standard C++
-extern const double M_PI ;
 
 extern const double mu_0; // vacuum permitivity
 extern const double epsilon_0; // vacuum permeability
