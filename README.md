@@ -18,3 +18,5 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 - **Yasel Quintero Lares**, documentation, installation setup, cross-platform compatibility, issuing, release
 - **Robert Dimitrovski**, dynamic phasor formulation, and supervision
 - **Aleksandra Lekić**, formulation and design of the toolbox, different functionality interconnections, harmonic stability solver, supervision and acquiring of the funding
+
+ The development of the Harmony was supported by the [Digital Competence Centre](https://www.tudelft.nl/index.php?id=67120&L=1/), Delft University of Technology.
