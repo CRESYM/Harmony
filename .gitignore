@@ -266,5 +266,18 @@ __pycache__/
 *.autosave
 Harmony/.vs/Harmony/v15/.suo
 
+# Visual Studio Code files
+.vs/
+
 # Harmony output files
 src/files/
+
+# Harmony build directory
+build/
+
+# Harmony installers
+install/Harmony/
+*.msi
+*.exe
+*.dll
+

@@ -1,4 +1,4 @@
-#include "TransmissionLine.h"
+#include "Transmissionline.h"
 
 TransmissionLine::TransmissionLine(const std::string& symbol, int pins, const std::vector<double>& values) 
     : Element(symbol, pins, pins){

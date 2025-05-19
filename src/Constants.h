@@ -14,13 +14,13 @@
 #include <symengine/complex_double.h>
 #include <symengine/expression.h>
 #include <symengine/symengine_config.h>
-#include <SymEngine/Matrix.h> // Ensure you include the necessary SymEngine headers
-#include <SymEngine/subs.h>
+#include <symengine/matrix.h> // Ensure you include the necessary SymEngine headers
+#include <symengine/subs.h>
 #include <symengine/simplify.h>
 #include <symengine/matrices/identity_matrix.h> // identity matrix
 #include <symengine/matrices/matrix_mul.h> // matrix multiplications
 #include <symengine/matrices/matrix_add.h>
-#include <Symengine/matrix_expressions.h>
+#include <symengine/matrix_expressions.h>
 #include <symengine/matrices/immutable_dense_matrix.h>
 #include <symengine/polys/basic_conversions.h>
 
