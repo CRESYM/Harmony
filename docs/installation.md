@@ -3,8 +3,11 @@
 This document describes how to setup a development environment that allows you to compile and run Harmony.
 
 ## Prerequisites 
-Harmony is currently only available on Windows (see [#16](https://github.com/CRESYM/Harmony/issues/16)).
-- [Visual Studio](https://visualstudio.microsoft.com) - version 2022 or newer, with a "Desktop Development for C++" workload installed (See [installation docs.](https://learn.microsoft.com/en-us/visualstudio/install/install-visual-studio?view=vs-2022))
+Harmony can be compiled on Window, Linux (tested in Ubuntu 22.04.5), and MacOS (tested in Sequoia 15.5). The requirements for each operating system are:
+- Compilers for C and C++
+    - Linux: GNU C and C++ compilers (tested version with 11.4.0)
+    - MacOS: Apple Clang C and C++ compilers (tested with version 17.0.0)
+    - Windows: [Visual Studio](https://visualstudio.microsoft.com) - version 2022 or newer, with a "Desktop Development for C++" workload installed (See [installation docs.](https://learn.microsoft.com/en-us/visualstudio/install/install-visual-studio?view=vs-2022))
 - [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python and other few packages. (You can also use Anaconda if it's already installed on your machine.)
 
 > [!WARNING]
