@@ -16,7 +16,7 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 See the [detailed installation instructions](docs/installation.md).
 
 ### Prerequisites 
-Harmony can be compiled on Window, Linux and MacOS. The requirements for each operating system are:
+Harmony can be compiled on Windows, Linux and MacOS. The requirements for each operating system are:
 - Compilers for C and C++
     - Linux: GNU C and C++ compilers
     - MacOS: Apple Clang C and C++ compilers
@@ -46,8 +46,8 @@ cmake ..
 cmake --build . --config Release
 
 # Run Harmony
-cd Release
-./Harmony.exe
+cd Release  # Windows only
+./Harmony
 ```
 
 
