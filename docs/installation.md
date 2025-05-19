@@ -3,7 +3,7 @@
 This document describes how to setup a development environment that allows you to compile and run Harmony.
 
 ## Prerequisites 
-Harmony can be compiled on Window, Linux (tested in Ubuntu 22.04.5), and MacOS (tested in Sequoia 15.5). The requirements for each operating system are:
+Harmony can be compiled on Windows, Linux (tested in Ubuntu 22.04.5), and MacOS (tested in Sequoia 15.5). The requirements for each operating system are:
 - Compilers for C and C++
     - Linux: GNU C and C++ compilers (tested version with 11.4.0)
     - MacOS: Apple Clang C and C++ compilers (tested with version 17.0.0)
@@ -17,7 +17,9 @@ Harmony can be compiled on Window, Linux (tested in Ubuntu 22.04.5), and MacOS (
 
 <summary>Verify miniconda installation on Windows</summary>
 
-Open Visual Studio. Close the Welcome dialogue or select the option *Continue without code*. Open the VS built-in terminal by selecting View->Terminal on the top menu. The terminal should display `(base)` at the left of the prompt symbol as shown in the picture below. This symbol indicates that VS can find and use miniconda. The word "base" means that no conda environments are activated; if an environment were activated, its name would appear instead of "base".
+Open Visual Studio. Close the Welcome dialogue or select the option *Continue without code*. Open the VS built-in terminal by selecting View->Terminal on the top menu. 
+
+The terminal should display `(base)` at the left of the prompt symbol as shown in the picture below. This symbol indicates that VS can find and use miniconda. The word "base" means that no conda environments are activated; if an environment were activated, its name would appear instead of "base".
 
 ![Screenshot 2025-05-05 at 21 03 07](https://github.com/user-attachments/assets/f519969a-9976-4255-b226-6aa5a976f190)
 
@@ -81,25 +83,25 @@ cd build
 cmake ..
 ```
 
-The VS Solution or makefile will be inside the `build` directory. The VS Solution or makefile need to be regenerated every time you make changes to *CMakeLists.txt*. These changes can include, for example: adding a new *.h* or *.cpp* file to the project, adding a dependency on a third party library, etc. To regenerate the solution or makefile, delete the `build` folder that contains them, and re-run the commands listed in this step.
+The VS Solution or makefile will be inside the `build` directory. The VS Solution or makefile need to be regenerated every time you make changes to *CMakeLists.txt*. These changes can include, for example: adding a new *.h* or *.cpp* file to the project, adding a dependency on a third party library, etc. To regenerate the solution or makefile, delete the `build` folder and re-run the commands listed in this step.
 
 **7.** (Optional, Windows) Open the VS Solution created in the previous step. Do so by selection File->Open->Project/Solution on the top menu. Choose the file `<path-to-harmony/build/Harmony.sln>`. Carry out your development as per usual, making changes to the project's source files and saving them.
 
-Note: Harmony will add the ALL_BUILD and ZERO_CHECK projects to the solution. You can ignore them.
+Note: Harmony will add the ALL_BUILD and ZERO_CHECK projects to the VS solution. You can ignore them.
 
 **8. Compile Harmony.** The following command (which needs to be run from the `build` folder containing the VS Solution or makefile) will build Harmony in Release mode. Use `--config Debug` to build in Debug mode.
 ```bash
 cmake --build . --config Release
 ```
 
-Windows users: Alternatively, you may also use the VS Build button or select Build->Solution from the menu at the top. The output file *Harmony.exe* will be created in the `build/Release` directory or `build/Debug` if the app was built in in Debug mode.
+Windows users: you may also use the VS Build button or select Build->Solution from the menu at the top. The output file *Harmony.exe* will be created in the `build/Release` directory or `build/Debug` if the app was built in in Debug mode.
 
 **9. Execute Harmomy.**
 ```bash
-# Open the folder containing Harmony.exe
+# Windows only: open the folder containing Harmony.exe
 cd Release
 # Run Harmony
-./Harmony.exe
+./Harmony
 ```
 
 Windows users: If you want to use the VS "Run" button or menu options, you need to set the Harmony project as the startup project in the Solution (CMake adds ALL_BUILD and ZERO_CHECK projects). To do so: right-click on the Harmony project in the *Solution Explorer* and select the option *Set as Startup Project*.
