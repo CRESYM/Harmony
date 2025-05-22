@@ -190,7 +190,7 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 			if (j > i) { // Only calculate for distinct pairs (i, j) where j > i
 				RCP<const Basic> m = sqrt(mul(s, real_double(mu_g / rho_g))); // with ground permeability μᵍ and resistivity ρᵍ
 				double H = getPositions()[i].second + getPositions()[j].second;
-				double dᵢⱼ = sqrt(pow(getPositions()[i].first - getPositions()[j].first, 2) +
+				double d_ij = sqrt(pow(getPositions()[i].first - getPositions()[j].first, 2) +
 					pow(getPositions()[i].second - getPositions()[j].second, 2));
 				double x = abs(getPositions()[i].first - getPositions()[j].first);
 				RCP<const Basic> Z_g = mul(mul(s, real_double(mu_g / (2 * M_PI))), sub(sub(real_double(0.5), log(mul(m, real_double(gamma_num * d_ij / 2)))), mul(m, real_double(2 * H / 3))));
