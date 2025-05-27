@@ -65,11 +65,9 @@ in CMakeList.txt after
 ```
 add the following lines.
 
-**Specify the directory where your header files are located**
-```include_directories(header path)```
+**Specify the directory where your header files are located**: ```include_directories(header path)```
 
-**Add your source files**
-```add_executable(YourExecutableName source1.cpp source2.cpp)```
+**Add your source files**: ```add_executable(YourExecutableName source1.cpp source2.cpp)```
 __________
      - Clone SymEngine Repository
      - Open Visual Studio Solution: Navigate to the SymEngine directory and look for a Visual Studio solution file (.sln). 
