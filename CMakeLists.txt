@@ -51,6 +51,15 @@ set(Element_Transmission_Line_Header_Files
     src/overhead_line.h
     src/Transmissionline.h
 )
+set(Solver_OPF_Header_Files
+    src/create_ac.h
+    src/create_dc.h
+    src/csv_reader.h
+    src/makeYbus.h
+    src/params_ac.h
+    src/params_dc.h
+    src/solve_opf.h
+)
 set(Header_Files
     src/Bus.h
     src/Constants.h
@@ -86,6 +95,15 @@ set(Element_Transmission_Line_Source_Files
     src/overhead_line.cpp
     src/Transmissionline.cpp
 )
+set(Solver_OPF_Source_Files
+    src/create_ac.cpp
+    src/create_dc.cpp
+    src/csv_reader.cpp
+    src/makeYbus.cpp
+    src/params_ac.cpp
+    src/params_dc.cpp
+    src/solve_opf.cpp
+)
 set(Source_Files
     src/Bus.cpp
     src/Constants.cpp
@@ -106,6 +124,8 @@ if(WIN32) # workds for x64 as well
     source_group("Header Files\\Elements\\Source" FILES ${Element_Source_Header_Files})
     source_group("Header Files\\Elements\\Transformer" FILES ${Element_Transformer_Header_Files})
     source_group("Header Files\\Elements\\Transmission Line" FILES ${Element_Transmission_Line_Header_Files})
+    source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Header_Files})
+
 
     source_group("Source Files" FILES ${Source_Files})
     source_group("Source Files\\Elements" FILES ${Element_Source_Files})
@@ -116,6 +136,9 @@ if(WIN32) # workds for x64 as well
     source_group("Source Files\\Elements\\Source" FILES ${Element_Source_Source_Files})
     source_group("Source Files\\Elements\\Transformer" FILES ${Element_Transformer_Source_Files})
     source_group("Source Files\\Elements\\Transmission_Line" FILES ${Element_Transmission_Line_Source_Files})
+    source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
+
+
 endif()
 
 
@@ -131,6 +154,8 @@ add_executable(
     ${Element_Source_Header_Files}
     ${Element_Transformer_Header_Files}
     ${Element_Transmission_Line_Header_Files}
+    ${Solver_OPF_Header_Files}
+
     ${Source_Files}
     ${Element_Source_Files}
     ${Element_Admittance_Source_Files}
@@ -140,6 +165,7 @@ add_executable(
     ${Element_Source_Source_Files}
     ${Element_Transformer_Source_Files}
     ${Element_Transmission_Line_Source_Files}
+    ${Solver_OPF_Source_Files}
 
 )
 
