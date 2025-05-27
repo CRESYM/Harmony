@@ -46,7 +46,7 @@ D:\Softwares:\vcpkg\packages\symengine_x64-windows\lib;$(LibraryPath)
 Add symengine.lib to Additional Dependencies
 
 6. Include SymEngine Headers in Your Code
-```
+```Cpp
 #include <symengine/symbol.h>
 #include <symengine/basic.h>
 #include <symengine/add.h>
