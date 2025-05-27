@@ -26,7 +26,7 @@
 #include "Filter.h"
 #include "Controller.h"
 
-#include "../build/solve_opf.h"
+#include "solve_opf.h"
 
 
 

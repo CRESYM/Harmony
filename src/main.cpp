@@ -1,7 +1,7 @@
 ﻿#include "network.h"
 #include "Bus.h"
 #include "Include_components.h"
-#include "../build/solve_opf.h"
+#include "solve_opf.h"
 
 
 int main() {
