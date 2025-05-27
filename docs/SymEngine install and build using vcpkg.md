@@ -31,9 +31,7 @@ Follow these steps:
      D:\Softwares:\vcpkg\packages\symengine_x64-windows\lib;$(LibraryPath)
     ```
 
-  - Configuration Properties > C/C++ > General, add additional include directories: 
-    ```[vcpkg-root]\packages\symengine\include```
-for example: ```D:\Softwares\vcpkg\packages\symengine_x64-windows\include\symengine;$(IncludePath)```
+  - Configuration Properties > C/C++ > General, add additional include directories: ```[vcpkg-   root]\packages\symengine\include``` for example: ```D:\Softwares\vcpkg\packages\symengine_x64-windows\include\symengine;$(IncludePath)```
 
    - Configuration Properties > Linker > General
      ```
