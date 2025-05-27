@@ -36,9 +36,9 @@ Follow these steps:
    - Configuration Properties > Linker > General
      ```
       Additional Library Directories 
-[vcpkg-root]\packages\symengine\lib
-D:\Softwares:\vcpkg\packages\symengine_x64-windows\lib;$(LibraryPath)
-```
+      [vcpkg-root]\packages\symengine\lib
+      D:\Softwares:\vcpkg\packages\symengine_x64-windows\lib;$(LibraryPath)
+     ```
 
 5. Add SymEngine to Your Project: Configuration Properties > Linker > Input and then
 Add symengine.lib to Additional Dependencies
