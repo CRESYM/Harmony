@@ -1,27 +1,26 @@
 ### SymEngine installation in case of not using miniconda installation
 
 1. Build GMP(GNU Multiple Precision Arithmetic Library): Ensure that GMP is built and installed correctly on your system. 
-- Download the GMP Source Code
-- Extract the Source Code 
-- Configure GMP: This bash script prepares the build environment and checks for any necessary dependencies For x64 (64-bit):
-     ./configure --prefix=/path/to/installation/directory/of/gmp --host=x86_64-pc-msys
-- make #to compile the library from source.
-- make install #install GMP to the specified installation directory 
-- make check #runs tests to ensure the library was built correctly and is functioning as expected.
-- Add to PATH: "System variables" (for all users) or "User variables" (just for your user), locate the PATH ...
-    /c/Users/ur username/installation directory of gmp
+     - Download the GMP Source Code
+     - Extract the Source Code 
+     - Configure GMP: This bash script prepares the build environment and checks for any necessary dependencies For x64 (64-bit):
+     ```./configure --prefix=/path/to/installation/directory/of/gmp --host=x86_64-pc-msys```
+     - make #to compile the library from source.
+     - make install #install GMP to the specified installation directory 
+     - make check #runs tests to ensure the library was built correctly and is functioning as expected.
+     - Add to PATH: "System variables" (for all users) or "User variables" (just for your user), locate the PATH ...
+         ```C:/Users/ur username/installation directory of gmp```
 
-* make sure that m4 is installed on your system (a macro processor typically used in the building of GNU packages), you can use MSYS2 shell to install m4, by the following scipts:
-- pacman -Syu  #to update the package database
-- pacman -S m4 #install m4 using pacman
-- m4 --version #verify installation
+     * make sure that m4 is installed on your system (a macro processor typically used in the building of GNU packages), you can use MSYS2 shell to install m4, by the following scipts:
+          - pacman -Syu  #to update the package database
+          - pacman -S m4 #install m4 using pacman
+          - m4 --version #verify installation
 
-* make sure that GCC and G++ cimpilers are installed in your MSYS environment using the following scripts
-- pacman -Syu #update package databases
-- pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc #install using the package manager for 64-bit architecture
-- need to update PATH environment variable by adding the following line in your '.bashrc' usually located in 'C:\msys64\home\ur username'
-    export PATH=/mingw64/bin:$PATH 
-- gcc -v #verify installation
+     * make sure that GCC and G++ cimpilers are installed in your MSYS environment using the following scripts
+          - pacman -Syu #update package databases
+          - pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc #install using the package manager for 64-bit architecture
+          - need to update PATH environment variable by adding the following line in your '.bashrc' usually located in 'C:\msys64\home\ur username': ```export PATH=/mingw64/bin:$PATH``` 
+          - gcc -v #verify installation
 
 * make sure that the GMP library is detected and linked correctly during the build process
 - Set GMP Include and Library Paths: Ensure that the include directory containing GMP headers (gmp.h) 
