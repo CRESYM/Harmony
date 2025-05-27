@@ -71,7 +71,7 @@ add the following lines.
 
 **Add your source files**
 ```add_executable(YourExecutableName source1.cpp source2.cpp)```
-
+__________
      - Clone SymEngine Repository
      - Open Visual Studio Solution: Navigate to the SymEngine directory and look for a Visual Studio solution file (.sln). 
      If there isn't one, you need to generate it using CMake. 
