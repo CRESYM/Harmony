@@ -1,4 +1,6 @@
-1- Build GMP(GNU Multiple Precision Arithmetic Library): Ensure that GMP is built and installed correctly on your system. 
+### SymEngine installation in case of not using miniconda installation
+
+1. Build GMP(GNU Multiple Precision Arithmetic Library): Ensure that GMP is built and installed correctly on your system. 
 - Download the GMP Source Code
 - Extract the Source Code 
 - Configure GMP: This bash script prepares the build environment and checks for any necessary dependencies For x64 (64-bit):
@@ -30,7 +32,7 @@
      
      This typically involves setting the C_INCLUDE_PATH (for headers) and LIBRARY_PATH (for libraries) environment variables or specifying these paths in your build system configuration.
 
-2- Build MPFR
+2. Build MPFR
 - Download MPFR
 - Extract the source code
 - Create a directory for MPFR installation:
@@ -42,7 +44,7 @@
      make check
      make install  
 
-2- Build SymEngine: Once GMP is built and installed, you can proceed to build SymEngine, ensuring that it is configured to use the GMP library.
+3. Build SymEngine: Once GMP is built and installed, you can proceed to build SymEngine, ensuring that it is configured to use the GMP library.
 - Download SymEngine source code
 - Extract the Source Code
 - Navigate to the SymEngine Directory 
@@ -55,11 +57,12 @@
 in CMakeList.txt after 
      cmake_minimum_required(VERSION 3.0)
      project(YourProjectName)
-add the following lines 
-# Specify the directory where your header files are located
+add the following lines
+
+** Specify the directory where your header files are located **
 include_directories(header path)
 
-# Add your source files
+** Add your source files **
 add_executable(YourExecutableName source1.cpp source2.cpp)
 
 -----
