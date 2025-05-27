@@ -26,27 +26,32 @@ Follow these steps:
      for example: ```D:\Softwares\vcpkg\packages\symengine_x64-windows\include\symengine;$(IncludePath)```
 
   - Add the library directory from vcpkg to Library Directories:
-    ```[vcpkg-root]\packages\symengine\lib
-     D:\Softwares:\vcpkg\packages\symengine_x64-windows\lib;$(LibraryPath)```
+    ```
+    [vcpkg-root]\packages\symengine\lib
+     D:\Softwares:\vcpkg\packages\symengine_x64-windows\lib;$(LibraryPath)
+    ```
 
-Configuration Properties > C/C++ > General, add additinal include directories: 
-[vcpkg-root]\packages\symengine\include
-for example: D:\Softwares\vcpkg\packages\symengine_x64-windows\include\symengine;$(IncludePath)
+  - Configuration Properties > C/C++ > General, add additional include directories: 
+    ```[vcpkg-root]\packages\symengine\include```
+for example: ```D:\Softwares\vcpkg\packages\symengine_x64-windows\include\symengine;$(IncludePath)```
 
-Configuration Properties > Linker > General
-Additional Library Directories 
+   - Configuration Properties > Linker > General
+     ```
+      Additional Library Directories 
 [vcpkg-root]\packages\symengine\lib
 D:\Softwares:\vcpkg\packages\symengine_x64-windows\lib;$(LibraryPath)
+```
 
-5- Add SymEngine to Your Project:
-Configuration Properties > Linker > Input
+5. Add SymEngine to Your Project: Configuration Properties > Linker > Input and then
 Add symengine.lib to Additional Dependencies
 
-6- Include SymEngine Headers in Your Code
+6. Include SymEngine Headers in Your Code
+```
 #include <symengine/symbol.h>
 #include <symengine/basic.h>
 #include <symengine/add.h>
+```
 
-7- Build Your Project
+7. Build Your Project
 
 
