@@ -53,11 +53,12 @@ cd Release  # Windows only
 
 
 ## Contributors
-- **Azadeh Kermansaravi**, development of the mathematical framework and the core of the toolbox, development of individual components, and their spectral representation
+- **Aleksandra Lekić**, development of the mathematical framework, development of individual components, and their spectral representation and formulation, and design of the toolbox, different functionality interconnections, harmonic stability solver, supervision, and acquisition of the funding
 - **Haixiao Li**, design of the power flow strategy, and formulation of the power flow solution
 - **Saif Alsarayreh**, dynamic phasor formulation, model design, and implementation
 - **Yasel Quintero Lares**, documentation, installation setup, cross-platform compatibility, issuing, release
+- **Azadeh Kermansaravi**, development of the core of the toolbox
 - **Robert Dimitrovski**, dynamic phasor formulation, and supervision
-- **Aleksandra Lekić**, formulation and design of the toolbox, different functionality interconnections, harmonic stability solver, supervision and acquiring of the funding
+
 
  The development of the Harmony was supported by the [Digital Competence Centre](https://www.tudelft.nl/index.php?id=67120&L=1/), Delft University of Technology.
