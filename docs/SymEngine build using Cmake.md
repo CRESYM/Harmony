@@ -66,7 +66,6 @@ in CMakeList.txt after
 add the following lines.
 
 **Specify the directory where your header files are located**
-
 ```include_directories(header path)```
 
 **Add your source files**
