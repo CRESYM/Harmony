@@ -1,6 +1,7 @@
 If you haven't already installed vcpkg, follow these instructions:
-1- git clone https://github.com/microsoft/vcpkg.git
-2- cd vcpkg
+
+- git clone https://github.com/microsoft/vcpkg.git
+- cd vcpkg
 3- ./bootstrap-vcpkg.bat
 4- vcpkg integrate install
 Install eigen with vcpkg
