@@ -59,6 +59,7 @@ set(Solver_OPF_Header_Files
     src/params_ac.h
     src/params_dc.h
     src/solve_opf.h
+    src/viz_opf.h
 )
 set(Header_Files
     src/Bus.h
@@ -103,6 +104,7 @@ set(Solver_OPF_Source_Files
     src/params_ac.cpp
     src/params_dc.cpp
     src/solve_opf.cpp
+    src/viz_opf.cpp
 )
 set(Source_Files
     src/Bus.cpp
@@ -124,6 +126,7 @@ if(WIN32) # workds for x64 as well
     source_group("Header Files\\Elements\\Source" FILES ${Element_Source_Header_Files})
     source_group("Header Files\\Elements\\Transformer" FILES ${Element_Transformer_Header_Files})
     source_group("Header Files\\Elements\\Transmission Line" FILES ${Element_Transmission_Line_Header_Files})
+    source_group("Header Files\\Solver" FILES)
     source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Header_Files})
 
 
@@ -136,7 +139,8 @@ if(WIN32) # workds for x64 as well
     source_group("Source Files\\Elements\\Source" FILES ${Element_Source_Source_Files})
     source_group("Source Files\\Elements\\Transformer" FILES ${Element_Transformer_Source_Files})
     source_group("Source Files\\Elements\\Transmission_Line" FILES ${Element_Transmission_Line_Source_Files})
-    source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
+    source_group("Source Files\\Solver" FILES)
+    source_group("Source Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
 
 
 endif()
