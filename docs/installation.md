@@ -111,7 +111,6 @@ Install `Matplot++` via `vcpkg`. Open  `Powershell` or `CMD`, and navigate to th
    In the root directory of `vcpkg`, type:
 
    ```bash
-   .\vcpkg install eigen3
    .\vcpkg install matplotplusplus
    ```
 **6. Matplot++ Configuration in Visual Studio IDE**
@@ -190,7 +189,7 @@ Step3: click `OK`
     <img src="assets\gurobi_config_f4.jpg" alt="Logo" width="660">
   </p> 
 
- Next, set **Additional Liarbry Directories**:
+ Next, set `Additional Liarbry Directories`:
 
  Step1: right-click `project` ➡ select `Properties` ➡ go to `Linker` ➡ select`General`
  
@@ -202,7 +201,7 @@ Step3: click `OK`
   <img src="assets\gurobi_config_f5.jpg" alt="Logo" width="660">
 </p> 
 
- Last, add **Additional Dpendencies**:
+ Last, add `Additional Dependencies`:
 
  Step1: right-click `project` ➡ select `Properties` ➡ go to`Linker` ➡ select`Input`
  
