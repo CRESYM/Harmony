@@ -104,10 +104,10 @@ Download `vcpkg`:
    ./vcpkg integrate install
    ```
 Install `Matplot++` via `vcpkg`. Open  `Powershell` or `CMD`, and navigate to the  `vcpkg` directory, like: 
-    ```bash
-   cd C:\XXX\vcpkg
-   ```
 
+```bash
+   cd C:\XXX\vcpkg
+```
    In the root directory of `vcpkg`, type:
 
    ```bash
