@@ -8,9 +8,7 @@
 #include <stdexcept>
 #include <complex>
 
-// -----------------------------------------------------------------------------
-//  Compute the absolute value of a sparse complex matrix.
-// -----------------------------------------------------------------------------
+
 static Eigen::SparseMatrix<double> absoluteSparseMatrix(const Eigen::SparseMatrix<std::complex<double>>& matrix) {
     Eigen::SparseMatrix<double> absMatrix(matrix.rows(), matrix.cols());
     for (int k = 0; k < matrix.outerSize(); ++k) {
@@ -91,9 +89,10 @@ DCNetworkParams params_dc(const std::string& dcgrid_name) {
     auto& fbus_dc = sys_dc.fbus_dc;
     auto& tbus_dc = sys_dc.tbus_dc;
 
-    // -------------------------------------------------------------------------
-    //  Load basic DC grid data
-    // -------------------------------------------------------------------------
+    /**************************************************
+    * LOAD DC GRID DATA
+    **************************************************/
+
     network_dc = create_dc(dcgrid_name);
     baseMW_dc = network_dc["baseMW"](0, 0);
     pol_dc = network_dc["pol"](0, 0);
@@ -111,23 +110,26 @@ DCNetworkParams params_dc(const std::string& dcgrid_name) {
     fbus_dc = branch_dc.col(0).cast<int>();
     tbus_dc = branch_dc.col(1).cast<int>();
 
-    // -------------------------------------------------------------------------
-    //  Compute DC network admittance matrix (Ybus)
-    // -------------------------------------------------------------------------
+
+    /**************************************************
+    * COMPUTE DC GRID ADMITTANCE (YBUS)
+    **************************************************/
+
     Y_dc = makeYbus(baseMW_dc, bus_dc, branch_dc);
     y_dc = absoluteSparseMatrix(Y_dc);
 
-    // -------------------------------------------------------------------------
-    //  Extract VSC Impedance parameters
-    //  The equivalent circuit for the VSC converter is as follows :
-    //
-    //  U_s  ●--[r_tf + j * x_tf]--●--[r_c + j * x_c]--● U_c--(VSC)--
-    //  PCC                                             AC terminal
-    //
-    //  PCC side parameters(r_tf, x_tf, bf_dc) and AC terminal side
-    //  parameters(r_c, x_c) are combined to form the overall converter impedance.
-    // -------------------------------------------------------------------------
-    //  PCC side transformer parameters
+    /* -------------------------------------------------------------------------
+      Extract VSC Impedance parameters
+      The equivalent circuit for the VSC converter is as follows :
+
+      U_s  ●--[r_tf + j * x_tf]--●--[r_c + j * x_c]--● U_c--(VSC)--
+           PCC                   Filter               AC terminal
+
+      PCC side parameters(r_tf, x_tf, bf_dc) and AC terminal side
+      parameters(r_c, x_c) are combined to form the overall converter impedance.
+     -------------------------------------------------------------------------*/
+
+     //  PCC side transformer parameters
     rtf_dc = conv_dc.col(8);
     xtf_dc = conv_dc.col(9);
 
@@ -143,11 +145,11 @@ DCNetworkParams params_dc(const std::string& dcgrid_name) {
     gtfc_dc = ztfc_dc.array().inverse().real();
     btfc_dc = ztfc_dc.array().inverse().imag();
 
-    // -------------------------------------------------------------------------
-    //  Converter Loss Parameters and State Determination
-    // -------------------------------------------------------------------------
 
-    // Initialize loss parameters and state indicator arrays.
+    /**************************************************
+    * CONVERTER LOSS PARAMETERS AND STATE DETERMINATION
+    **************************************************/
+
     closs_dc = Eigen::VectorXd::Zero(nconvs_dc);
     convState_dc = Eigen::VectorXi::Zero(nconvs_dc);
 
@@ -162,7 +164,6 @@ DCNetworkParams params_dc(const std::string& dcgrid_name) {
         }
     }
 
-    //  Convert loss parameters to per unit values
     aloss_dc = conv_dc.col(18) / baseMW_dc;
     bloss_dc = conv_dc.col(19).array() / basekV_dc.array();
     closs_dc = closs_dc.array() / (basekV_dc.array().square() / baseMW_dc);

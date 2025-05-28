@@ -53,13 +53,12 @@ ACNetworkParams params_ac(const std::string& acgrid_name) {
 
     ACNetworkParams sys_ac;
 
-    // Create aliases for the AC network parameters (preserving auto& as requested)
     auto& network_ac = sys_ac.network_ac;
     auto& baseMVA_ac = sys_ac.baseMVA_ac;
-    auto& bus_ac_entire = sys_ac.bus_ac_entire;
-    auto& branch_ac_entire = sys_ac.branch_ac_entire;
-    auto& generator_ac_entire = sys_ac.generator_ac_entire;
-    auto& gencost_ac_entire = sys_ac.gencost_ac_entire;
+    auto& bus_entire_ac = sys_ac.bus_entire_ac;
+    auto& branch_entire_ac = sys_ac.branch_entire_ac;
+    auto& gen_entire_ac = sys_ac.gen_entire_ac;
+    auto& gencost_entire_ac = sys_ac.gencost_entire_ac;
     auto& ngrids = sys_ac.ngrids;
     auto& bus_ac = sys_ac.bus_ac;
     auto& branch_ac = sys_ac.branch_ac;
@@ -83,24 +82,32 @@ ACNetworkParams params_ac(const std::string& acgrid_name) {
     auto& IDtoCountmap = sys_ac.IDtoCountmap;
     auto& refbuscount_ac = sys_ac.refbuscount_ac;
 
-    // Load the AC grid data from CSV files
+
+    /**************************************************
+    * LOAD AC GRID DATA
+    **************************************************/
+
     network_ac = create_ac(acgrid_name);
 
     // Extract base MVA and the raw data matrices
     baseMVA_ac = network_ac["baseMVA"](0, 0);
-    bus_ac_entire = network_ac["bus"];
-    branch_ac_entire = network_ac["branch"];
-    generator_ac_entire = network_ac["generator"];
-    gencost_ac_entire = network_ac["gencost"];
+    bus_entire_ac = network_ac["bus"];
+    branch_entire_ac = network_ac["branch"];
+    gen_entire_ac = network_ac["generator"];
+    gencost_entire_ac = network_ac["gencost"];
 
-    /* Determine the number of AC grids based on unique grid IDs (assumed to be in column 14) */
+    // Initialization for storing grid data
     std::set<int> unique_values;
-    for (int i = 0; i < bus_ac_entire.rows(); ++i) {
-        unique_values.insert(static_cast<int>(bus_ac_entire(i, 13)));
+    for (int i = 0; i < bus_entire_ac.rows(); ++i) {
+        unique_values.insert(static_cast<int>(bus_entire_ac(i, 13)));
     }
     ngrids = static_cast<int>(unique_values.size());
 
-    // Resize vectors for grid-specific data
+
+    /**************************************************
+    * INITIALIZE ARRAYS TO STORE GIRD DATA
+    **************************************************/
+
     bus_ac.resize(ngrids);
     branch_ac.resize(ngrids);
     generator_ac.resize(ngrids);
@@ -122,60 +129,64 @@ ACNetworkParams params_ac(const std::string& acgrid_name) {
     refbuscount_ac.resize(ngrids, -1);
     recRef.resize(ngrids);
 
-    /* Partition raw AC data into individual grids */
+
+    /**************************************************
+    * INITIALIZE ARRAYS TO STORE GIRD DATA
+    **************************************************/
+
     for (int ng = 0; ng < ngrids; ++ng) {
 
         std::vector<int> bus_rows, branch_rows, generator_rows, gencost_rows;
 
-        // Partition bus data: grid ID is in column 14 (1-indexed)
-        for (int i = 0; i < bus_ac_entire.rows(); ++i) {
-            if (static_cast<int>(bus_ac_entire(i, 13)) == ng + 1) {
+        // Partition bus data
+        for (int i = 0; i < bus_entire_ac.rows(); ++i) {
+            if (static_cast<int>(bus_entire_ac(i, 13)) == ng + 1) {
                 bus_rows.push_back(i);
             }
         }
-        bus_ac[ng] = Eigen::MatrixXd(bus_rows.size(), bus_ac_entire.cols());
+        bus_ac[ng] = Eigen::MatrixXd(bus_rows.size(), bus_entire_ac.cols());
         for (size_t i = 0; i < bus_rows.size(); ++i) {
-            bus_ac[ng].row(i) = bus_ac_entire.row(bus_rows[i]);
+            bus_ac[ng].row(i) = bus_entire_ac.row(bus_rows[i]);
         }
 
-        // Partition branch data: grid ID is in column 14
-        for (int i = 0; i < branch_ac_entire.rows(); ++i) {
-            if (static_cast<int>(branch_ac_entire(i, 13)) == ng + 1) {
+        // Partition branch data
+        for (int i = 0; i < branch_entire_ac.rows(); ++i) {
+            if (static_cast<int>(branch_entire_ac(i, 13)) == ng + 1) {
                 branch_rows.push_back(i);
             }
         }
-        branch_ac[ng] = Eigen::MatrixXd(branch_rows.size(), branch_ac_entire.cols());
+        branch_ac[ng] = Eigen::MatrixXd(branch_rows.size(), branch_entire_ac.cols());
         for (size_t i = 0; i < branch_rows.size(); ++i) {
-            branch_ac[ng].row(i) = branch_ac_entire.row(branch_rows[i]);
+            branch_ac[ng].row(i) = branch_entire_ac.row(branch_rows[i]);
         }
 
-        // Partition generator data: grid ID is in column 21
-        for (int i = 0; i < generator_ac_entire.rows(); ++i) {
-            if (static_cast<int>(generator_ac_entire(i, 21)) == ng + 1) {
+        // Partition generator data
+        for (int i = 0; i < gen_entire_ac.rows(); ++i) {
+            if (static_cast<int>(gen_entire_ac(i, 21)) == ng + 1) {
                 generator_rows.push_back(i);
             }
         }
-        generator_ac[ng] = Eigen::MatrixXd(generator_rows.size(), generator_ac_entire.cols());
+        generator_ac[ng] = Eigen::MatrixXd(generator_rows.size(), gen_entire_ac.cols());
         for (size_t i = 0; i < generator_rows.size(); ++i) {
-            generator_ac[ng].row(i) = generator_ac_entire.row(generator_rows[i]);
+            generator_ac[ng].row(i) = gen_entire_ac.row(generator_rows[i]);
         }
 
-        // Partition generator cost data: grid ID is in column 7
-        for (int i = 0; i < gencost_ac_entire.rows(); ++i) {
-            if (static_cast<int>(gencost_ac_entire(i, 7)) == ng + 1) {
+        // Partition generator cost data
+        for (int i = 0; i < gencost_entire_ac.rows(); ++i) {
+            if (static_cast<int>(gencost_entire_ac(i, 7)) == ng + 1) {
                 gencost_rows.push_back(i);
             }
         }
-        gencost_ac[ng] = Eigen::MatrixXd(gencost_rows.size(), gencost_ac_entire.cols());
+        gencost_ac[ng] = Eigen::MatrixXd(gencost_rows.size(), gencost_entire_ac.cols());
         for (size_t i = 0; i < gencost_rows.size(); ++i) {
-            gencost_ac[ng].row(i) = gencost_ac_entire.row(gencost_rows[i]);
+            gencost_ac[ng].row(i) = gencost_entire_ac.row(gencost_rows[i]);
         }
 
-        // Record bus and branch counts for this grid
+        // Record the number of buses and branches in grid #ng
         nbuses_ac[ng] = static_cast<int>(bus_ac[ng].rows());
         nbranches_ac[ng] = static_cast<int>(branch_ac[ng].rows());
 
-        // Build a mapping from global bus IDs to local indices and determine the reference bus.
+        // Record the reference bus index in grid #ng
         IDtoCountmap[ng] = Eigen::VectorXi::Zero(nbuses_ac[ng]);
         for (int i = 0; i < nbuses_ac[ng]; ++i) {
             int bus_id = static_cast<int>(bus_ac[ng](i, 0));
@@ -189,16 +200,16 @@ ACNetworkParams params_ac(const std::string& acgrid_name) {
         // Record the number of generators in this grid.
         ngens_ac[ng] = static_cast<int>(generator_ac[ng].rows());
 
-        // Compute the AC nodal admittance matrix using makeYbus() and extract its real and imaginary parts.
+        // Compute AC network admittance matrix
         Eigen::SparseMatrix<std::complex<double>> YY_ac = makeYbus(baseMVA_ac, bus_ac[ng], branch_ac[ng]);
         GG_ac[ng] = YY_ac.real();
         BB_ac[ng] = YY_ac.imag();
 
-        // Extract branch connectivity: from bus and to bus indices.
+        // Extract branch "from" and "to" indices for grid #ng
         fbus_ac[ng] = branch_ac[ng].col(0).cast<int>();
         tbus_ac[ng] = branch_ac[ng].col(1).cast<int>();
 
-        // Compute per-unit load values.
+        // Normalize load values
         pd_ac[ng] = bus_ac[ng].col(2) / baseMVA_ac;
         qd_ac[ng] = bus_ac[ng].col(3) / baseMVA_ac;
     }

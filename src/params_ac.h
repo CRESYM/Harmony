@@ -10,7 +10,7 @@
 struct ACNetworkParams {
 	std::unordered_map<std::string, Eigen::MatrixXd> network_ac;
 	double baseMVA_ac;
-	Eigen::MatrixXd bus_ac_entire, branch_ac_entire, generator_ac_entire, gencost_ac_entire;
+	Eigen::MatrixXd bus_entire_ac, branch_entire_ac, gen_entire_ac, gencost_entire_ac;
 	int ngrids;
 	std::vector<Eigen::MatrixXd> bus_ac, branch_ac, generator_ac, gencost_ac;
 	std::vector<std::vector<int>> recRef;
@@ -25,3 +25,4 @@ struct ACNetworkParams {
 ACNetworkParams params_ac(const std::string& acgrid_name);
 
 #endif // PARAMS_AC_H
+

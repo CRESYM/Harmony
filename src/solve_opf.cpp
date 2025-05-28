@@ -1,22 +1,29 @@
-#include "params_dc.h"
-#include "create_dc.h"
-#include "makeYbus.h"
-#include "params_ac.h"
-#include "create_ac.h"
-#include "gurobi_c++.h"
+#include <string>      
+#include <vector>
+#include <algorithm>
+#include <cmath>
 #include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <iomanip>
+#include <chrono>
+
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
-#include <vector>
-#include <cmath>
-#include <fstream>
-#include <iostream>
-#include <iomanip>
-#include <algorithm>
-#include <chrono>
+#include <matplot/matplot.h>
+#include "gurobi_c++.h"
+#include "create_dc.h"
+#include "params_dc.h"
+#include "makeYbus.h"
+#include "create_ac.h"
+#include "params_ac.h"
+#include "viz_opf.h"
+
 using namespace std;
 
-void solve_opf(const std::string& dc_name, const std::string& ac_name) {
+void solve_opf(const std::string& dc_name, const std::string& ac_name,
+    bool vscControl = true, bool  writeTxt = false, bool  plotResult = true) {
+
     auto start = std::chrono::high_resolution_clock::now();
     try {
 
@@ -51,10 +58,10 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
         ACNetworkParams sys_ac = params_ac(ac_name);
         auto& network_ac = sys_ac.network_ac;
         auto& baseMVA_ac = sys_ac.baseMVA_ac;
-        auto& bus_ac_entire = sys_ac.bus_ac_entire;
-        auto& branch_ac_entire = sys_ac.branch_ac_entire;
-        auto& generator_ac_entire = sys_ac.generator_ac_entire;
-        auto& gencost_ac_entire = sys_ac.gencost_ac_entire;
+        auto& bus_entire_ac = sys_ac.bus_entire_ac;
+        auto& branch_entire_ac = sys_ac.branch_entire_ac;
+        auto& gen_entire_ac = sys_ac.gen_entire_ac;
+        auto& gencost_entire_ac = sys_ac.gencost_entire_ac;
         auto& ngrids = sys_ac.ngrids;
         auto& bus_ac = sys_ac.bus_ac;
         auto& branch_ac = sys_ac.branch_ac;
@@ -78,15 +85,15 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
         auto& IDtoCountmap = sys_ac.IDtoCountmap;
         auto& refbuscount_ac = sys_ac.refbuscount_ac;
 
-
-        // INITIALIZE THE GUROBI ENVIRONMENT
         GRBEnv env = GRBEnv(true);
         env.start();
         GRBModel model = GRBModel(env);
 
-        /* DEFINE THE MAIN DECISION VARIABLES AND THEIR BOUNDS IN DC SIDE */
+        /**************************************************
+        * DEFINE MAIN DECISION VARIABLES AND BOUNDS IN DC SIDE
+         **************************************************/
 
-        // 1. vn2_dc: the square of DC nodal voltage
+         // 1. vn2_dc: the square of DC nodal voltage
         Eigen::Matrix<GRBVar, Eigen::Dynamic, 1> vn2_dc(nbuses_dc);
         for (int i = 0; i < nbuses_dc; ++i) {
             vn2_dc(i) = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
@@ -181,7 +188,11 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
         for (int i = 0; i < nconvs_dc; ++i) {
             convPloss_dc(i) = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
         }
-        /* ADD OPERATIONAL CONSTRAINTS FOR DCGRID AND VSC */
+
+
+        /**************************************************
+        * ADD OPERATIONAL CONSTRAINTS FOR VSC-MTDC GRID
+        **************************************************/
 
         // 1. Constrains for dc power flow - second-order cone relaxation
         Eigen::MatrixXd y_dc_dense = Eigen::MatrixXd(y_dc);
@@ -248,38 +259,44 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
         }
 
         // 4. Constraint for vsc control model
-        for (int i = 0; i < nconvs_dc; ++i) {
-            /*********** dc side control model ***********/
-            if (conv_dc(i, 3) == 1) { // p control
-                model.addConstr(pn_dc(i) == -conv_dc(i, 5) / baseMW_dc);
-            }
-            else if (conv_dc(i, 3) == 2) { //dc v control
-                model.addConstr(vn2_dc(i) == conv_dc(i, 7) * conv_dc(i, 7));
-            }
-            else { // droop control
-                model.addConstr(pn_dc(i) == (conv_dc(i, 23) - (1.0 / conv_dc(i, 22)) * (0.5 + 0.5 * vn2_dc(i) - conv_dc(i, 24))) / baseMW_dc * -1);
-            }
-            /*********** ac side control model ***********/
-            if (conv_dc(i, 4) == 1) { // q control
-                model.addConstr(qs_dc(i) == -conv_dc(i, 6) / baseMW_dc);
-            }
-            else { // ac v control
-                model.addConstr(v2s_dc(i) == conv_dc(i, 7) * conv_dc(i, 7));
-            }
-            /*********** inverter or rectifier model ***********/
-            if (convState_dc(i) == 0) { // rectifier
-                model.addConstr(ps_dc(i) >= 0);
-                model.addConstr(pn_dc(i) >= 0);
-                model.addConstr(pc_dc(i) <= 0);
-            }
-            else { // inverter
-                model.addConstr(ps_dc(i) <= 0);
-                model.addConstr(pn_dc(i) <= 0);
-                model.addConstr(pc_dc(i) >= 0);
+        if (vscControl) {
+            for (int i = 0; i < nconvs_dc; ++i) {
+                /*********** dc side control model ***********/
+                if (conv_dc(i, 3) == 1) { // p control
+                    model.addConstr(pn_dc(i) == -conv_dc(i, 5) / baseMW_dc);
+                }
+                else if (conv_dc(i, 3) == 2) { //dc v control
+                    model.addConstr(vn2_dc(i) == conv_dc(i, 7) * conv_dc(i, 7));
+                }
+                else { // droop control
+                    model.addConstr(pn_dc(i) == (conv_dc(i, 23) - (1.0 / conv_dc(i, 22)) * (0.5 + 0.5 * vn2_dc(i) - conv_dc(i, 24))) / baseMW_dc * -1);
+                }
+                /*********** ac side control model ***********/
+                if (conv_dc(i, 4) == 1) { // q control
+                    model.addConstr(qs_dc(i) == -conv_dc(i, 6) / baseMW_dc);
+                }
+                else { // ac v control
+                    model.addConstr(v2s_dc(i) == conv_dc(i, 7) * conv_dc(i, 7));
+                }
+                /*********** inverter or rectifier model ***********/
+                if (convState_dc(i) == 0) { // rectifier
+                    model.addConstr(ps_dc(i) >= 0);
+                    model.addConstr(pn_dc(i) >= 0);
+                    model.addConstr(pc_dc(i) <= 0);
+                }
+                else { // inverter
+                    model.addConstr(ps_dc(i) <= 0);
+                    model.addConstr(pn_dc(i) <= 0);
+                    model.addConstr(pc_dc(i) >= 0);
+                }
             }
         }
 
-        /* DEFINE THE MAIN DECISION VARIABLES AND THEIR BOUNDS IN AC SIDE */
+
+        /**************************************************
+        DEFINE THE MAIN DECISION VARIABLES AND THEIR BOUNDS IN AC SIDE
+        **************************************************/
+
         std::vector<std::vector<double>> lb_ac(ngrids), ub_ac(ngrids);
         std::vector<std::vector<GRBVar>> var_ac(ngrids);
         std::vector<Eigen::Matrix<GRBVar, Eigen::Dynamic, 1>> vn2_ac(ngrids), pn_ac(ngrids), qn_ac(ngrids);
@@ -293,16 +310,14 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
         std::vector<std::vector<int>> convindex(ngrids);
         std::vector<Eigen::VectorXd> actgen_ac(ngrids);
 
-
-
         for (int ng = 0; ng < ngrids; ++ng) {
 
             // 1. vn2_ac: squared nodal voltage amplitude
             vn2_ac[ng].resize(nbuses_ac[ng]);
             for (int i = 0; i < nbuses_ac[ng]; ++i) {
-                double lower = pow(bus_ac[ng](i, 12), 2);
-                double upper = pow(bus_ac[ng](i, 11), 2);
-                vn2_ac[ng](i) = model.addVar(lower, upper, 0.0, GRB_CONTINUOUS);
+                vn2_ac[ng](i) = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
+                model.addConstr(vn2_ac[ng](i) >= pow(bus_ac[ng](i, 12), 2));
+                model.addConstr(vn2_ac[ng](i) <= pow(bus_ac[ng](i, 11), 2));
             }
 
             // 2. pn_ac: nodal active power injection
@@ -320,20 +335,20 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
             // 4. pgen_ac: generator active power output
             pgen_ac[ng].resize(ngens_ac[ng]);
             for (int i = 0; i < ngens_ac[ng]; ++i) {
-                double lower = generator_ac[ng](i, 9) * generator_ac[ng](i, 7) / baseMVA_ac;
-                double upper = generator_ac[ng](i, 8) * generator_ac[ng](i, 7) / baseMVA_ac;
-                pgen_ac[ng](i) = model.addVar(lower, upper, 0.0, GRB_CONTINUOUS);
+                pgen_ac[ng](i) = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
+                model.addConstr(pgen_ac[ng](i) >= generator_ac[ng](i, 9) * generator_ac[ng](i, 7) / baseMVA_ac);
+                model.addConstr(pgen_ac[ng](i) <= generator_ac[ng](i, 8) * generator_ac[ng](i, 7) / baseMVA_ac);
             }
 
             // 5. qgen_ac: generator reactive power output
             qgen_ac[ng].resize(ngens_ac[ng]);
             for (int i = 0; i < ngens_ac[ng]; ++i) {
-                double lower = generator_ac[ng](i, 4) * generator_ac[ng](i, 7) / baseMVA_ac;
-                double upper = generator_ac[ng](i, 3) * generator_ac[ng](i, 7) / baseMVA_ac;
-                qgen_ac[ng](i) = model.addVar(lower, upper, 0.0, GRB_CONTINUOUS);
+                qgen_ac[ng](i) = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
+                model.addConstr(qgen_ac[ng](i) >= generator_ac[ng](i, 4) * generator_ac[ng](i, 7) / baseMVA_ac);
+                model.addConstr(qgen_ac[ng](i) <= generator_ac[ng](i, 3) * generator_ac[ng](i, 7) / baseMVA_ac);
             }
 
-            // 6. pij_ac, qij_ac - branch active and reactive power (inode to jnode)
+            // 6. pij_ac, qij_ac - branch active and reactive power
             pij_ac[ng] = Eigen::Matrix<GRBVar, Eigen::Dynamic, Eigen::Dynamic>(nbuses_ac[ng], nbuses_ac[ng]);
             qij_ac[ng] = Eigen::Matrix<GRBVar, Eigen::Dynamic, Eigen::Dynamic>(nbuses_ac[ng], nbuses_ac[ng]);
             for (int i = 0; i < nbuses_ac[ng]; ++i) {
@@ -343,7 +358,7 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
                 }
             }
 
-            // 7. ss_ac, cc_ac - second-order cone relaxation for AC power flow
+            // 7. ss_ac, cc_ac - second-order cone relaxation terms for AC power flow
             ss_ac[ng] = Eigen::Matrix<GRBVar, Eigen::Dynamic, Eigen::Dynamic>(nbuses_ac[ng], nbuses_ac[ng]);
             cc_ac[ng] = Eigen::Matrix<GRBVar, Eigen::Dynamic, Eigen::Dynamic>(nbuses_ac[ng], nbuses_ac[ng]);
             for (int i = 0; i < nbuses_ac[ng]; ++i) {
@@ -352,11 +367,13 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
                     cc_ac[ng](i, j) = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
                 }
             }
-
-
         }
 
-        /*  ADD OPERATIONAL CONSTRAINTS FOR DCGRID AND VSC  */
+
+        /**************************************************
+         * ADD OPERATIONAL CONSTRAINTS FOR INTERCONNECTED AC GRID
+         **************************************************/
+
         for (int ng = 0; ng < ngrids; ++ng) {
 
             // 1. Constraint for ac power flow -second-order cone relaxation.
@@ -379,7 +396,6 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
                 model.addConstr(qn_ac[ng](i) == qn_constraint);
             }
 
-
             for (int i = 0; i < nbuses_ac[ng]; ++i) {
                 for (int j = 0; j < nbuses_ac[ng]; ++j) {
                     // calculate pij_ac[ng]
@@ -395,7 +411,7 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
 
             // sysmmetry constraints
             for (int i = 0; i < nbuses_ac[ng]; ++i) {
-                for (int j = 0; j < nbuses_ac[ng]; ++j) {
+                for (int j = i; j < nbuses_ac[ng]; ++j) {
                     model.addConstr(cc_ac[ng](i, j) == cc_ac[ng](j, i));
                     model.addConstr(ss_ac[ng](i, j) + ss_ac[ng](j, i) == 0.0);
                 }
@@ -403,7 +419,7 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
 
             // relaxation constraints
             for (int i = 0; i < nbuses_ac[ng]; ++i) {
-                for (int j = 0; j < nbuses_ac[ng]; ++j) {
+                for (int j = i; j < nbuses_ac[ng]; ++j) {
                     model.addQConstr(cc_ac[ng](i, j) * cc_ac[ng](i, j) + ss_ac[ng](i, j) * ss_ac[ng](i, j) <= cc_ac[ng](i, i) * cc_ac[ng](j, j));
                 }
             }
@@ -438,7 +454,7 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
                 model.addConstr(qn_ac[ng](i) == qm_ac(i) - qd_ac[ng](i));
             }
 
-            // 3. Constraint for acgrid and vsc voltage coupling
+            // 2. Constraint for acgrid and vsc voltage coupling
             for (int i = 0; i < nconvs_dc; ++i) {
                 int j = static_cast<int>(conv_dc(i, 1)) - 1;
                 int k = static_cast<int>(conv_dc(i, 2)) - 1;
@@ -447,7 +463,10 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
 
         }
 
-        /*  DEFINE OPTIMIZATION OBJECTIVE  */
+        /**************************************************
+        * SET OPTIMIZATION OBJECTIVE
+        **************************************************/
+
         GRBQuadExpr obj = 0.0;
         for (int ng = 0; ng < ngrids; ++ng) {
             actgen_ac[ng] = generator_ac[ng].col(7);
@@ -480,30 +499,48 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
 
         auto end = std::chrono::high_resolution_clock::now();
 
+
         cout << "The value of Obj is : " << model.get(GRB_DoubleAttr_ObjVal) << endl;
+
         if (model.get(GRB_IntAttr_Status) == GRB_OPTIMAL || model.get(GRB_IntAttr_Status) == GRB_SUBOPTIMAL)
         {
             std::cout << "Optimization succeeded. Solution found!" << std::endl;
 
+
+            /**************************************************
+            * PRINT OPTIMIZATION RESULTS
+            **************************************************/
+            std::ofstream fout;
+            std::ostream* pio = &std::cout;
+            std::string   outfile;
+            if (writeTxt) {
+                outfile = (std::filesystem::current_path() / "opf_results.txt").string();
+                fout.open(outfile, std::ofstream::out | std::ofstream::trunc);
+                pio = &fout;
+            }
+
+#define OUT (*pio)
+
             //  " ac bus print " 
-            std::cout << "\n================================================================================";
-            std::cout << "\n|   AC  Bus Data                                                               |";
-            std::cout << "\n================================================================================";
-            std::cout << "\n Area     Bus      Voltage          Generation               Load        ";
-            std::cout << "\n #        #    Mag [pu] Ang [deg]   Pg [MW]  Qg [MVAr]   P [MW]  Q [MVAr]";
-            std::cout << "\n-----   -----  --------  --------  --------  ---------   ------  --------";
+            OUT << "\n================================================================================";
+            OUT << "\n|   AC  Bus Data                                                               |";
+            OUT << "\n================================================================================";
+            OUT << "\n Area     Bus      Voltage          Generation               Load        ";
+            OUT << "\n #        #    Mag [pu] Ang [deg]   Pg [MW]  Qg [MVAr]   P [MW]  Q [MVAr]";
+            OUT << "\n-----   -----  --------  --------  --------  ---------   ------  --------";
 
             for (int ng = 0; ng < ngrids; ++ng) {
                 const auto& genidx = generator_ac[ng].col(0);
                 for (int i = 0; i < nbuses_ac[ng]; ++i) {
                     double vmag = std::sqrt(vn2_ac[ng](i).get(GRB_DoubleAttr_X));
-                    std::cout << "\n" << std::setw(3) << ng + 1
+                    OUT << "\n"
+                        << std::setw(3) << ng + 1
                         << std::setw(8) << i + 1
                         << std::setw(11) << std::fixed << std::setprecision(3) << vmag
                         << std::setw(10) << 0.0;  // Assuming angle is zero for now
 
                     if (std::find(recRef[ng].begin(), recRef[ng].end(), i) != recRef[ng].end()) {
-                        std::cout << "*";
+                        OUT << "*";
                     }
 
                     bool is_generator = (genidx.array() == i + 1).any();
@@ -520,38 +557,38 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
                         double qgen = qgen_ac[ng](gen_idx).get(GRB_DoubleAttr_X) * baseMVA_ac;
 
                         if (std::find(recRef[ng].begin(), recRef[ng].end(), i) != recRef[ng].end()) {
-                            std::cout << std::setw(10) << pgen << std::setw(9) << qgen;
+                            OUT << std::setw(10) << pgen << std::setw(9) << qgen;
                         }
                         else {
-                            std::cout << std::setw(11) << pgen << std::setw(9) << qgen;
+                            OUT << std::setw(11) << pgen << std::setw(9) << qgen;
                         }
                         double pd = pd_ac[ng](i) * baseMVA_ac;
                         double qd = qd_ac[ng](i) * baseMVA_ac;
-                        std::cout << std::setw(11) << pd << std::setw(9) << qd;
+                        OUT << std::setw(11) << pd << std::setw(9) << qd;
                     }
                     else {
-                        std::cout << "          -       -";
+                        OUT << "          -       -";
                         double pd = pd_ac[ng](i) * baseMVA_ac;
                         double qd = qd_ac[ng](i) * baseMVA_ac;
-                        std::cout << std::setw(12) << pd << std::setw(9) << qd;
+                        OUT << std::setw(12) << pd << std::setw(9) << qd;
                     }
 
                 }
             }
-            std::cout << "\n-----   -----  --------  --------  --------  ---------   ------  --------";
+            OUT << "\n-----   -----  --------  --------  --------  ---------   ------  --------";
 
             double GenCostResUSA = model.get(GRB_DoubleAttr_ObjVal);;
             double GenCostResEURO = GenCostResUSA / 1.08;
-            std::cout << "\n The total generation cost is $" << std::fixed << std::setprecision(2)
+            OUT << "\n The total generation cost is $" << std::fixed << std::setprecision(2)
                 << GenCostResUSA << "/MWh (€" << GenCostResEURO << "/MWh)";
-            std::cout << "\n\n";
+            OUT << "\n\n";
 
-            std::cout << "\n===========================================================================================";
-            std::cout << "\n|     AC Grids Branch Data                                                                |";
-            std::cout << "\n===========================================================================================";
-            std::cout << "\n Area   Branch  From   To        From Branch Flow         To Branch Flow      Branch Loss";
-            std::cout << "\n #      #       Bus#   Bus#    Pij [MW]   Qij [MVAr]    Pij [MW]   Qij [MVAr]  Pij_loss [MW]";
-            std::cout << "\n ----   ------  -----  -----  ---------  ----------   ----------  ----------  -------------";
+            OUT << "\n===========================================================================================";
+            OUT << "\n|     AC Grids Branch Data                                                                |";
+            OUT << "\n===========================================================================================";
+            OUT << "\n Area   Branch  From   To        From Branch Flow         To Branch Flow      Branch Loss";
+            OUT << "\n #      #       Bus#   Bus#    Pij [MW]   Qij [MVAr]    Pij [MW]   Qij [MVAr]  Pij_loss [MW]";
+            OUT << "\n ----   ------  -----  -----  ---------  ----------   ----------  ----------  -------------";
 
             for (size_t ng = 0; ng < ngrids; ++ng) {
                 for (int i = 0; i < nbranches_ac[ng]; ++i) {
@@ -564,7 +601,8 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
 
                     double pij_loss = std::abs(pij_from_to + pij_to_from);
 
-                    std::cout << "\n " << std::setw(2) << ng + 1
+                    OUT << "\n "
+                        << std::setw(2) << ng + 1
                         << " " << std::setw(6) << i + 1
                         << " " << std::setw(7) << fbus_ac[ng](i)
                         << " " << std::setw(6) << tbus_ac[ng](i)
@@ -575,7 +613,8 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
                         << " " << std::setw(11) << pij_loss;
                 }
             }
-            std::cout << "\n ----   ------  -----  -----  ---------  -----------    --------  ----------  -------------";
+
+            OUT << "\n ----   ------  -----  -----  ---------  -----------    --------  ----------  -------------";
 
             double NetPloss_ac = 0.0;
 
@@ -590,16 +629,17 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
                     NetPloss_ac += std::abs(pij_from_to + pij_to_from);
                 }
             }
-            std::cout << "\n The total AC network losses is " << std::fixed << std::setprecision(3) << NetPloss_ac << " MW.";
-            std::cout << "\n";
+
+            OUT << "\n The total AC network losses is " << std::fixed << std::setprecision(3) << NetPloss_ac << " MW.";
+            OUT << "\n";
 
             // " dc bus print " 
-            std::cout << "\n================================================================================\n";
-            std::cout << "|   MTDC Bus Data                                                              |\n";
-            std::cout << "================================================================================\n";
-            std::cout << " Bus   Bus    AC   DC Voltage   DC Power   PCC Bus Injection   Converter loss\n";
-            std::cout << " DC #  AC #  Area   Vdc [pu]    Pdc [MW]   Ps [MW]  Qs [MVAr]  Conv_Ploss [MW]\n";
-            std::cout << "-----  ----  ----  ---------    --------   -------  --------    --------";
+            OUT << "\n================================================================================\n";
+            OUT << "|   MTDC Bus Data                                                              |\n";
+            OUT << "================================================================================\n";
+            OUT << " Bus   Bus    AC   DC Voltage   DC Power   PCC Bus Injection   Converter loss\n";
+            OUT << " DC #  AC #  Area   Vdc [pu]    Pdc [MW]   Ps [MW]  Qs [MVAr]  Conv_Ploss [MW]\n";
+            OUT << "-----  ----  ----  ---------    --------   -------  --------    --------";
 
             double totalConverterLoss = 0.0;
             for (int i = 0; i < nbuses_dc; ++i) {
@@ -611,8 +651,8 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
                 double qs = qs_dc(i).get(GRB_DoubleAttr_X) * baseMW_dc;
                 double ploss = convPloss_dc(i).get(GRB_DoubleAttr_X) * baseMW_dc;
                 totalConverterLoss += ploss;
-                std::cout << std::fixed << std::setprecision(3);
-                std::cout << "\n" << std::setw(4) << i + 1
+                OUT << std::fixed << std::setprecision(3);
+                OUT << "\n" << std::setw(4) << i + 1
                     << std::setw(6) << acBus
                     << std::setw(6) << acArea
                     << std::setw(10) << vdc
@@ -621,18 +661,19 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
                     << std::setw(9) << qs
                     << std::setw(11) << ploss;
             }
-            std::cout << "\n-----  ----  ----  ---------    --------   -------  --------    --------";
-            std::cout << "\n The total converter losses is " << std::fixed << std::setprecision(3)
+
+            OUT << "\n-----  ----  ----  ---------    --------   -------  --------    --------";
+            OUT << "\n The total converter losses is " << std::fixed << std::setprecision(3)
                 << totalConverterLoss << " MW";
-            std::cout << "\n";
+            OUT << "\n";
 
             // " dc branch print " 
-            std::cout << "\n ===================================================================\n";
-            std::cout << " |     MTDC Branch Data                                            |\n";
-            std::cout << " ===================================================================\n";
-            std::cout << " Branch  From   To     From Branch    To Branch      Branch Loss\n";
-            std::cout << " #       Bus#   Bus#   Flow Pij [MW]  Flow Pij [MW]  Pij_loss [MW]\n";
-            std::cout << " ------  -----  -----   ---------      ---------      ---------\n";
+            OUT << "\n ===================================================================\n";
+            OUT << " |     MTDC Branch Data                                            |\n";
+            OUT << " ===================================================================\n";
+            OUT << " Branch  From   To     From Branch    To Branch      Branch Loss\n";
+            OUT << " #       Bus#   Bus#   Flow Pij [MW]  Flow Pij [MW]  Pij_loss [MW]\n";
+            OUT << " ------  -----  -----   ---------      ---------      ---------\n";
 
             double NetPloss_dc = 0.0;
             for (int i = 0; i < nbranches_dc; ++i) {
@@ -643,7 +684,7 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
                 double pij_to_from = pij_dc(to, from).get(GRB_DoubleAttr_X) * baseMW_dc * pol_dc;
                 double pij_loss = std::abs(pij_from_to + pij_to_from);
 
-                std::cout << std::setw(5) << (i + 1) << " "
+                OUT << std::setw(5) << (i + 1) << " "
                     << std::setw(6) << fbus_dc(i) << " "
                     << std::setw(6) << tbus_dc(i) << " "
                     << std::setw(11) << std::fixed << std::setprecision(3) << pij_from_to << " "
@@ -653,14 +694,138 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name) {
                 NetPloss_dc += pij_loss;
             }
 
-            std::cout << " ------  -----  -----   ---------      ---------      ---------\n";
-            std::cout << " The total DC network losses is " << std::fixed << std::setprecision(3) << NetPloss_dc << " MW.\n";
+            OUT << " ------  -----  -----   ---------      ---------      ---------\n";
+            OUT << " The total DC network losses is " << std::fixed << std::setprecision(3) << NetPloss_dc << " MW.\n";
 
             auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
 
-            std::cout << "\n Execution time is " << duration << " s" << std::endl;
+            OUT << "\n Execution time is " << duration << " s" << std::endl;
+
+            if (fout.is_open()) fout.close();
+
+            if (writeTxt)
+                std::cout << "[info] OPF results saved to " << outfile << '\n';
+
+
+            /**************************************************
+            * EXTRACT THE OPTIMIZED RESULTS
+            **************************************************/
+
+            // 1. dc variable results
+            Eigen::VectorXd vn2_dc_k(nbuses_dc), pn_dc_k(nbuses_dc), ps_dc_k(nconvs_dc),
+                qs_dc_k(nconvs_dc), pc_dc_k(nconvs_dc), qc_dc_k(nconvs_dc),
+                v2s_dc_k(nconvs_dc), v2c_dc_k(nconvs_dc),
+                Ic_dc_k(nconvs_dc), lc_dc_k(nconvs_dc),
+                convPloss_dc_k(nconvs_dc);
+
+            Eigen::MatrixXd pij_dc_k(nbuses_dc, nbuses_dc), lij_dc_k(nbuses_dc, nbuses_dc),
+                Ctt_dc_k(nconvs_dc, 1), Ccc_dc_k(nconvs_dc, 1), Ctc_dc_k(nconvs_dc, 1),
+                Stc_dc_k(nconvs_dc, 1), Cct_dc_k(nconvs_dc, 1), Sct_dc_k(nconvs_dc, 1);
+
+            for (int i = 0; i < nbuses_dc; ++i) {
+                vn2_dc_k(i) = vn2_dc(i).get(GRB_DoubleAttr_X);
+                pn_dc_k(i) = pn_dc(i).get(GRB_DoubleAttr_X);
+            }
+            for (int i = 0; i < nconvs_dc; ++i) {
+                ps_dc_k(i) = ps_dc(i).get(GRB_DoubleAttr_X);
+                qs_dc_k(i) = qs_dc(i).get(GRB_DoubleAttr_X);
+                pc_dc_k(i) = pc_dc(i).get(GRB_DoubleAttr_X);
+                qc_dc_k(i) = qc_dc(i).get(GRB_DoubleAttr_X);
+                v2s_dc_k(i) = v2s_dc(i).get(GRB_DoubleAttr_X);
+                v2c_dc_k(i) = v2c_dc(i).get(GRB_DoubleAttr_X);
+                Ic_dc_k(i) = Ic_dc(i).get(GRB_DoubleAttr_X);
+                lc_dc_k(i) = lc_dc(i).get(GRB_DoubleAttr_X);
+                convPloss_dc_k(i) = convPloss_dc(i).get(GRB_DoubleAttr_X);
+
+                Ctt_dc_k(i, 0) = Ctt_dc(i).get(GRB_DoubleAttr_X);
+                Ccc_dc_k(i, 0) = Ccc_dc(i).get(GRB_DoubleAttr_X);
+                Ctc_dc_k(i, 0) = Ctc_dc(i).get(GRB_DoubleAttr_X);
+                Stc_dc_k(i, 0) = Stc_dc(i).get(GRB_DoubleAttr_X);
+                Cct_dc_k(i, 0) = Cct_dc(i).get(GRB_DoubleAttr_X);
+                Sct_dc_k(i, 0) = Sct_dc(i).get(GRB_DoubleAttr_X);
+            }
+            for (int i = 0; i < nbuses_dc; ++i)
+                for (int j = 0; j < nbuses_dc; ++j) {
+                    pij_dc_k(i, j) = pij_dc(i, j).get(GRB_DoubleAttr_X);
+                    lij_dc_k(i, j) = lij_dc(i, j).get(GRB_DoubleAttr_X);
+                }
+
+            // 2. ac variable results
+            std::vector<Eigen::VectorXd> vn2_ac_k(ngrids), pn_ac_k(ngrids), qn_ac_k(ngrids),
+                pgen_ac_k(ngrids), qgen_ac_k(ngrids);
+            std::vector<Eigen::MatrixXd> pij_ac_k(ngrids), qij_ac_k(ngrids),
+                ss_ac_k(ngrids), cc_ac_k(ngrids);
+
+            for (int ng = 0; ng < ngrids; ++ng) {
+                vn2_ac_k[ng].resize(nbuses_ac[ng]);
+                pn_ac_k[ng].resize(nbuses_ac[ng]);
+                qn_ac_k[ng].resize(nbuses_ac[ng]);
+                pgen_ac_k[ng].resize(ngens_ac[ng]);
+                qgen_ac_k[ng].resize(ngens_ac[ng]);
+                pij_ac_k[ng].resize(nbuses_ac[ng], nbuses_ac[ng]);
+                qij_ac_k[ng].resize(nbuses_ac[ng], nbuses_ac[ng]);
+                ss_ac_k[ng].resize(nbuses_ac[ng], nbuses_ac[ng]);
+                cc_ac_k[ng].resize(nbuses_ac[ng], nbuses_ac[ng]);
+
+                for (int i = 0; i < nbuses_ac[ng]; ++i) {
+                    vn2_ac_k[ng](i) = vn2_ac[ng](i).get(GRB_DoubleAttr_X);
+                    pn_ac_k[ng](i) = pn_ac[ng](i).get(GRB_DoubleAttr_X);
+                    qn_ac_k[ng](i) = qn_ac[ng](i).get(GRB_DoubleAttr_X);
+                }
+                for (int i = 0; i < ngens_ac[ng]; ++i) {
+                    pgen_ac_k[ng](i) = pgen_ac[ng](i).get(GRB_DoubleAttr_X);
+                    qgen_ac_k[ng](i) = qgen_ac[ng](i).get(GRB_DoubleAttr_X);
+                }
+
+                for (int i = 0; i < nbuses_ac[ng]; ++i)
+                    for (int j = 0; j < nbuses_ac[ng]; ++j) {
+                        pij_ac_k[ng](i, j) = pij_ac[ng](i, j).get(GRB_DoubleAttr_X);
+                        qij_ac_k[ng](i, j) = qij_ac[ng](i, j).get(GRB_DoubleAttr_X);
+                        ss_ac_k[ng](i, j) = ss_ac[ng](i, j).get(GRB_DoubleAttr_X);
+                        cc_ac_k[ng](i, j) = cc_ac[ng](i, j).get(GRB_DoubleAttr_X);
+                    }
+
+            }
+
+            OPFVisualData vis_data;
+
+            vis_data.bus_entire_ac = bus_entire_ac;
+            vis_data.branch_entire_ac = branch_entire_ac;
+            vis_data.gen_entire_ac = gen_entire_ac;
+            vis_data.bus_dc = bus_dc;
+            vis_data.branch_dc = branch_dc;
+            vis_data.conv_dc = conv_dc;
+
+            vis_data.vn2_dc_k = vn2_dc_k;
+            vis_data.ps_dc_k = ps_dc_k;
+            vis_data.qs_dc_k = qs_dc_k;
+            vis_data.pij_dc_k = pij_dc_k;
+
+            vis_data.nbuses_ac = nbuses_ac;
+            vis_data.ngens_ac = ngens_ac;
+
+            vis_data.vn2_ac_k = vn2_ac_k;
+            vis_data.pgen_ac_k = pgen_ac_k;
+            vis_data.qgen_ac_k = qgen_ac_k;
+
+            vis_data.pij_ac_k = pij_ac_k;
+            vis_data.qij_ac_k = qij_ac_k;
+
+            vis_data.nconvs_dc = nconvs_dc;
+            vis_data.nbuses_dc = nbuses_dc;
+            vis_data.ngrids = ngrids;
+
+            vis_data.baseMVA_ac = baseMVA_ac;
+            vis_data.baseMW_dc = baseMW_dc;
+            vis_data.pol_dc = pol_dc;
+
+            if (plotResult) {
+                viz_opf(vis_data);
+            }
 
         }
+
+
         else {
             std::cerr << "Optimization did not succeed. Status code: "
                 << model.get(GRB_IntAttr_Status) << std::endl;

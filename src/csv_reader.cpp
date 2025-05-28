@@ -22,7 +22,6 @@ Eigen::MatrixXd readCSVtoCpp(const std::string& filename) {
     std::vector<std::vector<double>> data;
     std::string line;
 
-    // Read the file line by line
     while (std::getline(file, line)) {
         std::stringstream lineStream(line);
         std::vector<double> row;
@@ -39,18 +38,15 @@ Eigen::MatrixXd readCSVtoCpp(const std::string& filename) {
             }
         }
 
-        // Only add non-empty rows to the data vector
         if (!row.empty()) {
             data.push_back(row);
         }
     }
 
-    // If no data was read, return an empty matrix
     if (data.empty()) {
         return Eigen::MatrixXd();
     }
 
-    // Verify that all rows have the same number of columns
     const size_t ncols = data[0].size();
     for (size_t i = 1; i < data.size(); ++i) {
         if (data[i].size() != ncols) {
@@ -58,7 +54,6 @@ Eigen::MatrixXd readCSVtoCpp(const std::string& filename) {
         }
     }
 
-    // Construct an Eigen::MatrixXd from the 2D vector data
     Eigen::MatrixXd matrix(data.size(), ncols);
     for (size_t i = 0; i < data.size(); ++i) {
         for (size_t j = 0; j < ncols; ++j) {

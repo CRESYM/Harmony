@@ -1,7 +1,7 @@
 ﻿#include "network.h"
 #include "Bus.h"
 #include "Include_components.h"
-#include "solve_opf.h"
+#include "../build/solve_opf.h"
 
 
 int main() {
@@ -151,8 +151,10 @@ int main() {
 
 
 	// run OPF Haxaio
-	std::cout << "OPF is running...:" << std::endl;
-	solve_opf("mtdc3slack_a", "ac14ac57");
+	solve_opf("mtdc3slack_a", "ac9ac14",
+		/*vscControl*/ true,
+		/*writeTxt  */ false,
+		/*plotResult*/ false);
 
 	// Cleanup
 	
