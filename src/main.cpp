@@ -33,128 +33,118 @@ int main() {
 	//std::vector<double> generator_values = { 1.0, 0.01, 1.0, 0.1 };
 	//Generator* g = new Generator("gen", 3, generator_values);
 
-	std::vector<double> vec = {1,1,1}; 
-	Load* load = new Load("l1", 3, vec);
-	DenseMatrix Y = load->compute_y_parameters();
-	for (int i = 0; i < Y.nrows(); i++) {
-		for (int j = 0; j < Y.ncols(); j++) {
-			cout << Y.get(i, j)->__str__() << " ";
-		}
-		cout << endl;
-	}
-	cout << endl;
-
-	MatrixXcd Y_num = load->compute_y_parameters_num(10);
-	cout << Y_num << endl;
+	//std::vector<double> vec = {1,1,1}; 
+	//Load* load = new Load("l1", 3, vec);
+	//DenseMatrix Y = load->compute_y_parameters();
 
 
-	//Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
-	Impedance* y = new Impedance("z1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) }));
-	AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
-	Network* myNetwork = new Network();
+	////Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
+	//Impedance* y = new Impedance("z1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) }));
+	//AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
+	//Network* myNetwork = new Network();
 
 	// Create Bus objects
-	Bus* bus1 = new Bus("Bus1", 1);
-	Bus* gnd = new Bus("gnd", 1);
+	//Bus* bus1 = new Bus("Bus1", 1);
+	//Bus* gnd = new Bus("gnd", 1);
 
-	// Add elements to the network
-	myNetwork->addElement(y);
-	myNetwork->addElement(ac);
+	//// Add elements to the network
+	//myNetwork->addElement(y);
+	//myNetwork->addElement(ac);
 
-	// Add buses to the network
-	myNetwork->addBus("Bus1", bus1);
-	myNetwork->addBus("gnd", gnd);
+	//// Add buses to the network
+	//myNetwork->addBus("Bus1", bus1);
+	//myNetwork->addBus("gnd", gnd);
 
-	// Connect elements to buses
-	myNetwork->connectElementToBus(y, 1, bus1);
-	myNetwork->connectElementToBus(y, 2, gnd);
-	myNetwork->connectElementToBus(ac, 1, bus1);
-	myNetwork->connectElementToBus(ac, 2, gnd);
+	//// Connect elements to buses
+	//myNetwork->connectElementToBus(y, 1, bus1);
+	//myNetwork->connectElementToBus(y, 2, gnd);
+	//myNetwork->connectElementToBus(ac, 1, bus1);
+	//myNetwork->connectElementToBus(ac, 2, gnd);
 
-	// Print the connections to verify the network
-	myNetwork->printConnections();
-
-
-	vector<Bus*> start_buses;
-	vector<Bus*> end_buses;
-	vector<Element*> skip_elements;
-
-	start_buses.push_back(bus1);
-	end_buses.push_back(gnd);
-	skip_elements.push_back(ac);
+	//// Print the connections to verify the network
+	//myNetwork->printConnections();
 
 
+	//vector<Bus*> start_buses;
+	//vector<Bus*> end_buses;
+	//vector<Element*> skip_elements;
 
-	//y->writeFile(10.0, 1000.0, 3);
-	double omega_num = 1000;
+	//start_buses.push_back(bus1);
+	//end_buses.push_back(gnd);
+	//skip_elements.push_back(ac);
+
+
+
+	////y->writeFile(10.0, 1000.0, 3);
+	//double omega_num = 1000;
 	//MatrixXcd Yparam = y->compute_y_parameters_num(omega_num);
 
 	//cout << Yparam << endl;
 
 	//Eigen::MatrixXcd equivalent_impedance;
-	myNetwork->compute_equivalent_impedance(start_buses, end_buses, skip_elements);
+	//myNetwork->compute_equivalent_impedance(start_buses, end_buses, skip_elements);
 	
-	try {
-		// Compute equivalent impedance
-		myNetwork->compute_equivalent_impedance_nums(start_buses, end_buses, skip_elements, omega_num);
-	}
-	catch (const std::exception& e) {
-		std::cerr << "Error during impedance computation: " << e.what() << std::endl;
-		delete myNetwork;
-		return EXIT_FAILURE;
-	}
-	//Create and Test MMC**
-	MMC* myMMC = new MMC(
-		"MMC1",         // Symbol
-		2,              // Number of input pins
-		2,              // Number of output pins
-		1000.0,         // Omega (Nominal Frequency in rad/s)
-		100.0,          // Active Power (P) in MW
-		50.0,           // Reactive Power (Q) in MVA
-		500.0,          // DC Power (P_dc) in kW
-		-100.0,         // Min Active Power (P_min) in MW
-		200.0,          // Max Active Power (P_max) in MW
-		-50.0,          // Min Reactive Power (Q_min) in MVA
-		100.0,          // Max Reactive Power (Q_max) in MVA
-		0.0,            // Theta (Voltage Angle in rad)
-		330.0,          // AC Voltage (V_m) in kV
-		640.0,          // DC Voltage (V_dc) in kV
-		0.05,           // Arm Inductance (L_arm) in H
-		1.07,           // Arm Resistance (R_arm) in Ω
-		0.01,           // Capacitance per Submodule (C_arm) in F
-		400,            // Number of Submodules (N)
-		0.06,           // Reactor Inductance (L_reactor) in H
-		0.535,          // Reactor Resistance (R_reactor) in Ω
-		0.00015         // Time Delay (t_delay) in seconds
-	);
+	//try {
+	//	// Compute equivalent impedance
+	//	myNetwork->compute_equivalent_impedance_nums(start_buses, end_buses, skip_elements, omega_num);
+	//}
+	//catch (const std::exception& e) {
+	//	std::cerr << "Error during impedance computation: " << e.what() << std::endl;
+	//	delete myNetwork;
+	//	return EXIT_FAILURE;
+	//}
+	////Create and Test MMC**
+	//MMC* myMMC = new MMC(
+	//	"MMC1",         // Symbol
+	//	2,              // Number of input pins
+	//	2,              // Number of output pins
+	//	1000.0,         // Omega (Nominal Frequency in rad/s)
+	//	100.0,          // Active Power (P) in MW
+	//	50.0,           // Reactive Power (Q) in MVA
+	//	500.0,          // DC Power (P_dc) in kW
+	//	-100.0,         // Min Active Power (P_min) in MW
+	//	200.0,          // Max Active Power (P_max) in MW
+	//	-50.0,          // Min Reactive Power (Q_min) in MVA
+	//	100.0,          // Max Reactive Power (Q_max) in MVA
+	//	0.0,            // Theta (Voltage Angle in rad)
+	//	330.0,          // AC Voltage (V_m) in kV
+	//	640.0,          // DC Voltage (V_dc) in kV
+	//	0.05,           // Arm Inductance (L_arm) in H
+	//	1.07,           // Arm Resistance (R_arm) in Ω
+	//	0.01,           // Capacitance per Submodule (C_arm) in F
+	//	400,            // Number of Submodules (N)
+	//	0.06,           // Reactor Inductance (L_reactor) in H
+	//	0.535,          // Reactor Resistance (R_reactor) in Ω
+	//	0.00015         // Time Delay (t_delay) in seconds
+	//);
 
-	myNetwork->addElement(myMMC);
+	//myNetwork->addElement(myMMC);
 
-	// Example MMC parameters (must match Controller constructor)
-	std::vector<double> converter_params = {
-		1000.0, 100.0, 50.0, 500.0, -100.0, 200.0, -50.0, 100.0, 314.16, 400,
-		1.07, 0.05, 0.01, 0.535, 0.06, 0.00015
-	};
+	//// Example MMC parameters (must match Controller constructor)
+	//std::vector<double> converter_params = {
+	//	1000.0, 100.0, 50.0, 500.0, -100.0, 200.0, -50.0, 100.0, 314.16, 400,
+	//	1.07, 0.05, 0.01, 0.535, 0.06, 0.00015
+	//};
 
-	std::cout << "Converter params size: " << converter_params.size() << std::endl;
+	//std::cout << "Converter params size: " << converter_params.size() << std::endl;
 
-	try {
-		myMMC->init_Controller(converter_params);
-		std::cout << "MMC Controller initialized successfully!\n";
-	}
-	catch (const std::exception& e) {
-		std::cerr << "Error initializing MMC Controller: " << e.what() << std::endl;
-		delete myMMC;
-		delete myNetwork;
-		return EXIT_FAILURE;
-	}
-
+	//try {
+	//	myMMC->init_Controller(converter_params);
+	//	std::cout << "MMC Controller initialized successfully!\n";
+	//}
+	//catch (const std::exception& e) {
+	//	std::cerr << "Error initializing MMC Controller: " << e.what() << std::endl;
+	//	delete myMMC;
+	//	delete myNetwork;
+	//	return EXIT_FAILURE;
+	//}
 
 	// run OPF Haxaio
-	solve_opf("mtdc3slack_a", "ac9ac14",
+	solve_opf("../../src/mtdc3slack_a", "../../src/ac9ac14",
 		/*vscControl*/ true,
 		/*writeTxt  */ false,
 		/*plotResult*/ false);
+
 
 	// Cleanup
 	

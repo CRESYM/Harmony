@@ -1,0 +1,3 @@
+C:/Users/akermansaravi/source/repos/Harmony/newbuild/CMakeFiles/Harmony.dir
+C:/Users/akermansaravi/source/repos/Harmony/newbuild/CMakeFiles/ALL_BUILD.dir
+C:/Users/akermansaravi/source/repos/Harmony/newbuild/CMakeFiles/ZERO_CHECK.dir

@@ -1,0 +1,270 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Bus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Constants.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\network.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\network_powerflow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\network_stability.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Element.cpp">
+      <Filter>Source Files\Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Admittance.cpp">
+      <Filter>Source Files\Elements\Admittance</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Controller.cpp">
+      <Filter>Source Files\Elements\Converter</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Filter.cpp">
+      <Filter>Source Files\Elements\Converter</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\MMC.cpp">
+      <Filter>Source Files\Elements\Converter</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Generator.cpp">
+      <Filter>Source Files\Elements\Generator</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Impedance.cpp">
+      <Filter>Source Files\Elements\Impedance</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Load.cpp">
+      <Filter>Source Files\Elements\Impedance</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\AC_source.cpp">
+      <Filter>Source Files\Elements\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_base.cpp">
+      <Filter>Source Files\Elements\Transformer</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_classic.cpp">
+      <Filter>Source Files\Elements\Transformer</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_Delta_Delta.cpp">
+      <Filter>Source Files\Elements\Transformer</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_Delta_Y.cpp">
+      <Filter>Source Files\Elements\Transformer</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_real.cpp">
+      <Filter>Source Files\Elements\Transformer</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_Y_Delta.cpp">
+      <Filter>Source Files\Elements\Transformer</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_Y_Y.cpp">
+      <Filter>Source Files\Elements\Transformer</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Cable.cpp">
+      <Filter>Source Files\Elements\Transmission_Line</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\overhead_line.cpp">
+      <Filter>Source Files\Elements\Transmission_Line</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transmissionline.cpp">
+      <Filter>Source Files\Elements\Transmission_Line</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\create_ac.cpp">
+      <Filter>Source Files\Solver\OPF</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\create_dc.cpp">
+      <Filter>Source Files\Solver\OPF</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\csv_reader.cpp">
+      <Filter>Source Files\Solver\OPF</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\makeYbus.cpp">
+      <Filter>Source Files\Solver\OPF</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\params_ac.cpp">
+      <Filter>Source Files\Solver\OPF</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\params_dc.cpp">
+      <Filter>Source Files\Solver\OPF</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\solve_opf.cpp">
+      <Filter>Source Files\Solver\OPF</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\akermansaravi\source\repos\Harmony\src\viz_opf.cpp">
+      <Filter>Source Files\Solver\OPF</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Bus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Include_components.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\network.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Element.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Admittance.h">
+      <Filter>Header Files\Elements\Admittance</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Controller.h">
+      <Filter>Header Files\Elements\Converter</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Filter.h">
+      <Filter>Header Files\Elements\Converter</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\MMC.h">
+      <Filter>Header Files\Elements\Converter</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Generator.h">
+      <Filter>Header Files\Elements\Generator</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Impedance.h">
+      <Filter>Header Files\Elements\Impedance</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Load.h">
+      <Filter>Header Files\Elements\Impedance</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\AC_source.h">
+      <Filter>Header Files\Elements\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_base.h">
+      <Filter>Header Files\Elements\Transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_classic.h">
+      <Filter>Header Files\Elements\Transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_Delta_Delta.h">
+      <Filter>Header Files\Elements\Transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_Delta_Y.h">
+      <Filter>Header Files\Elements\Transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_real.h">
+      <Filter>Header Files\Elements\Transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_Y_Delta.h">
+      <Filter>Header Files\Elements\Transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transformer_Y_Y.h">
+      <Filter>Header Files\Elements\Transformer</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Cable.h">
+      <Filter>Header Files\Elements\Transmission Line</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\overhead_line.h">
+      <Filter>Header Files\Elements\Transmission Line</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\Transmissionline.h">
+      <Filter>Header Files\Elements\Transmission Line</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\create_ac.h">
+      <Filter>Header Files\Solver\OPF</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\create_dc.h">
+      <Filter>Header Files\Solver\OPF</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\csv_reader.h">
+      <Filter>Header Files\Solver\OPF</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\makeYbus.h">
+      <Filter>Header Files\Solver\OPF</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\params_ac.h">
+      <Filter>Header Files\Solver\OPF</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\params_dc.h">
+      <Filter>Header Files\Solver\OPF</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\solve_opf.h">
+      <Filter>Header Files\Solver\OPF</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\akermansaravi\source\repos\Harmony\src\viz_opf.h">
+      <Filter>Header Files\Solver\OPF</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\akermansaravi\source\repos\Harmony\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{E244F181-74EB-301B-B6A9-E91E11841F9F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements">
+      <UniqueIdentifier>{9722F315-CF0A-39C8-AC24-B4B9FF20EE21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Admittance">
+      <UniqueIdentifier>{7D7418DC-5D50-309F-AAC8-85C7F490C88A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Converter">
+      <UniqueIdentifier>{9B61389E-3E39-3A2C-AA7B-93BEDD4B2FEA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Generator">
+      <UniqueIdentifier>{D0B91AB4-4738-380D-81C5-DAF54453E7F7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Impedance">
+      <UniqueIdentifier>{25352FE6-ADFB-3622-B589-4E9753F2FB5C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Source">
+      <UniqueIdentifier>{229084BE-E2FB-31CB-9BA1-E5A9F9BDA3BF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Transformer">
+      <UniqueIdentifier>{80673B44-C147-3686-AAA1-463FFCC0A819}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Elements\Transmission Line">
+      <UniqueIdentifier>{92D55FE0-0014-32C5-A683-10D8676A06F9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Solver">
+      <UniqueIdentifier>{206DD530-3A15-3966-907F-D40AA13F11B3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Solver\OPF">
+      <UniqueIdentifier>{1E5706B1-4160-370D-8F02-EA85D7809954}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{1183CB3F-9F5E-37C6-81F6-703049A03B5E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements">
+      <UniqueIdentifier>{F5C350D9-FD1E-3881-A56F-257C50154731}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Admittance">
+      <UniqueIdentifier>{BF4515D4-9979-3812-A9A1-2F08C6ADCDC7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Converter">
+      <UniqueIdentifier>{CCF06F92-D8F3-33C8-B024-8C932884AAF8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Generator">
+      <UniqueIdentifier>{2707DA2A-0813-3FD6-BC9B-5FC0375CB2EB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Impedance">
+      <UniqueIdentifier>{855EB47F-7BB5-36F9-863B-7F783D851335}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Source">
+      <UniqueIdentifier>{78E3D467-CAD5-320C-98A9-3BA6FEF548E2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Transformer">
+      <UniqueIdentifier>{E1CA4305-BEE1-34E8-A9E7-1CD79BC97A4B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Elements\Transmission_Line">
+      <UniqueIdentifier>{BDEDDD78-F550-37D6-A6D6-FD0C3B2EEFD3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Solver">
+      <UniqueIdentifier>{6A2A654C-FD24-3BE7-8565-E127D73B2A8D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Solver\OPF">
+      <UniqueIdentifier>{921B40C2-82DD-376F-B4B2-D4B46BCF260D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
