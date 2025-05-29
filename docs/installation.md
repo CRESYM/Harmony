@@ -193,7 +193,7 @@ Step3: click `OK`
 
  Step1: right-click `project` ➡ select `Properties` ➡ go to `Linker` ➡ select`General`
  
- Step2: select `Additional Liarbry Directories` ➡ add  `D:\gurobi952\win64\lib` 
+ Step2: select `Additional Library Directories` ➡ add  `D:\gurobi952\win64\lib` 
 
  Step3: click `OK`
 
@@ -205,7 +205,7 @@ Step3: click `OK`
 
  Step1: right-click `project` ➡ select `Properties` ➡ go to`Linker` ➡ select`Input`
  
- Step2: select `Additional Dpendencies` ➡ add  `D:\gurobi952\win64\lib\gurobi95.lib` and `D:\gurobi952\win64\lib\gurobi_c++mdd2019.lib` (for Debug), `D:\gurobi952\win64\lib\gurobi_c++md2019.lib` (for Release)
+ Step2: select `Additional Dependencies` ➡ add  `D:\gurobi952\win64\lib\gurobi95.lib` and `D:\gurobi952\win64\lib\gurobi_c++mdd2019.lib` (for Debug), `D:\gurobi952\win64\lib\gurobi_c++md2019.lib` (for Release)
 
  Step3: click `OK`
 
