@@ -1,14 +1,14 @@
 # Installation Instructions
 
-This document describes how to setup a development environment that allows you to compile and run Harmony.
+This document describes how to set up a development environment that allows you to compile and run Harmony.
 
 ## Prerequisites 
-Harmony can be compiled on Windows, Linux (tested in Ubuntu 22.04.5), and MacOS (tested in Sequoia 15.5). The requirements for each operating system are:
+Harmony can be compiled on Windows, Linux (tested in Ubuntu 22.04.5), and macOS (tested in Sequoia 15.5). The requirements for each operating system are:
 - Compilers for C and C++
     - Linux: GNU C and C++ compilers (tested version with 11.4.0)
     - MacOS: Apple Clang C and C++ compilers (tested with version 17.0.0)
     - Windows: [Visual Studio](https://visualstudio.microsoft.com) - version 2022 or newer, with a "Desktop Development for C++" workload installed (See [installation docs.](https://learn.microsoft.com/en-us/visualstudio/install/install-visual-studio?view=vs-2022))
-- [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python and other few packages. (You can also use Anaconda if it's already installed on your machine.)
+- [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python, and a few other packages. (You can also use Anaconda if it's already installed on your machine.)
 - [Gurobi C++ API](https://docs.gurobi.com/projects/optimizer/en/current/reference/cpp.html): C++ API for optimization (license required).
 - [Matplot++](https://alandefreitas.github.io/matplotplusplus/): C++ plotting library.
 
@@ -21,7 +21,7 @@ Harmony can be compiled on Windows, Linux (tested in Ubuntu 22.04.5), and MacOS 
 
 Open Visual Studio. Close the Welcome dialogue or select the option *Continue without code*. Open the VS built-in terminal by selecting View->Terminal on the top menu. 
 
-The terminal should display `(base)` at the left of the prompt symbol as shown in the picture below. This symbol indicates that VS can find and use miniconda. The word "base" means that no conda environments are activated; if an environment were activated, its name would appear instead of "base".
+The terminal should display `(base)` to the left of the prompt symbol as shown in the picture below. This symbol indicates that VS can find and use miniconda. The word "base" means that no conda environments are activated; if an environment were activated, its name would appear instead of "base".
 
 ![Screenshot 2025-05-05 at 21 03 07](https://github.com/user-attachments/assets/f519969a-9976-4255-b226-6aa5a976f190)
 
@@ -29,7 +29,7 @@ The terminal should display `(base)` at the left of the prompt symbol as shown i
 
 If `(base)` is not displayed, attempt any of the following:
 - Close and reopen Visual Studio. 
-- With Visual Studio closed, open the Windows PowerShell in admin mode. To do so: click on the Windows button in the toolbar, look for Windows PowerShell in the list of installed apps, right-click on it an select *More -> Run as Administrator*. Enter your username and password to validate your admin priveleges. Run the following command, close the PowerShell and re-open Visual Studio:
+- With Visual Studio closed, open Windows PowerShell in admin mode. To do so: click on the Windows button in the toolbar, look for Windows PowerShell in the list of installed apps, right-click on it, and select *More -> Run as Administrator*. Enter your username and password to validate your admin privileges. Run the following command, close the PowerShell, and re-open Visual Studio:
 ```
 Set-ExecutionPolicy RemoteSigned
 ```
@@ -40,14 +40,14 @@ Set-ExecutionPolicy RemoteSigned
 
 **Linux and MacOS:** open the terminal.
 
-**Windows:** open Visual Studio. Close the Welcome dialogue or select the option *Continue without code*. Open the Visual Studio built-in terminal by selecting View->Terminal on the top menu.
+**Windows:** Open Visual Studio. Close the Welcome dialogue or select the option *Continue without code*. Open the Visual Studio built-in terminal by selecting View->Terminal on the top menu.
 
 **1.** If you haven't yet done so, clone the Harmony repository by executing the commands: 
 ```bash
 # Download repository
 git clone https://github.com/CRESYM/Harmony.git
 # Open the folder
-cd Harmomy
+cd Harmony
 ``` 
 Alternatively, navigate to the Harmony repository using the `cd <path-to-harmony>` command, for example: `cd C:\Users\<netid>\Desktop\Harmony`
 
@@ -59,10 +59,10 @@ After opening the Harmony repository, use the `ls` command to verify you are in 
 conda env create -f environment.yml
 ```
 
-The `conda env list` command prints the names of the conda environments installed on your machine. You can use it to verify the harmony environment was created successfuly. See [Managing Conda Environments](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) for guidance on how to work with conda environments.
+The `conda env list` command prints the names of the conda environments installed on your machine. You can use it to verify that the harmony environment was created successfully. See [Managing Conda Environments](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) for guidance on how to work with conda environments.
 
 
-**3. Activate the conda environment** created in the previous step. You will need to activate the environment everytime you want to compile or execute Harmony. Activating the environment allows the compiler to find Harmony's dependencies. To activate it, run: 
+**3. Activate the conda environment** created in the previous step. You will need to activate the environment every time you want to compile or execute Harmony. Activating the environment allows the compiler to find Harmony's dependencies. To activate it, run: 
 ``` bash
 # Activate the harmony conda environment (done every time you want to compile or run harmony)
 conda activate harmony
@@ -85,7 +85,7 @@ cd build
 cmake ..
 ```
 
-The VS Solution or makefile will be inside the `build` directory. The VS Solution or makefile need to be regenerated every time you make changes to *CMakeLists.txt*. These changes can include, for example: adding a new *.h* or *.cpp* file to the project, adding a dependency on a third party library, etc. To regenerate the solution or makefile, delete the `build` folder and re-run the commands listed in this step.
+The VS Solution or makefile will be inside the `build` directory. The VS Solution or makefile needs to be regenerated every time you make changes to *CMakeLists.txt*. These changes can include, for example: adding a new *.h* or *.cpp* file to the project, adding a dependency on a third-party library, etc. To regenerate the solution or makefile, delete the `build` folder and re-run the commands listed in this step.
 
 After building the harmony, two other libraries need to be installed and configured: `Gurobi` and `Matplot++`
 
@@ -133,7 +133,7 @@ This is because `Matplot++` relies on [gunplot](https://sourceforge.net/projects
   <img src="assets\matplot++_f3.png" alt="Logo" width="660">
 </p> 
 
-After installing `gunplot`, add the `gunplot.exe` file into `PATH` under `System Variables` :
+After installing `gunplot`, add the `gunplot.exe` file to `PATH` under `System Variables` :
 <p align="left">
   <img src="assets\matplot++_f2.jpg" alt="Logo" width="350">
 </p> 
@@ -142,7 +142,7 @@ After installing `gunplot`, add the `gunplot.exe` file into `PATH` under `System
   <img src="assets\matplot++_f1.jpg" alt="Logo" width="350">
 </p> 
 
-Last, add `gunplot` library path in Visual Studio:
+Last, add the `gunplot` library path in Visual Studio:
 <p align="left">
   <img src="assets\matplot++_f5.jpg" alt="Logo" width="660">
 </p> 
@@ -189,7 +189,7 @@ Step3: click `OK`
     <img src="assets\gurobi_config_f4.jpg" alt="Logo" width="660">
   </p> 
 
- Next, set `Additional Liarbry Directories`:
+ Next, set `Additional Library Directories`:
 
  Step1: right-click `project` ➡ select `Properties` ➡ go to `Linker` ➡ select`General`
  
@@ -223,7 +223,7 @@ Note: Harmony will add the ALL_BUILD and ZERO_CHECK projects to the VS solution.
 cmake --build . --config Release
 ```
 
-Windows users: you may also use the VS Build button or select Build->Solution from the menu at the top. The output file *Harmony.exe* will be created in the `build/Release` directory or `build/Debug` if the app was built in Debug mode.
+Windows users: You may also use the VS Build button or select Build->Solution from the menu at the top. The output file *Harmony.exe* will be created in the `build/Release` directory or `build/Debug` if the app was built in Debug mode.
 
 **11. Execute Harmony.**
 ```bash
