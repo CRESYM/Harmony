@@ -22,6 +22,9 @@ Harmony can be compiled on Windows, Linux and MacOS. The requirements for each o
     - MacOS: Apple Clang C and C++ compilers
     - Windows: [Visual Studio](https://visualstudio.microsoft.com) - version 2022 or newer, with a "Desktop Development for C++" workload installed (See [installation docs.](https://learn.microsoft.com/en-us/visualstudio/install/install-visual-studio?view=vs-2022))
 - [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python and other few packages. (You can also use Anaconda if it is already installed on your machine.)
+- [Gurobi C++ API](https://docs.gurobi.com/projects/optimizer/en/current/reference/cpp.html): C++ API for optimization (license required).
+- [Matplot++](https://alandefreitas.github.io/matplotplusplus/): C++ plotting library.
+  
 > [!WARNING]
 > When installing miniconda, make sure you select the option **Add to path**. This will allow you to use miniconda from Visual Studio, Git Bash, etc. If you forgot this, have a look at Step 3 in [this blog post](https://eduand-alvarez.medium.com/setting-up-anaconda-on-your-windows-pc-6e39800c1afb), which shows how to add miniconda to your path. Alternatively, you may reinstall miniconda.
 
