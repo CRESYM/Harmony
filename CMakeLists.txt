@@ -4,6 +4,7 @@
 
 cmake_minimum_required(VERSION 4.0)
 project(Harmony)
+#include(FetchContent)
 
 # Set the C++ Standard (GoogleTest requires >= 14)
 # std::variant included in Constants.h requires >= 17)
@@ -23,6 +24,25 @@ include_directories(${SYMENGINE_INCLUDE_DIRS})
 # Find casadi on local system
 find_package(casadi CONFIG)
 
+#find Groubi
+#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+#message(STATUS ${CMAKE_MODULE_PATH})
+#find_package(GUROUBI REQUIRED)
+#include_directories(${GUROBI_INCLUDE_DIRS})
+
+#Find Matplot++
+#FetchContent_Declare(
+#   matplotplusplus
+#    GIT_REPOSITORY https://github.com/alandefreitas/matplotplusplus
+#   GIT_TAG origin/master
+#)
+
+#FetchContent_GetProperties(matplotplusplus)
+#if(NOT matplotplusplus_POPULATED)
+#    FetchContent_MakeAvailable(matplotplusplus)
+#    add_subdirectory(${matplotplusplus_SOURCE_DIR} ${matplotplusplus_BINARY_DIR} EXCLUDE_FROM_ALL)
+#endif()
+
 # Group header files
 set(Element_Header_Files src/Element.h)
 set(Element_Admittance_Header_Files src/Admittance.h)
@@ -35,6 +55,7 @@ set(Element_Generator_Header_Files src/Generator.h)
 set(Element_Impedance_Header_Files
     src/Impedance.h
     src/Load.h
+    src/Resistor.h
 )
 set(Element_Source_Header_Files src/AC_source.h)
 set(Element_Transformer_Header_Files
@@ -50,6 +71,9 @@ set(Element_Transmission_Line_Header_Files
     src/Cable.h
     src/overhead_line.h
     src/Transmissionline.h
+)
+set(Solver_State_Space_Model_Header_Files
+    src/State_Space_Model.h
 )
 set(Solver_OPF_Header_Files
     src/create_ac.h
@@ -80,6 +104,7 @@ set(Element_Generator_Source_Files src/Generator.cpp)
 set(Element_Impedance_Source_Files
     src/Impedance.cpp
     src/Load.cpp
+    src/Resistor.cpp
 )
 set(Element_Source_Source_Files src/AC_source.cpp)
 set(Element_Transformer_Source_Files
@@ -95,6 +120,9 @@ set(Element_Transmission_Line_Source_Files
     src/Cable.cpp
     src/overhead_line.cpp
     src/Transmissionline.cpp
+)
+set(Solver_State_Space_Model_Source_Files
+    src/State_Space_Model.cpp
 )
 set(Solver_OPF_Source_Files
     src/create_ac.cpp
@@ -128,6 +156,7 @@ if(WIN32) # workds for x64 as well
     source_group("Header Files\\Elements\\Transmission Line" FILES ${Element_Transmission_Line_Header_Files})
     source_group("Header Files\\Solver" FILES)
     source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Header_Files})
+    source_group("Header Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Header_Files})
 
 
     source_group("Source Files" FILES ${Source_Files})
@@ -141,6 +170,7 @@ if(WIN32) # workds for x64 as well
     source_group("Source Files\\Elements\\Transmission_Line" FILES ${Element_Transmission_Line_Source_Files})
     source_group("Source Files\\Solver" FILES)
     source_group("Source Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
+    source_group("Source Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Source_Files})
 
 
 endif()
@@ -159,6 +189,7 @@ add_executable(
     ${Element_Transformer_Header_Files}
     ${Element_Transmission_Line_Header_Files}
     ${Solver_OPF_Header_Files}
+    ${Solver_State_Space_Model_Header_Files}
 
     ${Source_Files}
     ${Element_Source_Files}
@@ -170,6 +201,7 @@ add_executable(
     ${Element_Transformer_Source_Files}
     ${Element_Transmission_Line_Source_Files}
     ${Solver_OPF_Source_Files}
+    ${Solver_State_Space_Model_Source_Files}
 
 )
 
@@ -184,6 +216,8 @@ target_link_libraries(
     Harmony
     casadi::casadi
     ${SYMENGINE_LIBRARIES}
+    #${GUROBI_LIBRARIES}
+    #matplot
 )
 
 # Find path to symengine dll and add it as a link directory

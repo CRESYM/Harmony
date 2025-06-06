@@ -5,6 +5,7 @@
 
 #include "Admittance.h"
 #include "Impedance.h"
+#include "Resistor.h"
 #include "Load.h"
 
 #include "Transformer_base.h"
@@ -28,6 +29,7 @@
 
 #include "solve_opf.h"
 
+#include "State_Space_Model.h"
 
 
 #endif // !INCLUDE_COMPONENTS_H

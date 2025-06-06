@@ -15,13 +15,16 @@ Impedance::Impedance(const std::string& symbol, int pins, DenseMatrix values):
         if (pins > 0) { // Check for valid number of pins
             // Case 1: Single impedance value provided for all phases
             if (values.ncols() == 1) {
-                for (int i = 0; i < pins; i++)
+                for (int i = 0; i < pins; i++) {
                     Y_matrix.set(i, i, div(integer(1), values.get(0, 0)));
+                }
+               
             }
             // Case 2: Multiple values provided for each phase's impedance
             else if (values.ncols() == pins) {
-                for (int i = 0; i < pins; i++)
+                for (int i = 0; i < pins; i++) {
                     Y_matrix.set(i, i, div(integer(1), values.get(0, i)));
+                }
             }
             // Error: The number of impedance values provided doesn't match the number of phases
             else
@@ -32,12 +35,13 @@ Impedance::Impedance(const std::string& symbol, int pins, DenseMatrix values):
         throw invalid_argument("Invalid number of pins, must be greater than 0!");
 
     // Fill in the complete Y parameters
-    for (int i = 0; i < pins; i++)
+    for (int i = 0; i < pins; i++) {
         for (int j = 0; j < pins; j++) {
             Y_matrix.set(pins + i, j, sub(zero, Y_matrix.get(i, j)));
             Y_matrix.set(pins + i, pins + j, Y_matrix.get(i, j));
             Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
         }
+    }
 }
 
 

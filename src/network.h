@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <map>
+#include "State_Space_Model.h"
 
 class Bus;
 class Element;
@@ -17,6 +18,8 @@ using Net = std::unordered_map<Bus*, std::vector<Element*>>;
 
 class Network {
 private: 
+    StateSpaceModel state_space_model; 
+
     std::unordered_map<std::string, Bus*> buses; // Map of bus names to buses
     std::unordered_map<std::string, Element*> elements;  // Map of designators to elements
     std::unordered_map<Bus*, std::vector<Element*>> connections; // Connections between buses and elements

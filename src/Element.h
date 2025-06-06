@@ -10,7 +10,9 @@ public:
      // Unified constructor for universal number of phases
     Element(const std::string& symbol, int inputPins, int outputPins)
         : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins) {
+       // std::cout << "[Debug] element\n";
         Y_matrix = createZeroMatrix(2*inputPins, 2*outputPins);
+      //  std::cout << "[Debug] y_matrix\n";
     }
 
     // Virtual destructor for resource cleanup in derived classes

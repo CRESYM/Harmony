@@ -1,11 +1,9 @@
 ﻿#include "network.h"
 #include "Bus.h"
 #include "Include_components.h"
-#include "solve_opf.h"
-
 
 int main() {
-	// Create Transformer object with 1 pin
+	//Create Transformer object with 1 pin
 	//std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0, 0.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
 	//Transformer_real* transformer = new Transformer_real("T1", 1, transformer_values);
 	//transformer->printElementValues();
@@ -31,12 +29,11 @@ int main() {
 
 	// Generator constructor check
 	//std::vector<double> generator_values = { 1.0, 0.01, 1.0, 0.1 };
-	//Generator* g = new Generator("gen", 3, generator_values);
+	//Generator* g = new Generator("gen", 1, generator_values);
 
 	//std::vector<double> vec = {1,1,1}; 
 	//Load* load = new Load("l1", 3, vec);
 	//DenseMatrix Y = load->compute_y_parameters();
-
 
 	////Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
 	//Impedance* y = new Impedance("z1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) }));
@@ -44,24 +41,44 @@ int main() {
 	//Network* myNetwork = new Network();
 
 	// Create Bus objects
-	//Bus* bus1 = new Bus("Bus1", 1);
+	//Bus* b1 = new Bus("Bus1", 1);
 	//Bus* gnd = new Bus("gnd", 1);
 
-	//// Add elements to the network
-	//myNetwork->addElement(y);
+	// Add elements to the network
+    //myNetwork->addElement(g);
 	//myNetwork->addElement(ac);
 
-	//// Add buses to the network
-	//myNetwork->addBus("Bus1", bus1);
+	// Add buses to the network
+	//myNetwork->addBus("Bus1", b1);
 	//myNetwork->addBus("gnd", gnd);
+	//std::cout << "connection 0\n";
 
-	//// Connect elements to buses
-	//myNetwork->connectElementToBus(y, 1, bus1);
-	//myNetwork->connectElementToBus(y, 2, gnd);
-	//myNetwork->connectElementToBus(ac, 1, bus1);
+
+	// Connect elements to buses
+	//myNetwork->connectElementToBus(g, 1, b1);
+	//std::cout << "connection 1\n";
+	//myNetwork->connectElementToBus(g, 2, gnd);
+	//std::cout << "connection 2\n";
+
+	//myNetwork->connectElementToBus(ac, 1, b1);
+	//std::cout << "connection 3\n";
+
 	//myNetwork->connectElementToBus(ac, 2, gnd);
+	//std::cout << "connection4\n";
 
-	//// Print the connections to verify the network
+
+	//std::cout << "Connecting y to bus1 and gnd...\n";
+	//std::cout << "Input pins: " << g->getInputPins()
+	//	<< ", Output pins: " << g->getOutputPins()
+	//	<< ", bus1 pins: " << b1->getPinNumber()
+	//	<< ", gnd pins: " << gnd->getPinNumber() << std::endl;
+
+	
+	//std::cout << "[Debug] Calling printConnectedElements() for Bus1\n";
+	//b1->printConnectedElements();
+
+
+	// Print the connections to verify the network
 	//myNetwork->printConnections();
 
 
@@ -140,11 +157,79 @@ int main() {
 	//}
 
 	// run OPF Haxaio
-	solve_opf("../../src/mtdc3slack_a", "../../src/ac9ac14",
-		/*vscControl*/ true,
-		/*writeTxt  */ false,
-		/*plotResult*/ false);
+	//solve_opf("../../src/mtdc3slack_a", "../../src/ac9ac14",
+	//	/*vscControl*/ true,
+	//	/*writeTxt  */ false,
+	//	/*plotResult*/ false);
 
+	//Cutset
+	Bus* bus0 = new Bus("0", 1);
+	Bus* bus1 = new Bus("1", 1);
+	Bus* bus2 = new Bus("2", 1);
+
+	std::vector<Bus*> buses = { bus0, bus1, bus2 };
+	// Create Elements (assumes ACSource and Resistor constructors take two buses and a value)
+	AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
+	Resistor* r1 = new Resistor("R1", 2, 2.0);
+	Resistor* r2 = new Resistor("R2", 2, 2.0);
+	Resistor* r3 = new Resistor("R3", 2, 2.0);
+
+	//r1->printElementInfo();       // Base class method
+	//r1->printElementValues();     // Calls Resistor::printElementValues
+
+	// Manually connect elements to buses
+	ac->attachBus(bus1, 1);
+	ac->attachBus(bus0, 2);
+
+	r1->attachBus(bus1, 1);
+	r1->attachBus(bus0, 2);
+
+	r2->attachBus(bus1, 1);
+	r2->attachBus(bus2, 2);
+
+	r3->attachBus(bus2, 1);
+	r3->attachBus(bus0, 2);
+	
+	// Collect elements
+	std::vector<Element*> elements = { ac, r1, r2, r3 };
+
+	auto busToElementsMap = StateSpaceModel::generateBusToElementsMap(elements);
+
+	// Create the StateSpaceModel object
+	StateSpaceModel model;
+
+	//Generate all bus cutsets
+	std::vector<std::vector<Bus*>> cutset_nodes = model.from_cutset_nodes(buses, {});
+
+	std::cout << "Cutset Nodes:" << std::endl;
+	for (const auto& group : cutset_nodes) {
+		std::cout << "[ ";
+		for (Bus* b : group) {
+			std::cout << b->getBusName() << " ";
+		}
+		std::cout << "]" << std::endl;
+	}
+
+	//Generate element cutsets from the bus cutsets
+	std::vector<std::vector<Element*>> cutset_elements = model.from_cutsets(cutset_nodes, busToElementsMap);
+
+	std::cout << "\nCutset Elements:" << std::endl;
+	for (const auto& group : cutset_elements) {
+		std::cout << "[ ";
+		for (Element* e : group) {
+			std::cout << e->getElementSymbol() << " ";
+		}
+		std::cout << "]" << std::endl;
+	}
+
+	delete bus0;
+	delete bus1;
+	delete bus2;
+
+	delete ac;
+	delete r1;
+	delete r2;
+	delete r3;
 
 	// Cleanup
 	

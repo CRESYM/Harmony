@@ -1,6 +1,6 @@
 ﻿// element.cpp
 
-# include "Element.h"
+#include "Element.h"
 #include "Constants.h"
 #include <iostream>
 #include <vector>
@@ -31,6 +31,7 @@ Bus* Element::getOtherBus(Bus* bus) {
         if (bus != it->first)
             return it->first;
     }
+    return nullptr; // No other bus found
 }
 
 // Implementation of compute_y_parameters 
