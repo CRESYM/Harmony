@@ -198,40 +198,39 @@ else()
     message(STATUS "The specified GUROBI_PATH is: ${GUROBI_PATH}")
 
     # Add Gurobi header files
-    include_directories(${GUROBI_PATH}/include)
+    include_directories("${GUROBI_PATH}/include")
     
     # Find gurobi*.lib that is NOT the C++ wrapper
     file(GLOB GUROBI_CORE_LIB "${GUROBI_PATH}/lib/gurobi[0-9]*.lib")
 
     # Based on build config, choose the C++ wrapper lib pattern
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        file(GLOB GUROBI_CPP_LIB "${GUROBI_PATH}/lib/gurobi_c++mdd*.lib")
-    else()
-        file(GLOB GUROBI_CPP_LIB "${GUROBI_PATH}/lib/gurobi_c++md*.lib")
-    endif()
+    file(GLOB GUROBI_CPP_DEBUG_LIB "${GUROBI_PATH}/lib/gurobi_c++mdd*.lib")
+    file(GLOB GUROBI_CPP_RELEASE_LIB "${GUROBI_PATH}/lib/gurobi_c++md[0-9]*.lib")
 
     # Fail if either is missing
     if(NOT GUROBI_CORE_LIB)
         message(FATAL_ERROR "Could not find Gurobi core library (gurobi*.lib) in ${GUROBI_PATH}/lib")
     endif()
 
-    if(NOT GUROBI_CPP_LIB)
+    if(NOT GUROBI_CPP_DEBUG_LIB OR NOT GUROBI_CPP_RELEASE_LIB)
         message(FATAL_ERROR "Could not find Gurobi C++ wrapper library (gurobi_c++md*.lib or gurobi_c++mdd*.lib) in ${GUROBI_PATH}/lib")
     endif()
 
     message(STATUS "Using Gurobi core lib: ${GUROBI_CORE_LIB}")
-    message(STATUS "Using Gurobi C++ lib: ${GUROBI_CPP_LIB}")
+    message(STATUS "Using Gurobi C++ Debug lib: ${GUROBI_CPP_DEBUG_LIB}")
+    message(STATUS "Using Gurobi C++ Release lib: ${GUROBI_CPP_RELEASE_LIB}")
 
     # Link the libraries
     target_link_libraries(
         Harmony
         "${GUROBI_CORE_LIB}"
-        "${GUROBI_CPP_LIB}"
+        $<$<CONFIG:Debug>:${GUROBI_CPP_DEBUG_LIB}>
+        $<$<CONFIG:Release>:${GUROBI_CPP_RELEASE_LIB}>
     )
 endif()
 
 
-# Set Mathplot++ path 
+# Set Matplot++ path 
 set(MATPLOT_PATH "" CACHE PATH "Path to MatPlot++ installation")
 if(NOT MATPLOT_PATH)
     # User did not provide a path for the Matplot installation
@@ -239,11 +238,13 @@ if(NOT MATPLOT_PATH)
 elseif(NOT EXISTS "${MATPLOT_PATH}")
     message(FATAL_ERROR "The specified MATPLOT_PATH does not exist: ${MATPLOT_PATH}")
 else()
+    message(STATUS "The specified MATPLOT_PATH is: ${MATPLOT_PATH}")
+
     # Matplot supports CMake. We will use Matplot++Config.cmake contained in MATPLOT_PATH to configure the package
     list(APPEND CMAKE_PREFIX_PATH "${MATPLOT_PATH}")
     find_package(Matplot++ REQUIRED)
     # Add Matplot++ header files
-    include_directories("${MATPLOT_PATH}/include")
+    #include_directories("${MATPLOT_PATH}/include")
     # Link the library
     target_link_libraries(Harmony Matplot++::matplot)
 
