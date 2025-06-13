@@ -103,3 +103,124 @@ std::map<Bus*, std::vector<Element*>> StateSpaceModel::generateBusToElementsMap(
     }
     return map;
 }
+// Finds all loops in the given set of buses and their connected elements
+std::vector<std::vector<Element*>> StateSpaceModel::findLoops(
+    const std::vector<Bus*>& nodes,
+    const std::map<Bus*, std::vector<Element*>>& node_collection)
+{
+    std::vector<std::vector<Element*>> loop_collection;
+
+    // Create bus index mapping
+    std::map<Bus*, int> busIndices;
+    for (size_t i = 0; i < nodes.size(); ++i) {
+        busIndices[nodes[i]] = static_cast<int>(i);
+    }
+
+    for (Bus* node : nodes) {
+        traverseForLoops(node, node, nodes, loop_collection, node_collection, nullptr, busIndices);
+    }
+
+    return loop_collection;
+}
+
+//builds the path (vector of elements) from the root to this node
+std::vector<Element*> StateSpaceModel::Tree::getPath() const {
+    std::vector<Element*> path;
+    if (parent) path = parent->getPath();
+    if (element) path.push_back(element);
+    return path;
+}
+
+// Checks if the given Bus* is already in the current branch
+bool StateSpaceModel::Tree::containsNode(Bus* node) const {
+    if (current_node == node) return true;
+    if (parent) return parent->containsNode(node);
+    return false;
+}
+
+std::string StateSpaceModel::Tree::toString() const {
+    std::string str = "Root: " + (root ? root->getBusName() : "null") +
+        ", Current: " + (current_node ? current_node->getBusName() : "null") +
+        ", Element: " + (element ? element->getElementSymbol() : "None") +
+        ", Subelements: [";
+
+    for (size_t i = 0; i < subelements.size(); ++i) {
+        str += subelements[i]->getElementSymbol();
+        if (i != subelements.size() - 1) str += ", ";
+    }
+    str += "]";
+    return str;
+}
+
+//Compares two loops (vectors of Element*) for strict order-based equality
+bool equalLoops(const std::vector<Element*>& a, const std::vector<Element*>& b) {
+    if (a.size() != b.size()) return false;
+    for (size_t i = 0; i < a.size(); ++i) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
+}
+
+void StateSpaceModel::traverseForLoops(
+    Bus* current_node,
+    Bus* start_node,
+    const std::vector<Bus*>& nodes,
+    std::vector<std::vector<Element*>>& loop_collection,
+    const std::map<Bus*, std::vector<Element*>>& node_collection,
+    std::shared_ptr<Tree> current_branch,
+    const std::map<Bus*, int>& busIndices)
+{
+    auto it = node_collection.find(current_node);
+    if (it == node_collection.end()) return;  // No elements connected to this bus
+
+    const std::vector<Element*>& connected_elements = it->second;
+
+    for (Element* element : connected_elements) {
+        Bus* other_node = element->getOtherBus(current_node); // The bus on the other side of the element
+        if (!other_node) continue;
+
+        auto new_branch = std::make_shared<Tree>(element, current_node, start_node, current_branch);
+
+        if (busIndices.at(other_node) > busIndices.at(current_node)) {
+            if (current_branch) current_branch->addPathElement(element);
+            traverseForLoops(other_node, start_node, nodes, loop_collection, node_collection, new_branch, busIndices);
+        }
+        else if (other_node == start_node) {
+            if (!current_branch || !current_branch->getElement() || element != current_branch->getElement()) {
+
+                std::shared_ptr<Tree> iter = new_branch;
+                std::vector<Element*> loop;
+                std::vector<Bus*> loop_nodes;
+                loop_nodes.push_back(start_node);
+
+                while (iter) {
+                    Element* e = iter->getElement();
+                    if (e) loop.push_back(e);
+                    Bus* n = iter->getCurrentNode();
+                    if (n) loop_nodes.push_back(n);
+                    iter = iter->getParent();
+                }
+
+                std::reverse(loop.begin(), loop.end());
+                std::reverse(loop_nodes.begin(), loop_nodes.end());
+
+                // compare by ordered vector equality instead of set
+                bool duplicate = false;
+                for (const auto& existing_loop : loop_collection) {
+                    if (equalLoops(existing_loop, loop)) {
+                        duplicate = true;
+                        break;
+                    }
+                }
+
+                if (!duplicate) {                
+                    loop_collection.push_back(loop);
+                }
+                continue;
+            }
+        }
+
+    }
+}
+
+

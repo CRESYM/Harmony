@@ -35,9 +35,12 @@ int main() {
 	//Load* load = new Load("l1", 3, vec);
 	//DenseMatrix Y = load->compute_y_parameters();
 
-	////Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
+	//Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
+	//std::cout << "Admitance" << std::endl;
+	//y->printElementInfo();
 	//Impedance* y = new Impedance("z1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) }));
 	//AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
+
 	//Network* myNetwork = new Network();
 
 	// Create Bus objects
@@ -222,6 +225,19 @@ int main() {
 		std::cout << "]" << std::endl;
 	}
 
+	// Find loops
+	auto loops = StateSpaceModel::findLoops(buses, busToElementsMap);
+
+	// Print loop results
+	std::cout << "\nLoops found:" << std::endl;
+	for (size_t i = 0; i < loops.size(); ++i) {
+		std::cout << "Loop " << i + 1 << ": ";
+		for (Element* e : loops[i]) {
+			std::cout << e->getElementSymbol() << " ";
+		}
+		std::cout << std::endl;
+	}
+
 	delete bus0;
 	delete bus1;
 	delete bus2;
@@ -232,13 +248,8 @@ int main() {
 	delete r3;
 
 	// Cleanup
-	
-
-	// Clean up dynamically allocated memory
 	//delete myNetwork;
-	//delete transformer;  // Clean up transformer
-
-
+	//delete transformer;  
 	//delete load1;
 
 	return 0;
