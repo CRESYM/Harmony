@@ -24,24 +24,8 @@ include_directories(${SYMENGINE_INCLUDE_DIRS})
 # Find casadi on local system
 find_package(casadi CONFIG)
 
-#find Groubi
-#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
-#message(STATUS ${CMAKE_MODULE_PATH})
-#find_package(GUROUBI REQUIRED)
-#include_directories(${GUROBI_INCLUDE_DIRS})
-
-#Find Matplot++
-#FetchContent_Declare(
-#   matplotplusplus
-#    GIT_REPOSITORY https://github.com/alandefreitas/matplotplusplus
-#   GIT_TAG origin/master
-#)
-
-#FetchContent_GetProperties(matplotplusplus)
-#if(NOT matplotplusplus_POPULATED)
-#    FetchContent_MakeAvailable(matplotplusplus)
-#    add_subdirectory(${matplotplusplus_SOURCE_DIR} ${matplotplusplus_BINARY_DIR} EXCLUDE_FROM_ALL)
-#endif()
+# Gurobi and Mathplot++ are configured below
+# They need to be configured after add_executable(Harmony ...)
 
 # Group header files
 set(Element_Header_Files src/Element.h)
@@ -171,8 +155,6 @@ if(WIN32) # workds for x64 as well
     source_group("Source Files\\Solver" FILES)
     source_group("Source Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
     source_group("Source Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Source_Files})
-
-
 endif()
 
 
@@ -216,9 +198,71 @@ target_link_libraries(
     Harmony
     casadi::casadi
     ${SYMENGINE_LIBRARIES}
-    #${GUROBI_LIBRARIES}
-    #matplot
 )
+
+# Configure Gurobi
+set(GUROBI_PATH "" CACHE PATH "Path to Gurobi installation")
+if(NOT GUROBI_PATH)
+    # User did not provide a path for the Gurobi installation
+    message(WARNING "Path to Gurobi was not specified. You will need to configure it manually in the Visual Studio Project Properties")
+elseif(NOT EXISTS "${GUROBI_PATH}")
+    message(FATAL_ERROR "The specified GUROBI_PATH does not exist: ${GUROBI_PATH}")
+else()
+    message(STATUS "The specified GUROBI_PATH is: ${GUROBI_PATH}")
+
+    # Add Gurobi header files
+    include_directories("${GUROBI_PATH}/include")
+    
+    # Find gurobi*.lib that is NOT the C++ wrapper
+    file(GLOB GUROBI_CORE_LIB "${GUROBI_PATH}/lib/gurobi[0-9]*.lib")
+
+    # Based on build config, choose the C++ wrapper lib pattern
+    file(GLOB GUROBI_CPP_DEBUG_LIB "${GUROBI_PATH}/lib/gurobi_c++mdd*.lib")
+    file(GLOB GUROBI_CPP_RELEASE_LIB "${GUROBI_PATH}/lib/gurobi_c++md[0-9]*.lib")
+
+    # Fail if either is missing
+    if(NOT GUROBI_CORE_LIB)
+        message(FATAL_ERROR "Could not find Gurobi core library (gurobi*.lib) in ${GUROBI_PATH}/lib")
+    endif()
+
+    if(NOT GUROBI_CPP_DEBUG_LIB OR NOT GUROBI_CPP_RELEASE_LIB)
+        message(FATAL_ERROR "Could not find Gurobi C++ wrapper library (gurobi_c++md*.lib or gurobi_c++mdd*.lib) in ${GUROBI_PATH}/lib")
+    endif()
+
+    message(STATUS "Using Gurobi core lib: ${GUROBI_CORE_LIB}")
+    message(STATUS "Using Gurobi C++ Debug lib: ${GUROBI_CPP_DEBUG_LIB}")
+    message(STATUS "Using Gurobi C++ Release lib: ${GUROBI_CPP_RELEASE_LIB}")
+
+    # Link the libraries
+    target_link_libraries(
+        Harmony
+        "${GUROBI_CORE_LIB}"
+        $<$<CONFIG:Debug>:${GUROBI_CPP_DEBUG_LIB}>
+        $<$<CONFIG:Release>:${GUROBI_CPP_RELEASE_LIB}>
+    )
+endif()
+
+
+# Set Matplot++ path 
+set(MATPLOT_PATH "" CACHE PATH "Path to MatPlot++ installation")
+if(NOT MATPLOT_PATH)
+    # User did not provide a path for the Matplot installation
+    message(WARNING "Path to Matplot++ was not specified. You will need to configure it manually in the Visual Studio Project Properties")
+elseif(NOT EXISTS "${MATPLOT_PATH}")
+    message(FATAL_ERROR "The specified MATPLOT_PATH does not exist: ${MATPLOT_PATH}")
+else()
+    message(STATUS "The specified MATPLOT_PATH is: ${MATPLOT_PATH}")
+
+    # Matplot supports CMake. We will use Matplot++Config.cmake contained in MATPLOT_PATH to configure the package
+    list(APPEND CMAKE_PREFIX_PATH "${MATPLOT_PATH}")
+    find_package(Matplot++ REQUIRED)
+    # Add Matplot++ header files
+    #include_directories("${MATPLOT_PATH}/include")
+    # Link the library
+    target_link_libraries(Harmony Matplot++::matplot)
+
+endif()
+
 
 # Find path to symengine dll and add it as a link directory
 get_target_property(SYMENGINE_DLL_PATH symengine LOCATION)
