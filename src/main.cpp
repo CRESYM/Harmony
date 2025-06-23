@@ -93,8 +93,6 @@ int main() {
 	//end_buses.push_back(gnd);
 	//skip_elements.push_back(ac);
 
-
-
 	////y->writeFile(10.0, 1000.0, 3);
 	//double omega_num = 1000;
 	//MatrixXcd Yparam = y->compute_y_parameters_num(omega_num);
@@ -113,7 +111,8 @@ int main() {
 	//	delete myNetwork;
 	//	return EXIT_FAILURE;
 	//}
-	////Create and Test MMC**
+	
+	//Create and Test MMC**
 	//MMC* myMMC = new MMC(
 	//	"MMC1",         // Symbol
 	//	2,              // Number of input pins
@@ -159,13 +158,102 @@ int main() {
 	//	return EXIT_FAILURE;
 	//}
 
-	// run OPF Haxaio
+	// Numerically computes the Jacobian matrices A = ∂f/∂x and B = ∂f/∂u at a specified operating point
+	double Fnom = 50;
+    double Vnom_sec = 333e3;
+    double Pnom = 1000e6;
+    double Vnom_dc = 640e3;
+    double Nb_PM = 36;
+    double C_PM = 1.758e-3;
+
+    double Zbase = Vnom_sec * Vnom_sec / Pnom;
+    double Larm_pu = 0.15;
+    double Rarm_pu = Larm_pu / 100;
+
+    double Larm = Larm_pu * (Zbase / (2 * M_PI * Fnom));
+    double Rarm = Rarm_pu * Zbase;
+
+    double w = 2 * M_PI * Fnom;
+
+    MMC mmc("MMC1", 2, 2, w, 0, 0, 0,
+		-Pnom, Pnom, -Pnom, Pnom,  // Power limits
+	    0, Vnom_sec, Vnom_dc,       // Angle, AC/DC voltages
+	    Larm, Rarm, C_PM / Nb_PM,     // Arm parameters
+	    Nb_PM, 0.0, 0.0, 150e-6);   // Submodules, reactor, delay
+   
+    // Linear Jacobian Analysis
+    std::cout << "=== Linear Jacobian Analysis ===\n"; 
+    mmc.computeJacobianLinear();
+
+    Eigen::MatrixXd A_lin = mmc.getA();
+    Eigen::MatrixXd B_lin = mmc.getB();
+
+    // Print A matrix
+    std::cout << "A = \n" << A_lin << "\n\n";
+
+    // Print B matrix
+    std::cout << "B = \n" << B_lin << "\n\n"; 
+   
+    // Eigenvalue analysis
+    Eigen::EigenSolver<Eigen::MatrixXd> es(A_lin);
+    std::cout << "Eigenvalues (linear):\n" << es.eigenvalues() << "\n";
+    mmc.checkStability();
+
+    // Nonlinear with Harmonic Injection
+    std::cout << "\nNonlinear Analysis with Harmonics: \n";
+    // Assign nonlinear parameters to match test case
+    double Rm = 10.0;
+    double Rp = Rarm;  // Equal to R_arm used in MMC
+    double Rn = Rarm;
+
+    mmc.setRarmPositive(Rp);
+    mmc.setRarmNegative(Rn);
+    mmc.setRarmMutual(Rm);
+
+    // Set 2nd harmonic amplitudes and phases 
+    mmc.setSecondHarmonicInjection(5000.0, 3000.0, 2*M_PI/3, 2*M_PI/3, 6*M_PI/3);
+
+    // Define operating point
+    Eigen::VectorXd x0 = Eigen::VectorXd::Zero(6);  // [ip1,ip2,ip3,in1,in2,in3]
+    x0 << 200e3, 0, 15e3, 20e3, 20e3, 20e3;
+
+    Eigen::VectorXd u0(8);                          // [VD1,VD2,VS1-VS6]
+    u0 << 0, 0, 400, 400, -400, 400, -400, 400;
+    double t = 5.0;
+
+    // Numerical Jacobian
+    mmc.computeJacobianNumerically(x0, u0);
+    std::cout << "\nA (numerical):\n" << mmc.getA() << "\n";
+    std::cout << "\nB (numerical):\n" << mmc.getB() << "\n";
+
+    // Admittance matrix
+    std::complex<double> s = std::complex<double>(0, 2 * M_PI * Fnom); 
+    Eigen::MatrixXcd Y = mmc.computeAdmittanceMatrix(s);
+
+    // Print the admittance matrix
+    std::cout << "Admittance Matrix: " << Fnom << "):\n" << Y << std::endl;
+    
+    // Equilibrium Solution
+    std::cout << "\nEquilibrium Solution: \n";
+    mmc.solveEquilibrium();
+    const Eigen::VectorXd x_eq = mmc.getEquilibriumState();
+    std::cout << "Equilibrium state:\n" << x_eq.transpose() << "\n";
+
+    // Verify equilibrium
+    const Eigen::VectorXd dx_eq = mmc.computeStateDerivatives(x_eq.head(6), u0);
+    std::cout << "||dx|| at equilibrium: " << dx_eq.norm() << "\n";
+
+    mmc.printEigenvalues();  // Display eigenvalues
+    mmc.checkStability();  // Analyze stability
+	
+
+	// Run OPF Haxaio
 	//solve_opf("../../src/mtdc3slack_a", "../../src/ac9ac14",
 	//	/*vscControl*/ true,
 	//	/*writeTxt  */ false,
 	//	/*plotResult*/ false);
 
-	//Cutset
+	// Cutset
 	Bus* bus0 = new Bus("0", 1);
 	Bus* bus1 = new Bus("1", 1);
 	Bus* bus2 = new Bus("2", 1);
@@ -213,7 +301,7 @@ int main() {
 		std::cout << "]" << std::endl;
 	}
 
-	//Generate element cutsets from the bus cutsets
+	// Generate element cutsets from the bus cutsets
 	std::vector<std::vector<Element*>> cutset_elements = model.from_cutsets(cutset_nodes, busToElementsMap);
 
 	std::cout << "\nCutset Elements:" << std::endl;
