@@ -3,7 +3,7 @@
 HARMONic stabilitY assessment of PE-penetrated power systems
 
 As other power systems, the European grid experiences a massive RES development, bringing up many new challenges for system operation. One of such challenges is the massive penetration of Power Electronic (PE) converters (e.g. PV & wind generation units, batteries & chargers, HVDC connections, statcoms, etc.) on a large scale as they may cause instable system operation (resonance) or harmonic waves that can interfere and/or damage the neighbouring equipment. 
-Where a few, local (a plant) and rather simple situations had to be analysed in the past, the risk is growing exponentially, as more devices connect, as they are more diverse, as they are closer one to another. Grid regulations are all the more demanding that complex situations can actually not be addressed. And, as a consequence, strong mitigation measures are integrated in every piece of equipment, at a significant additional cost… without preventing all undesired interactions.    
+Where a few, local (a plant) and rather simple situations had to be analysed in the past, the risk is growing exponentially, as more devices connect, as they are more diverse, as they are closer one to another. Grid regulations are all the more demanding that complex situations cannot actually be addressed. And, as a consequence, strong mitigation measures are integrated in every piece of equipment, at a significant additional cost… without preventing all undesired interactions.    
 There is a small number of publicly available, but limited, tools for such analyses, often requiring time-consuming modeling of the power system and the detailed control algorithms, possibly limited in terms of phasor-based simulation or unable to model all power converters, or unable to satisfactorily model an AC-DC hybrid system. 
 Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) project deals with the development of a mathematical framework capable of simulating all components in AC-DC system for converter driven stability assessment studies becomes crucial, in order to complement present tools, and eventually:  
 (i) ease the performance of stability assessment studies; 
@@ -18,7 +18,7 @@ See the [detailed installation instructions](docs/installation.md).
 ### Prerequisites 
 Harmony can be compiled on Windows. The requirements are:
 - [Visual Studio](https://visualstudio.microsoft.com) - version 2022 or newer, with a "Desktop Development for C++" workload installed (See [installation docs.](https://learn.microsoft.com/en-us/visualstudio/install/install-visual-studio?view=vs-2022))
-- [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python and other few packages. (You can also use Anaconda if it is already installed on your machine.)
+- [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python, and a few other packages. (You can also use Anaconda if it is already installed on your machine.)
   
 > [!WARNING]
 > When installing miniconda, make sure you select the option **'Add to path'**. This will allow you to use miniconda from Visual Studio, Git Bash, etc. If you forgot this, have a look at Step 3 in [this blog post](https://eduand-alvarez.medium.com/setting-up-anaconda-on-your-windows-pc-6e39800c1afb), which shows how to add miniconda to your path. Alternatively, you may reinstall miniconda.
@@ -45,8 +45,8 @@ conda activate harmony
 # Configure the project
 mkdir build
 cd build
-cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" -DMATPLOT_DIR="matplot++_installation_dir"
-# e.g. cmake .. -DGUROBI_PATH="C:\gurobi1202\win64" -DMATPLOT_DIR="C:\Program Files\Matplot++ 1.2.0"
+cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" -DMATPLOT_PATH="matplot++_installation_dir"
+# e.g. cmake .. -DGUROBI_PATH="C:\gurobi1202\win64" -DMATPLOT_PATH="C:\Program Files\Matplot++ 1.2.0"
 
 # Compile Harmony
 cmake --build . --config Release
