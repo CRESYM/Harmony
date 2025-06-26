@@ -4,7 +4,6 @@
 
 cmake_minimum_required(VERSION 4.0)
 project(Harmony)
-#include(FetchContent)
 
 # Set the C++ Standard (GoogleTest requires >= 14)
 # std::variant included in Constants.h requires >= 17)
