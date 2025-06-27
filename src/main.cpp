@@ -41,7 +41,7 @@ int main() {
 	//Impedance* y = new Impedance("z1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) }));
 	//AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
 
-	//Network* myNetwork = new Network();
+	Network* myNetwork = new Network();
 
 	// Create Bus objects
 	//Bus* b1 = new Bus("Bus1", 1);
@@ -197,7 +197,10 @@ int main() {
     // Eigenvalue analysis
     Eigen::EigenSolver<Eigen::MatrixXd> es(A_lin);
     std::cout << "Eigenvalues (linear):\n" << es.eigenvalues() << "\n";
-    mmc.checkStability();
+
+	// Generalized stability check
+	myNetwork->checkStability(A_lin);
+    //mmc.checkStability();
 
     // Nonlinear with Harmonic Injection
     std::cout << "\nNonlinear Analysis with Harmonics: \n";
@@ -244,8 +247,7 @@ int main() {
     std::cout << "||dx|| at equilibrium: " << dx_eq.norm() << "\n";
 
     mmc.printEigenvalues();  // Display eigenvalues
-    mmc.checkStability();  // Analyze stability
-	
+    myNetwork->checkStability(mmc.getA());  // Analyze stability
 
 	// Run OPF Haxaio
 	//solve_opf("../../src/mtdc3slack_a", "../../src/ac9ac14",
@@ -326,6 +328,32 @@ int main() {
 		std::cout << std::endl;
 	}
 
+	// Create a Capacitor between bus1 and bus2
+	double capacitance = 1e-6; // 1 microfarad
+	Capacitor* cap = new Capacitor("C1", bus1, bus2, capacitance, 0.0);
+
+	std::vector<Bus*> all_buses = {bus0, bus1, bus2 };
+	std::unordered_map<Bus*, int> busIndex; 
+	int row_index = 0;
+	for (auto* bus : all_buses) {
+		busIndex[bus] = row_index++;
+	}
+
+	int num_equations = static_cast<int>(all_buses.size());
+	
+	// MNA stamp
+	DenseMatrix M(num_equations + 1, num_equations + 1);
+	cap->writeMNAmatrix(M, num_equations, 1, symbol("C1"), busIndex);
+	std::cout << "M(3,3) = " << *M.get(3, 3) << "\n";   // branch row, col
+	std::cout << "M(1,3) = " << *M.get(1, 3) << "\n";   // node-row , col
+	std::cout << "M(3,1) = " << *M.get(3, 1) << "\n";   // branch row , node-col
+
+	// add capacitor to element list so loops / cutsets include it
+	elements.push_back(cap);
+
+
+	delete cap; 
+	
 	delete bus0;
 	delete bus1;
 	delete bus2;

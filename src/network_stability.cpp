@@ -302,4 +302,34 @@ void Network::compute_equivalent_impedance_nums(std::vector<Bus*> start_buses, s
     //cout << equivalent_impedance_size << endl;
 }
 
+void Network::checkStability(const Eigen::MatrixXd& A_matrix) {
+    Eigen::EigenSolver<Eigen::MatrixXd> es(A_matrix);
+    auto eigenvalues = es.eigenvalues();
+
+    bool stable = true;
+    bool marginallyStable = false;
+
+    for (int i = 0; i < eigenvalues.size(); ++i) {
+        double realPart = eigenvalues[i].real();
+
+        if (realPart > 1e-6) {
+            stable = false;
+            break;
+        }
+        else if (std::abs(realPart) < 1e-6) {
+            marginallyStable = true;
+        }
+    }
+
+    if (stable && !marginallyStable) {
+        std::cout << "System is STABLE around this operating point.\n";
+    }
+    else if (!stable) {
+        std::cout << "System is UNSTABLE around this operating point.\n";
+    }
+    else {
+        std::cout << "System is MARGINALLY STABLE or needs further analysis.\n";
+    }
+}
+
 

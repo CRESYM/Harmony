@@ -271,27 +271,27 @@ Eigen::MatrixXcd MMC::computeAdmittanceMatrix(std::complex<double> s) {
 }
 
 // System analysis
-void MMC::checkStability() const {
-    Eigen::EigenSolver<Eigen::MatrixXd> es(A_matrix);
-
-    bool stable = true;
-    for (int i = 0; i < es.eigenvalues().size(); ++i) {
-        if (es.eigenvalues()(i).real() > 0) {
-            stable = false;
-            break;
-        }
-    }
-
-    if (stable) {
-        std::cout << "System is STABLE around this operating point.\n";
-    }
-    else if (es.eigenvalues().real().maxCoeff() > 0) {
-        std::cout << "System is UNSTABLE around this operating point.\n";
-    }
-    else {
-        std::cout << "System is MARGINALLY STABLE or needs further analysis.\n";
-    }
-}
+//void MMC::checkStability() const {
+//    Eigen::EigenSolver<Eigen::MatrixXd> es(A_matrix);
+//
+//    bool stable = true;
+//    for (int i = 0; i < es.eigenvalues().size(); ++i) {
+//        if (es.eigenvalues()(i).real() > 0) {
+//            stable = false;
+//            break;
+//        }
+//    }
+//
+//    if (stable) {
+//        std::cout << "System is STABLE around this operating point.\n";
+//    }
+//    else if (es.eigenvalues().real().maxCoeff() > 0) {
+//        std::cout << "System is UNSTABLE around this operating point.\n";
+//    }
+//    else {
+//        std::cout << "System is MARGINALLY STABLE or needs further analysis.\n";
+//    }
+//}
 
 void MMC::printEigenvalues() const {
     Eigen::EigenSolver<Eigen::MatrixXd> es(A_matrix);

@@ -2,11 +2,19 @@
 #define STATE_SPACE_MODEL
 
 #include <vector>
+#include <map>
+#include <memory>
+#include <symengine/expression.h>
+#include <symengine/matrix.h>
 #include "Element.h"  
-#include "Bus.h"                        
+#include "Bus.h"      
+#include "network.h"
 
 class Bus;
 class Element;
+
+using SymEngine::Expression;
+using SymEngine::DenseMatrix;
 
 class StateSpaceModel {
 public:
@@ -59,6 +67,9 @@ public:
         const std::vector<Bus*>& nodes,
         const std::map<Bus*, std::vector<Element*>>& node_collection);
 
+    //void StateSpaceModel::formState(Network* net);
+
+
 private:
     static void traverseForLoops(
         Bus* current_node,
@@ -68,6 +79,8 @@ private:
         const std::map<Bus*, std::vector<Element*>>& node_collection,
         std::shared_ptr<Tree> current_branch,
         const std::map<Bus*, int>& busIndices);
+
+    SymEngine::DenseMatrix A, B, C, D;
 };
 
 #endif //STATE_SPACE_MODEL

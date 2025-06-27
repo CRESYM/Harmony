@@ -7,6 +7,7 @@
 #include "Impedance.h"
 #include "Resistor.h"
 #include "Load.h"
+#include "Capacitor.h"
 
 #include "Transformer_base.h"
 #include "Transformer_real.h"

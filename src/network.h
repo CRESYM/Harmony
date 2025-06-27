@@ -18,13 +18,16 @@ using Net = std::unordered_map<Bus*, std::vector<Element*>>;
 
 class Network {
 private: 
-    StateSpaceModel state_space_model; 
+    //StateSpaceModel state_space_model; 
 
     std::unordered_map<std::string, Bus*> buses; // Map of bus names to buses
     std::unordered_map<std::string, Element*> elements;  // Map of designators to elements
     std::unordered_map<Bus*, std::vector<Element*>> connections; // Connections between buses and elements
 
     int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation
+
+    //analyse the network topology & component list
+    void finalizeSystemLayout() const;
 public:
 
 	// Constructor to initialize the network with zero pins
@@ -73,6 +76,9 @@ public:
 
     void compute_equivalent_impedance_nums(std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double omega_num);
 
+    // System analysis
+    void checkStability(const Eigen::MatrixXd& A_matrix);
+
     //Power flow computation //network_powerflow.cpp
     std::map<std::string, double> PowerFlow();
 
@@ -101,6 +107,17 @@ public:
         std::vector<std::string> new_o,
         std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
         std::map<std::string, double>& global_params);
+    
+    //getters for state_space_model
+    int getNumberStateVariables() const; //number of state variables
+    int getStateVariablePosition() const; //MNA matrix column positions
+    const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getStateVariableSymbols() const; //return symengine symbols 
+    int getNumberIndependentSource() const; //independent sources
+    const std::vector<SymEngine::RCP<const SymEngine::Symbol>>&getSourceSymbols() const;
+    int getNumberOutputs() const;
+    const std::vector<int>& getOutputIndexes() const;
+    int getNumberEquations() const;
+    
 };
 
 #endif // NETWORK_H

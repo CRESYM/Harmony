@@ -51,6 +51,36 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
     return Y_val_exact;
 }
 
+// Generic MNA stamping 
+void Element::writeMNAmatrix(DenseMatrix& A,
+    int num_equations,
+    int index,
+    const RCP<const Basic>& value,
+    const std::unordered_map<Bus*, int>& busIndex)
+{
+    // Symbolic current variable like "vc1", "ir1", etc.
+    RCP<const Basic> current_symbol = symbol("v" + element_symbol + std::to_string(index));
+
+    int row = num_equations + index - 1;
+    int col = num_equations;  // Last column for extra variable (e.g., branch voltage)
+
+    A.set(row, col, current_symbol);  // Stamp current equation
+
+    auto buses = getBuses();  // [0] = node1, [1] = node2
+
+    if (buses[0] && busIndex.count(buses[0])) {
+        int n1 = busIndex.at(buses[0]);
+        A.set(n1, row, value);     // node1: KCL: +value
+        A.set(row, n1, one);       // branch eq: voltage +
+    }
+
+    if (buses[1] && busIndex.count(buses[1])) {
+        int n2 = busIndex.at(buses[1]);
+        A.set(n2, row, mul(integer(-1), value)); // node2: KCL: -value
+        A.set(row, n2, integer(-1));             // branch eq: voltage -
+    }
+}
+
 // Function to print the Element's values and Y_matrix entries
 void Element::printElementValues() {
     std::cout << "Element : " << getElementSymbol() << std::endl;
