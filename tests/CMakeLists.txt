@@ -49,6 +49,7 @@ include_directories(${CMAKE_SOURCE_DIR}/../src)
 # Define an executable testharmony made up of various cpp files
 add_executable(
     testharmony
+    testSimpleNetwork.cpp
     testelement.cpp
     testimpedance.cpp
     testload.cpp

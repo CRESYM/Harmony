@@ -95,7 +95,7 @@ void Element::printElementValues() {
 // Function to write the Y-parameter matrix to a file over a frequency range
 void Element::writeFile(double start_frequency, int end_frequency, int number_of_points) {
     std::ofstream myfile;
-    myfile.open("files/"+element_symbol+".csv");
+    myfile.open("files/" + element_symbol + ".csv");
 
     // Print the Y-parameters in file
     double gap = (log10(end_frequency) - log10(start_frequency)) / (number_of_points - 1);

@@ -31,59 +31,16 @@ int main() {
 	//std::vector<double> generator_values = { 1.0, 0.01, 1.0, 0.1 };
 	//Generator* g = new Generator("gen", 1, generator_values);
 
-	//std::vector<double> vec = {1,1,1}; 
-	//Load* load = new Load("l1", 3, vec);
+	std::vector<double> vec = {10,1e-3,1e-6}; 
+	Load* load = new Load("l1", 1, vec);
+	load->writeFile(1, 1e5, 1000);
 	//DenseMatrix Y = load->compute_y_parameters();
 
-	//Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
-	//std::cout << "Admitance" << std::endl;
-	//y->printElementInfo();
-	//Impedance* y = new Impedance("z1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) }));
-	//AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
+	Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
+	std::cout << "Admitance" << std::endl;
+	y->printElementInfo();
 
 	Network* myNetwork = new Network();
-
-	// Create Bus objects
-	//Bus* b1 = new Bus("Bus1", 1);
-	//Bus* gnd = new Bus("gnd", 1);
-
-	// Add elements to the network
-    //myNetwork->addElement(g);
-	//myNetwork->addElement(ac);
-
-	// Add buses to the network
-	//myNetwork->addBus("Bus1", b1);
-	//myNetwork->addBus("gnd", gnd);
-	//std::cout << "connection 0\n";
-
-
-	// Connect elements to buses
-	//myNetwork->connectElementToBus(g, 1, b1);
-	//std::cout << "connection 1\n";
-	//myNetwork->connectElementToBus(g, 2, gnd);
-	//std::cout << "connection 2\n";
-
-	//myNetwork->connectElementToBus(ac, 1, b1);
-	//std::cout << "connection 3\n";
-
-	//myNetwork->connectElementToBus(ac, 2, gnd);
-	//std::cout << "connection4\n";
-
-
-	//std::cout << "Connecting y to bus1 and gnd...\n";
-	//std::cout << "Input pins: " << g->getInputPins()
-	//	<< ", Output pins: " << g->getOutputPins()
-	//	<< ", bus1 pins: " << b1->getPinNumber()
-	//	<< ", gnd pins: " << gnd->getPinNumber() << std::endl;
-
-	
-	//std::cout << "[Debug] Calling printConnectedElements() for Bus1\n";
-	//b1->printConnectedElements();
-
-
-	// Print the connections to verify the network
-	//myNetwork->printConnections();
-
 
 	//vector<Bus*> start_buses;
 	//vector<Bus*> end_buses;
@@ -199,7 +156,7 @@ int main() {
     std::cout << "Eigenvalues (linear):\n" << es.eigenvalues() << "\n";
 
 	// Generalized stability check
-	myNetwork->checkStability(A_lin);
+	//myNetwork->checkStability(A_lin);
     //mmc.checkStability();
 
     // Nonlinear with Harmonic Injection
@@ -247,7 +204,7 @@ int main() {
     std::cout << "||dx|| at equilibrium: " << dx_eq.norm() << "\n";
 
     mmc.printEigenvalues();  // Display eigenvalues
-    myNetwork->checkStability(mmc.getA());  // Analyze stability
+    //myNetwork->checkStability(mmc.getA());  // Analyze stability
 
 	// Run OPF Haxaio
 	//solve_opf("../../src/mtdc3slack_a", "../../src/ac9ac14",
