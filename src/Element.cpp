@@ -98,8 +98,7 @@ void Element::writeFile(double start_frequency, int end_frequency, int number_of
     myfile.open("files/" + element_symbol + ".csv");
 
     // Print the Y-parameters in file
-    double gap = (log10(end_frequency) - log10(start_frequency)) / (number_of_points - 1);
-    gap = pow(10, gap);
+    double gap = (end_frequency - start_frequency) / (number_of_points - 1);
     int frequency = start_frequency;
     for (int p = 0; p < number_of_points; p++) {
         std::vector<std::vector<complex<double>>> Y = compute_y_parameters(frequency);
@@ -113,7 +112,7 @@ void Element::writeFile(double start_frequency, int end_frequency, int number_of
         }
         myfile << "\n";
 
-        frequency *= gap; // increase frequency
+        frequency = frequency + gap; // increase frequency
     }
     
     myfile.close();

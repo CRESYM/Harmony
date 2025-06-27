@@ -33,7 +33,7 @@ int main() {
 
 	std::vector<double> vec = {10,1e-3,1e-6}; 
 	Load* load = new Load("l1", 1, vec);
-	load->writeFile(1, 1e5, 1000);
+	load->writeFile(10, 100000, 10000);
 	//DenseMatrix Y = load->compute_y_parameters();
 
 	Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
@@ -212,6 +212,7 @@ int main() {
 	//	/*writeTxt  */ false,
 	//	/*plotResult*/ false);
 
+
 	// Cutset
 	Bus* bus0 = new Bus("0", 1);
 	Bus* bus1 = new Bus("1", 1);
@@ -223,9 +224,6 @@ int main() {
 	Resistor* r1 = new Resistor("R1", 2, 2.0);
 	Resistor* r2 = new Resistor("R2", 2, 2.0);
 	Resistor* r3 = new Resistor("R3", 2, 2.0);
-
-	//r1->printElementInfo();       // Base class method
-	//r1->printElementValues();     // Calls Resistor::printElementValues
 
 	// Manually connect elements to buses
 	ac->attachBus(bus1, 1);
@@ -239,7 +237,7 @@ int main() {
 
 	r3->attachBus(bus2, 1);
 	r3->attachBus(bus0, 2);
-	
+
 	// Collect elements
 	std::vector<Element*> elements = { ac, r1, r2, r3 };
 
@@ -248,56 +246,20 @@ int main() {
 	// Create the StateSpaceModel object
 	StateSpaceModel model;
 
-	//Generate all bus cutsets
-	std::vector<std::vector<Bus*>> cutset_nodes = model.from_cutset_nodes(buses, {});
-
-	std::cout << "Cutset Nodes:" << std::endl;
-	for (const auto& group : cutset_nodes) {
-		std::cout << "[ ";
-		for (Bus* b : group) {
-			std::cout << b->getBusName() << " ";
-		}
-		std::cout << "]" << std::endl;
-	}
-
-	// Generate element cutsets from the bus cutsets
-	std::vector<std::vector<Element*>> cutset_elements = model.from_cutsets(cutset_nodes, busToElementsMap);
-
-	std::cout << "\nCutset Elements:" << std::endl;
-	for (const auto& group : cutset_elements) {
-		std::cout << "[ ";
-		for (Element* e : group) {
-			std::cout << e->getElementSymbol() << " ";
-		}
-		std::cout << "]" << std::endl;
-	}
-
-	// Find loops
-	auto loops = StateSpaceModel::findLoops(buses, busToElementsMap);
-
-	// Print loop results
-	std::cout << "\nLoops found:" << std::endl;
-	for (size_t i = 0; i < loops.size(); ++i) {
-		std::cout << "Loop " << i + 1 << ": ";
-		for (Element* e : loops[i]) {
-			std::cout << e->getElementSymbol() << " ";
-		}
-		std::cout << std::endl;
-	}
-
+	
 	// Create a Capacitor between bus1 and bus2
 	double capacitance = 1e-6; // 1 microfarad
 	Capacitor* cap = new Capacitor("C1", bus1, bus2, capacitance, 0.0);
 
-	std::vector<Bus*> all_buses = {bus0, bus1, bus2 };
-	std::unordered_map<Bus*, int> busIndex; 
+	std::vector<Bus*> all_buses = { bus0, bus1, bus2 };
+	std::unordered_map<Bus*, int> busIndex;
 	int row_index = 0;
 	for (auto* bus : all_buses) {
 		busIndex[bus] = row_index++;
 	}
 
 	int num_equations = static_cast<int>(all_buses.size());
-	
+
 	// MNA stamp
 	DenseMatrix M(num_equations + 1, num_equations + 1);
 	cap->writeMNAmatrix(M, num_equations, 1, symbol("C1"), busIndex);
@@ -309,19 +271,8 @@ int main() {
 	elements.push_back(cap);
 
 
-	delete cap; 
-	
-	delete bus0;
-	delete bus1;
-	delete bus2;
-
-	delete ac;
-	delete r1;
-	delete r2;
-	delete r3;
-
 	// Cleanup
-	//delete myNetwork;
+	delete myNetwork;
 	//delete transformer;  
 	//delete load1;
 
