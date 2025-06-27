@@ -29,7 +29,7 @@ find_package(casadi CONFIG)
 
 # Group header files
 set(Element_Header_Files src/Element.h)
-set(Element_Admittance_Header_Files src/Admittance.h)
+#set(Element_Admittance_Header_Files src/Admittance.h)
 set(Element_Converter_Header_Files
     src/Controller.h
     src/Filter.h
@@ -40,6 +40,8 @@ set(Element_Impedance_Header_Files
     src/Impedance.h
     src/Load.h
     src/Resistor.h
+    src/Admittance.h
+    src/Capacitor.h
 )
 set(Element_Source_Header_Files src/AC_source.h)
 set(Element_Transformer_Header_Files
@@ -78,7 +80,7 @@ set(Header_Files
 
 # Group source files
 set(Element_Source_Files src/Element.cpp)
-set(Element_Admittance_Source_Files src/Admittance.cpp)
+#set(Element_Admittance_Source_Files src/Admittance.cpp)
 set(Element_Converter_Source_Files
     src/Controller.cpp
     src/Filter.cpp
@@ -89,6 +91,8 @@ set(Element_Impedance_Source_Files
     src/Impedance.cpp
     src/Load.cpp
     src/Resistor.cpp
+    src/Admittance.cpp
+    src/Capacitor.cpp
 )
 set(Element_Source_Source_Files src/AC_source.cpp)
 set(Element_Transformer_Source_Files
@@ -131,7 +135,7 @@ set(Source_Files
 if(WIN32) # workds for x64 as well
     source_group("Header Files" FILES ${Header_Files})
     source_group("Header Files\\Elements" FILES ${Element_Header_Files})
-    source_group("Header Files\\Elements\\Admittance" FILES ${Element_Admittance_Header_Files})
+    #source_group("Header Files\\Elements\\Admittance" FILES ${Element_Admittance_Header_Files})
     source_group("Header Files\\Elements\\Converter" FILES ${Element_Converter_Header_Files})
     source_group("Header Files\\Elements\\Generator" FILES ${Element_Generator_Header_Files})
     source_group("Header Files\\Elements\\Impedance" FILES ${Element_Impedance_Header_Files})
@@ -145,7 +149,7 @@ if(WIN32) # workds for x64 as well
 
     source_group("Source Files" FILES ${Source_Files})
     source_group("Source Files\\Elements" FILES ${Element_Source_Files})
-    source_group("Source Files\\Elements\\Admittance" FILES ${Element_Admittance_Source_Files})
+    #source_group("Source Files\\Elements\\Admittance" FILES ${Element_Admittance_Source_Files})
     source_group("Source Files\\Elements\\Converter" FILES ${Element_Converter_Source_Files})
     source_group("Source Files\\Elements\\Generator" FILES ${Element_Generator_Source_Files})
     source_group("Source Files\\Elements\\Impedance" FILES ${Element_Impedance_Source_Files})
@@ -163,7 +167,7 @@ add_executable(
     Harmony
     ${Header_Files}
     ${Element_Header_Files}
-    ${Element_Admittance_Header_Files}
+    #${Element_Admittance_Header_Files}
     ${Element_Converter_Header_Files}
     ${Element_Generator_Header_Files}
     ${Element_Impedance_Header_Files}
@@ -175,7 +179,7 @@ add_executable(
 
     ${Source_Files}
     ${Element_Source_Files}
-    ${Element_Admittance_Source_Files}
+    #${Element_Admittance_Source_Files}
     ${Element_Converter_Source_Files}
     ${Element_Generator_Source_Files}
     ${Element_Impedance_Source_Files}
