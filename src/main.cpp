@@ -23,22 +23,14 @@ int main() {
 	//transformer->printElementValues();
 
 	// TL constructor check
-	//std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
-	//TransmissionLine* t = new TransmissionLine("tl", 3, transmission_line_values);
+	std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
+	TransmissionLine* transmission_line = new TransmissionLine("tl", 1, transmission_line_values);
+	transmission_line->writeFile(10, 10000000, 1000);
 
 
 	// Generator constructor check
 	//std::vector<double> generator_values = { 1.0, 0.01, 1.0, 0.1 };
 	//Generator* g = new Generator("gen", 1, generator_values);
-
-	std::vector<double> vec = {10,1e-3,1e-6}; 
-	Load* load = new Load("l1", 1, vec);
-	load->writeFile(10, 100000, 10000);
-	//DenseMatrix Y = load->compute_y_parameters();
-
-	Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
-	std::cout << "Admitance" << std::endl;
-	y->printElementInfo();
 
 	Network* myNetwork = new Network();
 
@@ -50,24 +42,10 @@ int main() {
 	//end_buses.push_back(gnd);
 	//skip_elements.push_back(ac);
 
-	////y->writeFile(10.0, 1000.0, 3);
-	//double omega_num = 1000;
-	//MatrixXcd Yparam = y->compute_y_parameters_num(omega_num);
-
-	//cout << Yparam << endl;
 
 	//Eigen::MatrixXcd equivalent_impedance;
 	//myNetwork->compute_equivalent_impedance(start_buses, end_buses, skip_elements);
-	
-	//try {
-	//	// Compute equivalent impedance
-	//	myNetwork->compute_equivalent_impedance_nums(start_buses, end_buses, skip_elements, omega_num);
-	//}
-	//catch (const std::exception& e) {
-	//	std::cerr << "Error during impedance computation: " << e.what() << std::endl;
-	//	delete myNetwork;
-	//	return EXIT_FAILURE;
-	//}
+
 	
 	//Create and Test MMC**
 	//MMC* myMMC = new MMC(

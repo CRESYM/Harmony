@@ -53,6 +53,7 @@ add_executable(
     teststatespacemodel.cpp
     testelement.cpp
     testimpedance.cpp
+    testadmittance.cpp
     testload.cpp
     utils.cpp
     ${HARMONY_SOURCE_FILES}
