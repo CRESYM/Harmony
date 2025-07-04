@@ -55,6 +55,10 @@ add_executable(
     testimpedance.cpp
     testadmittance.cpp
     testload.cpp
+    testcapacitor.cpp
+    testresistor.cpp
+    testinductor.cpp
+    testswitch.cpp
     utils.cpp
     ${HARMONY_SOURCE_FILES}
 )

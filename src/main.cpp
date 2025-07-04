@@ -225,29 +225,109 @@ int main() {
 	StateSpaceModel model;
 
 	
-	// Create a Capacitor between bus1 and bus2
-	double capacitance = 1e-6; // 1 microfarad
-	Capacitor* cap = new Capacitor("C1", bus1, bus2, capacitance, 0.0);
+	//// Create a Capacitor between bus1 and bus2
+	//double capacitance = 1e-6; // 1 microfarad
+	//Capacitor* cap = new Capacitor("C1", bus1, bus2, capacitance, 0.0); //single-phase
+	//
 
-	std::vector<Bus*> all_buses = { bus0, bus1, bus2 };
-	std::unordered_map<Bus*, int> busIndex;
-	int row_index = 0;
-	for (auto* bus : all_buses) {
-		busIndex[bus] = row_index++;
+	//std::vector<Bus*> all_buses = { bus0, bus1, bus2 };
+	//std::unordered_map<Bus*, int> busIndex;
+	//int row_index = 0;
+	//for (auto* bus : all_buses) {
+	//	busIndex[bus] = row_index++;
+	//}
+
+	//int num_equations = static_cast<int>(all_buses.size());
+
+	//// MNA stamp
+	//DenseMatrix M(num_equations + 1, num_equations + 1);
+	//cap->writeMNAmatrix(M, num_equations, 1, symbol("C1"), busIndex);
+	//std::cout << "M(3,3) = " << *M.get(3, 3) << "\n";   // branch row, col
+	//std::cout << "M(1,3) = " << *M.get(1, 3) << "\n";   // node-row , col
+	//std::cout << "M(3,1) = " << *M.get(3, 1) << "\n";   // branch row , node-col
+
+	//// add capacitor to element list so loops / cutsets include it
+	//elements.push_back(cap);
+
+	//switch single-phase 
+	Bus* a = new Bus("a",1);
+	Bus* b = new Bus("b",1);
+
+	Switch* sw = new Switch("SW1", { a }, { b }, { true }); //closed
+
+	std::vector<Bus*> buses1 = { a, b };
+	std::unordered_map<Bus*, int> busIndex1 = { {a,0},{b,1} };
+
+	int num_eq = static_cast<int>(buses1.size());
+	DenseMatrix A(num_eq + 1, num_eq + 1);      // +1 auxiliary row
+
+	sw->writeMNAmatrix(A, num_eq, 0, symbol("SW1"), busIndex1);
+
+	std::cout << "A(2,0)=" << *A.get(2, 0) << "  A(0,2)=" << *A.get(0, 2) << '\n'; 
+	std::cout << "A(2,1)=" << *A.get(2, 1) << "  A(1,2)=" << *A.get(1, 2) << '\n'; 
+
+    //switch three-phase 
+	Bus* a1 = new Bus("a1", 1);
+	Bus* a2 = new Bus("a2", 1);
+	Bus* a3 = new Bus("a3", 1);
+	Bus* b1 = new Bus("b1", 1);
+	Bus* b2 = new Bus("b2", 1);
+	Bus* b3 = new Bus("b3", 1);
+
+	std::vector<Bus*> node1s = { a1, a2, a3 };
+	std::vector<Bus*> node2s = { b1, b2, b3 };
+	std::vector<bool> phaseStates = { true, false, true };  // for example: phase 0 and 2 closed, phase 1 open
+
+	Switch* sw3p = new Switch("SW3P", node1s, node2s, phaseStates);
+
+	std::vector<Bus*> buses3p = { a1, a2, a3, b1, b2, b3 };
+	std::unordered_map<Bus*, int> busIndex3p;
+	for (int i = 0; i < 6; ++i) {
+		busIndex3p[buses3p[i]] = i;
 	}
 
-	int num_equations = static_cast<int>(all_buses.size());
+    int num_eq_3p = static_cast<int>(buses3p.size());
+	DenseMatrix A3p(num_eq_3p + 3, num_eq_3p + 3);  // +3 auxiliary rows, one per phase
+	
+	// Initialize A3p to zero
+	for (int i = 0; i < A3p.nrows(); ++i)
+		for (int j = 0; j < A3p.ncols(); ++j)
+			A3p.set(i, j, zero);
 
-	// MNA stamp
-	DenseMatrix M(num_equations + 1, num_equations + 1);
-	cap->writeMNAmatrix(M, num_equations, 1, symbol("C1"), busIndex);
-	std::cout << "M(3,3) = " << *M.get(3, 3) << "\n";   // branch row, col
-	std::cout << "M(1,3) = " << *M.get(1, 3) << "\n";   // node-row , col
-	std::cout << "M(3,1) = " << *M.get(3, 1) << "\n";   // branch row , node-col
+	
+	sw3p->writeMNAmatrix(A3p, num_eq_3p, 0, symbol("SW3P"), busIndex3p);  
 
-	// add capacitor to element list so loops / cutsets include it
-	elements.push_back(cap);
+	std::cout << "\nThree-phase switch matrix entries:\n";
 
+	for (int p = 0; p < 3; ++p) {
+		int aux_row = num_eq_3p + p;   
+		int idx_n1 = busIndex3p[node1s[p]];
+		int idx_n2 = busIndex3p[node2s[p]];
+
+		std::cout << "Diagonal A(aux_row=" << aux_row << ", aux_row=" << aux_row << ") = " << *A3p.get(aux_row, aux_row) << "\n";
+		std::cout << "A(aux_row=" << aux_row << ", n1=" << idx_n1 << ") = " << *A3p.get(aux_row, idx_n1) << "\n";
+		std::cout << "A(n1=" << idx_n1 << ", aux_row=" << aux_row << ") = " << *A3p.get(idx_n1, aux_row) << "\n";
+		std::cout << "A(aux_row=" << aux_row << ", n2=" << idx_n2 << ") = " << *A3p.get(aux_row, idx_n2) << "\n";
+		std::cout << "A(n2=" << idx_n2 << ", aux_row=" << aux_row << ") = " << *A3p.get(idx_n2, aux_row) << "\n";
+
+
+		// For open phase (phase 1)
+		if (!phaseStates[p]) {
+			std::cout << "Diagonal A(aux_row=" << aux_row << ", aux_row=" << aux_row << ") = " << *A3p.get(aux_row, aux_row) << "\n";
+		}
+	}
+
+	// Print full matrix
+	std::cout << "\n--- MNA Matrix A3p (9x9) ---\n";
+	for (int i = 0; i < A3p.nrows(); ++i) {
+		for (int j = 0; j < A3p.ncols(); ++j) {
+			std::cout << A3p.get(i, j)->__str__() << "\t";
+		}
+		std::cout << "\n";
+	}
+
+    // Clean up
+	 delete a; delete b;
 
 	// Cleanup
 	delete myNetwork;

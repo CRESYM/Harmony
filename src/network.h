@@ -19,15 +19,35 @@ using Net = std::unordered_map<Bus*, std::vector<Element*>>;
 class Network {
 private: 
     //StateSpaceModel state_space_model; 
-
     std::unordered_map<std::string, Bus*> buses; // Map of bus names to buses
     std::unordered_map<std::string, Element*> elements;  // Map of designators to elements
     std::unordered_map<Bus*, std::vector<Element*>> connections; // Connections between buses and elements
 
     int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation
-
-    //analyse the network topology & component list
-    void finalizeSystemLayout() const;
+    //state_space_model
+    int number_voltage_sources;
+    int number_current_sources;
+    int number_switches;
+    int number_inductors;
+    int number_capacitors;
+    int number_resistors;
+    int number_independent_sources;
+    int number_elements;
+    int number_nodes;
+    int total_number_equations;
+    int state_variables;
+    std::vector<Element*> element_list;
+    std::vector<std::string> symbols_bank;
+    std::vector<Bus*> nodes;
+    std::vector<Element*> switches;
+    std::vector<Element*> inductors;
+    std::vector<Element*> capacitors;
+    std::vector<RCP<const Symbol>> initial_values;
+    std::vector<RCP<const Symbol>> state_variables_symbols;
+    std::vector<RCP<const Symbol>> sources_symbols;
+    std::vector<RCP<const Symbol>> independent_sources;
+    std::vector<RCP<const Symbol>> sources_values;
+ 
 public:
 
 	// Constructor to initialize the network with zero pins
@@ -114,9 +134,6 @@ public:
     const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getStateVariableSymbols() const; //return symengine symbols 
     int getNumberIndependentSource() const; //independent sources
     const std::vector<SymEngine::RCP<const SymEngine::Symbol>>&getSourceSymbols() const;
-    int getNumberOutputs() const;
-    const std::vector<int>& getOutputIndexes() const;
-    int getNumberEquations() const;
     
 };
 

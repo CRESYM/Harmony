@@ -1,4 +1,4 @@
-#ifndef STATE_SPACE_MODEL
+﻿#ifndef STATE_SPACE_MODEL
 #define STATE_SPACE_MODEL
 
 #include <vector>
@@ -67,7 +67,8 @@ public:
         const std::vector<Bus*>& nodes,
         const std::map<Bus*, std::vector<Element*>>& node_collection);
 
-    //void StateSpaceModel::formState(Network* net);
+    // high‑level wrapper: build A,B,C,D from a populated Network
+    //void formState(Network* net);
 
 
 private:
@@ -80,7 +81,7 @@ private:
         std::shared_ptr<Tree> current_branch,
         const std::map<Bus*, int>& busIndices);
 
-    SymEngine::DenseMatrix A, B, C, D;
+    DenseMatrix A, B, C, D;  //state_space blocks
 };
 
 #endif //STATE_SPACE_MODEL

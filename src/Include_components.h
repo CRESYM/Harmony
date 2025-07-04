@@ -8,6 +8,8 @@
 #include "Resistor.h"
 #include "Load.h"
 #include "Capacitor.h"
+#include "Switch.h"
+#include "Inductor.h"
 
 #include "Transformer_base.h"
 #include "Transformer_real.h"
@@ -31,6 +33,7 @@
 #include "solve_opf.h"
 
 #include "State_Space_Model.h"
+
 
 
 #endif // !INCLUDE_COMPONENTS_H

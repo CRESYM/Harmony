@@ -117,5 +117,3 @@ void Network::printConnections() {
     }
 }
 
-//state_space
-

@@ -83,6 +83,9 @@ public:
         const SymEngine::RCP<const SymEngine::Basic>& value,
         const std::unordered_map<Bus*, int>& busIndex);
 
+    virtual bool getPhaseState(int i) const { return true; } // Default to closed
+
+
     // Virtual power flow computation methods (override in subclasses)
     virtual void computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
         std::map<std::string, double>& globalParams) const {}

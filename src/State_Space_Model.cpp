@@ -9,6 +9,8 @@ using SymEngine::mul;
 using SymEngine::symbol;
 using SymEngine::one;
 
+
+
 using namespace SymEngine;
 
 
@@ -235,15 +237,15 @@ void StateSpaceModel::traverseForLoops(
 
 //void StateSpaceModel::formState(Network* net)
 //{
-//    const int nX = net->getNumberStateVariables();
-//    const int nU = net->getNumberIndependentSource();
-//    const int nY = net->getNumberOutputs();
-//    const int nEq = net->getNumberEquations();
-//    const int xPos = net->getStateVariablePosition();
+//    // Retrieve system information
+//    int state_variables = net->getNumberStateVariables();
+//    int state_variables_position = net->getStateVariablePosition();
+//    int independent_sources = net->getNumberIndependentSource();
+//    const std::vector<RCP<const Symbol>>& state_variables_symbols = net->getStateVariableSymbols();
+//    const std::vector<RCP<const Symbol>>& independent_sources_symbols = net->getSourceSymbols();
 //
-//    const auto& xSym = net->getStateVariableSymbols();
-//    const auto& uSym = net->getSourceSymbols();
-//    const auto& yIdx = net->getOutputIndexes();
-//
+//    // Initialize state-space matrices
+//    A = DenseMatrix(state_variables, state_variables);
+//    B = DenseMatrix(state_variables, independent_sources);
 //
 //}

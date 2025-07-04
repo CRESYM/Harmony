@@ -93,7 +93,7 @@ public:
     Eigen::MatrixXcd computeAdmittanceMatrix(std::complex<double> s);
 
     // System analysis
-    //void checkStability() const;
+    void checkStability() const;
     void printEigenvalues() const;
 
     // Add a filter or controller
