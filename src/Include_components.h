@@ -5,7 +5,11 @@
 
 #include "Admittance.h"
 #include "Impedance.h"
+#include "Resistor.h"
 #include "Load.h"
+#include "Capacitor.h"
+#include "Switch.h"
+#include "Inductor.h"
 
 #include "Transformer_base.h"
 #include "Transformer_real.h"
@@ -25,6 +29,10 @@
 #include "MMC.h"
 #include "Filter.h"
 #include "Controller.h"
+
+#include "solve_opf.h"
+
+#include "State_Space_Model.h"
 
 
 

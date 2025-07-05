@@ -25,7 +25,13 @@ public:
         Q_max(maxReactivePower), theta(angle), V_m(acVoltage), V_dc(dcVoltage),
         L_arm(armInductance), R_arm(armResistance), C_arm(armCapacitance),
         N(numSubmodules), L_reactor(reactorInductance),
-        R_reactor(reactorResistance), t_delay(timeDelay) {}
+        R_reactor(reactorResistance), t_delay(timeDelay) 
+    {
+        A_matrix = Eigen::MatrixXd::Zero(6, 6);
+        B_matrix = Eigen::MatrixXd::Zero(6, 8);
+        C_matrix = Eigen::MatrixXd::Identity(6, 6);
+        D_matrix = Eigen::MatrixXd::Zero(6, 8);
+    }
 
     // Constructor to initialize MMC with the converter_params (from init_MMC)
     //MMC(const std::vector<double>& converter_params)
@@ -52,21 +58,43 @@ public:
     //    t_delay = converter_params[15];
     //}
 
-
     // Destructor
     ~MMC() {}
-
-    static MMC init_MMC(const std::vector<double>& converter_params);
     
-    // Method to initialize controllers and Filters in MMC
-    void init_Controller(const std::vector<double>&converter_params);
+    // Initialization methods
+    static MMC init_MMC(const std::vector<double>& converter_params);
+    void init_Controller(const std::vector<double>&converter_params);// Method to initialize controllers and Filters in MMC
     void init_Filter(const std::vector<double>& converter_params);
-
     void update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc);
+    
+    //setter-Harmonic injection
+    void setRarmPositive(double val);  // Rp
+    void setRarmNegative(double val);  // Rn
+    void setRarmMutual(double val);    // Rm
+
+    void setSecondHarmonicInjection(double A, double B, double ph1, double ph2, double ph3);
+    
+    //getter
+    Eigen::MatrixXd getA() const { return A_matrix; }
+    Eigen::MatrixXd getB() const { return B_matrix; }
+    Eigen::MatrixXd getC() const { return C_matrix; }
+    Eigen::MatrixXd getD() const { return D_matrix; }
+    Eigen::VectorXd getEquilibriumState() const { return equilibrium_state; }
+
+    Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u);
+    Eigen::VectorXd computeStateDerivativesLinear(const Eigen::VectorXd& x, const Eigen::VectorXd& u);
+
+    Eigen::MatrixXd computeJacobianNumerically(const Eigen::VectorXd& x0, const Eigen::VectorXd& u0);
+    void computeJacobianLinear();
+
+    // Equilibrium point calculation
     void solveEquilibrium();
-    void computeJacobian();
-    Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& state, const Eigen::VectorXd& inputs);
-    Eigen::MatrixXd computeJacobianNumerically(const Eigen::VectorXd& state, const Eigen::VectorXd& inputs);
+
+    Eigen::MatrixXcd computeAdmittanceMatrix(std::complex<double> s);
+
+    // System analysis
+    void checkStability() const;
+    void printEigenvalues() const;
 
     // Add a filter or controller
     void addSubElement(const std::string& subElementName, const std::shared_ptr<Element>& subElement) {
@@ -116,8 +144,6 @@ public:
         printSubElements();
     }
 
-
-
 private:
     double omega_0;  // Nominal frequency
     double P;        // Active power [MW]
@@ -137,15 +163,25 @@ private:
     double L_reactor; // Inductance of the phase reactor [H]
     double R_reactor; // Resistance of the phase reactor [Ω]
     double t_delay;   // Time delay [s]
+    
+    //Add Harmonic Parameters 
+    double A_harm = 0.0;         // Amplitude of upper arm harmonic injection
+    double B_harm = 0.0;         // Amplitude of lower arm harmonic injection
+    double phi1 = 0.0, phi2 = 0.0, phi3 = 0.0; // Phase shifts
 
+    // Custom arm resistance values (for nonlinear models or harmonic tuning)
+    double Rn_custom = 0.0;  // Negative arm resistance
+    double Rm_custom = 10.0; // Mutual resistance
+    
+    // System matrices
+    Eigen::MatrixXd A_matrix, B_matrix, C_matrix, D_matrix;
+    Eigen::VectorXd equilibrium_state;
+    
     // Sub-elements
     std::vector<std::pair<std::string, std::shared_ptr<Element>>> subElements;
 
     std::map<std::string, std::shared_ptr<Controller>> controls;
     std::map<std::string, std::shared_ptr<Filter>> filters;
-
-    Eigen::VectorXd equilibrium_state;
-    Eigen::MatrixXd A_matrix, B_matrix, C_matrix, D_matrix;
 };
 
 #endif // MMC_H

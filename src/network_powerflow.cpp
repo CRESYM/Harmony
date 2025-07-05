@@ -6,11 +6,11 @@
 #include <algorithm>
 
 
-
 void Network::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     const std::vector<std::string>& bus_info)
 {
     dict_ac.push_back(bus_info);
+
 }
 
 void Network::addBusDC(std::vector<std::vector<std::string>>& dict_dc,

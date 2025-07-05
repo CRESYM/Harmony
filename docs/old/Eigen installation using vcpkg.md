@@ -1,19 +1,25 @@
-If you haven't already installed vcpkg, follow these instructions:
-1- git clone https://github.com/microsoft/vcpkg.git
-2- cd vcpkg
-3- ./bootstrap-vcpkg.bat
-4- vcpkg integrate install
-Install eigen with vcpkg
-1- vcpkg install eigen3
-2- vcpkg install eigen3:x64-windows
-3- Open your project in Visual Studio.
-4- Right-click your project in Solution Explorer, and select Properties.
-5- Under C/C++ -> General, add the path to the Eigen headers (vcpkg/installed/x64-windows/include/Eigen) in the Additional Include Directories section.
+### Installation of Eigen in case that you did not use miniconda for installation
 
+If you haven't already installed vcpkg, follow these instructions:
+
+- git clone https://github.com/microsoft/vcpkg.git
+- cd vcpkg
+- ./bootstrap-vcpkg.bat
+- vcpkg integrate install
+
+Install eigen with vcpkg:
+- vcpkg install eigen3
+- vcpkg install eigen3:x64-windows
+- Open your project in Visual Studio.
+- Right-click your project in Solution Explorer, and select Properties.
+- Under C/C++ -> General, add the path to the Eigen headers (vcpkg/installed/x64-windows/include/Eigen) in the Additional Include Directories section.
+
+To test the successful installation, use the following code.
 #include <Eigen/Dense>
 
 
 Sample to test: 
+```
 #include <iostream>
 #include <Eigen/dense>
 #include <coin-or/IpIpoptApplication.hpp>
@@ -40,3 +46,4 @@ int main()
     std::cout << "Hello World!\n";
     return 0;
 }
+```

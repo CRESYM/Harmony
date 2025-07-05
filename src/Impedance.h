@@ -41,7 +41,7 @@ public:
 
 private:
     // No additional private members in this class, as the behavior is inherited from Element
-    DenseMatrix Y_matrix; // Admittance matrix
+    //DenseMatrix Y_matrix; // Admittance matrix
 };
 
 #endif // _IMPEDANCE_H_

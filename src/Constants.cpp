@@ -16,9 +16,13 @@ RCP<const Basic> s = symbol("s"); // mul(j, omega);
 // Static helper function to create a zero matrix
 DenseMatrix createZeroMatrix(int size1, int size2) {
     DenseMatrix zeroMatrix(size1, size2);
+	//std::cout << "[Debug] check0\n";
     for (int i = 0; i < size1; ++i) {
+		//std::cout << "[Debug] check1\n";
         for (int j = 0; j < size2; ++j) {
+			//std::cout << "[Debug] check2\n";
             zeroMatrix.set(i, j, zero); // Use SymEngine's symbolic `zero`
+			//std::cout << "[Debug] check3\n";
         }
     }
     return zeroMatrix;

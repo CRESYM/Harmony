@@ -23,9 +23,12 @@ include_directories(${SYMENGINE_INCLUDE_DIRS})
 # Find casadi on local system
 find_package(casadi CONFIG)
 
+# Gurobi and Mathplot++ are configured below
+# They need to be configured after add_executable(Harmony ...)
+
 # Group header files
 set(Element_Header_Files src/Element.h)
-set(Element_Admittance_Header_Files src/Admittance.h)
+#set(Element_Admittance_Header_Files src/Admittance.h)
 set(Element_Converter_Header_Files
     src/Controller.h
     src/Filter.h
@@ -35,6 +38,11 @@ set(Element_Generator_Header_Files src/Generator.h)
 set(Element_Impedance_Header_Files
     src/Impedance.h
     src/Load.h
+    src/Resistor.h
+    src/Admittance.h
+    src/Capacitor.h
+    src/Switch.h
+    src/Inductor.h
 )
 set(Element_Source_Header_Files src/AC_source.h)
 set(Element_Transformer_Header_Files
@@ -51,6 +59,19 @@ set(Element_Transmission_Line_Header_Files
     src/overhead_line.h
     src/Transmissionline.h
 )
+set(Solver_State_Space_Model_Header_Files
+    src/State_Space_Model.h
+)
+set(Solver_OPF_Header_Files
+    src/create_ac.h
+    src/create_dc.h
+    src/csv_reader.h
+    src/makeYbus.h
+    src/params_ac.h
+    src/params_dc.h
+    src/solve_opf.h
+    src/viz_opf.h
+)
 set(Header_Files
     src/Bus.h
     src/Constants.h
@@ -60,7 +81,7 @@ set(Header_Files
 
 # Group source files
 set(Element_Source_Files src/Element.cpp)
-set(Element_Admittance_Source_Files src/Admittance.cpp)
+#set(Element_Admittance_Source_Files src/Admittance.cpp)
 set(Element_Converter_Source_Files
     src/Controller.cpp
     src/Filter.cpp
@@ -70,6 +91,11 @@ set(Element_Generator_Source_Files src/Generator.cpp)
 set(Element_Impedance_Source_Files
     src/Impedance.cpp
     src/Load.cpp
+    src/Resistor.cpp
+    src/Admittance.cpp
+    src/Capacitor.cpp
+    src/Switch.cpp
+    src/Inductor.cpp
 )
 set(Element_Source_Source_Files src/AC_source.cpp)
 set(Element_Transformer_Source_Files
@@ -86,6 +112,19 @@ set(Element_Transmission_Line_Source_Files
     src/overhead_line.cpp
     src/Transmissionline.cpp
 )
+set(Solver_State_Space_Model_Source_Files
+    src/State_Space_Model.cpp
+)
+set(Solver_OPF_Source_Files
+    src/create_ac.cpp
+    src/create_dc.cpp
+    src/csv_reader.cpp
+    src/makeYbus.cpp
+    src/params_ac.cpp
+    src/params_dc.cpp
+    src/solve_opf.cpp
+    src/viz_opf.cpp
+)
 set(Source_Files
     src/Bus.cpp
     src/Constants.cpp
@@ -93,29 +132,37 @@ set(Source_Files
     src/network.cpp
     src/network_powerflow.cpp
     src/network_stability.cpp
+    src/network_statespacemodel.cpp
 )
 
 # Add source_groups to create file filters (groups) in Visual Studio project
 if(WIN32) # workds for x64 as well
     source_group("Header Files" FILES ${Header_Files})
     source_group("Header Files\\Elements" FILES ${Element_Header_Files})
-    source_group("Header Files\\Elements\\Admittance" FILES ${Element_Admittance_Header_Files})
+    #source_group("Header Files\\Elements\\Admittance" FILES ${Element_Admittance_Header_Files})
     source_group("Header Files\\Elements\\Converter" FILES ${Element_Converter_Header_Files})
     source_group("Header Files\\Elements\\Generator" FILES ${Element_Generator_Header_Files})
     source_group("Header Files\\Elements\\Impedance" FILES ${Element_Impedance_Header_Files})
     source_group("Header Files\\Elements\\Source" FILES ${Element_Source_Header_Files})
     source_group("Header Files\\Elements\\Transformer" FILES ${Element_Transformer_Header_Files})
     source_group("Header Files\\Elements\\Transmission Line" FILES ${Element_Transmission_Line_Header_Files})
+    source_group("Header Files\\Solver" FILES)
+    source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Header_Files})
+    source_group("Header Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Header_Files})
+
 
     source_group("Source Files" FILES ${Source_Files})
     source_group("Source Files\\Elements" FILES ${Element_Source_Files})
-    source_group("Source Files\\Elements\\Admittance" FILES ${Element_Admittance_Source_Files})
+    #source_group("Source Files\\Elements\\Admittance" FILES ${Element_Admittance_Source_Files})
     source_group("Source Files\\Elements\\Converter" FILES ${Element_Converter_Source_Files})
     source_group("Source Files\\Elements\\Generator" FILES ${Element_Generator_Source_Files})
     source_group("Source Files\\Elements\\Impedance" FILES ${Element_Impedance_Source_Files})
     source_group("Source Files\\Elements\\Source" FILES ${Element_Source_Source_Files})
     source_group("Source Files\\Elements\\Transformer" FILES ${Element_Transformer_Source_Files})
     source_group("Source Files\\Elements\\Transmission_Line" FILES ${Element_Transmission_Line_Source_Files})
+    source_group("Source Files\\Solver" FILES)
+    source_group("Source Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
+    source_group("Source Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Source_Files})
 endif()
 
 
@@ -124,22 +171,27 @@ add_executable(
     Harmony
     ${Header_Files}
     ${Element_Header_Files}
-    ${Element_Admittance_Header_Files}
+    #${Element_Admittance_Header_Files}
     ${Element_Converter_Header_Files}
     ${Element_Generator_Header_Files}
     ${Element_Impedance_Header_Files}
     ${Element_Source_Header_Files}
     ${Element_Transformer_Header_Files}
     ${Element_Transmission_Line_Header_Files}
+    ${Solver_OPF_Header_Files}
+    ${Solver_State_Space_Model_Header_Files}
+
     ${Source_Files}
     ${Element_Source_Files}
-    ${Element_Admittance_Source_Files}
+    #${Element_Admittance_Source_Files}
     ${Element_Converter_Source_Files}
     ${Element_Generator_Source_Files}
     ${Element_Impedance_Source_Files}
     ${Element_Source_Source_Files}
     ${Element_Transformer_Source_Files}
     ${Element_Transmission_Line_Source_Files}
+    ${Solver_OPF_Source_Files}
+    ${Solver_State_Space_Model_Source_Files}
 
 )
 
@@ -155,6 +207,70 @@ target_link_libraries(
     casadi::casadi
     ${SYMENGINE_LIBRARIES}
 )
+
+# Configure Gurobi
+set(GUROBI_PATH "" CACHE PATH "Path to Gurobi installation")
+if(NOT GUROBI_PATH)
+    # User did not provide a path for the Gurobi installation
+    message(WARNING "Path to Gurobi was not specified. You will need to configure it manually in the Visual Studio Project Properties")
+elseif(NOT EXISTS "${GUROBI_PATH}")
+    message(FATAL_ERROR "The specified GUROBI_PATH does not exist: ${GUROBI_PATH}")
+else()
+    message(STATUS "The specified GUROBI_PATH is: ${GUROBI_PATH}")
+
+    # Add Gurobi header files
+    include_directories("${GUROBI_PATH}/include")
+    
+    # Find gurobi*.lib that is NOT the C++ wrapper
+    file(GLOB GUROBI_CORE_LIB "${GUROBI_PATH}/lib/gurobi[0-9]*.lib")
+
+    # Based on build config, choose the C++ wrapper lib pattern
+    file(GLOB GUROBI_CPP_DEBUG_LIB "${GUROBI_PATH}/lib/gurobi_c++mdd*.lib")
+    file(GLOB GUROBI_CPP_RELEASE_LIB "${GUROBI_PATH}/lib/gurobi_c++md[0-9]*.lib")
+
+    # Fail if either is missing
+    if(NOT GUROBI_CORE_LIB)
+        message(FATAL_ERROR "Could not find Gurobi core library (gurobi*.lib) in ${GUROBI_PATH}/lib")
+    endif()
+
+    if(NOT GUROBI_CPP_DEBUG_LIB OR NOT GUROBI_CPP_RELEASE_LIB)
+        message(FATAL_ERROR "Could not find Gurobi C++ wrapper library (gurobi_c++md*.lib or gurobi_c++mdd*.lib) in ${GUROBI_PATH}/lib")
+    endif()
+
+    message(STATUS "Using Gurobi core lib: ${GUROBI_CORE_LIB}")
+    message(STATUS "Using Gurobi C++ Debug lib: ${GUROBI_CPP_DEBUG_LIB}")
+    message(STATUS "Using Gurobi C++ Release lib: ${GUROBI_CPP_RELEASE_LIB}")
+
+    # Link the libraries
+    target_link_libraries(
+        Harmony
+        "${GUROBI_CORE_LIB}"
+        $<$<CONFIG:Debug>:${GUROBI_CPP_DEBUG_LIB}>
+        $<$<CONFIG:Release>:${GUROBI_CPP_RELEASE_LIB}>
+    )
+endif()
+
+
+# Set Matplot++ path 
+set(MATPLOT_PATH "" CACHE PATH "Path to MatPlot++ installation")
+if(NOT MATPLOT_PATH)
+    # User did not provide a path for the Matplot installation
+    message(WARNING "Path to Matplot++ was not specified. You will need to configure it manually in the Visual Studio Project Properties")
+elseif(NOT EXISTS "${MATPLOT_PATH}")
+    message(FATAL_ERROR "The specified MATPLOT_PATH does not exist: ${MATPLOT_PATH}")
+else()
+    message(STATUS "The specified MATPLOT_PATH is: ${MATPLOT_PATH}")
+
+    # Matplot supports CMake. We will use Matplot++Config.cmake contained in MATPLOT_PATH to configure the package
+    list(APPEND CMAKE_PREFIX_PATH "${MATPLOT_PATH}")
+    find_package(Matplot++ REQUIRED)
+    # Add Matplot++ header files
+    #include_directories("${MATPLOT_PATH}/include")
+    # Link the library
+    target_link_libraries(Harmony Matplot++::matplot)
+
+endif()
+
 
 # Find path to symengine dll and add it as a link directory
 get_target_property(SYMENGINE_DLL_PATH symengine LOCATION)
