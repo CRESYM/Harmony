@@ -1,6 +1,18 @@
-//State_Space_Model.cpp
+﻿//State_Space_Model.cpp
 
 #include "State_Space_Model.h"
+using SymEngine::RCP;
+using SymEngine::Basic;
+using SymEngine::DenseMatrix;
+using SymEngine::integer;
+using SymEngine::mul;
+using SymEngine::symbol;
+using SymEngine::one;
+
+
+
+using namespace SymEngine;
+
 
 std::vector<std::vector<Bus*>> StateSpaceModel::from_cutset_nodes(
     const std::vector<Bus*>& buses,
@@ -223,4 +235,17 @@ void StateSpaceModel::traverseForLoops(
     }
 }
 
-
+//void StateSpaceModel::formState(Network* net)
+//{
+//    // Retrieve system information
+//    int state_variables = net->getNumberStateVariables();
+//    int state_variables_position = net->getStateVariablePosition();
+//    int independent_sources = net->getNumberIndependentSource();
+//    const std::vector<RCP<const Symbol>>& state_variables_symbols = net->getStateVariableSymbols();
+//    const std::vector<RCP<const Symbol>>& independent_sources_symbols = net->getSourceSymbols();
+//
+//    // Initialize state-space matrices
+//    A = DenseMatrix(state_variables, state_variables);
+//    B = DenseMatrix(state_variables, independent_sources);
+//
+//}

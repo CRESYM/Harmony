@@ -19,12 +19,12 @@ using Net = std::unordered_map<Bus*, std::vector<Element*>>;
 
 class Network {
 private: 
-    StateSpaceModel state_space_model; 
-
+    //StateSpaceModel state_space_model; 
     std::unordered_map<std::string, Bus*> buses; // Map of bus names to buses
     std::unordered_map<std::string, Element*> elements;  // Map of designators to elements
     std::unordered_map<Bus*, std::vector<Element*>> connections; // Connections between buses and elements
 
+<<<<<<< HEAD
     int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation 
     
     //store Dictionary OPF
@@ -32,6 +32,33 @@ private:
 
     std::unordered_map<std::string, int> busName2Id_;
 
+=======
+    int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation
+    //state_space_model
+    int number_voltage_sources;
+    int number_current_sources;
+    int number_switches;
+    int number_inductors;
+    int number_capacitors;
+    int number_resistors;
+    int number_independent_sources;
+    int number_elements;
+    int number_nodes;
+    int total_number_equations;
+    int state_variables;
+    std::vector<Element*> element_list;
+    std::vector<std::string> symbols_bank;
+    std::vector<Bus*> nodes;
+    std::vector<Element*> switches;
+    std::vector<Element*> inductors;
+    std::vector<Element*> capacitors;
+    std::vector<RCP<const Symbol>> initial_values;
+    std::vector<RCP<const Symbol>> state_variables_symbols;
+    std::vector<RCP<const Symbol>> sources_symbols;
+    std::vector<RCP<const Symbol>> independent_sources;
+    std::vector<RCP<const Symbol>> sources_values;
+ 
+>>>>>>> 7617a1b3212feea10c328cd04181ca91c26cb1ab
 public:
 
 	// Constructor to initialize the network with zero pins
@@ -80,6 +107,9 @@ public:
 
     void compute_equivalent_impedance_nums(std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double omega_num);
 
+    // System analysis
+    void checkStability(const Eigen::MatrixXd& A_matrix);
+
     //Power flow computation //network_powerflow.cpp
     std::map<std::string, double> PowerFlow();
 
@@ -111,6 +141,7 @@ public:
         bool print_info = false);
 
     void make_Converter(Element* element,
+<<<<<<< HEAD
         std::map<std::string, double>& global_params,
         const std::vector<std::string>& conv_info,
         bool print_info = false);
@@ -124,6 +155,22 @@ public:
     auto& getNetData() { return data; }  
 
 
+=======
+        std::vector<std::vector<std::string>>& dict_dc,
+        std::vector<std::vector<std::string>>& dict_ac,
+        std::vector<std::string> new_i,
+        std::vector<std::string> new_o,
+        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
+        std::map<std::string, double>& global_params);
+    
+    //getters for state_space_model
+    int getNumberStateVariables() const; //number of state variables
+    int getStateVariablePosition() const; //MNA matrix column positions
+    const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getStateVariableSymbols() const; //return symengine symbols 
+    int getNumberIndependentSource() const; //independent sources
+    const std::vector<SymEngine::RCP<const SymEngine::Symbol>>&getSourceSymbols() const;
+    
+>>>>>>> 7617a1b3212feea10c328cd04181ca91c26cb1ab
 };
 
 #endif // NETWORK_H

@@ -51,6 +51,36 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
     return Y_val_exact;
 }
 
+// Generic MNA stamping 
+void Element::writeMNAmatrix(DenseMatrix& A,
+    int num_equations,
+    int index,
+    const RCP<const Basic>& value,
+    const std::unordered_map<Bus*, int>& busIndex)
+{
+    // Symbolic current variable like "vc1", "ir1", etc.
+    RCP<const Basic> current_symbol = symbol("v" + element_symbol + std::to_string(index));
+
+    int row = num_equations + index - 1;
+    int col = num_equations;  // Last column for extra variable (e.g., branch voltage)
+
+    A.set(row, col, current_symbol);  // Stamp current equation
+
+    auto buses = getBuses();  // [0] = node1, [1] = node2
+
+    if (buses[0] && busIndex.count(buses[0])) {
+        int n1 = busIndex.at(buses[0]);
+        A.set(n1, row, value);     // node1: KCL: +value
+        A.set(row, n1, one);       // branch eq: voltage +
+    }
+
+    if (buses[1] && busIndex.count(buses[1])) {
+        int n2 = busIndex.at(buses[1]);
+        A.set(n2, row, mul(integer(-1), value)); // node2: KCL: -value
+        A.set(row, n2, integer(-1));             // branch eq: voltage -
+    }
+}
+
 // Function to print the Element's values and Y_matrix entries
 void Element::printElementValues() {
     std::cout << "Element : " << getElementSymbol() << std::endl;
@@ -65,11 +95,10 @@ void Element::printElementValues() {
 // Function to write the Y-parameter matrix to a file over a frequency range
 void Element::writeFile(double start_frequency, int end_frequency, int number_of_points) {
     std::ofstream myfile;
-    myfile.open("files/"+element_symbol+".csv");
+    myfile.open("files/" + element_symbol + ".csv");
 
     // Print the Y-parameters in file
-    double gap = (log10(end_frequency) - log10(start_frequency)) / (number_of_points - 1);
-    gap = pow(10, gap);
+    double gap = (end_frequency - start_frequency) / (number_of_points - 1);
     int frequency = start_frequency;
     for (int p = 0; p < number_of_points; p++) {
         std::vector<std::vector<complex<double>>> Y = compute_y_parameters(frequency);
@@ -83,7 +112,7 @@ void Element::writeFile(double start_frequency, int end_frequency, int number_of
         }
         myfile << "\n";
 
-        frequency *= gap; // increase frequency
+        frequency = frequency + gap; // increase frequency
     }
     
     myfile.close();

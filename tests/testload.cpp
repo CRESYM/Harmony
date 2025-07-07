@@ -4,6 +4,14 @@
 
 class TestLoad : public testing::Test {};
 
+// Test cases for Load class
+/*
+std::vector<double> vec = { 10,1e-3,1e-6 };
+Load* load = new Load("l1", 1, vec);
+load->writeFile(10, 100000, 1000);
+*/
+
+
 // Test cases for Load constructor
 TEST_F(TestLoad, TestConstructor) {
     // Optional: Let GTest capture Harmony's output to std::cerr so

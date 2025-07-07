@@ -56,6 +56,26 @@ cd Release
 ./Harmony
 ```
 
+### Run the tests
+```bash
+# Open the tests directory
+cd tests
+
+# Activate the harmony conda environment
+conda activate harmony
+
+# Configure the project
+mkdir build
+cd build
+cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" -DMATPLOT_PATH="matplot++_installation_dir"
+# e.g. cmake .. -DGUROBI_PATH="C:\gurobi1202\win64" -DMATPLOT_PATH="C:\Program Files\Matplot++ 1.2.0"
+
+# Compile the tests
+cmake --build . --config Release
+
+# Run the tests
+ctest
+```
 
 
 ## Contributors

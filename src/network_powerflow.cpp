@@ -15,50 +15,12 @@
 #include <iomanip>         
 
 
-using Eigen::MatrixXd;
-
-template<typename Table>
-Eigen::MatrixXd map2dense(const Table& tbl,
-    const std::vector<std::string>& colNames)
-{
-    const int nRow = static_cast<int>(tbl.size());
-    const int nCol = static_cast<int>(colNames.size());
-    Eigen::MatrixXd M(nRow, nCol);
-
-    for (const auto& [rowKey, colMap] : tbl)         
-    {
-        int r = std::stoi(rowKey);                     
-        for (int c = 0; c < nCol; ++c)
-        {
-            auto it = colMap.find(colNames[c]);
-            M(r, c) = (it != colMap.end()) ? it->second : 0.0; 
-        }
-    }
-    return M;
-}
-
-/* ----------------------------------------------------------------- */
 void Network::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     const std::vector<std::string>& bus_info,
     bool print_info /* =false*/)
 {
-    int id = static_cast<int>(dict_ac.size()) + 1;
-
-    if (bus_info.size() != 6) {
-
-        std::cerr << "[addBusAC] Error: Expected 6 fields:\n "
-            << " [0] bus_name\n "
-            << " [1] grid_area\n "
-            << " [2] base_power [MW] \n "
-            << " [3] rated_voltage [kV]\n "
-            << " [4] voltage_upper [pu or kV]\n "
-            << " [5] voltage_lower [pu or kV]\n "
-            << " but received " << bus_info.size() << ".\n";
-
-        std::cerr << "  Received: { ";
-        for (const auto& s : bus_info) std::cerr << '"' << s << "\" ";
-        std::cerr << "}\n";
-    }
+    dict_ac.push_back(bus_info);
+}
 
     std::string bus_id = std::to_string(id);
     std::string bus_name = bus_info[0];
