@@ -68,6 +68,9 @@ set(Solver_OPF_Header_Files
     src/params_dc.h
     src/solve_opf.h
     src/viz_opf.h
+    src/paramsHmo_ac.h
+    src/paramsHmo_dc.h
+    src/solveHmo_opf.h
 )
 set(Header_Files
     src/Bus.h
@@ -117,6 +120,9 @@ set(Solver_OPF_Source_Files
     src/params_dc.cpp
     src/solve_opf.cpp
     src/viz_opf.cpp
+    src/paramsHmo_ac.cpp
+    src/paramsHmo_dc.cpp
+    src/solveHmo_opf.cpp
 )
 set(Source_Files
     src/Bus.cpp

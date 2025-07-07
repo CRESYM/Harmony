@@ -9,6 +9,7 @@
 #include <iostream>
 #include <map>
 #include "State_Space_Model.h"
+#include <Eigen/Dense>  
 
 class Bus;
 class Element;
@@ -24,7 +25,13 @@ private:
     std::unordered_map<std::string, Element*> elements;  // Map of designators to elements
     std::unordered_map<Bus*, std::vector<Element*>> connections; // Connections between buses and elements
 
-    int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation
+    int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation 
+    
+    //store Dictionary OPF
+    std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
+
+    std::unordered_map<std::string, int> busName2Id_;
+
 public:
 
 	// Constructor to initialize the network with zero pins
@@ -78,29 +85,45 @@ public:
 
     // Power flow construction helpers
     void addBusAC(std::vector<std::vector<std::string>>& dict_ac,
-        const std::vector<std::string>& bus_info);
+        const std::vector<std::string>& bus_info,
+        bool print_info = false);
 
     void addBusDC(std::vector<std::vector<std::string>>& dict_dc,
-        const std::vector<std::string>& bus_info);
+        const std::vector<std::string>& bus_info,
+        bool print_info = false);
 
     void make_BranchAC(Element* element,
-        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
-        std::map<std::string, double>& global_params);
+        std::map<std::string, double>& global_params,
+        const std::vector<std::string>& br_info,
+        bool print_info = false );
 
     void make_BranchDC(Element* element,
-        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
-        std::map<std::string, double>& global_params);
+        std::map<std::string, double>& global_params,
+        const std::vector<std::string>& br_info, 
+        bool print_info = false );
 
     void make_Generator(Element* element,
-        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data);
+        const std::vector<std::string>& gen_info,
+        bool print_info = false);
+
+    void make_Load(Element* element,
+        const std::vector<std::string>& load_info,
+        bool print_info = false);
 
     void make_Converter(Element* element,
-        std::vector<std::vector<std::string>>& dict_dc,
-        std::vector<std::vector<std::string>>& dict_ac,
-        std::vector<std::string> new_i,
-        std::vector<std::string> new_o,
-        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
-        std::map<std::string, double>& global_params);
+        std::map<std::string, double>& global_params,
+        const std::vector<std::string>& conv_info,
+        bool print_info = false);
+
+    void make_OPF(const Network& net,
+        bool vscControl = true,
+        bool writeTxt = false,
+        bool plotResult = false);
+
+    const auto& getNetData() const { return data; }   
+    auto& getNetData() { return data; }  
+
+
 };
 
 #endif // NETWORK_H

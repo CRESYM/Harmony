@@ -1,344 +1,447 @@
 ﻿#include "network.h"
 #include "Bus.h"
 #include "Include_components.h"
+#include "Impedance.h"
+#include "solveHmo_opf.h"
+#include <iomanip>
+
 
 int main() {
-	//Create Transformer object with 1 pin
-	//std::vector<double> transformer_values = { 10.0, 5.0, 12.0, 6.0, 2.0, 0.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
-	//Transformer_real* transformer = new Transformer_real("T1", 1, transformer_values);
-	//transformer->printElementValues();
-
-	// OHL constructor check
-	//std::vector<double> distances = { 11.8, 27.5 };
-	//std::vector<int> numbers = { 2, 2 };
-	//std::vector<double> values_g = { 0.9196, 0.0062, 10.0, 7.5, 6.5 };
-	//Overhead_Line* ohl = new Overhead_Line("ohl", 100.0, make_tuple(1.0, 1.0, 1.0),
-	//	make_tuple("flat", numbers, distances, 0.01436, 0.06266, 10.0, 0.4572),
-	//	make_tuple(2, values_g, 1.0));
 
 
-	// Transformer constructor check
-	//std::vector<double> transformer_values = { 1.0, 1.0, 2.0, 2.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
-	//TransformerDeltaY* transformer = new TransformerDeltaY("T1", 3, transformer_values);
-	//transformer->printElementValues();
+    try{
 
-	// TL constructor check
-	//std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
-	//TransmissionLine* t = new TransmissionLine("tl", 3, transmission_line_values);
+        /* ---------- 0 Set Network Object ---------- */
+        Network net;   
+        const auto& data = net.getNetData();
+      
+        /* ---------- 1.1 Create AC Buses ---------- */
+        Bus* bus1_ac = new Bus("ACBUS01", 3);   
+        Bus* bus2_ac = new Bus("ACBUS02", 3);
+        Bus* bus3_ac = new Bus("ACBUS03", 3);
+        Bus* bus4_ac = new Bus("ACBUS04", 3);
+        Bus* bus5_ac = new Bus("ACBUS05", 3);
+        std::vector<std::vector<std::string>> dict_ac;
+        net.addBusAC(dict_ac, { "ACBUS01", "1", "100", "345", "1.1", "0.9" }, true);
+        net.addBusAC(dict_ac, { "ACBUS02", "1", "100", "345", "1.1", "0.9" }, true);
+        net.addBusAC(dict_ac, { "ACBUS03", "1", "100", "345", "1.1", "0.9" }, true);
+        net.addBusAC(dict_ac, { "ACBUS04", "1", "100", "345", "1.1", "0.9" }, true);
+        net.addBusAC(dict_ac, { "ACBUS05", "1", "100", "345", "1.1", "0.9" }, true);
 
+        /* ---------- 1.2 Add AC Loads  ---------- */
+        std::vector<double> load_params1 = { 1, 1, 1 };
+        Load* load1 = new Load("LOAD01", 3, load_params1);
+        net.connectElementToBus(load1, 1, bus1_ac);
 
-	// Generator constructor check
-	//std::vector<double> generator_values = { 1.0, 0.01, 1.0, 0.1 };
-	//Generator* g = new Generator("gen", 1, generator_values);
+        std::vector<double> load_params2 = { 1, 1, 1 };
+        Load* load2 = new Load("LOAD02", 3, load_params2);
+        net.connectElementToBus(load2, 1, bus2_ac);
 
-	//std::vector<double> vec = {1,1,1}; 
-	//Load* load = new Load("l1", 3, vec);
-	//DenseMatrix Y = load->compute_y_parameters();
+        std::vector<double> load_params3 = { 1, 1, 1 };
+        Load* load3 = new Load("LOAD03", 3, load_params3);
+        net.connectElementToBus(load3, 1, bus3_ac);
 
-	//Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega)}));
-	//std::cout << "Admitance" << std::endl;
-	//y->printElementInfo();
-	//Impedance* y = new Impedance("z1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) }));
-	//AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
+        std::vector<double> load_params4 = { 1, 1, 1 };
+        Load* load4 = new Load("LOAD04", 3, load_params4);
+        net.connectElementToBus(load4, 1, bus4_ac);
 
-	//Network* myNetwork = new Network();
+        std::vector<double> load_params5 = { 1, 1, 1 };
+        Load* load5 = new Load("LOAD05", 3, load_params4);
+        net.connectElementToBus(load5, 1, bus5_ac);
 
-	// Create Bus objects
-	//Bus* b1 = new Bus("Bus1", 1);
-	//Bus* gnd = new Bus("gnd", 1);
+        std::vector<std::vector<std::string>> dict_load;
+        std::vector<std::string> load_info1 = {
+            "Load01",   // 0  load_name
+            "1",        // 1  grid_area
+            "345",      // 2  rated_voltage_kv [kV]
+            "0",      // 3  R [Ω]
+            "0",        // 4  L [H]
+            "0",        // 5  C [F]
+        };
+        net.make_Load(load1, load_info1, true);
 
-	// Add elements to the network
-    //myNetwork->addElement(g);
-	//myNetwork->addElement(ac);
+        std::vector<std::string> load_info2 = {
+            "Load02",    // 0  load_name
+            "1",         // 1  grid_area
+            "345",       // 2  rated_voltage_kv [kV]
+            "5950",      // 3  R [Ω]
+            "37.9",      // 4  L [H]
+            "0",         // 5  C [F]
+        };
+        net.make_Load(load2, load_info2, true);
 
-	// Add buses to the network
-	//myNetwork->addBus("Bus1", b1);
-	//myNetwork->addBus("gnd", gnd);
-	//std::cout << "connection 0\n";
+        std::vector<std::string> load_info3 = {
+         "Load03",    // 0  load_name
+         "1",         // 1  grid_area
+         "345",       // 2  rated_voltage_kv [kV]
+         "2650",      // 3  R [Ω]
+         "25.2",      // 4  L [H]
+         "0",         // 5  C [F]
+        };
+        net.make_Load(load3, load_info3, true);
 
+        std::vector<std::string> load_info4 = {
+          "Load04",    // 0  load_name
+          "1",         // 1  grid_area
+          "345",       // 2  rated_voltage_kv [kV]
+          "2976",      // 3  R [Ω]
+          "75.7",      // 4  L [H]
+          "0",         // 5  C [F]
+        };
+        net.make_Load(load4, load_info4, true);
 
-	// Connect elements to buses
-	//myNetwork->connectElementToBus(g, 1, b1);
-	//std::cout << "connection 1\n";
-	//myNetwork->connectElementToBus(g, 2, gnd);
-	//std::cout << "connection 2\n";
-
-	//myNetwork->connectElementToBus(ac, 1, b1);
-	//std::cout << "connection 3\n";
-
-	//myNetwork->connectElementToBus(ac, 2, gnd);
-	//std::cout << "connection4\n";
-
-
-	//std::cout << "Connecting y to bus1 and gnd...\n";
-	//std::cout << "Input pins: " << g->getInputPins()
-	//	<< ", Output pins: " << g->getOutputPins()
-	//	<< ", bus1 pins: " << b1->getPinNumber()
-	//	<< ", gnd pins: " << gnd->getPinNumber() << std::endl;
-
-	
-	//std::cout << "[Debug] Calling printConnectedElements() for Bus1\n";
-	//b1->printConnectedElements();
-
-
-	// Print the connections to verify the network
-	//myNetwork->printConnections();
-
-
-	//vector<Bus*> start_buses;
-	//vector<Bus*> end_buses;
-	//vector<Element*> skip_elements;
-
-	//start_buses.push_back(bus1);
-	//end_buses.push_back(gnd);
-	//skip_elements.push_back(ac);
-
-	////y->writeFile(10.0, 1000.0, 3);
-	//double omega_num = 1000;
-	//MatrixXcd Yparam = y->compute_y_parameters_num(omega_num);
-
-	//cout << Yparam << endl;
-
-	//Eigen::MatrixXcd equivalent_impedance;
-	//myNetwork->compute_equivalent_impedance(start_buses, end_buses, skip_elements);
-	
-	//try {
-	//	// Compute equivalent impedance
-	//	myNetwork->compute_equivalent_impedance_nums(start_buses, end_buses, skip_elements, omega_num);
-	//}
-	//catch (const std::exception& e) {
-	//	std::cerr << "Error during impedance computation: " << e.what() << std::endl;
-	//	delete myNetwork;
-	//	return EXIT_FAILURE;
-	//}
-	
-	//Create and Test MMC**
-	//MMC* myMMC = new MMC(
-	//	"MMC1",         // Symbol
-	//	2,              // Number of input pins
-	//	2,              // Number of output pins
-	//	1000.0,         // Omega (Nominal Frequency in rad/s)
-	//	100.0,          // Active Power (P) in MW
-	//	50.0,           // Reactive Power (Q) in MVA
-	//	500.0,          // DC Power (P_dc) in kW
-	//	-100.0,         // Min Active Power (P_min) in MW
-	//	200.0,          // Max Active Power (P_max) in MW
-	//	-50.0,          // Min Reactive Power (Q_min) in MVA
-	//	100.0,          // Max Reactive Power (Q_max) in MVA
-	//	0.0,            // Theta (Voltage Angle in rad)
-	//	330.0,          // AC Voltage (V_m) in kV
-	//	640.0,          // DC Voltage (V_dc) in kV
-	//	0.05,           // Arm Inductance (L_arm) in H
-	//	1.07,           // Arm Resistance (R_arm) in Ω
-	//	0.01,           // Capacitance per Submodule (C_arm) in F
-	//	400,            // Number of Submodules (N)
-	//	0.06,           // Reactor Inductance (L_reactor) in H
-	//	0.535,          // Reactor Resistance (R_reactor) in Ω
-	//	0.00015         // Time Delay (t_delay) in seconds
-	//);
-
-	//myNetwork->addElement(myMMC);
-
-	//// Example MMC parameters (must match Controller constructor)
-	//std::vector<double> converter_params = {
-	//	1000.0, 100.0, 50.0, 500.0, -100.0, 200.0, -50.0, 100.0, 314.16, 400,
-	//	1.07, 0.05, 0.01, 0.535, 0.06, 0.00015
-	//};
-
-	//std::cout << "Converter params size: " << converter_params.size() << std::endl;
-
-	//try {
-	//	myMMC->init_Controller(converter_params);
-	//	std::cout << "MMC Controller initialized successfully!\n";
-	//}
-	//catch (const std::exception& e) {
-	//	std::cerr << "Error initializing MMC Controller: " << e.what() << std::endl;
-	//	delete myMMC;
-	//	delete myNetwork;
-	//	return EXIT_FAILURE;
-	//}
-
-	// Numerically computes the Jacobian matrices A = ∂f/∂x and B = ∂f/∂u at a specified operating point
-	double Fnom = 50;
-    double Vnom_sec = 333e3;
-    double Pnom = 1000e6;
-    double Vnom_dc = 640e3;
-    double Nb_PM = 36;
-    double C_PM = 1.758e-3;
-
-    double Zbase = Vnom_sec * Vnom_sec / Pnom;
-    double Larm_pu = 0.15;
-    double Rarm_pu = Larm_pu / 100;
-
-    double Larm = Larm_pu * (Zbase / (2 * M_PI * Fnom));
-    double Rarm = Rarm_pu * Zbase;
-
-    double w = 2 * M_PI * Fnom;
-
-    MMC mmc("MMC1", 2, 2, w, 0, 0, 0,
-		-Pnom, Pnom, -Pnom, Pnom,  // Power limits
-	    0, Vnom_sec, Vnom_dc,       // Angle, AC/DC voltages
-	    Larm, Rarm, C_PM / Nb_PM,     // Arm parameters
-	    Nb_PM, 0.0, 0.0, 150e-6);   // Submodules, reactor, delay
+        std::vector<std::string> load_info5 = {
+            "Load05",    // 0  load_name
+            "1",         // 1  grid_area
+            "345",       // 2  rated_voltage_kv [kV]
+            "1984",      // 3  R [Ω]
+            "37.9",      // 4  L [H]
+            "0",         // 5  C [F]
+        };
+        net.make_Load(load5, load_info5, true);
    
-    // Linear Jacobian Analysis
-    std::cout << "=== Linear Jacobian Analysis ===\n"; 
-    mmc.computeJacobianLinear();
+        /*  ---------- 1.3 Add AC Generators  ---------- */
+        std::vector<double> gen1_params = { 0.02, 0.3, 0.05, 7.0 };
+        Generator* gen1 = new Generator("GEN01", 3, gen1_params);
+        net.connectElementToBus(gen1, 1, bus1_ac);
 
-    Eigen::MatrixXd A_lin = mmc.getA();
-    Eigen::MatrixXd B_lin = mmc.getB();
+        std::vector<double> gen2_params = { 0.02, 0.3, 0.05, 7.0 };
+        Generator* gen2 = new Generator("GEN02", 3, gen2_params);
+        net.connectElementToBus(gen2, 1, bus2_ac);
 
-    // Print A matrix
-    std::cout << "A = \n" << A_lin << "\n\n";
+        std::vector<std::vector<std::string>> dict_gen;
+        
+        std::vector<std::string> gen_info1 = {
+            "GEN01",    // 0  generator_name
+            "1",        // 1  grid_area
+            "345",      // 2  rated_voltage_kv [kV]
+            "200",      // 3  P_max  [MW]
+            " 10",      // 4  P_min  [MW]
+            "84",       // 5  Q_max  [MVAr]
+            "84",       // 6  Q_min  [MVAr]
+            "0.11",     // 7  cost_quadratic_coeff
+            "50",       // 8  cost_linear_coeff
+            "150"       // 9  cost_constant_coeff
+        };
+        net.make_Generator(gen1, gen_info1,  true);
 
-    // Print B matrix
-    std::cout << "B = \n" << B_lin << "\n\n"; 
-   
-    // Eigenvalue analysis
-    Eigen::EigenSolver<Eigen::MatrixXd> es(A_lin);
-    std::cout << "Eigenvalues (linear):\n" << es.eigenvalues() << "\n";
-    mmc.checkStability();
+        std::vector<std::string> gen_info2 = {
+            "GEN02",    // 0  generator_name
+            "1",        // 1  grid_area
+            "345",      // 2  rated_voltage_kv [kV]
+            "40",       // 3  P_max  [MW]
+            "40",       // 4  P_min  [MW]
+            "-31",      // 5  Q_max  [MVAr]
+            "-33",      // 6  Q_min  [MVAr]
+            "0.085",    // 7  cost_quadratic_coeff
+            "1.2",      // 8  cost_linear_coeff
+            "600"       // 9  cost_constant_coeff
+        };
+        net.make_Generator(gen2, gen_info2, true);
 
-    // Nonlinear with Harmonic Injection
-    std::cout << "\nNonlinear Analysis with Harmonics: \n";
-    // Assign nonlinear parameters to match test case
-    double Rm = 10.0;
-    double Rp = Rarm;  // Equal to R_arm used in MMC
-    double Rn = Rarm;
+       /*  ---------- 1.4 Add Branches  ---------- */
+       // AC Branches
+       std::map<std::string, double> globals = {
+        {"omega", 2 * M_PI * 50},
+        {"Z_base", 1.0}
+       };
+       std::vector<std::vector<std::string>> dict_br_ac;
+       
+       DenseMatrix ACZ1(1, 1);
+       double ACR1 = 0.02;                
+       double ACX1 = 0.06;                
+       RCP<const Basic> ACZsym1 = add(real_double(ACR1),      
+           mul(I, real_double(ACX1)));
+       ACZ1.set(0, 0, ACZsym1);
+       Impedance* br1_ac= new Impedance("br1_ac", 3, ACZ1);
+       net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
+       net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
+       std::vector<std::string> info_br1_ac = { "ACBR1", "1", "0.06"};
+       net.make_BranchAC(br1_ac, globals, info_br1_ac, true);
 
-    mmc.setRarmPositive(Rp);
-    mmc.setRarmNegative(Rn);
-    mmc.setRarmMutual(Rm);
+       DenseMatrix ACZ2(1, 1);
+       double ACR2 = 0.08;
+       double ACX2 = 0.24;
+       RCP<const Basic> ACZsym2 = add(real_double(ACR2),
+           mul(I, real_double(ACX2)));
+       ACZ2.set(0, 0, ACZsym2);
+       Impedance* br2_ac = new Impedance("br2_ac", 3, ACZ2);
+       net.connectElementToBus(br2_ac, /*terminal=*/1, bus1_ac);
+       net.connectElementToBus(br2_ac, /*terminal=*/2, bus3_ac);
+       std::vector<std::string> info_br2_ac = { "ACBR2", "1", "0.05" };
+       net.make_BranchAC(br2_ac, globals, info_br2_ac, true);
 
-    // Set 2nd harmonic amplitudes and phases 
-    mmc.setSecondHarmonicInjection(5000.0, 3000.0, 2*M_PI/3, 2*M_PI/3, 6*M_PI/3);
+       DenseMatrix ACZ3(1, 1);
+       double ACR3 = 0.06;
+       double ACX3 = 0.18;
+       RCP<const Basic> ACZsym3 = add(real_double(ACR3),
+           mul(I, real_double(ACX3)));
+       ACZ3.set(0, 0, ACZsym3);
+       Impedance* br3_ac = new Impedance("br3_ac", 3, ACZ3);
+       net.connectElementToBus(br3_ac, /*terminal=*/1, bus2_ac);
+       net.connectElementToBus(br3_ac, /*terminal=*/2, bus3_ac);
+       std::vector<std::string> info_br3_ac = { "ACBR3", "1", "0.04" };
+       net.make_BranchAC(br3_ac, globals, info_br3_ac, true);
 
-    // Define operating point
-    Eigen::VectorXd x0 = Eigen::VectorXd::Zero(6);  // [ip1,ip2,ip3,in1,in2,in3]
-    x0 << 200e3, 0, 15e3, 20e3, 20e3, 20e3;
+       DenseMatrix ACZ4(1, 1);
+       double ACR4 = 0.06;
+       double ACX4 = 0.18;
+       RCP<const Basic> ACZsym4 = add(real_double(ACR4),
+           mul(I, real_double(ACX4)));
+       ACZ4.set(0, 0, ACZsym4);
+       Impedance* br4_ac = new Impedance("br4_ac", 3, ACZ4);
+       net.connectElementToBus(br4_ac, /*terminal=*/1, bus2_ac);
+       net.connectElementToBus(br4_ac, /*terminal=*/2, bus4_ac);
+       std::vector<std::string> info_br4_ac = { "ACBR4", "1", "0.04" };
+       net.make_BranchAC(br4_ac, globals, info_br4_ac, true);
 
-    Eigen::VectorXd u0(8);                          // [VD1,VD2,VS1-VS6]
-    u0 << 0, 0, 400, 400, -400, 400, -400, 400;
-    double t = 5.0;
+       DenseMatrix ACZ5(1, 1);
+       double ACR5 = 0.04;
+       double ACX5 = 0.12;
+       RCP<const Basic> ACZsym5 = add(real_double(ACR5),
+           mul(I, real_double(ACX5)));
+       ACZ5.set(0, 0, ACZsym5);
+       Impedance* br5_ac = new Impedance("br5_ac", 3, ACZ5);
+       net.connectElementToBus(br5_ac, /*terminal=*/1, bus2_ac);
+       net.connectElementToBus(br5_ac, /*terminal=*/2, bus5_ac);
+       std::vector<std::string> info_br5_ac = { "ACBR5", "1", "0.03" };
+       net.make_BranchAC(br5_ac, globals, info_br5_ac, true);
 
-    // Numerical Jacobian
-    mmc.computeJacobianNumerically(x0, u0);
-    std::cout << "\nA (numerical):\n" << mmc.getA() << "\n";
-    std::cout << "\nB (numerical):\n" << mmc.getB() << "\n";
+       DenseMatrix ACZ6(1, 1);
+       double ACR6 = 0.01;
+       double ACX6 = 0.03;
+       RCP<const Basic> ACZsym6 = add(real_double(ACR6),
+           mul(I, real_double(ACX6)));
+       ACZ6.set(0, 0, ACZsym6);
+       Impedance* br6_ac = new Impedance("br6_ac", 3, ACZ6);
+       net.connectElementToBus(br6_ac, /*terminal=*/1, bus3_ac);
+       net.connectElementToBus(br6_ac, /*terminal=*/2, bus4_ac);
+       std::vector<std::string> info_br6_ac = { "ACBR6", "1", "0.02" };
+       net.make_BranchAC(br6_ac, globals, info_br6_ac, true);
 
-    // Admittance matrix
-    std::complex<double> s = std::complex<double>(0, 2 * M_PI * Fnom); 
-    Eigen::MatrixXcd Y = mmc.computeAdmittanceMatrix(s);
+       DenseMatrix ACZ7(1, 1);
+       double ACR7 = 0.08;
+       double ACX7 = 0.24;
+       RCP<const Basic> ACZsym7 = add(real_double(ACR7),
+           mul(I, real_double(ACX7)));
+       ACZ7.set(0, 0, ACZsym7);
+       Impedance* br7_ac = new Impedance("br7_ac", 3, ACZ7);
+       net.connectElementToBus(br7_ac, /*terminal=*/1, bus4_ac);
+       net.connectElementToBus(br7_ac, /*terminal=*/2, bus5_ac);
+       std::vector<std::string> info_br7_ac = { "ACBR7", "1", "0.05" };
+       net.make_BranchAC(br7_ac, globals, info_br7_ac, true);
 
-    // Print the admittance matrix
-    std::cout << "Admittance Matrix: " << Fnom << "):\n" << Y << std::endl;
-    
-    // Equilibrium Solution
-    std::cout << "\nEquilibrium Solution: \n";
-    mmc.solveEquilibrium();
-    const Eigen::VectorXd x_eq = mmc.getEquilibriumState();
-    std::cout << "Equilibrium state:\n" << x_eq.transpose() << "\n";
+       /*  ---------- 2.1 Create DC Buses  ---------- */
+       Bus* bus1_dc = new Bus("DCBUS01", 1);
+       Bus* bus2_dc = new Bus("DCBUS02", 1);
+       Bus* bus3_dc = new Bus("DCBUS03", 1);
+       std::vector<std::vector<std::string>> dict_dc;
+       net.addBusDC(dict_dc, { "DCBUS01", "330", "1.1", "0.9" }, true);
+       net.addBusDC(dict_dc, { "DCBUS02", "330", "1.1", "0.9" }, true);
+       net.addBusDC(dict_dc, { "DCBUS03", "330", "1.1", "0.9" }, true);
 
-    // Verify equilibrium
-    const Eigen::VectorXd dx_eq = mmc.computeStateDerivatives(x_eq.head(6), u0);
-    std::cout << "||dx|| at equilibrium: " << dx_eq.norm() << "\n";
+       /*  ---------- 2.2 Create DC Buses  ---------- */
 
-    mmc.printEigenvalues();  // Display eigenvalues
-    mmc.checkStability();  // Analyze stability
-	
+       DenseMatrix DCZ1(1, 1);
+       double DCR1 = 0.052;
+       RCP<const Basic> DCZsym1 = real_double(DCR1);
+       DCZ1.set(0, 0, DCZsym1);
+       Impedance* br1_dc = new Impedance("br1_dc", 1, DCZ1);
+       net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
+       net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
+       std::vector<std::string> info_br1_dc = { "DCBR1" };
+       net.make_BranchDC(br1_dc, globals, info_br1_dc, true);
 
-	// Run OPF Haxaio
-	//solve_opf("../../src/mtdc3slack_a", "../../src/ac9ac14",
-	//	/*vscControl*/ true,
-	//	/*writeTxt  */ false,
-	//	/*plotResult*/ false);
+       DenseMatrix DCZ2(1, 1);
+       double DCR2 = 0.073;
+       RCP<const Basic> DCZsym2 = real_double(DCR2);
+       DCZ2.set(0, 0, DCZsym2);
+       Impedance* br2_dc = new Impedance("br2_dc", 1, DCZ2);
+       net.connectElementToBus(br2_dc, /*terminal=*/1, bus1_dc);
+       net.connectElementToBus(br2_dc, /*terminal=*/2, bus3_dc);
+       std::vector<std::string> info_br2_dc = { "DCBR2" };
+       net.make_BranchDC(br2_dc, globals, info_br2_dc, true);
 
-	// Cutset
-	Bus* bus0 = new Bus("0", 1);
-	Bus* bus1 = new Bus("1", 1);
-	Bus* bus2 = new Bus("2", 1);
+       DenseMatrix DCZ3(1, 1);
+       double DCR3 = 0.052;
+       RCP<const Basic> DCZsym3 = real_double(DCR3);
+       DCZ3.set(0, 0, DCZsym3);
+       Impedance* br3_dc = new Impedance("br3_dc", 1, DCZ3);
+       net.connectElementToBus(br3_dc, /*terminal=*/1, bus2_dc);
+       net.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
+       std::vector<std::string> info_br3_dc = { "DCBR3" };
+       net.make_BranchDC(br3_dc, globals, info_br3_dc, true);
 
-	std::vector<Bus*> buses = { bus0, bus1, bus2 };
-	// Create Elements (assumes ACSource and Resistor constructors take two buses and a value)
-	AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
-	Resistor* r1 = new Resistor("R1", 2, 2.0);
-	Resistor* r2 = new Resistor("R2", 2, 2.0);
-	Resistor* r3 = new Resistor("R3", 2, 2.0);
+       /*  ---------- 2.3 Create Converters ---------- */
+       MMC* mmc1 = new MMC(
+   	    "MMC1",         // Symbol
+   	    3,              // Number of input pins
+   	    1,              // Number of output pins
+   	    1000.0,         // Omega (Nominal Frequency in rad/s)
+   	    100.0,          // Active Power (P) in MW
+   	    50.0,           // Reactive Power (Q) in MVA
+   	    500.0,          // DC Power (P_dc) in kW
+   	    -100.0,         // Min Active Power (P_min) in MW
+   	    200.0,          // Max Active Power (P_max) in MW
+   	    -50.0,          // Min Reactive Power (Q_min) in MVA
+   	    100.0,          // Max Reactive Power (Q_max) in MVA
+   	    0.0,            // Theta (Voltage Angle in rad)
+   	    330.0,          // AC Voltage (V_m) in kV
+   	    640.0,          // DC Voltage (V_dc) in kV
+   	    0.05,           // Arm Inductance (L_arm) in H
+   	    1.07,           // Arm Resistance (R_arm) in Ω
+   	    0.01,           // Capacitance per Submodule (C_arm) in F
+   	    400,            // Number of Submodules (N)
+   	    0.06,           // Reactor Inductance (L_reactor) in H
+   	    0.535,          // Reactor Resistance (R_reactor) in Ω
+   	    0.00015         // Time Delay (t_delay) in seconds
+       );
+       net.connectElementToBus(mmc1, 1, bus2_ac);  
+       net.connectElementToBus(mmc1, 2, bus1_dc);   
 
-	//r1->printElementInfo();       // Base class method
-	//r1->printElementValues();     // Calls Resistor::printElementValues
+       std::vector<std::string> info_conv1 = {
+        "MMC1",          // 0  generator_name
+        "1",             // 1  grid_area
+        "1",             // 2  type_dc 
+        "1",             // 3  type_ac
+        "0.0015",        // 4  rftc
+        "0.1121",        // 5  xtfc
+        "0.0887",        // 6  bf
+        "0.0001",        // 7  rc
+        "0.16428",       // 8  xc
+        "345",           // 9  basekVac
+        "1.1",           // 10 Vmmax
+        "0.9",           // 11 Vmmin
+        "1.2",           // 12 Imax
+        "1.103",         // 13 LossAC
+        "0.887",         // 14 LossB
+        "2.885",         // 15 LossCrec
+        "4.371",         // 16 LossCinv
+        "0",             // 17 droop
+        "0",             // 18 Pdcset
+        "0",             // 19 Vdcset
+        "0",             // 20 Dvdsetc
+       };
+       net.make_Converter(mmc1, globals, info_conv1, true);
 
-	// Manually connect elements to buses
-	ac->attachBus(bus1, 1);
-	ac->attachBus(bus0, 2);
 
-	r1->attachBus(bus1, 1);
-	r1->attachBus(bus0, 2);
+       MMC* mmc2 = new MMC(
+           "MMC2",         // Symbol
+           3,              // Number of input pins
+           1,              // Number of output pins
+           1000.0,         // Omega (Nominal Frequency in rad/s)
+           100.0,          // Active Power (P) in MW
+           50.0,           // Reactive Power (Q) in MVA
+           500.0,          // DC Power (P_dc) in kW
+           -100.0,         // Min Active Power (P_min) in MW
+           200.0,          // Max Active Power (P_max) in MW
+           -50.0,          // Min Reactive Power (Q_min) in MVA
+           100.0,          // Max Reactive Power (Q_max) in MVA
+           0.0,            // Theta (Voltage Angle in rad)
+           330.0,          // AC Voltage (V_m) in kV
+           640.0,          // DC Voltage (V_dc) in kV
+           0.05,           // Arm Inductance (L_arm) in H
+           1.07,           // Arm Resistance (R_arm) in Ω
+           0.01,           // Capacitance per Submodule (C_arm) in F
+           400,            // Number of Submodules (N)
+           0.06,           // Reactor Inductance (L_reactor) in H
+           0.535,          // Reactor Resistance (R_reactor) in Ω
+           0.00015         // Time Delay (t_delay) in seconds
+       );
+       net.connectElementToBus(mmc2, 1, bus3_ac);
+       net.connectElementToBus(mmc2, 2, bus2_dc);
 
-	r2->attachBus(bus1, 1);
-	r2->attachBus(bus2, 2);
+       std::vector<std::string> info_conv2 = {
+        "MMC2",          // 0  generator_name
+        "1",             // 1  grid_area
+        "2",             // 2  type_dc 
+        "2",             // 3  type_ac
+        "0.0015",        // 4  rftc
+        "0.1121",        // 5  xtfc
+        "0.0887",        // 6  bf
+        "0.0001",        // 7  rc
+        "0.16428",       // 8  xc
+        "345",           // 9  basekVac
+        "1.1",           // 10 Vmmax
+        "0.9",           // 11 Vmmin
+        "1.2",           // 12 Imax
+        "1.103",         // 13 LossAC
+        "0.887",         // 14 LossB
+        "2.885",         // 15 LossCrec
+        "4.371",         // 16 LossCinv
+        "0",             // 17 droop
+        "0",             // 18 Pdcset
+        "0",             // 19 Vdcset
+        "0",             // 20 Dvdsetc
+       };
+       net.make_Converter(mmc2, globals, info_conv2, true);
 
-	r3->attachBus(bus2, 1);
-	r3->attachBus(bus0, 2);
-	
-	// Collect elements
-	std::vector<Element*> elements = { ac, r1, r2, r3 };
 
-	auto busToElementsMap = StateSpaceModel::generateBusToElementsMap(elements);
+       MMC* mmc3 = new MMC(
+           "MMC3",         // Symbol
+           3,              // Number of input pins
+           1,              // Number of output pins
+           1000.0,         // Omega (Nominal Frequency in rad/s)
+           100.0,          // Active Power (P) in MW
+           50.0,           // Reactive Power (Q) in MVA
+           500.0,          // DC Power (P_dc) in kW
+           -100.0,         // Min Active Power (P_min) in MW
+           200.0,          // Max Active Power (P_max) in MW
+           -50.0,          // Min Reactive Power (Q_min) in MVA
+           100.0,          // Max Reactive Power (Q_max) in MVA
+           0.0,            // Theta (Voltage Angle in rad)
+           330.0,          // AC Voltage (V_m) in kV
+           640.0,          // DC Voltage (V_dc) in kV
+           0.05,           // Arm Inductance (L_arm) in H
+           1.07,           // Arm Resistance (R_arm) in Ω
+           0.01,           // Capacitance per Submodule (C_arm) in F
+           400,            // Number of Submodules (N)
+           0.06,           // Reactor Inductance (L_reactor) in H
+           0.535,          // Reactor Resistance (R_reactor) in Ω
+           0.00015         // Time Delay (t_delay) in seconds
+       );
+       net.connectElementToBus(mmc3, 1, bus5_ac);
+       net.connectElementToBus(mmc3, 2, bus3_dc);
 
-	// Create the StateSpaceModel object
-	StateSpaceModel model;
+       std::vector<std::string> info_conv3 = {
+        "MMC3",          // 0  generator_name
+        "1",             // 1  grid_area
+        "1",             // 2  type_dc 
+        "1",             // 3  type_ac
+        "0.0015",        // 4  rftc
+        "0.1121",        // 5  xtfc
+        "0.0887",        // 6  bf
+        "0.0001",        // 7  rc
+        "0.16428",       // 8  xc
+        "345",           // 9  basekVac
+        "1.1",           // 10 Vmmax
+        "0.9",           // 11 Vmmin
+        "1.2",           // 12 Imax
+        "1.103",         // 13 LossAC
+        "0.887",         // 14 LossB
+        "2.885",         // 15 LossCrec
+        "4.371",         // 16 LossCinv
+        "0",             // 17 droop
+        "0",             // 18 Pdcset
+        "0",             // 19 Vdcset
+        "0",             // 20 Dvdsetc
+       };
+       net.make_Converter(mmc3, globals, info_conv3, true);
 
-	//Generate all bus cutsets
-	std::vector<std::vector<Bus*>> cutset_nodes = model.from_cutset_nodes(buses, {});
+       /*  ---------- 3 OPF Implementation ---------- */
+       net.make_OPF(net, true, false, false);
+       
+    }
 
-	std::cout << "Cutset Nodes:" << std::endl;
-	for (const auto& group : cutset_nodes) {
-		std::cout << "[ ";
-		for (Bus* b : group) {
-			std::cout << b->getBusName() << " ";
-		}
-		std::cout << "]" << std::endl;
-	}
+    catch (const std::exception& e) {
 
-	// Generate element cutsets from the bus cutsets
-	std::vector<std::vector<Element*>> cutset_elements = model.from_cutsets(cutset_nodes, busToElementsMap);
+        std::cerr << "Error: " << e.what() << std::endl;
 
-	std::cout << "\nCutset Elements:" << std::endl;
-	for (const auto& group : cutset_elements) {
-		std::cout << "[ ";
-		for (Element* e : group) {
-			std::cout << e->getElementSymbol() << " ";
-		}
-		std::cout << "]" << std::endl;
-	}
+#ifdef _DEBUG
+        system("pause");
+#endif
+        return EXIT_FAILURE;
+    }
 
-	// Find loops
-	auto loops = StateSpaceModel::findLoops(buses, busToElementsMap);
-
-	// Print loop results
-	std::cout << "\nLoops found:" << std::endl;
-	for (size_t i = 0; i < loops.size(); ++i) {
-		std::cout << "Loop " << i + 1 << ": ";
-		for (Element* e : loops[i]) {
-			std::cout << e->getElementSymbol() << " ";
-		}
-		std::cout << std::endl;
-	}
-
-	delete bus0;
-	delete bus1;
-	delete bus2;
-
-	delete ac;
-	delete r1;
-	delete r2;
-	delete r3;
-
-	// Cleanup
-	//delete myNetwork;
-	//delete transformer;  
-	//delete load1;
-
-	return 0;
+    return EXIT_SUCCESS;
 }

@@ -115,4 +115,9 @@ void Network::printConnections() {
         }
         std::cout << "Total number of pins is " << pins << std::endl;
     }
+
+    void make_OPF(const Network & net,
+        bool vscControl = true,
+        bool writeTxt = false,
+        bool plotResult = false);
 }

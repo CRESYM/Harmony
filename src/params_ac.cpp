@@ -44,7 +44,7 @@
  *    - refbuscount       : Vector. Indices of the reference bus for each AC grid.
  *    - GG_ft_ac, BB_ft_ac: Vectors. Branch off-diagonal entries (from-to) (per unit).
  *    - GG_tf_ac, BB_tf_ac: Vectors. Branch off-diagonal entries (to-from) (per unit).
- *    - fbus_ac, tbus_ac  : Vectors. "From" and "to” bus indices per grid.
+ *    - fbus_ac, tbus_ac  : Vectors. "From" and "to?bus indices per grid.
  *
  * See also: create_dc.cpp, makeYbus.cpp
  */
