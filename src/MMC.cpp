@@ -8,30 +8,6 @@
 #include <cmath>
 #include <iostream>
 
-// Static method to initialize the MMC with converter parameters
-MMC MMC::init_MMC(const std::vector<double>& converter_params) {
-    return MMC(
-        "MMC", 100, 10,                            // symbol, inputPins, outputPins
-        converter_params[0],                       // omega
-        converter_params[1],                       // activePower
-        converter_params[2],                       // reactivePower
-        converter_params[3],                       // dcPower
-        converter_params[4],                       // minActivePower
-        converter_params[5],                       // maxActivePower
-        converter_params[6],                       // minReactivePower
-        converter_params[7],                       // maxReactivePower
-        converter_params[8],                       // angle
-        converter_params[9],                       // acVoltage
-        converter_params[10],                      // dcVoltage
-        converter_params[11],                      // armInductance
-        converter_params[12],                      // armResistance
-        converter_params[13],                      // armCapacitance
-        static_cast<int>(converter_params[14]),    // numSubmodules
-        converter_params[15],                      // reactorInductance
-        converter_params[16],                      // reactorResistance
-        converter_params[17]                       // timeDelay
-    );  // Return the fully initialized MMC instance
-}
 
 // Initialize the controller(s) in MMC using provided parameters
 void MMC::init_Controller(const std::vector<double>& converter_params) {
@@ -80,25 +56,13 @@ void MMC::update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc
     this->P_dc = Pdc;
 }
 
-void MMC::setRarmPositive(double val) { R_arm = val; }
-void MMC::setRarmNegative(double val) { Rn_custom = val; }
-void MMC::setRarmMutual(double val) { Rm_custom = val; }
-
-void MMC::setSecondHarmonicInjection(double A, double B, double ph1, double ph2, double ph3) {
-    A_harm = A;
-    B_harm = B;
-    phi1 = ph1;
-    phi2 = ph2;
-    phi3 = ph3;
-}
-
 Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u) {
     assert(x.size() == 6 && u.size() == 8);
     
     const double L = L_arm;
     const double Rp = R_arm;
     const double Rn = R_arm;
-    const double Rm = 10.0;
+    const double Rm = R_arm;
 
     double t = 5.0; // Operating time (5s) 
     const double w = omega_0;
@@ -251,10 +215,6 @@ void MMC::solveEquilibrium() {
     // equilibrium_state = Eigen::VectorXd::Zero(13);
 }
 
-//void MMC::computeJacobian() {
-//    A_matrix = Eigen::MatrixXd::Zero(13, 13);
-//    B_matrix = Eigen::MatrixXd::Zero(13, 3);
-//}
 
 Eigen::MatrixXcd MMC::computeAdmittanceMatrix(std::complex<double> s) {
     // s: Laplace variable (jω)

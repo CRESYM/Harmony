@@ -140,10 +140,6 @@ void Network::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
 }
 
 
-//void Network::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
-//    const std::vector<std::string>& bus_info)
-//{
-//    dict_dc.push_back(bus_info);
 void Network::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
     const std::vector<std::string>& bus_info,
     bool  print_info /* =false*/)
@@ -247,15 +243,6 @@ void Network::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
 }
 
 
-
-
-//void Network::make_BranchAC(Element* element,
-//    std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
-//    std::map<std::string, double>& global_params)
-//{
-//    element->computePowerFlowAC(data["branch"], global_params);
-//}
-
 void Network::make_BranchAC(Element* element,
     std::map<std::string, double>& global_params,
     const std::vector<std::string>& br_info,
@@ -344,13 +331,6 @@ void Network::make_BranchAC(Element* element,
 
 }
 
-
-//void Network::make_BranchDC(Element* element,
-//    std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
-//    std::map<std::string, double>& global_params)
-//{
-//    element->computePowerFlowDC(data["branchdc"], global_params);
-//}
 
 void Network::make_BranchDC(Element* element,
     std::map<std::string, double>& global_params,
@@ -820,43 +800,6 @@ void Network::make_Load(Element* element,
         std::cout << std::endl;
     }
 }
-
-//std::map<std::string, double> Network::PowerFlow() {
-//    std::map<std::string, double> global_dict;
-//
-//    double omega = 2 * M_PI * 50;
-//    global_dict["omega"] = omega;
-//
-//    // Define data structures
-//    std::vector<std::vector<std::string>> dict_ac;
-//    std::vector<std::vector<std::string>> dict_dc;
-//
-//    // Define and initialize data map
-//    std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
-//
-//    // Initialize specific elements of the data map
-//    data["source_type"]["matpower"]["0"] = 0;
-//    data["name"]["network"]["0"] = 0;
-//    data["source_version"]["0.0.0"]["0"] = 0;
-//    data["per_unit"]["true"]["0"] = 1;
-//    data["dcpol"]["2"]["0"] = 1;
-//    data["baseMVA"]["100"]["0"] = 100;
-//
-//    // Add baseMVA to global_dict for solver use
-//    global_dict["baseMVA"] = 100;
-//
-//    // Initialize empty elements of the data map
-//    std::vector<std::string> keys = {
-//        "bus", "busdc", "shunt", "dcline", "storage", "switch",
-//        "load", "branch", "branchdc", "gen", "convdc"
-//    };
-//
-//    for (const auto& key : keys) {
-//        data[key] = {}; // Empty structure for each
-//    }
-//    // ...
-//    return global_dict;
-//}
 
 std::map<std::string, double> Network::PowerFlow() {
     std::map<std::string, double> global_dict;

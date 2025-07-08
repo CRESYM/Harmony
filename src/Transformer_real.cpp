@@ -12,8 +12,8 @@ Transformer_real::Transformer_real(const std::string& symbol, int pins, const st
         phi = values[5]; // Phase shift
     }
     else if (values.size() == 8) {
-        R = { values[0], values[2], values[4] };  // Primary and secondary resistances
-        L = { values[1], values[3], values[5] };  // Primary and secondary reactances
+        R = { values[0], values[2], values[4] };  // Primary, secondary and magnetization resistances
+        L = { values[1], values[3], values[5] };  // Primary, secondary and magnetization reactances
         a = values[6];  // Turns ratio
         phi = values[7]; // Phase shift
         Y_m = add(div(integer(1), real_double(R[2])), div(integer(1), mul(j, mul(omega, real_double(L[2])))));

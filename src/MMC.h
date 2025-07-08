@@ -12,14 +12,14 @@ class Filter;
 class MMC : public Element {
 public:
     // Constructor 
-    MMC(const std::string& symbol, int inputPins, int outputPins,
+    MMC(const std::string& symbol, 
         double omega, double activePower, double reactivePower, double dcPower,
         double minActivePower, double maxActivePower, double minReactivePower,
         double maxReactivePower, double angle, double acVoltage, double dcVoltage, // move to converter -> element (parent) class as a parent of mmc
         double armInductance, double armResistance, double armCapacitance,
         int numSubmodules, double reactorInductance, double reactorResistance,
         double timeDelay)
-        : Element(symbol, inputPins, outputPins),
+		: Element(symbol, 3, 1), // AC side - input pins; DC side - output pins
         omega_0(omega), P(activePower), Q(reactivePower), P_dc(dcPower),
         P_min(minActivePower), P_max(maxActivePower), Q_min(minReactivePower),
         Q_max(maxReactivePower), theta(angle), V_m(acVoltage), V_dc(dcVoltage),
@@ -34,45 +34,25 @@ public:
     }
 
     // Constructor to initialize MMC with the converter_params (from init_MMC)
-    //MMC(const std::vector<double>& converter_params)
-    //    : Element("MMC", 100, 10),  // Replace with actual default values if needed
-    //    omega_0(converter_params[8]), P(100), Q(100), P_dc(100),  // Initial dummy values
-    //    P_min(-converter_params[8]), P_max(converter_params[8]),
-    //    Q_min(-converter_params[8]), Q_max(converter_params[8]),
-    //    theta(0), V_m(333), V_dc(640), L_arm(50e-3), R_arm(1.07),
-    //    C_arm(10e-3), N(400), L_reactor(60e-3), R_reactor(0.535),
-    //    t_delay(150e-6)
-    //{
-    //    // Initialize additional parameters based on converter_params
-    //    P_min = -converter_params[7];
-    //    P_max = converter_params[7];
-    //    Q_min = -converter_params[7];
-    //    Q_max = converter_params[7];
-    //    omega_0 = converter_params[8];
-    //    N = static_cast<int>(converter_params[9]);
-    //    R_arm = converter_params[10];
-    //    L_arm = converter_params[11];
-    //    C_arm = converter_params[12];
-    //    R_reactor = converter_params[13];
-    //    L_reactor = converter_params[14];
-    //    t_delay = converter_params[15];
-    //}
+    MMC(const std::string& symbol, const std::vector<double>& converter_params)
+        : Element(symbol, 3, 1), // AC side - input pins; DC side - output pins
+        omega_0(converter_params[0]), P(converter_params[1]), Q(converter_params[2]),
+        P_dc(converter_params[3]), P_min(converter_params[4]), P_max(converter_params[5]),
+        Q_min(converter_params[6]), Q_max(converter_params[7]),
+        theta(converter_params[8]), V_m(converter_params[9]), V_dc(converter_params[10]),
+        L_arm(converter_params[11]), R_arm(converter_params[12]), C_arm(converter_params[13]),
+        N(static_cast<int>(converter_params[14])), L_reactor(converter_params[15]),
+        R_reactor(converter_params[16]), t_delay(converter_params[17]) {};
+  
 
     // Destructor
-    ~MMC() {}
+    ~MMC() {};
     
     // Initialization methods
-    static MMC init_MMC(const std::vector<double>& converter_params);
     void init_Controller(const std::vector<double>&converter_params);// Method to initialize controllers and Filters in MMC
     void init_Filter(const std::vector<double>& converter_params);
     void update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc);
-    
-    //setter-Harmonic injection
-    void setRarmPositive(double val);  // Rp
-    void setRarmNegative(double val);  // Rn
-    void setRarmMutual(double val);    // Rm
-
-    void setSecondHarmonicInjection(double A, double B, double ph1, double ph2, double ph3);
+   
     
     //getter
     Eigen::MatrixXd getA() const { return A_matrix; }
