@@ -9,7 +9,6 @@
 #include <iostream>
 #include <map>
 #include "State_Space_Model.h"
-#include <Eigen/Dense>  
 
 class Bus;
 class Element;
@@ -18,21 +17,12 @@ class Element;
 using Net = std::unordered_map<Bus*, std::vector<Element*>>;
 
 class Network {
-private: 
+private:
     //StateSpaceModel state_space_model; 
     std::unordered_map<std::string, Bus*> buses; // Map of bus names to buses
     std::unordered_map<std::string, Element*> elements;  // Map of designators to elements
     std::unordered_map<Bus*, std::vector<Element*>> connections; // Connections between buses and elements
 
-<<<<<<< HEAD
-    int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation 
-    
-    //store Dictionary OPF
-    std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
-
-    std::unordered_map<std::string, int> busName2Id_;
-
-=======
     int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation
     //state_space_model
     int number_voltage_sources;
@@ -57,12 +47,19 @@ private:
     std::vector<RCP<const Symbol>> sources_symbols;
     std::vector<RCP<const Symbol>> independent_sources;
     std::vector<RCP<const Symbol>> sources_values;
- 
->>>>>>> 7617a1b3212feea10c328cd04181ca91c26cb1ab
+
+    //int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation 
+
+        //store Dictionary OPF
+    std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
+
+    std::unordered_map<std::string, int> busName2Id_;
+
+
 public:
 
-	// Constructor to initialize the network with zero pins
-	Network():pins(0) {}
+    // Constructor to initialize the network with zero pins
+    Network() :pins(0) {}
 
     // Destructor to handle resource cleanup
     ~Network();
@@ -114,6 +111,31 @@ public:
     std::map<std::string, double> PowerFlow();
 
     // Power flow construction helpers
+   /* void addBusAC(std::vector<std::vector<std::string>>& dict_ac,
+        const std::vector<std::string>& bus_info);
+
+    void addBusDC(std::vector<std::vector<std::string>>& dict_dc,
+        const std::vector<std::string>& bus_info);
+
+    void make_BranchAC(Element* element,
+        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
+        std::map<std::string, double>& global_params);
+
+    void make_BranchDC(Element* element,
+        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
+        std::map<std::string, double>& global_params);
+
+    void make_Generator(Element* element,
+        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data);
+
+    void make_Converter(Element* element,
+        std::vector<std::vector<std::string>>& dict_dc,
+        std::vector<std::vector<std::string>>& dict_ac,
+        std::vector<std::string> new_i,
+        std::vector<std::string> new_o,
+        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
+        std::map<std::string, double>& global_params);*/
+
     void addBusAC(std::vector<std::vector<std::string>>& dict_ac,
         const std::vector<std::string>& bus_info,
         bool print_info = false);
@@ -125,12 +147,12 @@ public:
     void make_BranchAC(Element* element,
         std::map<std::string, double>& global_params,
         const std::vector<std::string>& br_info,
-        bool print_info = false );
+        bool print_info = false);
 
     void make_BranchDC(Element* element,
         std::map<std::string, double>& global_params,
-        const std::vector<std::string>& br_info, 
-        bool print_info = false );
+        const std::vector<std::string>& br_info,
+        bool print_info = false);
 
     void make_Generator(Element* element,
         const std::vector<std::string>& gen_info,
@@ -140,8 +162,15 @@ public:
         const std::vector<std::string>& load_info,
         bool print_info = false);
 
+    //void make_Converter(Element* element,
+    //    std::vector<std::vector<std::string>>& dict_dc,
+    //    std::vector<std::vector<std::string>>& dict_ac,
+    //    std::vector<std::string> new_i,
+    //    std::vector<std::string> new_o,
+    //    std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
+    //    std::map<std::string, double>& global_params);
+
     void make_Converter(Element* element,
-<<<<<<< HEAD
         std::map<std::string, double>& global_params,
         const std::vector<std::string>& conv_info,
         bool print_info = false);
@@ -151,26 +180,20 @@ public:
         bool writeTxt = false,
         bool plotResult = false);
 
-    const auto& getNetData() const { return data; }   
-    auto& getNetData() { return data; }  
+    const auto& getNetData() const { return data; }
+    auto& getNetData() { return data; }
 
 
-=======
-        std::vector<std::vector<std::string>>& dict_dc,
-        std::vector<std::vector<std::string>>& dict_ac,
-        std::vector<std::string> new_i,
-        std::vector<std::string> new_o,
-        std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
-        std::map<std::string, double>& global_params);
-    
     //getters for state_space_model
     int getNumberStateVariables() const; //number of state variables
     int getStateVariablePosition() const; //MNA matrix column positions
     const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getStateVariableSymbols() const; //return symengine symbols 
     int getNumberIndependentSource() const; //independent sources
-    const std::vector<SymEngine::RCP<const SymEngine::Symbol>>&getSourceSymbols() const;
-    
->>>>>>> 7617a1b3212feea10c328cd04181ca91c26cb1ab
+    const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getSourceSymbols() const;
+
+    int  getNumberOutputs() const;     // y dimension
+    const std::vector<int>& getOutputIndexes() const;
+    int  getNumberEquations() const;     // total MNA rows    
 };
 
 #endif // NETWORK_H
