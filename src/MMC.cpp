@@ -105,35 +105,6 @@ Eigen::VectorXd MMC::computeStateDerivativesLinear(const Eigen::VectorXd& x, con
     return A_matrix * x + B_matrix * u;
 }
 
-// Jacobian calculations
-void MMC::computeJacobianLinear() {
-    double L = L_arm;
-    const double Rp = R_arm;
-    const double Rn = Rn_custom;
-    const double Rm = Rm_custom;
-
-    // A matrix entries
-    double A11 = -(Rp + Rm) / L;
-    double A14 = -Rm / L;
-    double A12 = -(Rm + Rn) / L;
-
-    A_matrix << A11, 0, 0, A14, 0, 0,
-        0, A11, 0, 0, A14, 0,
-        0, 0, A11, 0, 0, A14,
-        A14, 0, 0, A12, 0, 0,
-        0, A14, 0, 0, A12, 0,
-        0, 0, A14, 0, 0, A12;
-
-    // B matrix 
-    double Bval = 1.0 / L;
-    B_matrix << Bval, 0.0, -Bval, 0.0, 0.0, 0.0, 0.0, 0.0,
-                Bval, 0.0, 0.0, -Bval, 0.0, 0.0, 0.0, 0.0,
-                Bval, 0.0, 0.0, 0.0, -Bval, 0.0, 0.0, 0.0,
-                0.0, -Bval, 0.0, 0.0, 0.0, Bval, 0.0, 0.0,
-                0.0, -Bval, 0.0, 0.0, 0.0, 0.0, Bval, 0.0,
-                0.0, -Bval, 0.0, 0.0, 0.0, 0.0, 0.0, Bval;
-}
-
 // Computes Jacobian matrices A = ∂f/∂x and B = ∂f/∂u numerically
 // x0, u0: Operating point vectors for state and input
 Eigen::MatrixXd MMC::computeJacobianNumerically(const Eigen::VectorXd& x0, const Eigen::VectorXd& u0) {

@@ -42,7 +42,13 @@ public:
         theta(converter_params[8]), V_m(converter_params[9]), V_dc(converter_params[10]),
         L_arm(converter_params[11]), R_arm(converter_params[12]), C_arm(converter_params[13]),
         N(static_cast<int>(converter_params[14])), L_reactor(converter_params[15]),
-        R_reactor(converter_params[16]), t_delay(converter_params[17]) {};
+        R_reactor(converter_params[16]), t_delay(converter_params[17]) {
+        
+        A_matrix = Eigen::MatrixXd::Zero(6, 6);
+        B_matrix = Eigen::MatrixXd::Zero(6, 8);
+        C_matrix = Eigen::MatrixXd::Identity(6, 6);
+        D_matrix = Eigen::MatrixXd::Zero(6, 8);
+    };
   
 
     // Destructor
@@ -65,8 +71,7 @@ public:
     Eigen::VectorXd computeStateDerivativesLinear(const Eigen::VectorXd& x, const Eigen::VectorXd& u);
 
     Eigen::MatrixXd computeJacobianNumerically(const Eigen::VectorXd& x0, const Eigen::VectorXd& u0);
-    void computeJacobianLinear();
-
+    
     // Equilibrium point calculation
     void solveEquilibrium();
 

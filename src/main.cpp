@@ -7,12 +7,6 @@
 
 
 int main() {
-	// Create Transformer object with 1 pin
-	std::vector<double> transformer_values = { 4.3218, 0.45856, 0.7938, 0.084225, 1.0804e+06, 2866, 2.0, 0.0 }; // R_primary, L_primary, R_secondary, L_secondary, Turns Ratio
-	Transformer_real* transformer = new Transformer_real("T1", 1, transformer_values);
-	transformer->printElementValues();
-	transformer->writeFile(10, 10000000, 10000);
-
 	// OHL constructor check
 	//std::vector<double> distances = { 11.8, 27.5 };
 	//std::vector<int> numbers = { 2, 2 };
@@ -52,17 +46,6 @@ int main() {
 	//myNetwork->compute_equivalent_impedance(start_buses, end_buses, skip_elements);
 
 
-	//try {
-	//	myMMC->init_Controller(converter_params);
-	//	std::cout << "MMC Controller initialized successfully!\n";
-	//}
-	//catch (const std::exception& e) {
-	//	std::cerr << "Error initializing MMC Controller: " << e.what() << std::endl;
-	//	delete myMMC;
-	//	delete myNetwork;
-	//	return EXIT_FAILURE;
-	//}
-
 	// Numerically computes the Jacobian matrices A = ∂f/∂x and B = ∂f/∂u at a specified operating point
 	double Fnom = 50;
 	double Vnom_sec = 333e3;
@@ -86,27 +69,16 @@ int main() {
 		Larm, Rarm, C_PM / Nb_PM,     // Arm parameters
 		Nb_PM, 0.0, 0.0, 150e-6);   // Submodules, reactor, delay
 
-    //myNetwork->addElement(myMMC);
-
-	// Linear Jacobian Analysis
-	std::cout << "=== Linear Jacobian Analysis ===\n";
-	mmc.computeJacobianLinear();
-
-	Eigen::MatrixXd A_lin = mmc.getA();
-	Eigen::MatrixXd B_lin = mmc.getB();
-
-	// Print A matrix
-	std::cout << "A = \n" << A_lin << "\n\n";
-
-	// Print B matrix
-	std::cout << "B = \n" << B_lin << "\n\n";
-
-	// Eigenvalue analysis
-	Eigen::EigenSolver<Eigen::MatrixXd> es(A_lin);
-	std::cout << "Eigenvalues (linear):\n" << es.eigenvalues() << "\n";
-
-	// Generalized stability check
-	//mmc.checkStability();
+    //try {
+//	myMMC->init_Controller(converter_params);
+//	std::cout << "MMC Controller initialized successfully!\n";
+//}
+//catch (const std::exception& e) {
+//	std::cerr << "Error initializing MMC Controller: " << e.what() << std::endl;
+//	delete myMMC;
+//	delete myNetwork;
+//	return EXIT_FAILURE;
+//}
 
 	// Nonlinear with Harmonic Injection
 	std::cout << "\nNonlinear Analysis with Harmonics: \n";
@@ -184,12 +156,6 @@ int main() {
 	// Create the StateSpaceModel object
 	StateSpaceModel model;
 
-
-	//// Create a Capacitor between bus1 and bus2
-	//double capacitance = 1e-6; // 1 microfarad
-	//Capacitor* cap = new Capacitor("C1", bus1, bus2, capacitance, 0.0); //single-phase
-	//
-
 	//std::vector<Bus*> all_buses = { bus0, bus1, bus2 };
 	//std::unordered_map<Bus*, int> busIndex;
 	//int row_index = 0;
@@ -206,8 +172,6 @@ int main() {
 	//std::cout << "M(1,3) = " << *M.get(1, 3) << "\n";   // node-row , col
 	//std::cout << "M(3,1) = " << *M.get(3, 1) << "\n";   // branch row , node-col
 
-	//// add capacitor to element list so loops / cutsets include it
-	//elements.push_back(cap);
 
 	//Haixiao
 	try {
@@ -482,9 +446,6 @@ int main() {
         std::vector<std::string> info_br3_dc = { "DCBR3" };
         net.make_BranchDC(br3_dc, globals, info_br3_dc, true);
 
-        //// Manually connect elements to buses
-        //ac->attachBus(bus1, 1);
-        //ac->attachBus(bus0, 2);
         /*  ---------- 2.3 Create Converters ---------- */
         MMC* mmc1 = new MMC(
             "MMC1",         // Symbol
@@ -560,11 +521,6 @@ int main() {
         net.connectElementToBus(mmc2, 1, bus3_ac);
         net.connectElementToBus(mmc2, 2, bus2_dc);
 
-        //r3->attachBus(bus2, 1);
-        //r3->attachBus(bus0, 2);
-
-        // Collect elements
-        //std::vector<Element*> elements = { ac, r1, r2, r3 };
         std::vector<std::string> info_conv2 = {
          "MMC2",          // 0  generator_name
          "1",             // 1  grid_area
