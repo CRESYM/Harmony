@@ -17,9 +17,9 @@ int main() {
 
 
 	// Transformer constructor check
-	//std::vector<double> transformer_values = { 1.0, 1.0, 2.0, 2.0, 2.0 }; // R_primary, X_primary, R_secondary, X_secondary, Turns Ratio
-	//TransformerDeltaY* transformer = new TransformerDeltaY("T1", 3, transformer_values);
-	//transformer->printElementValues();
+	std::vector<double> transformer_values = { 1.0, 1.0e-3, 2.0, 2.0e-3, 0.5e-3 }; // R_primary, L_primary, R_secondary, L_secondary, Mutual inductance
+	Transformer_classic* transformer = new Transformer_classic("T1", 1, transformer_values);
+	transformer->writeFile(10, 10000000, 100000);
 
 	//// TL constructor check
 	//std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
@@ -116,12 +116,6 @@ int main() {
 	mmc.printEigenvalues();  // Display eigenvalues
 	//myNetwork->checkStability(mmc.getA());  // Analyze stability
 
-	// Run OPF Haxaio
-	//solve_opf("../../src/mtdc3slack_a", "../../src/ac9ac14",
-	//	/*vscControl*/ true,
-	//	/*writeTxt  */ false,
-	//	/*plotResult*/ false);
-
 
 	// Cutset
 	Bus* bus0 = new Bus("0", 1);
@@ -186,11 +180,11 @@ int main() {
         Bus* bus4_ac = new Bus("ACBUS04", 3);
         Bus* bus5_ac = new Bus("ACBUS05", 3);
         std::vector<std::vector<std::string>> dict_ac;
-        net.addBusAC(dict_ac, { "ACBUS01", "1", "100", "345", "1.1", "0.9" }, true);
-        net.addBusAC(dict_ac, { "ACBUS02", "1", "100", "345", "1.1", "0.9" }, true);
-        net.addBusAC(dict_ac, { "ACBUS03", "1", "100", "345", "1.1", "0.9" }, true);
-        net.addBusAC(dict_ac, { "ACBUS04", "1", "100", "345", "1.1", "0.9" }, true);
-        net.addBusAC(dict_ac, { "ACBUS05", "1", "100", "345", "1.1", "0.9" }, true);
+        net.addBusAC(dict_ac, { "ACBUS01", "1", "100", "345", "1.1", "0.9" }, false);
+        net.addBusAC(dict_ac, { "ACBUS02", "1", "100", "345", "1.1", "0.9" }, false);
+        net.addBusAC(dict_ac, { "ACBUS03", "1", "100", "345", "1.1", "0.9" }, false);
+        net.addBusAC(dict_ac, { "ACBUS04", "1", "100", "345", "1.1", "0.9" }, false);
+        net.addBusAC(dict_ac, { "ACBUS05", "1", "100", "345", "1.1", "0.9" }, false);
 
         /* ---------- 1.2 Add AC Loads  ---------- */
         std::vector<double> load_params1 = { 1, 1, 1 };
@@ -224,7 +218,7 @@ int main() {
             "0",        // 4  L [H]
             "0",        // 5  C [F]
         };
-        net.make_Load(load1, load_info1, true);
+        net.make_Load(load1, load_info1, false);
 
         std::vector<std::string> load_info2 = {
             "Load02",    // 0  load_name
@@ -234,7 +228,7 @@ int main() {
             "37.9",      // 4  L [H]
             "0",         // 5  C [F]
         };
-        net.make_Load(load2, load_info2, true);
+        net.make_Load(load2, load_info2, false);
 
         std::vector<std::string> load_info3 = {
          "Load03",    // 0  load_name
@@ -244,7 +238,7 @@ int main() {
          "25.2",      // 4  L [H]
          "0",         // 5  C [F]
         };
-        net.make_Load(load3, load_info3, true);
+        net.make_Load(load3, load_info3, false);
 
         std::vector<std::string> load_info4 = {
           "Load04",    // 0  load_name
@@ -254,7 +248,7 @@ int main() {
           "75.7",      // 4  L [H]
           "0",         // 5  C [F]
         };
-        net.make_Load(load4, load_info4, true);
+        net.make_Load(load4, load_info4, false);
 
         std::vector<std::string> load_info5 = {
             "Load05",    // 0  load_name
@@ -264,7 +258,7 @@ int main() {
             "37.9",      // 4  L [H]
             "0",         // 5  C [F]
         };
-        net.make_Load(load5, load_info5, true);
+        net.make_Load(load5, load_info5, false);
 
         /*  ---------- 1.3 Add AC Generators  ---------- */
         std::vector<double> gen1_params = { 0.02, 0.3, 0.05, 7.0 };
@@ -289,7 +283,7 @@ int main() {
             "50",       // 8  cost_linear_coeff
             "150"       // 9  cost_constant_coeff
         };
-        net.make_Generator(gen1, gen_info1, true);
+        net.make_Generator(gen1, gen_info1, false);
 
         std::vector<std::string> gen_info2 = {
             "GEN02",    // 0  generator_name
@@ -303,7 +297,7 @@ int main() {
             "1.2",      // 8  cost_linear_coeff
             "600"       // 9  cost_constant_coeff
         };
-        net.make_Generator(gen2, gen_info2, true);
+        net.make_Generator(gen2, gen_info2, false);
 
         ///*  ---------- 1.4 Add Branches  ---------- */
         // AC Branches
@@ -316,28 +310,24 @@ int main() {
         DenseMatrix ACZ1(1, 1);
         double ACR1 = 0.02;
         double ACX1 = 0.06;
-        // RCP<const Basic> ACZsym1 = add(real_double(ACR1),
-        //    mul(I, real_double(ACX1)));
         RCP<const Basic> ACZsym1 = real_double(ACR1);
         ACZ1.set(0, 0, ACZsym1);
         Impedance* br1_ac = new Impedance("br1_ac", 3, ACZ1);
         net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
         net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
         std::vector<std::string> info_br1_ac = { "ACBR1", "1", "0.06" };
-        net.make_BranchAC(br1_ac, globals, info_br1_ac, true);
+        net.make_BranchAC(br1_ac, globals, info_br1_ac, false);
 
         DenseMatrix ACZ2(1, 1);
         double ACR2 = 0.08;
         double ACX2 = 0.24;
-        // RCP<const Basic> ACZsym2 = add(real_double(ACR2),
-        //    mul(I, real_double(ACX2)));
         RCP<const Basic> ACZsym2 = real_double(ACR2);
         ACZ2.set(0, 0, ACZsym2);
         Impedance* br2_ac = new Impedance("br2_ac", 3, ACZ2);
         net.connectElementToBus(br2_ac, /*terminal=*/1, bus1_ac);
         net.connectElementToBus(br2_ac, /*terminal=*/2, bus3_ac);
         std::vector<std::string> info_br2_ac = { "ACBR2", "1", "0.05" };
-        net.make_BranchAC(br2_ac, globals, info_br2_ac, true);
+        net.make_BranchAC(br2_ac, globals, info_br2_ac, false);
 
         DenseMatrix ACZ3(1, 1);
         double ACR3 = 0.06;
@@ -350,7 +340,7 @@ int main() {
         net.connectElementToBus(br3_ac, /*terminal=*/1, bus2_ac);
         net.connectElementToBus(br3_ac, /*terminal=*/2, bus3_ac);
         std::vector<std::string> info_br3_ac = { "ACBR3", "1", "0.04" };
-        net.make_BranchAC(br3_ac, globals, info_br3_ac, true);
+        net.make_BranchAC(br3_ac, globals, info_br3_ac, false);
 
         DenseMatrix ACZ4(1, 1);
         double ACR4 = 0.06;
@@ -363,7 +353,7 @@ int main() {
         net.connectElementToBus(br4_ac, /*terminal=*/1, bus2_ac);
         net.connectElementToBus(br4_ac, /*terminal=*/2, bus4_ac);
         std::vector<std::string> info_br4_ac = { "ACBR4", "1", "0.04" };
-        net.make_BranchAC(br4_ac, globals, info_br4_ac, true);
+        net.make_BranchAC(br4_ac, globals, info_br4_ac, false);
 
         DenseMatrix ACZ5(1, 1);
         double ACR5 = 0.04;
@@ -376,7 +366,7 @@ int main() {
         net.connectElementToBus(br5_ac, /*terminal=*/1, bus2_ac);
         net.connectElementToBus(br5_ac, /*terminal=*/2, bus5_ac);
         std::vector<std::string> info_br5_ac = { "ACBR5", "1", "0.03" };
-        net.make_BranchAC(br5_ac, globals, info_br5_ac, true);
+        net.make_BranchAC(br5_ac, globals, info_br5_ac, false);
 
         DenseMatrix ACZ6(1, 1);
         double ACR6 = 0.01;
@@ -389,7 +379,7 @@ int main() {
         net.connectElementToBus(br6_ac, /*terminal=*/1, bus3_ac);
         net.connectElementToBus(br6_ac, /*terminal=*/2, bus4_ac);
         std::vector<std::string> info_br6_ac = { "ACBR6", "1", "0.02" };
-        net.make_BranchAC(br6_ac, globals, info_br6_ac, true);
+        net.make_BranchAC(br6_ac, globals, info_br6_ac, false);
 
         
         DenseMatrix ACZ7(1, 1);
@@ -403,16 +393,16 @@ int main() {
         net.connectElementToBus(br7_ac, /*terminal=*/1, bus4_ac);
         net.connectElementToBus(br7_ac, /*terminal=*/2, bus5_ac);
         std::vector<std::string> info_br7_ac = { "ACBR7", "1", "0.05" };
-        net.make_BranchAC(br7_ac, globals, info_br7_ac, true);
+        net.make_BranchAC(br7_ac, globals, info_br7_ac, false);
 
         /*  ---------- 2.1 Create DC Buses  ---------- */
         Bus* bus1_dc = new Bus("DCBUS01", 1);
         Bus* bus2_dc = new Bus("DCBUS02", 1);
         Bus* bus3_dc = new Bus("DCBUS03", 1);
         std::vector<std::vector<std::string>> dict_dc;
-        net.addBusDC(dict_dc, { "DCBUS01", "330", "1.1", "0.9" }, true);
-        net.addBusDC(dict_dc, { "DCBUS02", "330", "1.1", "0.9" }, true);
-        net.addBusDC(dict_dc, { "DCBUS03", "330", "1.1", "0.9" }, true);
+        net.addBusDC(dict_dc, { "DCBUS01", "330", "1.1", "0.9" }, false);
+        net.addBusDC(dict_dc, { "DCBUS02", "330", "1.1", "0.9" }, false);
+        net.addBusDC(dict_dc, { "DCBUS03", "330", "1.1", "0.9" }, false);
 
         ///*  ---------- 2.2 Create DC Buses  ---------- */
 
@@ -424,7 +414,7 @@ int main() {
         net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
         net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
         std::vector<std::string> info_br1_dc = { "DCBR1" };
-        net.make_BranchDC(br1_dc, globals, info_br1_dc, true);
+        net.make_BranchDC(br1_dc, globals, info_br1_dc, false);
 
         DenseMatrix DCZ2(1, 1);
         double DCR2 = 0.073;
@@ -434,7 +424,7 @@ int main() {
         net.connectElementToBus(br2_dc, /*terminal=*/1, bus1_dc);
         net.connectElementToBus(br2_dc, /*terminal=*/2, bus3_dc);
         std::vector<std::string> info_br2_dc = { "DCBR2" };
-        net.make_BranchDC(br2_dc, globals, info_br2_dc, true);
+        net.make_BranchDC(br2_dc, globals, info_br2_dc, false);
 
         DenseMatrix DCZ3(1, 1);
         double DCR3 = 0.052;
@@ -444,7 +434,7 @@ int main() {
         net.connectElementToBus(br3_dc, /*terminal=*/1, bus2_dc);
         net.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
         std::vector<std::string> info_br3_dc = { "DCBR3" };
-        net.make_BranchDC(br3_dc, globals, info_br3_dc, true);
+        net.make_BranchDC(br3_dc, globals, info_br3_dc, false);
 
         /*  ---------- 2.3 Create Converters ---------- */
         MMC* mmc1 = new MMC(
@@ -494,7 +484,7 @@ int main() {
          "0",             // 19 Vdcset
          "0",             // 20 Dvdsetc
         };
-        net.make_Converter(mmc1, globals, info_conv1, true);
+        net.make_Converter(mmc1, globals, info_conv1, false);
 
 
         MMC* mmc2 = new MMC(
@@ -544,7 +534,7 @@ int main() {
          "0",             // 19 Vdcset
          "0",             // 20 Dvdsetc
         };
-        net.make_Converter(mmc2, globals, info_conv2, true);
+        net.make_Converter(mmc2, globals, info_conv2, false);
 
 
         MMC* mmc3 = new MMC(
@@ -594,7 +584,7 @@ int main() {
          "0",             // 19 Vdcset
          "0",             // 20 Dvdsetc
         };
-        net.make_Converter(mmc3, globals, info_conv3, true);
+        net.make_Converter(mmc3, globals, info_conv3, false);
 
         /*----- 3 OPF Implementatiopn ----- */
         net.make_OPF(net, true, false, false);

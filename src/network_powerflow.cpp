@@ -36,20 +36,11 @@ Eigen::MatrixXd map2dense(const Table& tbl,
     return M;
 }
 
-//void Network::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
-//    const std::vector<std::string>& bus_info)
-//{
-//    dict_ac.push_back(bus_info);
-//
-//}
 
 void Network::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     const std::vector<std::string>& bus_info,
     bool print_info /* =false*/)
 {
-    //    dict_ac.push_back(bus_info);
-    //}
-
     int id = static_cast<int>(dict_ac.size()) + 1;
 
     std::string bus_id = std::to_string(id);
@@ -419,47 +410,6 @@ void Network::make_BranchDC(Element* element,
 
 }
 
-//void Network::make_Converter(
-//    Element* element,
-//    std::vector<std::vector<std::string>>& dict_dc,
-//    std::vector<std::vector<std::string>>& dict_ac,
-//    std::vector<std::string> new_i,
-//    std::vector<std::string> new_o,
-//    std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data,
-//    std::map<std::string, double>& global_params)
-//{
-//    int key_i, key_o;
-//
-//    if (!new_i.empty()) {
-//        dict_dc.push_back(new_i);
-//        // Emulate add_bus_dc(data);
-//        key_i = static_cast<int>(data["busdc"].size()) + 1;
-//    }
-//    else {
-//        key_i = -1;
-//    }
-//
-//    if (!new_o.empty()) {
-//        dict_ac.push_back(new_o);
-//        // Emulate add_bus_ac(data);
-//        key_o = static_cast<int>(data["bus"].size()) + 1;
-//    }
-//    else {
-//        key_o = -1;
-//    }
-//
-//    int key = static_cast<int>(data["convdc"].size()) + 1;
-//
-//    std::map<std::string, double> converter_data;
-//    converter_data["busdc_i"] = static_cast<double>(key_i);
-//    converter_data["busac_i"] = static_cast<double>(key_o);
-//
-//    data["convdc"][std::to_string(key)] = converter_data;
-//
-//    element->computePowerFlowDC(data["branchdc"], global_params);
-//    element->computePowerFlowAC(data["branch"], global_params);
-//}
-
 void Network::make_Converter(
     Element* element,
     std::map<std::string, double>& global_params,
@@ -572,12 +522,6 @@ void Network::make_Converter(
 }
 
 
-//void Network::make_Generator(Element* element,
-//    std::map<std::string, std::map<std::string, std::map<std::string, double>>>& data)
-//{
-//    std::map<std::string, double> dummy_globals;
-//    element->computePowerFlowAC(data["gen"], dummy_globals);
-//}
 void Network::make_Generator(
     Element* element,
     const std::vector<std::string>& gen_info,
