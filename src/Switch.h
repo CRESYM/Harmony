@@ -20,6 +20,10 @@ public:
         const SymEngine::RCP<const SymEngine::Basic>& value,
         const std::unordered_map<Bus*, int>& busIndex) override;
 
+    //Symbolic admittance matrix stamping 
+    //void writeMatrixSymbolic(SymEngine::DenseMatrix& Y,
+    //    const std::unordered_map<Bus*, int>& busIndex);
+
     // getters
     bool getState(int phase = 0) const { return phaseState[phase]; }
 

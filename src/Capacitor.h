@@ -25,11 +25,22 @@ public:
         const SymEngine::RCP<const SymEngine::Basic>& value,
         const std::unordered_map<Bus*, int>& busIndex) override;
 
+    //void writeMatrixSymbolic(SymEngine::DenseMatrix& Y,
+    //    const std::unordered_map<Bus*, int>& busIndex) override;
+
+    void writeMNAmatrixNumeric(Eigen::MatrixXd& A,
+        int num_equations,
+        int index,
+        const std::unordered_map<Bus*, int>& busIndex) override;
+
     void printElementValues() override;
 
 private:
     double C; // Capacitance value in Farads
     double initial_value; // Initial voltage across the capacitor
+
+    std::vector<Bus*> node1;  // Store first terminal buses
+    std::vector<Bus*> node2;  // Store second terminal buses
 };
 
 #endif // CAPACITOR_H

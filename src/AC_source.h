@@ -20,6 +20,15 @@ public:
 
     //void addPowerFlowData();
 
+    //void writeMatrixSymbolic(SymEngine::DenseMatrix& mat,
+    //    const std::unordered_map<Bus*, int>& busIndex) override;
+
+    void writeMNAmatrixNumeric(Eigen::MatrixXd& A,
+        int num_equations,
+        int index,
+        const std::unordered_map<Bus*, int>& busIndex) override;
+
+
     // Function to print AC source values
     void printElementValues();
 

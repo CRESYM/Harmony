@@ -95,6 +95,80 @@ void Capacitor::writeMNAmatrix(DenseMatrix& A,
     }
 }
 
+//void Capacitor::writeMatrixSymbolic(
+//    SymEngine::DenseMatrix& Y,
+//    const std::unordered_map<Bus*, int>& busIndex)
+//{
+//    std::cout << "[Capacitor::writeMatrixSymbolic] Called for '" << getElementSymbol() << "'\n";
+//
+//    // Laplace‑domain admittance Y = s*C
+//    auto s = SymEngine::symbol("s");
+//    auto Ys = SymEngine::mul(s, SymEngine::real_double(C));
+//
+//    if (connections.size() != 2) {
+//        std::cerr << "[Capacitor] ERROR: needs exactly two terminals\n";
+//        return;
+//    }
+//
+//    // grab the two buses out of the base‐class connections map
+//    auto it = connections.begin();
+//    Bus* p = it->first;   int pi = it->second;
+//    ++it;
+//    Bus* n = it->first;   int ni = it->second;
+//
+//    auto ip = busIndex.find(p);
+//    auto in = busIndex.find(n);
+//    if (ip == busIndex.end() || in == busIndex.end()) {
+//        std::cerr << "[Capacitor] Bus not in map\n";
+//        return;
+//    }
+//    int rp = ip->second, rn = in->second;
+//
+//    std::cout << "  stamping +sC at (" << rp << "," << rp << ") and (" << rn << "," << rn << ");"
+//        << "  −sC at (" << rp << "," << rn << ") and (" << rn << "," << rp << ")\n";
+//
+//    // stamp onto the MNA (same pattern as resistor/AC_source)
+//    Y.set(rp, rp, SymEngine::add(Y.get(rp, rp), Ys));
+//    Y.set(rn, rn, SymEngine::add(Y.get(rn, rn), Ys));
+//    Y.set(rp, rn, SymEngine::sub(Y.get(rp, rn), Ys));
+//    Y.set(rn, rp, SymEngine::sub(Y.get(rn, rp), Ys));
+//
+//    std::cout << "[Capacitor::writeMatrixSymbolic] Done\n";
+//}
+
+void Capacitor::writeMNAmatrixNumeric(Eigen::MatrixXd& A,
+    int num_equations,
+    int index,
+    const std::unordered_map<Bus*, int>& busIndex)
+{
+    Bus* n1 = nullptr;
+    Bus* n2 = nullptr;
+
+    for (const auto& [bus, terminal] : connections) {
+        if (terminal == 0) n1 = bus;
+        else if (terminal == 1) n2 = bus;
+    }
+
+    int row = index; 
+
+    int n1_idx = (n1 && busIndex.count(n1)) ? busIndex.at(n1) : -1;
+    int n2_idx = (n2 && busIndex.count(n2)) ? busIndex.at(n2) : -1;
+
+    // Stamp KCL equations at the capacitor
+    if (n1_idx != -1) {
+        A(n1_idx, row) += 1.0;  // current flowing out of node n1
+        A(row, n1_idx) += 1.0;  // voltage at node n1
+    }
+    if (n2_idx != -1) {
+        A(n2_idx, row) += -1.0; // current into node n2
+        A(row, n2_idx) += -1.0; // voltage at node n2
+    }
+
+    // Stamp the capacitor dynamic equation: I = C * dV/dt (or I - C * dV/dt = 0)
+    A(row, row) -= C; 
+}
+
+
 // Print basic capacitor info
 void Capacitor::printElementValues() {
     std::cout << "Capacitor symbol: " << getElementSymbol() << std::endl;

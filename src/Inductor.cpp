@@ -93,6 +93,43 @@ void Inductor::writeMNAmatrix(DenseMatrix& A,
 
 }
 
+//void Inductor::writeMatrixSymbolic(DenseMatrix& Y,
+//    const std::unordered_map<Bus*, int>& busIndex) {
+//
+//    RCP<const Basic> s = symbol("s");  // Laplace variable
+//    RCP<const Basic> Yl = div(one, mul(s, real_double(L))); // Y = 1/(sL)
+//
+//    for (size_t i = 0; i < connections.size() / 2; ++i) {
+//        // Find connected buses for phase i
+//        Bus* n1 = nullptr;
+//        Bus* n2 = nullptr;
+//
+//        // Find terminals connected to phase i and i + nph (like in your MNA code)
+//        int nph = getInputPins();
+//        for (auto& kv : connections) {
+//            if (kv.second == i) n1 = kv.first;
+//            if (kv.second == i + nph) n2 = kv.first;
+//        }
+//
+//        if (!n1 || !n2) {
+//            throw std::runtime_error("Inductor missing bus connections for symbolic matrix");
+//        }
+//
+//        int idx1 = busIndex.at(n1);
+//        int idx2 = busIndex.at(n2);
+//
+//        // Stamp the inductive admittance matrix entries (Y = 1/(sL))
+//        // Y(n1,n1) += Yl
+//        Y.set(idx1, idx1, add(Y.get(idx1, idx1), Yl));
+//        // Y(n2,n2) += Yl
+//        Y.set(idx2, idx2, add(Y.get(idx2, idx2), Yl));
+//        // Y(n1,n2) -= Yl
+//        Y.set(idx1, idx2, sub(Y.get(idx1, idx2), Yl));
+//        // Y(n2,n1) -= Yl
+//        Y.set(idx2, idx1, sub(Y.get(idx2, idx1), Yl));
+//    }
+//}
+
 // Access initial value
 double Inductor::getInitialCurrent() const {
     return initial_value;

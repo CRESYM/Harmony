@@ -121,38 +121,70 @@ int main() {
 	//myNetwork->checkStability(mmc.getA());  // Analyze stability
 
 
-	// Cutset
+	// state_space
 	Bus* bus0 = new Bus("0", 1);
 	Bus* bus1 = new Bus("1", 1);
 	Bus* bus2 = new Bus("2", 1);
 
-	std::vector<Bus*> buses = { bus0, bus1, bus2 };
-	// Create Elements (assumes ACSource and Resistor constructors take two buses and a value)
-	AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
-	Resistor* r1 = new Resistor("R1", 2, 2.0);
-	Resistor* r2 = new Resistor("R2", 2, 2.0);
-	Resistor* r3 = new Resistor("R3", 2, 2.0);
+	//std::vector<Bus*> buses = { bus0, bus1, bus2 };
+	//// Create Elements (assumes ACSource and Resistor constructors take two buses and a value)
+	//AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
+	//Resistor* r1 = new Resistor("R1", 2, 2.0);
+	//Resistor* r2 = new Resistor("R2", 2, 2.0);
+	//Resistor* r3 = new Resistor("R3", 2, 2.0);
 
 	// Manually connect elements to buses
-	ac->attachBus(bus1, 1);
-	ac->attachBus(bus0, 2);
+	//ac->attachBus(bus1, 1);
+	//ac->attachBus(bus0, 2);
 
-	r1->attachBus(bus1, 1);
-	r1->attachBus(bus0, 2);
+	//r1->attachBus(bus1, 1);
+	//r1->attachBus(bus0, 2);
 
-	r2->attachBus(bus1, 1);
-	r2->attachBus(bus2, 2);
+	//r2->attachBus(bus1, 1);
+	//r2->attachBus(bus2, 2);
 
-	r3->attachBus(bus2, 1);
-	r3->attachBus(bus0, 2);
+	//r3->attachBus(bus2, 1);
+	//r3->attachBus(bus0, 2);
 
-	// Collect elements
-	std::vector<Element*> elements = { ac, r1, r2, r3 };
+	//// Collect elements
+	//std::vector<Element*> elements = { ac, r1, r2, r3 };
 
-	auto busToElementsMap = StateSpaceModel::generateBusToElementsMap(elements);
+	//auto busToElementsMap = StateSpaceModel::generateBusToElementsMap(elements);
+
+    // Add buses to network
+    myNetwork->addBus(bus0->getBusName(), bus0);
+    myNetwork->addBus(bus1->getBusName(), bus1);
+    myNetwork->addBus(bus2->getBusName(), bus2);
+
+    // Create and add elements
+    AC_source* ac = new AC_source("AC1", 1, DenseMatrix(1, 1, { integer(10) }));
+    ac->attachBus(bus1, 1);
+    ac->attachBus(bus0, 2);
+    myNetwork->addElement(ac->getElementSymbol(), ac);
+
+    Resistor* r1 = new Resistor("R1", 2, 2.0);
+    r1->attachBus(bus1, 1);
+    r1->attachBus(bus0, 2);
+    myNetwork->addElement(r1->getElementSymbol(), r1);
+
+    // Add capacitor as you showed
+    Capacitor* c1 = new Capacitor("C1", { bus0 }, { bus1 }, 1e-6);
+    c1->attachBus(bus0, 1);
+    c1->attachBus(bus1, 2);
+    myNetwork->addElement(c1->getElementSymbol(), c1);
+
+    // Finalize counts and indices (assign buses to matrix indices etc.)
+    myNetwork->finalizeCounts();
 
 	// Create the StateSpaceModel object
 	StateSpaceModel model;
+    //model.formState(myNetwork);
+
+    // Print matrices
+    //std::cout << "A = \n" << model.getA() << "\n";
+    //std::cout << "B = \n" << model.getB() << "\n";
+    //std::cout << "C = \n" << model.getC() << "\n";
+    //std::cout << "D = \n" << model.getD() << "\n";
 
 	//std::vector<Bus*> all_buses = { bus0, bus1, bus2 };
 	//std::unordered_map<Bus*, int> busIndex;

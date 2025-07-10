@@ -25,7 +25,6 @@ private:
 
     int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation
     //state_space_model
-    int number_voltage_sources;
     int number_current_sources;
     int number_switches;
     int number_inductors;
@@ -35,6 +34,7 @@ private:
     int number_elements;
     int number_nodes;
     int total_number_equations;
+    int number_outputs;
     int state_variables;
     std::vector<Element*> element_list;
     std::vector<std::string> symbols_bank;
@@ -47,6 +47,8 @@ private:
     std::vector<RCP<const Symbol>> sources_symbols;
     std::vector<RCP<const Symbol>> independent_sources;
     std::vector<RCP<const Symbol>> sources_values;
+    std::vector<int> output_indexes;
+
 
     //int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation 
 
@@ -192,8 +194,15 @@ public:
     const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getSourceSymbols() const;
 
     int  getNumberOutputs() const;     // y dimension
-    const std::vector<int>& getOutputIndexes() const;
+    //std::vector<int>& getOutputIndexes();              // non-const version   allows modification
+    const std::vector<int>& getOutputIndexes() const;  // const version   for read-only access
+
+
     int  getNumberEquations() const;     // total MNA rows    
+
+    std::unordered_map<Bus*, int> getBusIndexMap() const;
+    void finalizeCounts();
+
 };
 
 #endif // NETWORK_H

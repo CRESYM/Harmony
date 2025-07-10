@@ -11,7 +11,8 @@
 #include "network.h"
 
 class Bus;
-class Element;
+class Element; 
+class Network;
 
 using SymEngine::Expression;
 using SymEngine::DenseMatrix;
@@ -50,6 +51,34 @@ public:
         std::string toString() const; 
     };
 
+    // Nested Output class for storing output variable indexes
+    class Output {
+    private:
+        std::vector<int> indexes;
+
+    public:
+        void addIndex(int index) {
+            indexes.push_back(index);
+        }
+
+        const std::vector<int>& getIndexes() const {
+            return indexes;
+        }
+
+        int getNumber() const {
+            return indexes.size();
+        }
+
+        std::string toString() const {
+            std::ostringstream oss;
+            oss << "Output indexes: ";
+            for (int idx : indexes) {
+                oss << idx << " ";
+            }
+            return oss.str();
+        }
+    };
+
     StateSpaceModel() = default; 
     
     static std::vector<std::vector<Bus*>> from_cutset_nodes(const std::vector<Bus*>& buses,
@@ -67,9 +96,18 @@ public:
         const std::vector<Bus*>& nodes,
         const std::map<Bus*, std::vector<Element*>>& node_collection);
 
-    // high‑level wrapper: build A,B,C,D from a populated Network
-    //void formState(Network* net);
+    // build A,B,C,D from a populated Network
+    void formState(Network* net);
 
+    // Getters
+    const SymEngine::DenseMatrix& getA() const { return A; }
+    const SymEngine::DenseMatrix& getB() const { return B; }
+    const SymEngine::DenseMatrix& getC() const { return C; }
+    const SymEngine::DenseMatrix& getD() const { return D; }
+
+    const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getXSymbols() const { return x_symbols; }
+    const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getUSymbols() const { return u_symbols; }
+    const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getYSymbols() const { return y_symbols; }
 
 private:
     static void traverseForLoops(
@@ -82,6 +120,9 @@ private:
         const std::map<Bus*, int>& busIndices);
 
     DenseMatrix A, B, C, D;  //state_space blocks
+    std::vector<SymEngine::RCP<const SymEngine::Symbol>> x_symbols; // state
+    std::vector<SymEngine::RCP<const SymEngine::Symbol>> u_symbols; // input
+    std::vector<SymEngine::RCP<const SymEngine::Symbol>> y_symbols; // output
 };
 
 #endif //STATE_SPACE_MODEL

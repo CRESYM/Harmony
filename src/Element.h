@@ -83,6 +83,16 @@ public:
         const SymEngine::RCP<const SymEngine::Basic>& value,
         const std::unordered_map<Bus*, int>& busIndex);
 
+    // Stamps into symbolic matrix
+    /*  virtual void writeMatrixSymbolic(SymEngine::DenseMatrix& mat,
+        const std::unordered_map<Bus*, int>& busIndex);*/
+
+    // Numeric MNA stamping
+    virtual void writeMNAmatrixNumeric(Eigen::MatrixXd& A,
+        int num_equations,
+        int index,
+        const std::unordered_map<Bus*, int>& busIndex);
+    
     virtual bool getPhaseState(int i) const { return true; } // Default to closed
 
 

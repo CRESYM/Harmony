@@ -22,6 +22,15 @@ public:
             const RCP<const Basic>&value,
             const std::unordered_map<Bus*, int>&busIndex) override;
     
+     //void writeMatrixSymbolic(SymEngine::DenseMatrix& Y,
+     //    const std::unordered_map<Bus*, int>& busIndex);
+
+     // Numeric MNA stamping for multi-phase values
+     void writeMNAmatrixNumeric(Eigen::MatrixXd& A,
+         int num_equations,
+         int index,
+         const std::unordered_map<Bus*, int>& busIndex) override;
+        
     // Override to print resistor-specific data
     void printElementValues() override;
 

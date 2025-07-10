@@ -109,6 +109,101 @@ void Resistor::writeMNAmatrix(DenseMatrix& A,
     }
 }
 
+void Resistor::writeMNAmatrixNumeric(Eigen::MatrixXd& A,
+    int num_equations,
+    int index,
+    const std::unordered_map<Bus*, int>& busIndex)
+{
+    Bus* n1 = nullptr;
+    Bus* n2 = nullptr;
+
+    for (const auto& [bus, terminal] : connections) {
+        if (terminal == 0) n1 = bus;
+        else if (terminal == 1) n2 = bus;
+    }
+
+    double G = 1.0 / R_values[0];  // Conductance
+
+    if (n1) {
+        int r1 = busIndex.at(n1);
+        A(r1, r1) += G;
+    }
+    if (n2) {
+        int r2 = busIndex.at(n2);
+        A(r2, r2) += G;
+    }
+    if (n1 && n2) {
+        int r1 = busIndex.at(n1);
+        int r2 = busIndex.at(n2);
+        A(r1, r2) -= G;
+        A(r2, r1) -= G;
+    }
+}
+
+
+//void Resistor::writeMatrixSymbolic(DenseMatrix& A,
+//    const std::unordered_map<Bus*, int>& busIndex)
+//{
+//    auto buses = getBuses();
+//    Bus* node1 = buses.size() > 0 ? buses[0] : nullptr;
+//    Bus* node2 = buses.size() > 1 ? buses[1] : nullptr;
+//
+//    std::cout << "[Resistor::writeMatrixSymbolic] Called for resistor '" << getElementSymbol() << "'\n";
+//    std::cout << "  Connected buses: ";
+//    if (node1) std::cout << node1->getBusName() << " ";
+//    if (node2) std::cout << node2->getBusName();
+//    std::cout << "\n";
+//
+//    if (R_values.empty() || R_values[0] <= 0) {
+//        std::cerr << "[Resistor::writeMatrixSymbolic] ERROR: invalid resistance value\n";
+//        return;
+//    }
+//
+//    RCP<const Basic> Y_value = div(one, real_double(R_values[0]));
+//    std::cout << "  Calculated admittance Y_value = " << *Y_value << "\n";
+//
+//    if (node1) {
+//        if (busIndex.count(node1)) {
+//            int n1 = busIndex.at(node1);
+//            std::cout << "  Setting A(" << n1 << "," << n1 << ") += Y_value\n";
+//            A.set(n1, n1, add(A.get(n1, n1), Y_value));
+//
+//            if (node2) {
+//                if (busIndex.count(node2)) {
+//                    int n2 = busIndex.at(node2);
+//                    std::cout << "  Setting off-diagonal entries:\n";
+//                    std::cout << "    A(" << n1 << "," << n2 << ") -= Y_value\n";
+//                    std::cout << "    A(" << n2 << "," << n2 << ") += Y_value\n";
+//                    std::cout << "    A(" << n2 << "," << n1 << ") -= Y_value\n";
+//
+//                    A.set(n1, n2, sub(A.get(n1, n2), Y_value));
+//                    A.set(n2, n2, add(A.get(n2, n2), Y_value));
+//                    A.set(n2, n1, sub(A.get(n2, n1), Y_value));
+//                    std::cout << "  Done setting off-diagonal\n";
+//                }
+//                else {
+//                    std::cerr << "Warning: node2 not found in busIndex\n";
+//                }
+//            }
+//        }
+//        else {
+//            std::cerr << "Warning: node1 not found in busIndex\n";
+//        }
+//    }
+//    else if (node2) {
+//        if (busIndex.count(node2)) {
+//            int n2 = busIndex.at(node2);
+//            std::cout << "  Setting A(" << n2 << "," << n2 << ") += Y_value\n";
+//            A.set(n2, n2, add(A.get(n2, n2), Y_value));
+//        }
+//        else {
+//            std::cerr << " Warning: node2 not found in busIndex\n";
+//        }
+//    }
+//
+//    std::cout << "Finished for resistor '" << getElementSymbol() << "'\n";
+//}
+
 void Resistor::printElementValues() {
     std::cout << "Resistor values (Ohms): ";
     for (double r : R_values) {

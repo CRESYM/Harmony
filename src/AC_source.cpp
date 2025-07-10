@@ -36,6 +36,91 @@ AC_source::~AC_source() {
     std::cout << "AC source object for " << getElementSymbol() << " destroyed." << std::endl;
 }
 
+// void AC_source::writeMatrixSymbolic(DenseMatrix & mat,
+    //    const std::unordered_map<Bus*, int>& busIndex)
+    //{
+    //    std::cout << "Called for AC source '" << getElementSymbol() << "'\n";
+    //
+    //    if (connections.size() != 2) {
+    //        std::cerr << "ERROR: AC_source should be connected to exactly two buses.\n";
+    //        return;
+    //    }
+    //
+    //    auto it = connections.begin();
+    //    Bus* busA = it->first;
+    //    ++it;
+    //    Bus* busB = it->first;
+    //
+    //    std::cout << "  Connected buses: " << busA->getBusName() << ", " << busB->getBusName() << "\n";
+    //
+    //    auto itA = busIndex.find(busA);
+    //    auto itB = busIndex.find(busB);
+    //
+    //    if (itA == busIndex.end()) {
+    //        std::cerr << "ERROR: busA '" << busA->getBusName() << "' not found in busIndex\n";
+    //        return;
+    //    }
+    //    if (itB == busIndex.end()) {
+    //        std::cerr << " ERROR: busB '" << busB->getBusName() << "' not found in busIndex\n";
+    //        return;
+    //    }
+    //
+    //    int i = itA->second;
+    //    int j = itB->second;
+    //
+    //    if (Z.nrows() != 1 || Z.ncols() != 1) {
+    //        std::cerr << " ERROR: Z must be a 1x1 matrix.\n";
+    //        return;
+    //    }
+    //
+    //    RCP<const Basic> Zval = Z.get(0, 0);
+    //    std::cout << "  Impedance Z = " << *Zval << "\n";
+    //
+    //    RCP<const Basic> Y_val = div(integer(1), Zval);  // Y = 1/Z
+    //    std::cout << "  Calculated admittance Y = " << *Y_val << "\n";
+    //
+    //    std::cout << "  Setting matrix entries:\n";
+    //    std::cout << "    mat(" << i << "," << i << ") += Y\n";
+    //    std::cout << "    mat(" << j << "," << j << ") += Y\n";
+    //    std::cout << "    mat(" << i << "," << j << ") -= Y\n";
+    //    std::cout << "    mat(" << j << "," << i << ") -= Y\n";
+    //
+    //    mat.set(i, i, add(mat.get(i, i), Y_val));
+    //    mat.set(j, j, add(mat.get(j, j), Y_val));
+    //    mat.set(i, j, sub(mat.get(i, j), Y_val));
+    //    mat.set(j, i, sub(mat.get(j, i), Y_val));
+    //
+    //    std::cout << "Finished for AC source '" << getElementSymbol() << "'\n";
+    //}
+
+    void AC_source::writeMNAmatrixNumeric(Eigen::MatrixXd & A,
+        int num_equations,
+        int index,
+        const std::unordered_map<Bus*, int>&busIndex)
+{
+    if (connections.size() != 2) {
+        throw std::runtime_error("AC_source should be connected to exactly two buses.");
+    }
+
+    auto it = connections.begin();
+    Bus* n1 = it->first;
+    ++it;
+    Bus* n2 = it->first;
+
+    int row = index; // Branch current equation row index
+
+    if (n1) {
+        int r = busIndex.at(n1);
+        A(row, r) += 1.0;    // KCL at positive terminal
+        A(r, row) += 1.0;    
+    }
+    if (n2) {
+        int r = busIndex.at(n2);
+        A(row, r) += -1.0;   // KCL at negative terminal
+        A(r, row) += -1.0;
+    }
+}
+
 void AC_source::printElementValues() {
 	printElementInfo();
 
