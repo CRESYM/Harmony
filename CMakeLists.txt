@@ -53,6 +53,7 @@ set(Element_Transformer_Header_Files
     src/Transformer_real.h
     src/Transformer_Y_Delta.h
     src/Transformer_Y_Y.h
+    src/Transformer_Y_Y_real.h
 )
 set(Element_Transmission_Line_Header_Files
     src/Cable.h
@@ -109,6 +110,7 @@ set(Element_Transformer_Source_Files
     src/Transformer_real.cpp
     src/Transformer_Y_Delta.cpp
     src/Transformer_Y_Y.cpp
+    src/Transformer_Y_Y_real.cpp
 )
 set(Element_Transmission_Line_Source_Files
     src/Cable.cpp

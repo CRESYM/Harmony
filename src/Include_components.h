@@ -18,6 +18,7 @@
 #include "Transformer_Y_Delta.h"
 #include "Transformer_Delta_Y.h"
 #include "Transformer_Y_Y.h"
+#include "Transformer_Y_Y_real.h"
 
 #include "AC_source.h"
 #include "Generator.h"
