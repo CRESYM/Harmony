@@ -2,13 +2,19 @@
 
 HARMONic stabilitY assessment of PE-penetrated power systems
 
-As other power systems, the European grid experiences a massive RES development, bringing up many new challenges for system operation. One of such challenges is the massive penetration of Power Electronic (PE) converters (e.g. PV & wind generation units, batteries & chargers, HVDC connections, statcoms, etc.) on a large scale as they may cause instable system operation (resonance) or harmonic waves that can interfere and/or damage the neighbouring equipment. 
-Where a few, local (a plant) and rather simple situations had to be analysed in the past, the risk is growing exponentially, as more devices connect, as they are more diverse, as they are closer one to another. Grid regulations are all the more demanding that complex situations cannot actually be addressed. And, as a consequence, strong mitigation measures are integrated in every piece of equipment, at a significant additional cost… without preventing all undesired interactions.    
-There is a small number of publicly available, but limited, tools for such analyses, often requiring time-consuming modeling of the power system and the detailed control algorithms, possibly limited in terms of phasor-based simulation or unable to model all power converters, or unable to satisfactorily model an AC-DC hybrid system. 
-Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) project deals with the development of a mathematical framework capable of simulating all components in AC-DC system for converter driven stability assessment studies becomes crucial, in order to complement present tools, and eventually:  
+Like other power systems, the European grid experiences a massive RES development, bringing up many new challenges for system operation. One of such challenges is the massive penetration of Power Electronic (PE) converters (e.g. PV & wind generation units, batteries & chargers, HVDC connections, statcoms, etc.) on a large scale as they may cause instable system operation (resonance) or harmonic waves that can interfere and/or damage the neighbouring equipment. 
+
+Where a few, local (a plant) and rather simple situations had to be analysed in the past, the risk is growing exponentially, as more devices connect, as they are more diverse, and as they are closer to one another. Grid regulations are all the more demanding because complex situations cannot actually be addressed. And, as a consequence, strong mitigation measures are integrated in every piece of equipment, at a significant additional cost… without preventing all undesired interactions.    
+
+There is a small number of publicly available, but limited, tools for such analyses, often requiring time-consuming modeling of the power system and the detailed control algorithms, possibly limited in terms of phasor-based simulation, or unable to model all power converters, or unable to satisfactorily model an AC-DC hybrid system. 
+Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) project deals with the development of a mathematical framework capable of simulating all components in AC-DC systems for converter-driven stability assessment studies becomes crucial, in order to complement present tools, and eventually:  
+
 (i) ease the performance of stability assessment studies; 
+
 (ii) analyse complex situations; 
-(iii) refine mitigation measures; and  
+
+(iii) refine mitigation measures; and 
+
 (iv) lower overall equipment costs. 
 
 ## Installation and Usage
