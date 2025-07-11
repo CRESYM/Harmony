@@ -14,8 +14,8 @@ class Bus;
 class Element; 
 class Network;
 
-using SymEngine::Expression;
-using SymEngine::DenseMatrix;
+//using SymEngine::Expression;
+//using SymEngine::DenseMatrix;
 
 class StateSpaceModel {
 public:
@@ -100,10 +100,17 @@ public:
     void formState(Network* net);
 
     // Getters
-    const SymEngine::DenseMatrix& getA() const { return A; }
-    const SymEngine::DenseMatrix& getB() const { return B; }
-    const SymEngine::DenseMatrix& getC() const { return C; }
-    const SymEngine::DenseMatrix& getD() const { return D; }
+    //const SymEngine::DenseMatrix& getA() const { return A; }
+    //const SymEngine::DenseMatrix& getB() const { return B; }
+    //const SymEngine::DenseMatrix& getC() const { return C; }
+    //const SymEngine::DenseMatrix& getD() const { return D; }
+
+    // Getters for Eigen::MatrixXd
+    const Eigen::MatrixXd& getA() const { return A_mat; } 
+    const Eigen::MatrixXd& getB() const { return B_mat; }
+    const Eigen::MatrixXd& getC() const { return C_mat; }
+    const Eigen::MatrixXd& getD() const { return D_mat; }
+
 
     const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getXSymbols() const { return x_symbols; }
     const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getUSymbols() const { return u_symbols; }
@@ -119,7 +126,13 @@ private:
         std::shared_ptr<Tree> current_branch,
         const std::map<Bus*, int>& busIndices);
 
-    DenseMatrix A, B, C, D;  //state_space blocks
+    //DenseMatrix A, B, C, D;  //state_space blocks
+    // Change these to Eigen::MatrixXd
+    Eigen::MatrixXd A_mat; 
+    Eigen::MatrixXd B_mat; 
+    Eigen::MatrixXd C_mat; 
+    Eigen::MatrixXd D_mat; 
+
     std::vector<SymEngine::RCP<const SymEngine::Symbol>> x_symbols; // state
     std::vector<SymEngine::RCP<const SymEngine::Symbol>> u_symbols; // input
     std::vector<SymEngine::RCP<const SymEngine::Symbol>> y_symbols; // output

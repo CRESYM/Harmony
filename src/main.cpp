@@ -157,7 +157,8 @@ int main() {
     myNetwork->addBus(bus2->getBusName(), bus2);
 
     // Create and add elements
-    AC_source* ac = new AC_source("AC1", 1, DenseMatrix(1, 1, { integer(10) }));
+    //AC_source* ac = new AC_source("AC1", 1, DenseMatrix(1, 1, { integer(0) }));
+    AC_source* ac = new AC_source("AC1", 2, SymEngine::DenseMatrix(1, 1, { SymEngine::real_double(10.0) }));
     ac->attachBus(bus1, 1);
     ac->attachBus(bus0, 2);
     myNetwork->addElement(ac->getElementSymbol(), ac);
@@ -168,23 +169,27 @@ int main() {
     myNetwork->addElement(r1->getElementSymbol(), r1);
 
     // Add capacitor as you showed
-    Capacitor* c1 = new Capacitor("C1", { bus0 }, { bus1 }, 1e-6);
-    c1->attachBus(bus0, 1);
-    c1->attachBus(bus1, 2);
-    myNetwork->addElement(c1->getElementSymbol(), c1);
+    //Capacitor* c1 = new Capacitor("C1", { bus0 }, { bus1 }, 1e-6);
+    Capacitor* c1 = new Capacitor("C1", { bus0 }, { bus2 }, 1e-6); // Name, node1s, node2s, capacitance
+
+    //c1->attachBus(bus0, 1);
+    //c1->attachBus(bus1, 2);
+    //myNetwork->addElement(c1->getElementSymbol(), c1);
 
     // Finalize counts and indices (assign buses to matrix indices etc.)
     myNetwork->finalizeCounts();
+    myNetwork->assignMatrixIndices();
+
 
 	// Create the StateSpaceModel object
 	StateSpaceModel model;
-    //model.formState(myNetwork);
+    model.formState(myNetwork);
 
     // Print matrices
-    //std::cout << "A = \n" << model.getA() << "\n";
-    //std::cout << "B = \n" << model.getB() << "\n";
-    //std::cout << "C = \n" << model.getC() << "\n";
-    //std::cout << "D = \n" << model.getD() << "\n";
+    std::cout << "A = \n" << model.getA() << "\n";
+    std::cout << "B = \n" << model.getB() << "\n";
+    std::cout << "C = \n" << model.getC() << "\n";
+    std::cout << "D = \n" << model.getD() << "\n";
 
 	//std::vector<Bus*> all_buses = { bus0, bus1, bus2 };
 	//std::unordered_map<Bus*, int> busIndex;
@@ -642,7 +647,13 @@ int main() {
 
 	// Cleanup
 	delete myNetwork;
-
+    delete bus0;
+    delete bus1;
+    delete bus2;
+    delete ac;
+    delete r1;
+    delete c1;
+    delete myNetwork;
 	return 0;
 
 }

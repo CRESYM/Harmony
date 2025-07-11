@@ -85,10 +85,12 @@ void Element::writeMNAmatrix(DenseMatrix& A,
 //    throw std::runtime_error("writeMatrixSymbolic not implemented for this element.");
 //}
 
-void Element::writeMNAmatrixNumeric(Eigen::MatrixXd& A,
-    int num_equations,
-    int index,
-    const std::unordered_map<Bus*, int>& busIndex)
+void Element::writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B,
+        int num_equations,
+        int index,
+        const std::unordered_map<Bus*, int>& busIndex,
+        const std::unordered_map<Element*, int>& currentSourceIndex,
+        const std::unordered_map<Element*, int>& stateVarIndex)
 {
     throw std::runtime_error("writeMNAmatrixNumeric must be implemented by derived classes");
 }
@@ -99,7 +101,7 @@ void Element::printElementValues() {
     std::cout << "Y matrix symbolic entries: " << endl; 
     for (int i = 0; i < Y_matrix.nrows(); i++) {
         for (int j = 0; j < Y_matrix.ncols(); j++) {
-            std::cout << simplify(Y_matrix.get(i, j))->__str__() << " "; // Use __str__() for output
+            std::cout << simplify(Y_matrix.get(i, j))->__str__() << " "; 
         }
         std::cout << std::endl;
     }

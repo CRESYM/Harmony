@@ -109,35 +109,38 @@ void Resistor::writeMNAmatrix(DenseMatrix& A,
     }
 }
 
-void Resistor::writeMNAmatrixNumeric(Eigen::MatrixXd& A,
+void Resistor::writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B, 
     int num_equations,
     int index,
-    const std::unordered_map<Bus*, int>& busIndex)
+    const std::unordered_map<Bus*, int>& busIndex,
+    const std::unordered_map<Element*, int>& currentSourceIndex,
+    const std::unordered_map<Element*, int>& stateVarIndex)
 {
     Bus* n1 = nullptr;
     Bus* n2 = nullptr;
 
-    for (const auto& [bus, terminal] : connections) {
-        if (terminal == 0) n1 = bus;
-        else if (terminal == 1) n2 = bus;
+    for (const auto& pair : connections) { // Use 'pair' for consistency
+        if (pair.second == 0) n1 = pair.first;
+        else if (pair.second == 1) n2 = pair.first;
     }
 
-    double G = 1.0 / R_values[0];  // Conductance
+    double G = 1.0 / R_values[0]; 
 
-    if (n1) {
+    if (n1 && busIndex.count(n1)) {
         int r1 = busIndex.at(n1);
         A(r1, r1) += G;
     }
-    if (n2) {
+    if (n2 && busIndex.count(n2)) {
         int r2 = busIndex.at(n2);
         A(r2, r2) += G;
     }
-    if (n1 && n2) {
+    if (n1 && n2 && busIndex.count(n1) && busIndex.count(n2)) {
         int r1 = busIndex.at(n1);
         int r2 = busIndex.at(n2);
         A(r1, r2) -= G;
         A(r2, r1) -= G;
     }
+   
 }
 
 

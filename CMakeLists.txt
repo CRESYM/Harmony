@@ -75,6 +75,7 @@ set(Solver_OPF_Header_Files
     src/paramsHmo_ac.h
     src/paramsHmo_dc.h
     src/solveHmo_opf.h
+    src/Powerflow.h
 )
 set(Header_Files
     src/Bus.h
@@ -132,6 +133,8 @@ set(Solver_OPF_Source_Files
     src/paramsHmo_ac.cpp
     src/paramsHmo_dc.cpp
     src/solveHmo_opf.cpp
+    src/Powerflow_data.cpp
+    src/Powerflow_network_params.cpp
 )
 set(Source_Files
     src/Bus.cpp

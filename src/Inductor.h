@@ -28,6 +28,16 @@ public:
         const RCP<const Basic>& value,
         const std::unordered_map<Bus*, int>& busIndex) override;
 
+    //void writeMatrixSymbolic(SymEngine::DenseMatrix& Y,
+    //    const std::unordered_map<Bus*, int>& busIndex) override;
+
+    void writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B,
+        int num_equations,
+        int index,
+        const std::unordered_map<Bus*, int>& busIndex,
+        const std::unordered_map<Element*, int>& currentSourceIndex,
+        const std::unordered_map<Element*, int>& stateVarIndex) override;
+    
     void printElementValues() override;
 
     double getInitialCurrent() const;

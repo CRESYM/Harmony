@@ -93,6 +93,47 @@ void Inductor::writeMNAmatrix(DenseMatrix& A,
 
 }
 
+void Inductor::writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B, 
+    int num_equations,
+    int index,
+    const std::unordered_map<Bus*, int>& busIndex,
+    const std::unordered_map<Element*, int>& currentSourceIndex,
+    const std::unordered_map<Element*, int>& stateVarIndex)
+{
+    std::cout << "writeMNAmatrixNumeric called for this pointer: " << this << "\n";
+
+    auto it_state = stateVarIndex.find(this);
+    if (it_state == stateVarIndex.end()) {
+        std::cerr << "State var index not found for this pointer: " << this << "\n";
+        return;
+    }
+
+    Bus* n1 = nullptr;
+    Bus* n2 = nullptr;
+
+    for (const auto& [bus, terminal] : connections) {
+        if (terminal == 0) n1 = bus;
+        else if (terminal == 1) n2 = bus;
+    }
+
+    int row = it_state->second;
+
+    int n1_idx = (n1 && busIndex.count(n1)) ? busIndex.at(n1) : -1;
+    int n2_idx = (n2 && busIndex.count(n2)) ? busIndex.at(n2) : -1;
+
+    // Stamp KCL equations relating nodes and inductor current state variable
+    if (n1_idx != -1) {
+        A(n1_idx, row) += 1.0;
+        A(row, n1_idx) += 1.0;
+    }
+    if (n2_idx != -1) {
+        A(n2_idx, row) += -1.0;
+        A(row, n2_idx) += -1.0;
+    }
+
+    E(row, row) += L;
+}
+
 //void Inductor::writeMatrixSymbolic(DenseMatrix& Y,
 //    const std::unordered_map<Bus*, int>& busIndex) {
 //

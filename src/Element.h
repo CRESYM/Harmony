@@ -88,11 +88,17 @@ public:
         const std::unordered_map<Bus*, int>& busIndex);*/
 
     // Numeric MNA stamping
-    virtual void writeMNAmatrixNumeric(Eigen::MatrixXd& A,
+    /*virtual void writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E,
         int num_equations,
         int index,
-        const std::unordered_map<Bus*, int>& busIndex);
-    
+        const std::unordered_map<Bus*, int>& busIndex);*/
+    virtual void writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B,
+        int num_equations,
+        int index,
+        const std::unordered_map<Bus*, int>& busIndex,
+        const std::unordered_map<Element*, int>& currentSourceIndex,
+        const std::unordered_map<Element*, int>& stateVarIndex);
+
     virtual bool getPhaseState(int i) const { return true; } // Default to closed
 
 
