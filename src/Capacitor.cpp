@@ -136,36 +136,50 @@ void Capacitor::writeMNAmatrix(DenseMatrix& A,
 //    std::cout << "[Capacitor::writeMatrixSymbolic] Done\n";
 //}
 
-void Capacitor::writeMNAmatrixNumeric(Eigen::MatrixXd& A,
+void Capacitor::writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B,
     int num_equations,
     int index,
-    const std::unordered_map<Bus*, int>& busIndex)
+    const std::unordered_map<Bus*, int>& busIndex,
+    const std::unordered_map<Element*, int>& currentSourceIndex,
+    const std::unordered_map<Element*, int>& stateVarIndex)
 {
-    Bus* n1 = nullptr;
-    Bus* n2 = nullptr;
+        Bus* n1 = nullptr;
+        Bus* n2 = nullptr;
 
-    for (const auto& [bus, terminal] : connections) {
-        if (terminal == 0) n1 = bus;
-        else if (terminal == 1) n2 = bus;
-    }
+        for (const auto& pair : connections) { 
+            if (pair.second == 0) n1 = pair.first;
+            else if (pair.second == 1) n2 = pair.first;
+        }
 
-    int row = index; 
+        int cap_row = -1; 
+        auto it_sv = stateVarIndex.find(this);
+        if (it_sv != stateVarIndex.end())
+            cap_row = it_sv->second;
+        else {
+            std::cerr << "Capacitor state variable index not found\n";
+            return;
+        }
 
-    int n1_idx = (n1 && busIndex.count(n1)) ? busIndex.at(n1) : -1;
-    int n2_idx = (n2 && busIndex.count(n2)) ? busIndex.at(n2) : -1;
+        int n1_idx = (n1 && busIndex.count(n1)) ? busIndex.at(n1) : -1;
+        int n2_idx = (n2 && busIndex.count(n2)) ? busIndex.at(n2) : -1;
 
-    // Stamp KCL equations at the capacitor
-    if (n1_idx != -1) {
-        A(n1_idx, row) += 1.0;  // current flowing out of node n1
-        A(row, n1_idx) += 1.0;  // voltage at node n1
-    }
-    if (n2_idx != -1) {
-        A(n2_idx, row) += -1.0; // current into node n2
-        A(row, n2_idx) += -1.0; // voltage at node n2
-    }
+        // Stamp KCL equations for capacitor current
+        if (n1_idx != -1) {
+            A(n1_idx, cap_row) += 1.0;  // Current flows out of n1
+        }
+        if (n2_idx != -1) {
+            A(n2_idx, cap_row) -= 1.0;  // Current flows into n2
+        }
 
-    // Stamp the capacitor dynamic equation: I = C * dV/dt (or I - C * dV/dt = 0)
-    A(row, row) -= C; 
+        if (n1_idx != -1) {
+            A(cap_row, n1_idx) += 1.0; // For V_n1
+            A(n1_idx, cap_row) += 1.0; // For I_C KCL
+        }
+        if (n2_idx != -1) {
+            A(cap_row, n2_idx) += -1.0; // For -V_n2
+            A(n2_idx, cap_row) -= 1.0; // For I_C KCL
+        }
+        E(cap_row, cap_row) += C; 
 }
 
 

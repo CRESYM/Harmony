@@ -50,6 +50,10 @@ private:
     std::vector<int> output_indexes;
 
 
+    std::unordered_map<Bus*, int> bus_indices;
+    std::unordered_map<Element*, int> current_source_indices;
+    std::unordered_map<Element*, int> state_var_indices;
+
     //int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation 
 
         //store Dictionary OPF
@@ -200,7 +204,13 @@ public:
 
     int  getNumberEquations() const;     // total MNA rows    
 
-    std::unordered_map<Bus*, int> getBusIndexMap() const;
+    const std::unordered_map<Bus*, int>& getBusIndexMap() const;
+    const std::unordered_map<Element*, int>& getCurrentSourceIndexMap() const;
+    const std::unordered_map<Element*, int>& getStateVarIndexMap() const;
+
+
+    void assignMatrixIndices();
+
     void finalizeCounts();
 
 };

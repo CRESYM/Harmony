@@ -93,34 +93,73 @@ AC_source::~AC_source() {
     //    std::cout << "Finished for AC source '" << getElementSymbol() << "'\n";
     //}
 
-    void AC_source::writeMNAmatrixNumeric(Eigen::MatrixXd & A,
-        int num_equations,
-        int index,
-        const std::unordered_map<Bus*, int>&busIndex)
+void AC_source::writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B,
+    int num_equations,
+    int index,
+    const std::unordered_map<Bus*, int>& busIndex,
+    const std::unordered_map<Element*, int>& currentSourceIndex,
+    const std::unordered_map<Element*, int>& stateVarIndex)
 {
     if (connections.size() != 2) {
         throw std::runtime_error("AC_source should be connected to exactly two buses.");
     }
 
-    auto it = connections.begin();
-    Bus* n1 = it->first;
-    ++it;
-    Bus* n2 = it->first;
+    Bus* n1 = nullptr; // For terminal 0 (positive)
+    Bus* n2 = nullptr; // For terminal 1 (negative)
 
-    int row = index; // Branch current equation row index
-
-    if (n1) {
-        int r = busIndex.at(n1);
-        A(row, r) += 1.0;    // KCL at positive terminal
-        A(r, row) += 1.0;    
+    for (const auto& pair : connections) {
+        Bus* bus_ptr = pair.first;
+        int terminal_id = pair.second;
+        if (terminal_id == 0) n1 = bus_ptr;
+        else if (terminal_id == 1) n2 = bus_ptr;
     }
-    if (n2) {
-        int r = busIndex.at(n2);
-        A(row, r) += -1.0;   // KCL at negative terminal
-        A(r, row) += -1.0;
+
+    // Find  AC source's current source row index
+    int row = -1;
+    auto it_cs = currentSourceIndex.find(this);
+    if (it_cs != currentSourceIndex.end())
+        row = it_cs->second;
+    else {
+        std::cerr << "[WARNING] AC_source current source index not found\n";
+        return;
+    }
+
+    // Get bus indices
+    int n1_idx = (n1 && busIndex.count(n1)) ? busIndex.at(n1) : -1;
+    int n2_idx = (n2 && busIndex.count(n2)) ? busIndex.at(n2) : -1;
+
+    // Stamping into A matrix 
+    if (n1_idx != -1) {
+        A(row, n1_idx) += 1.0;  // V_n1 term in V_n1 - V_n2 = V_source
+        A(n1_idx, row) += 1.0;  // KCL at n1: I_source flows out
+    }
+    if (n2_idx != -1) {
+        A(row, n2_idx) += -1.0; // -V_n2 term in V_n1 - V_n2 = V_source
+        A(n2_idx, row) += -1.0; // KCL at n2: I_source flows in
+    }
+
+    // Stamping into B matrix 
+    if (Z.nrows() == 1 && Z.ncols() == 1) {
+        SymEngine::RCP<const SymEngine::Basic> expr = Z.get(0, 0);
+
+        if (SymEngine::is_a<SymEngine::RealDouble>(*expr)) {
+
+            double source_value = rcp_static_cast<const RealDouble>(expr)->as_double();
+            B(row, 0) += source_value;
+        }
+        else if (SymEngine::is_a<SymEngine::Integer>(*expr)) {
+       
+            double source_value = static_cast<double>(rcp_static_cast<const Integer>(expr)->as_int());
+            B(row, 0) += source_value;
+        }
+        else {
+            std::cerr << "AC_source Z element (0,0) is not a numerical type (RealDouble or Integer). Cannot stamp value to B_mat.\n";
+        }
+    }
+    else {
+        std::cerr << "AC_source Z is not a 1x1 matrix. Cannot stamp source value.\n";
     }
 }
-
 void AC_source::printElementValues() {
 	printElementInfo();
 

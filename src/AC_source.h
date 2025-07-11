@@ -23,11 +23,13 @@ public:
     //void writeMatrixSymbolic(SymEngine::DenseMatrix& mat,
     //    const std::unordered_map<Bus*, int>& busIndex) override;
 
-    void writeMNAmatrixNumeric(Eigen::MatrixXd& A,
+    void writeMNAmatrixNumeric(
+        Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B,
         int num_equations,
         int index,
-        const std::unordered_map<Bus*, int>& busIndex) override;
-
+        const std::unordered_map<Bus*, int>& busIndex,
+        const std::unordered_map<Element*, int>& currentSourceIndex,
+        const std::unordered_map<Element*, int>& stateVarIndex) override;
 
     // Function to print AC source values
     void printElementValues();

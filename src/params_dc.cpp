@@ -170,3 +170,4 @@ DCNetworkParams params_dc(const std::string& dcgrid_name) {
 
     return sys_dc;
 }
+
