@@ -1,10 +1,4 @@
 ﻿#include "Inductor.h"
-#include <symengine/symbol.h>
-#include <symengine/mul.h>
-#include <symengine/integer.h>
-#include <iostream>
-
-using namespace SymEngine;
 
 // Frequency-domain constructor (symbolic Y = 1 / (sL))
 Inductor::Inductor(const std::string& symbol, int pins, const std::vector<double>& inductance)
@@ -19,6 +13,11 @@ Inductor::Inductor(const std::string& symbol, int pins, const std::vector<double
         Y_matrix.set(1, 1, Yval);
     }
     else {
+        if (L.size() == 1) {
+            for (int i = 1; i < pins; ++i) {
+                L.push_back(L[0]);  // Fill with the same capacitance value
+            }
+        }
         for (int i = 0; i < pins; ++i) {
             RCP<const Basic> sL = mul(s, real_double(L[i]));
             RCP<const Basic> Yval = div(one, sL);
@@ -52,7 +51,7 @@ void Inductor::writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_map
     for (int p = 0; p < input_pins; ++p) {
         int row = location + p;   // branch current row
 
-        RCP<const Basic> il_sym = symbol("Vl_" + getElementSymbol() + std::to_string(p));
+        RCP<const Basic> il_sym = symbol("Il_" + getElementSymbol() + std::to_string(p));
         symbols.push_back(il_sym);
 
 		matrix.set(row, row, one);  // Set diagonal to 1 for current equation
@@ -60,13 +59,13 @@ void Inductor::writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_map
             int r = bus_indices[node1] + p;
             RCP<const Basic> Lsym = real_double(L[p]);
             matrix.set(row, r, div(mul(integer(-1), one), Lsym));
-            matrix.set(row, matrix.ncols() - 1, mul(integer(-1), il_sym));
+            matrix.set(r, matrix.ncols() - 1, addSym(matrix.get(r, matrix.ncols() - 1), mul(minus_one, il_sym)));
         }
         if (node2 && (bus_indices.count(node2) != 0)) {
             int r = bus_indices[node2] + p;
             RCP<const Basic> Lsym = real_double(L[p]);
             matrix.set(row, r, div(one, Lsym));
-            matrix.set(row, matrix.ncols() - 1, il_sym);
+            matrix.set(r, matrix.ncols() - 1, addSym(matrix.get(r, matrix.ncols() - 1), il_sym));
         }
     }
     symbol_map[this] = symbols;  // Store the symbols for this element

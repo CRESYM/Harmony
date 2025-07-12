@@ -164,14 +164,17 @@ void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out)
                         value = substitute_symbols(value, symbols, 1.0);
                     }
                 }
-                B(i + k, j + k) = eval_basic(value);
+                B(i + k,  + k) = eval_basic(value);
             }
         }
     }
 
-    for (int i = 0; i < number_outputs; ++i) {
+   
+    for (int i = 0; i < output.size(); ++i) {
         Bus* bus = output[i];
         int bus_index = bus_indices[bus];
+
+		// Fill C matrix
         for (int j = 0; j < list_state_variables.size(); ++j) {
             int location = element_indices[list_state_variables[j]];
             for (int k = 0; k < list_state_variables[j]->getInputPins(); ++k) {
@@ -189,9 +192,9 @@ void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out)
 		}
 
         for (int j = 0; j < list_independent_sources.size(); ++j) {
-            int location = element_indices[list_independent_sources[j]];
             for (int k = 0; k < list_independent_sources[j]->getInputPins(); ++k) {
                 RCP<const Basic> value = matrix.get(bus_index + k, total_number_equations);
+
                 for (auto& [element, symbols] : symbols_bank) {
                     if (element != list_independent_sources[j]) {
                         value = substitute_symbols(value, symbols, 0.0);

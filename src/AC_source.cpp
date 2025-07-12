@@ -92,13 +92,13 @@ void AC_source::writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_ma
 
         if (node1 && (bus_indices.count(node1) != 0)) {
             int r = bus_indices[node1]+p;
-			matrix.set(row, matrix.ncols() - 1, v_sym); // Set voltage symbol in the last column
+			matrix.set(row, matrix.ncols() - 1, addSym(matrix.get(row, matrix.ncols() - 1), v_sym)); // Set voltage symbol in the last column
             matrix.set(row, r, one);
             matrix.set(r, row, one);
         }
         if (node2 && (bus_indices.count(node2) != 0)) {
             int r = bus_indices[node2]+p;
-			matrix.set(row, matrix.ncols() - 1, mul(integer(-1), v_sym)); // Set voltage symbol in the last column
+			matrix.set(row, matrix.ncols() - 1, addSym(matrix.get(row, matrix.ncols() - 1), mul(minus_one, v_sym))); // Set voltage symbol in the last column
             matrix.set(row, r, mul(integer(-1), one));
             matrix.set(r, row, mul(integer(-1), one));
         }

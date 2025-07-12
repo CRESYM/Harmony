@@ -23,12 +23,12 @@ void Switch::writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_map<B
 
         if (phaseState[p]) { // Closed switch
             if (node1 && (bus_indices.count(node1) != 0)) {
-                int i = bus_indices[node1];
+                int i = bus_indices[node1]+p;
                 matrix.set(row, i, one);
                 matrix.set(i, row, one);
             }
             if (node2 && (bus_indices.count(node2) != 0)) {
-                int j = bus_indices[node2];
+                int j = bus_indices[node2]+p;
                 matrix.set(row, j, minus_one);
                 matrix.set(j, row, minus_one);
             }

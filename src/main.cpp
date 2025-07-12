@@ -104,40 +104,6 @@ int main() {
 
 	//mmc.printEigenvalues();  // Display eigenvalues
 
-
-	Network* myNetwork = new Network();
-
-	Bus* bus0 = new Bus("gnd", 3);
-	Bus* bus1 = new Bus("1", 3);
-	Bus* bus2 = new Bus("2", 3); // Bus for capacitor
-
-    // Add buses to network
-    myNetwork->addBus(bus0->getBusName(), bus0);
-    myNetwork->addBus(bus1->getBusName(), bus1);
-	myNetwork->addBus(bus2->getBusName(), bus2); // Add bus2 for capacitor
-
-    // Create and add elements
-	AC_source* ac = new AC_source("AC1", 3, {0.0});
-	myNetwork->addElement(ac);
-	myNetwork->connectElementToBus(ac, 1, bus1); // Connect AC source to bus1
-	myNetwork->connectElementToBus(ac, 2, bus0); // Connect AC source to ground bus 
-
-    Resistor* r1 = new Resistor("R1", 3, { 2.0 });
-    myNetwork->addElement(r1);
-	myNetwork->connectElementToBus(r1, 1, bus1); // Connect resistor to bus1
-	myNetwork->connectElementToBus(r1, 2, bus2); // Connect resistor to ground bus
-
-    // Add capacitor as you showed
-    Capacitor* c1 = new Capacitor("C1", 3, { 1e-6 }); // Name, pins, capacitance
-    myNetwork->addElement(c1);
-	myNetwork->connectElementToBus(c1, 2, bus0); // Connect capacitor to ground bus
-	myNetwork->connectElementToBus(c1, 1, bus2); // Connect capacitor to bus2
-	
-	// Create the StateSpaceModel object
-	StateSpaceModel model;
-	model.formState(myNetwork, {bus1});
-
-
 //	//Haixiao
 //	try {
 //        ///* ---------- 0 Set Network Object ---------- */
@@ -575,13 +541,6 @@ int main() {
 
 
 
-	// Cleanup
-	delete myNetwork;
-    delete bus0;
-    delete bus1;
-    delete ac;
-    delete r1;
-    delete c1;
 	return 0;
 
 }
