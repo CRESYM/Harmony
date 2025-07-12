@@ -102,36 +102,36 @@ void StateSpaceModel::formState(Network* net)
     vec_uint pivot_cols;
     reduced_row_echelon_form(matrix, matrix, pivot_cols);
 
-    std::cout << "[StateSpaceModel] MNA after RREF." << std::endl;
-    for (int i = 0; i < total_number_equations; ++i) {
-        for (int j = 0; j < total_number_equations + 1; ++j) {
-            std::cout << matrix.get(i, j)->__str__() << " ";
-        }
-        std::cout << std::endl;
-    }
-	std::cout << "[StateSpaceModel] Pivot columns: ";
-    for (const auto& col : pivot_cols) {
-        std::cout << col << " ";
-    }
-    std::cout << std::endl;
+ //   std::cout << "[StateSpaceModel] MNA after RREF." << std::endl;
+ //   for (int i = 0; i < total_number_equations; ++i) {
+ //       for (int j = 0; j < total_number_equations + 1; ++j) {
+ //           std::cout << matrix.get(i, j)->__str__() << " ";
+ //       }
+ //       std::cout << std::endl;
+ //   }
+	//std::cout << "[StateSpaceModel] Pivot columns: ";
+ //   for (const auto& col : pivot_cols) {
+ //       std::cout << col << " ";
+ //   }
+ //   std::cout << std::endl;
 
 	// Extract A, B, C, D matrices from the MNA matrix
 	A = Eigen::MatrixXd::Zero(number_state_variables, number_state_variables);
-	B = Eigen::MatrixXd::Zero(number_state_variables, number_independent_sources + number_switches);
+	B = Eigen::MatrixXd::Zero(number_state_variables, number_independent_sources);
 	C = Eigen::MatrixXd::Zero(number_outputs, number_state_variables);
-	D = Eigen::MatrixXd::Zero(number_outputs, number_independent_sources + number_switches);
+	D = Eigen::MatrixXd::Zero(number_outputs, number_independent_sources);
 
 	int index_independent_source = 0;
     for (int i = 0; i < list_state_variables.size(); i++) {
+        int location1 = element_indices[list_state_variables[i]];
+		// Fill A matrix
         for (int j = 0; j < list_state_variables.size(); j++) {
-			int location1 = element_indices[list_state_variables[i]];
 			int location2 = element_indices[list_state_variables[j]];
             for (int k = 0; k < list_state_variables[i]->getInputPins(); ++k) {
 				RCP<const Basic> value = matrix.get(location1 + k, total_number_equations);
                 for (auto& [element, symbols] : symbols_bank) {
                     if (element != list_state_variables[j]) {
                         value = substitute_symbols(value, symbols, 0.0);
-
                     }
                     else {
                         value = substitute_symbols(value, symbols, 1.0);
@@ -140,22 +140,24 @@ void StateSpaceModel::formState(Network* net)
                 A(i + k, j + k) = eval_basic(value);
 			}
         }
-    }
-  //      else if (dynamic_cast<AC_source*>(element)) {
-  //          // Independent source
-  //          for (int i = 0; i < element->getInputPins(); ++i) {
-  //              B(index_state_variable, index_independent_source + i) = matrix.get(location + i, total_number_equations);
-  //          }
-  //          index_independent_source += element->getInputPins();
-  //      }
-  //      else if (dynamic_cast<Switch*>(element)) {
-  //          // Switch
-  //          for (int i = 0; i < element->getInputPins(); ++i) {
-  //              B(index_state_variable, index_independent_source + i) = matrix.get(location + i, total_number_equations);
-  //          }
-  //          index_independent_source += element->getInputPins();
-		//}
 
+		// Fill B matrix
+        for (int j = 0; j < list_independent_sources.size(); j++) {
+            int location2 = element_indices[list_independent_sources[j]];
+            for (int k = 0; k < list_state_variables[i]->getInputPins(); ++k) {
+                RCP<const Basic> value = matrix.get(location1 + k, total_number_equations);
+                for (auto& [element, symbols] : symbols_bank) {
+                    if (element != list_independent_sources[j]) {
+                        value = substitute_symbols(value, symbols, 0.0);
+                    }
+                    else {
+                        value = substitute_symbols(value, symbols, 1.0);
+                    }
+                }
+                B(i + k, j + k) = eval_basic(value);
+            }
+        }
+    }
 }
 
 

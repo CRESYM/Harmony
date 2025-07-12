@@ -142,7 +142,7 @@ int main() {
 
     // Print matrices
     std::cout << "A = \n" << model.getA() << "\n";
-    //std::cout << "B = \n" << model.getB() << "\n";
+    std::cout << "B = \n" << model.getB() << "\n";
     //std::cout << "C = \n" << model.getC() << "\n";
     //std::cout << "D = \n" << model.getD() << "\n";
 
