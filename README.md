@@ -17,7 +17,7 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 
 (iv) lower overall equipment costs. 
 
-![alt text](blob/main/install/res/HARMONY_figure.png?raw=true) 
+![alt text](/main/install/res/HARMONY_figure.png?raw=true) 
 
 ## Installation and Usage
 
