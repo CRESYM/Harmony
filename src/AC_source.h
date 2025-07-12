@@ -14,22 +14,12 @@ class AC_source : public Element {
 public:
     // Constructor
     AC_source(const std::string& symbol, int pins, DenseMatrix Z);
+	AC_source(const std::string& symbol, int pins, const std::vector<double>& Z);
 
     // Destructor
     ~AC_source();
 
-    //void addPowerFlowData();
-
-    //void writeMatrixSymbolic(SymEngine::DenseMatrix& mat,
-    //    const std::unordered_map<Bus*, int>& busIndex) override;
-
-    void writeMNAmatrixNumeric(
-        Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B,
-        int num_equations,
-        int index,
-        const std::unordered_map<Bus*, int>& busIndex,
-        const std::unordered_map<Element*, int>& currentSourceIndex,
-        const std::unordered_map<Element*, int>& stateVarIndex) override;
+    void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
 
     // Function to print AC source values
     void printElementValues();
@@ -47,8 +37,6 @@ private:
     double P_max;  // Max active power output [MW]
     double Q_min;  // Min reactive power output [MVA]
     double Q_max;  // Max reactive power output [MVA]
-
-    std::vector<std::complex<double>> Y; // Y parameters for the source
 };
 
 #endif

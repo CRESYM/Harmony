@@ -10,9 +10,7 @@ public:
      // Unified constructor for universal number of phases
     Element(const std::string& symbol, int inputPins, int outputPins)
         : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins) {
-       // std::cout << "[Debug] element\n";
         Y_matrix = createZeroMatrix(2*inputPins, 2*outputPins);
-      //  std::cout << "[Debug] y_matrix\n";
     }
 
     // Virtual destructor for resource cleanup in derived classes
@@ -77,28 +75,8 @@ public:
     }
 
     // Generic MNA stamping 
-    virtual void writeMNAmatrix(SymEngine::DenseMatrix& A,
-        int num_equations,
-        int index,
-        const SymEngine::RCP<const SymEngine::Basic>& value,
-        const std::unordered_map<Bus*, int>& busIndex);
-
-    // Stamps into symbolic matrix
-    /*  virtual void writeMatrixSymbolic(SymEngine::DenseMatrix& mat,
-        const std::unordered_map<Bus*, int>& busIndex);*/
-
-    // Numeric MNA stamping
-    /*virtual void writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E,
-        int num_equations,
-        int index,
-        const std::unordered_map<Bus*, int>& busIndex);*/
-    virtual void writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B,
-        int num_equations,
-        int index,
-        const std::unordered_map<Bus*, int>& busIndex,
-        const std::unordered_map<Element*, int>& currentSourceIndex,
-        const std::unordered_map<Element*, int>& stateVarIndex);
-
+    virtual void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) {};
+    
     virtual bool getPhaseState(int i) const { return true; } // Default to closed
 
 

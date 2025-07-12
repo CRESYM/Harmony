@@ -3,7 +3,6 @@
 
 #include "Element.h"
 #include "Bus.h"
-#include <symengine/expression.h>
 
 using SymEngine::RCP;
 using SymEngine::Basic;
@@ -12,39 +11,18 @@ using SymEngine::DenseMatrix;
 class Inductor : public Element {
 public:
     // Frequency-domain constructor (symbolic admittance Y = 1 / (sL))
-    Inductor(const std::string& symbol, int inputPins, int outputPins, double inductance, double frequency);
-
-    // Time-domain constructor (MNA-based) for both single, multi-phase
-    Inductor(const std::string& symbol,
-        const std::vector<Bus*>& node1s,
-        const std::vector<Bus*>& node2s,
-        double inductance,
-        const std::vector<double>& initialCurrents = {});
+    Inductor(const std::string& symbol, int pins, const std::vector<double>& inductance);
 
     // MNA matrix writer
-    void writeMNAmatrix(SymEngine::DenseMatrix& A,
-        int num_equations,
-        int firstBranchIndex,
-        const RCP<const Basic>& value,
-        const std::unordered_map<Bus*, int>& busIndex) override;
-
-    //void writeMatrixSymbolic(SymEngine::DenseMatrix& Y,
-    //    const std::unordered_map<Bus*, int>& busIndex) override;
-
-    void writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B,
-        int num_equations,
-        int index,
-        const std::unordered_map<Bus*, int>& busIndex,
-        const std::unordered_map<Element*, int>& currentSourceIndex,
-        const std::unordered_map<Element*, int>& stateVarIndex) override;
+    void writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_map<Bus*, int>& bus_indices, int location, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
     
     void printElementValues() override;
 
     double getInitialCurrent() const;
 
 private:
-    double L;   // inductance (H)
-    double initial_value;
+    std::vector<double> L;   // inductance (H)
+	double initial_value = 0; // Initial current value for the inductor, not used for now
 };
 
 #endif // INDUCTOR_H

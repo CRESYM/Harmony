@@ -44,7 +44,9 @@ set(Element_Impedance_Header_Files
     src/Switch.h
     src/Inductor.h
 )
-set(Element_Source_Header_Files src/AC_source.h)
+set(Element_Source_Header_Files 
+    src/AC_source.h
+)
 set(Element_Transformer_Header_Files
     src/Transformer_base.h
     src/Transformer_classic.h
@@ -102,7 +104,9 @@ set(Element_Impedance_Source_Files
     src/Switch.cpp
     src/Inductor.cpp
 )
-set(Element_Source_Source_Files src/AC_source.cpp)
+set(Element_Source_Source_Files 
+    src/AC_source.cpp
+)
 set(Element_Transformer_Source_Files
     src/Transformer_base.cpp
     src/Transformer_classic.cpp
@@ -143,7 +147,6 @@ set(Source_Files
     src/network.cpp
     src/network_powerflow.cpp
     src/network_stability.cpp
-    src/network_statespacemodel.cpp
 )
 
 # Add source_groups to create file filters (groups) in Visual Studio project

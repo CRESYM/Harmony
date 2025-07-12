@@ -1,21 +1,14 @@
 ﻿#ifndef STATE_SPACE_MODEL
 #define STATE_SPACE_MODEL
 
-#include <vector>
-#include <map>
-#include <memory>
-#include <symengine/expression.h>
-#include <symengine/matrix.h>
 #include "Element.h"  
 #include "Bus.h"      
 #include "network.h"
 
-class Bus;
-class Element; 
-class Network;
+class Network; // Forward declaration of Network class
+class Element; // Forward declaration of Element class
+class Bus; // Forward declaration of Bus class
 
-//using SymEngine::Expression;
-//using SymEngine::DenseMatrix;
 
 class StateSpaceModel {
 public:
@@ -80,11 +73,12 @@ public:
     };
 
     StateSpaceModel() = default; 
-    
-    static std::vector<std::vector<Bus*>> from_cutset_nodes(const std::vector<Bus*>& buses,
+	// StateSpaceModel(Network* net);
+
+    static std::vector<std::vector<Bus*>> form_cutset_nodes(const std::vector<Bus*>& buses,
         const std::vector<std::pair<Bus*, Bus*>>& connections);
 
-    static std::vector<std::vector<Element*>> from_cutsets(
+    static std::vector<std::vector<Element*>> form_cutsets(
         const std::vector<std::vector<Bus*>>& cutset_nodes,
         const std::map<Bus*, std::vector<Element*>>& busToElementsMap);
 
@@ -99,17 +93,11 @@ public:
     // build A,B,C,D from a populated Network
     void formState(Network* net);
 
-    // Getters
-    //const SymEngine::DenseMatrix& getA() const { return A; }
-    //const SymEngine::DenseMatrix& getB() const { return B; }
-    //const SymEngine::DenseMatrix& getC() const { return C; }
-    //const SymEngine::DenseMatrix& getD() const { return D; }
-
     // Getters for Eigen::MatrixXd
-    const Eigen::MatrixXd& getA() const { return A_mat; } 
-    const Eigen::MatrixXd& getB() const { return B_mat; }
-    const Eigen::MatrixXd& getC() const { return C_mat; }
-    const Eigen::MatrixXd& getD() const { return D_mat; }
+    const Eigen::MatrixXd& getA() const { return A; } 
+    const Eigen::MatrixXd& getB() const { return B; }
+    const Eigen::MatrixXd& getC() const { return C; }
+    const Eigen::MatrixXd& getD() const { return D; }
 
 
     const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getXSymbols() const { return x_symbols; }
@@ -126,16 +114,32 @@ private:
         std::shared_ptr<Tree> current_branch,
         const std::map<Bus*, int>& busIndices);
 
-    //DenseMatrix A, B, C, D;  //state_space blocks
-    // Change these to Eigen::MatrixXd
-    Eigen::MatrixXd A_mat; 
-    Eigen::MatrixXd B_mat; 
-    Eigen::MatrixXd C_mat; 
-    Eigen::MatrixXd D_mat; 
+    // A, B, C, D;  
+    Eigen::MatrixXd A; 
+    Eigen::MatrixXd B; 
+    Eigen::MatrixXd C; 
+    Eigen::MatrixXd D; 
 
     std::vector<SymEngine::RCP<const SymEngine::Symbol>> x_symbols; // state
     std::vector<SymEngine::RCP<const SymEngine::Symbol>> u_symbols; // input
     std::vector<SymEngine::RCP<const SymEngine::Symbol>> y_symbols; // output
+
+    int number_switches;
+    int number_independent_sources;
+    int number_nodes;
+    int total_number_equations;
+    int number_outputs;
+    int number_state_variables;
+    
+
+    std::unordered_map<Bus*, int> bus_indices;
+    std::unordered_map<Element*, int> element_indices;
+    std::map<Element*, std::vector<RCP<const Basic>>> symbols_bank;
+	std::vector<Element*> list_state_variables; // Elements that are state variables (e.g., inductors, capacitors)
+	std::vector<Element*> list_independent_sources; // Independent sources (e.g., voltage, current sources)
+	std::vector<Element*> list_switches; // Switches in the network
+
+    void finalizeCounts(Network*);
 };
 
 #endif //STATE_SPACE_MODEL

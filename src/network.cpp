@@ -5,6 +5,11 @@
 #include <stdexcept>
 
 
+Network::Network() : pins(0) {
+    state_space_model = new StateSpaceModel();
+}
+
+
 Network::~Network() {
     // Delete all Bus objects in the network
     for (std::unordered_map<std::string, Bus*>::iterator i = buses.begin(); i != buses.end(); i++)
@@ -59,10 +64,6 @@ void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
         exit(1);
     }
 
-    //std::cout << "[Debug] Trying to connect " << elem->getElementSymbol()
-    //    << " (pins=" << pins << ", terminal=" << terminal << ") to bus "
-    //    << bus->getBusName() << " (bus pins=" << bus->getPinNumber() << ")\n";
-
     // Check if the number of pins matches between the element and the bus
     if (pins == bus->getPinNumber()) {
         // Add the element to the connections map for this bus
@@ -71,8 +72,6 @@ void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
         elem->attachBus(bus, terminal);
         // Attach the element to the bus
         bus->attachElement(elem);  // Attach the element to the bus
-        //std::cout << "[Debug] Successfully connected " << elem->getElementSymbol()
-        //    << " to bus " << bus->getBusName() << std::endl;
     }
     else {
         std::cerr << "Connection failed: element pins = " << pins

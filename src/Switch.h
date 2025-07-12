@@ -8,21 +8,10 @@ class Switch : public Element {
 public:
 
     // Unified constructor for single-phase and three-phase systems
-    Switch(const std::string& symbol,
-        const std::vector<Bus*>& node1s,
-        const std::vector<Bus*>& node2s,
-        const std::vector<bool>& phaseState = { true });
+    Switch(const std::string& symbol, int pins, const std::vector<bool>& state);
 
     // override generic stamper
-    void writeMNAmatrix(SymEngine::DenseMatrix& A,
-        int num_equations,
-        int index,
-        const SymEngine::RCP<const SymEngine::Basic>& value,
-        const std::unordered_map<Bus*, int>& busIndex) override;
-
-    //Symbolic admittance matrix stamping 
-    //void writeMatrixSymbolic(SymEngine::DenseMatrix& Y,
-    //    const std::unordered_map<Bus*, int>& busIndex);
+    void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
 
     // getters
     bool getState(int phase = 0) const { return phaseState[phase]; }

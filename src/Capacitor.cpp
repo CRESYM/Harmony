@@ -5,188 +5,79 @@
 using namespace SymEngine;
 
 // Frequency-domain constructor Supports both single-phase and multi-phase
-Capacitor::Capacitor(const std::string& symbol, int inputPins, int outputPins, double capacitance, double frequency)
-    : Element(symbol, inputPins, outputPins), C(capacitance), initial_value(0.0)
+Capacitor::Capacitor(const std::string& symbol, int pins, const std::vector<double>& capacitance)
+    : Element(symbol, pins, pins), C(capacitance)
 {
-    DenseMatrix Y = createZeroMatrix(2 * inputPins, 2 * outputPins);
-    RCP<const Basic> sC = mul(real_double(C), s);  // s * C
-
     // Single-phase case: 2x2 admittance matrix
-    if (inputPins == 1 && outputPins == 1) {
-        Y.set(0, 0, sC);
-        Y.set(0, 1, mul(integer(-1), sC));
-        Y.set(1, 0, mul(integer(-1), sC));
-        Y.set(1, 1, sC);
+    if (pins == 1) {
+        RCP<const Basic> sC = mul(real_double(C[0]), s);  // s * C
+        Y_matrix.set(0, 0, sC);
+        Y_matrix.set(0, 1, mul(integer(-1), sC));
+        Y_matrix.set(1, 0, mul(integer(-1), sC));
+        Y_matrix.set(1, 1, sC);
     }
     else {
+        if (C.size() == 1) {
+            for (int i = 1; i < pins; ++i) {
+                C.push_back(C[0]);  // Fill with the same capacitance value
+			}
+        }
         // Multi-phase case: block diagonal admittance matrix
-        for (int i = 0; i < inputPins; ++i) {
+        for (int i = 0; i < pins; ++i) {
+            if (C[i] <= 0.0) {
+                throw std::invalid_argument("Capacitance must be positive.");
+			}
+            RCP<const Basic> sC = mul(real_double(C[i]), s);  // s * C
             int a = 2 * i;
             int b = 2 * i + 1;
-            Y.set(a, a, sC);                       // Y(i,i)
-            Y.set(a, b, mul(integer(-1), sC));     // Y(i,j)
-            Y.set(b, a, mul(integer(-1), sC));     // Y(j,i)
-            Y.set(b, b, sC);                       // Y(j,j)
+            Y_matrix.set(a, a, sC);                       // Y(i,i)
+            Y_matrix.set(a, b, mul(integer(-1), sC));     // Y(i,j)
+            Y_matrix.set(b, a, mul(integer(-1), sC));     // Y(j,i)
+            Y_matrix.set(b, b, sC);                       // Y(j,j)
         }
     }
-
-    Y_matrix = Y; // Store symbolic admittance matrix in Element base class
 }
 
-// Time-domain unified constructor for MNA Supports both single-phase and multi-phase 
-Capacitor::Capacitor(const std::string& symbol,
-    const std::vector<Bus*>& node1s,
-    const std::vector<Bus*>& node2s,
-    double capacitance,
-    const std::vector<double>& initialVoltage)
-    : Element(symbol, static_cast<int>(node1s.size()), static_cast<int>(node2s.size())), C(capacitance)
-{
-    int nph = static_cast<int>(node1s.size());
-
-    SYMENGINE_ASSERT(node2s.size() == nph);
-    SYMENGINE_ASSERT(initialVoltage.size() == 1 || initialVoltage.size() == nph);
-
-    // Support scalar initial voltage (broadcast to all phases)
-    if (initialVoltage.size() == 1 && nph > 1) {
-        initial_value = initialVoltage[0]; 
-    }
-    else if (initialVoltage.size() == nph) {
-        initial_value = initialVoltage[0];  
-    }
-
-    // Attach terminals for each phase
-    for (int i = 0; i < nph; ++i) {
-        attachBus(node1s[i], i);         // Phase i input
-        attachBus(node2s[i], i + nph);   // Phase i output
-    }
-}
 
 Capacitor::~Capacitor()
 {
 }
 
-void Capacitor::writeMNAmatrix(DenseMatrix& A,
-    int num_equations,
-    int firstBranchIndex,
-    const RCP<const Basic>& value,
-    const std::unordered_map<Bus*, int>& busIndex)
+void Capacitor::writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_map<Bus*, int>& bus_indices, int location, 
+    std::map<Element*, std::vector<RCP<const Basic>>>& symbol_map)
 {
-    int nph = getInputPins();          // #phases (inputPins == outputPins)
-    RCP<const Basic> Csym = value;     
+    std::vector<Bus*> buses = getBuses();
+    Bus* node1 = buses.size() > 0 ? buses[0] : nullptr;
+    Bus* node2 = buses.size() > 1 ? buses[1] : nullptr;
 
-    for (int p = 0; p < nph; ++p) {
-        int row = num_equations + firstBranchIndex + p;   // branch current row
+	std::vector<RCP<const Basic>> symbols;
 
-        
-        Bus* n1 = nullptr;
-        Bus* n2 = nullptr;
-        for (auto& kv : connections) {
-            if (kv.second == p)         n1 = kv.first;       // +terminal
-            if (kv.second == p + nph)   n2 = kv.first;       // ‑terminal
+    for (int p = 0; p < input_pins; ++p) {
+        int row = location + p;   // branch current row
+     
+        RCP<const Basic> vc_sym = symbol("Ic_" + getElementSymbol() + std::to_string(p));
+		symbols.push_back(vc_sym);
+
+        matrix.set(row, matrix.ncols()-1, vc_sym);
+        if (node1 && (bus_indices.count(node1) != 0)) { 
+            int r = bus_indices[node1]+p;  
+            RCP<const Basic> Csym = real_double(C[p]);
+            matrix.set(row, r, Csym);  
+            matrix.set(r, row, one);  
         }
-
-        
-        RCP<const Basic> ic_sym = symbol("ic_" + getElementSymbol() + std::to_string(p));
-
-        A.set(row, num_equations, ic_sym);  
-        // stamp ±C between branch row and nodes
-        if (n1) { int r = busIndex.at(n1);  A.set(row, r, Csym);  A.set(r, row, one); }
-        if (n2) { int r = busIndex.at(n2);  A.set(row, r, mul(integer(-1), Csym));  A.set(r, row, mul(integer(-1), one)); }
+        if (node2 && (bus_indices.count(node2) != 0)) { 
+            int r = bus_indices[node2]+p;  
+            RCP<const Basic> Csym = real_double(C[p]);
+            matrix.set(row, r, mul(integer(-1), Csym));
+            matrix.set(r, row, mul(integer(-1), one));
+        }
     }
+	symbol_map[this] = symbols;  // Store the symbols for this element
 }
-
-//void Capacitor::writeMatrixSymbolic(
-//    SymEngine::DenseMatrix& Y,
-//    const std::unordered_map<Bus*, int>& busIndex)
-//{
-//    std::cout << "[Capacitor::writeMatrixSymbolic] Called for '" << getElementSymbol() << "'\n";
-//
-//    // Laplace‑domain admittance Y = s*C
-//    auto s = SymEngine::symbol("s");
-//    auto Ys = SymEngine::mul(s, SymEngine::real_double(C));
-//
-//    if (connections.size() != 2) {
-//        std::cerr << "[Capacitor] ERROR: needs exactly two terminals\n";
-//        return;
-//    }
-//
-//    // grab the two buses out of the base‐class connections map
-//    auto it = connections.begin();
-//    Bus* p = it->first;   int pi = it->second;
-//    ++it;
-//    Bus* n = it->first;   int ni = it->second;
-//
-//    auto ip = busIndex.find(p);
-//    auto in = busIndex.find(n);
-//    if (ip == busIndex.end() || in == busIndex.end()) {
-//        std::cerr << "[Capacitor] Bus not in map\n";
-//        return;
-//    }
-//    int rp = ip->second, rn = in->second;
-//
-//    std::cout << "  stamping +sC at (" << rp << "," << rp << ") and (" << rn << "," << rn << ");"
-//        << "  −sC at (" << rp << "," << rn << ") and (" << rn << "," << rp << ")\n";
-//
-//    // stamp onto the MNA (same pattern as resistor/AC_source)
-//    Y.set(rp, rp, SymEngine::add(Y.get(rp, rp), Ys));
-//    Y.set(rn, rn, SymEngine::add(Y.get(rn, rn), Ys));
-//    Y.set(rp, rn, SymEngine::sub(Y.get(rp, rn), Ys));
-//    Y.set(rn, rp, SymEngine::sub(Y.get(rn, rp), Ys));
-//
-//    std::cout << "[Capacitor::writeMatrixSymbolic] Done\n";
-//}
-
-void Capacitor::writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B,
-    int num_equations,
-    int index,
-    const std::unordered_map<Bus*, int>& busIndex,
-    const std::unordered_map<Element*, int>& currentSourceIndex,
-    const std::unordered_map<Element*, int>& stateVarIndex)
-{
-        Bus* n1 = nullptr;
-        Bus* n2 = nullptr;
-
-        for (const auto& pair : connections) { 
-            if (pair.second == 0) n1 = pair.first;
-            else if (pair.second == 1) n2 = pair.first;
-        }
-
-        int cap_row = -1; 
-        auto it_sv = stateVarIndex.find(this);
-        if (it_sv != stateVarIndex.end())
-            cap_row = it_sv->second;
-        else {
-            std::cerr << "Capacitor state variable index not found\n";
-            return;
-        }
-
-        int n1_idx = (n1 && busIndex.count(n1)) ? busIndex.at(n1) : -1;
-        int n2_idx = (n2 && busIndex.count(n2)) ? busIndex.at(n2) : -1;
-
-        // Stamp KCL equations for capacitor current
-        if (n1_idx != -1) {
-            A(n1_idx, cap_row) += 1.0;  // Current flows out of n1
-        }
-        if (n2_idx != -1) {
-            A(n2_idx, cap_row) -= 1.0;  // Current flows into n2
-        }
-
-        if (n1_idx != -1) {
-            A(cap_row, n1_idx) += 1.0; // For V_n1
-            A(n1_idx, cap_row) += 1.0; // For I_C KCL
-        }
-        if (n2_idx != -1) {
-            A(cap_row, n2_idx) += -1.0; // For -V_n2
-            A(n2_idx, cap_row) -= 1.0; // For I_C KCL
-        }
-        E(cap_row, cap_row) += C; 
-}
-
 
 // Print basic capacitor info
 void Capacitor::printElementValues() {
     std::cout << "Capacitor symbol: " << getElementSymbol() << std::endl;
-    std::cout << "Capacitance: " << C << " F" << std::endl;
     std::cout << "Initial voltage: " << initial_value << " V" << std::endl;
     std::cout << "Y matrix (symbolic):\n" << Y_matrix.__str__() << std::endl;
 }

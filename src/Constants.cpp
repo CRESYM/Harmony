@@ -18,14 +18,17 @@ DenseMatrix createZeroMatrix(int size1, int size2) {
     DenseMatrix zeroMatrix(size1, size2);
 	//std::cout << "[Debug] check0\n";
     for (int i = 0; i < size1; ++i) {
-		//std::cout << "[Debug] check1\n";
         for (int j = 0; j < size2; ++j) {
-			//std::cout << "[Debug] check2\n";
             zeroMatrix.set(i, j, zero); // Use SymEngine's symbolic `zero`
-			//std::cout << "[Debug] check3\n";
         }
     }
     return zeroMatrix;
+}
+// Fill a matrix with zeros
+void fillWithZero(DenseMatrix& mat) {
+	for (unsigned i = 0; i < mat.nrows(); ++i)
+		for (unsigned j = 0; j < mat.ncols(); ++j)
+			mat.set(i, j, zero);
 }
 
 // Functions for conversion between symbolic and complex or real double scalar/eigen matrix
@@ -116,6 +119,14 @@ MatrixXcd substitute_symbol(DenseMatrix M, RCP<const Basic> symbol, complex<doub
 	return N;
 }
 
+RCP<const Basic> substitute_symbols(const RCP<const Basic>& expr, const std::vector<RCP<const Basic>>& symbols, double value) {
+	map_basic_basic subs_map;
+	for (const auto& symbol : symbols) {
+		RCP<const Basic> value_expr = real_double(value);
+		subs_map[symbol] = value_expr;
+	}
+	return expr->subs(subs_map);
+}
 
 double eval_basic(const RCP<const Basic>& expr) {
 	try {
@@ -213,4 +224,20 @@ bool convertToBoolean(const std::string& value) {
 		// Handle invalid input
 		throw std::invalid_argument("Invalid boolean value: " + value);
 	}
+}
+
+// Helper symbolic operations
+extern RCP<const Basic> inv(const RCP<const Basic>& val) {
+	return div(one, val);
+}
+
+extern RCP<const Basic> addSym(const RCP<const Basic>& a, const RCP<const Basic>& b) {
+	if (a.is_null()) return b;
+	if (b.is_null()) return a;
+	return add(a, b);
+}
+
+extern RCP<const Basic> subSym(const RCP<const Basic>& a, const RCP<const Basic>& b) {
+	if (a.is_null()) return mul(integer(-1), b);
+	return sub(a, b);
 }

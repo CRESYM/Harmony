@@ -7,22 +7,6 @@
 
 using namespace SymEngine;
 
-// Helper symbolic operations
-RCP<const Basic> inv(const RCP<const Basic>& val) {
-    return div(one, val);
-}
-
-RCP<const Basic> addSym(const RCP<const Basic>& a, const RCP<const Basic>& b) {
-    if (a.is_null()) return b;
-    if (b.is_null()) return a;
-    return add(a, b);
-}
-
-RCP<const Basic> subSym(const RCP<const Basic>& a, const RCP<const Basic>& b) {
-    if (a.is_null()) return mul(integer(-1), b);
-    return sub(a, b);
-}
-
 Resistor::Resistor(const std::string& symbol, int pins, const std::vector<double>& R)
     : Element(symbol, pins, pins)
 {
@@ -51,161 +35,51 @@ Resistor::Resistor(const std::string& symbol, int pins, const std::vector<double
         }
         R_values = R;
     }
-
-    initializeYMatrix(pins);
-}
-
-// Constructor for scalar input
-Resistor::Resistor(const std::string& symbol, int pins, double R)
-    : Resistor(symbol, pins, std::vector<double>{R})  
-{
-}
-
-// Initialize admittance matrix based on R_values
-void Resistor::initializeYMatrix(int pins)
-{
-    Y_matrix.assign(2 * pins, std::vector<double>(2 * pins, 0.0));
-
     // Diagonal entries for positive nodes
     for (int i = 0; i < pins; ++i) {
-        Y_matrix[i][i] = 1.0 / R_values[i];
+        Y_matrix.set(i, i, real_double(1.0 / R_values[i]));
     }
 
-    // Populate rest of Y matrix for series connection
-    for (int i = 0; i < pins; ++i) {
-        for (int j = 0; j < pins; ++j) {
-            double y = Y_matrix[i][j];
-            Y_matrix[pins + i][j] = -y;
-            Y_matrix[i][pins + j] = -y;
-            Y_matrix[pins + i][pins + j] = y;
+    // Fill in the complete Y parameters
+    for (int i = 0; i < pins; i++)
+        for (int j = 0; j < pins; j++) {
+            Y_matrix.set(pins + i, j, sub(zero, Y_matrix.get(i, j)));
+            Y_matrix.set(pins + i, pins + j, Y_matrix.get(i, j));
+            Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
         }
-    }
 }
 
-void Resistor::writeMNAmatrix(DenseMatrix& A,
-    int num_equations,
-    int index,
-    const RCP<const Basic>& value,
-    const std::unordered_map<Bus*, int>& busIndex)
+
+
+void Resistor::writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_map<Bus*, int>& bus_indices, int location,
+    std::map<Element*, std::vector<RCP<const Basic>>>& symbols_map)
 {
     std::vector<Bus*> buses = getBuses();
     Bus* node1 = buses.size() > 0 ? buses[0] : nullptr;
     Bus* node2 = buses.size() > 1 ? buses[1] : nullptr;
 
-    if (node1 && busIndex.count(node1)) {
-        int n1 = busIndex.at(node1);
-        A.set(n1, n1, addSym(A.get(n1, n1), inv(value)));
+    if (node1 && (bus_indices.count(node1) != 0)) {
+        int n1 = bus_indices[node1];
+        for (int i = 0; i < input_pins; ++i) {
+            matrix.set(n1+i, n1+i, addSym(matrix.get(n1+i, n1+i), inv(real_double(R_values[i]))));
+		}
 
-        if (node2 && busIndex.count(node2)) {
-            int n2 = busIndex.at(node2);
-            A.set(n1, n2, subSym(A.get(n1, n2), inv(value)));
-            A.set(n2, n2, addSym(A.get(n2, n2), inv(value)));
-            A.set(n2, n1, subSym(A.get(n2, n1), inv(value)));
+        if (node2 && (bus_indices.count(node2) != 0)) {
+			int n2 = bus_indices[node2];
+            for (int i = 0; i < output_pins; ++i) {
+                matrix.set(n1+i, n2+i, subSym(matrix.get(n1+i, n2+i), inv(real_double(R_values[i]))));
+                matrix.set(n2+i, n1+i, subSym(matrix.get(n2+i, n1+i), inv(real_double(R_values[i]))));
+				matrix.set(n2+i, n2+i, addSym(matrix.get(n2+i, n2+i), inv(real_double(R_values[i]))));
+			}
         }
     }
-    else if (node2 && busIndex.count(node2)) {
-        int n2 = busIndex.at(node2);
-        A.set(n2, n2, addSym(A.get(n2, n2), inv(value)));
+    else if (node2 && (bus_indices.count(node2) != 0)) {
+        int n2 = bus_indices[node2];
+        for (int i = 0; i < output_pins; ++i) {
+            matrix.set(n2+i, n2+i, addSym(matrix.get(n2+i, n2+i), inv(real_double(R_values[i]))));
+        }
     }
 }
-
-void Resistor::writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B, 
-    int num_equations,
-    int index,
-    const std::unordered_map<Bus*, int>& busIndex,
-    const std::unordered_map<Element*, int>& currentSourceIndex,
-    const std::unordered_map<Element*, int>& stateVarIndex)
-{
-    Bus* n1 = nullptr;
-    Bus* n2 = nullptr;
-
-    for (const auto& pair : connections) { // Use 'pair' for consistency
-        if (pair.second == 0) n1 = pair.first;
-        else if (pair.second == 1) n2 = pair.first;
-    }
-
-    double G = 1.0 / R_values[0]; 
-
-    if (n1 && busIndex.count(n1)) {
-        int r1 = busIndex.at(n1);
-        A(r1, r1) += G;
-    }
-    if (n2 && busIndex.count(n2)) {
-        int r2 = busIndex.at(n2);
-        A(r2, r2) += G;
-    }
-    if (n1 && n2 && busIndex.count(n1) && busIndex.count(n2)) {
-        int r1 = busIndex.at(n1);
-        int r2 = busIndex.at(n2);
-        A(r1, r2) -= G;
-        A(r2, r1) -= G;
-    }
-   
-}
-
-
-//void Resistor::writeMatrixSymbolic(DenseMatrix& A,
-//    const std::unordered_map<Bus*, int>& busIndex)
-//{
-//    auto buses = getBuses();
-//    Bus* node1 = buses.size() > 0 ? buses[0] : nullptr;
-//    Bus* node2 = buses.size() > 1 ? buses[1] : nullptr;
-//
-//    std::cout << "[Resistor::writeMatrixSymbolic] Called for resistor '" << getElementSymbol() << "'\n";
-//    std::cout << "  Connected buses: ";
-//    if (node1) std::cout << node1->getBusName() << " ";
-//    if (node2) std::cout << node2->getBusName();
-//    std::cout << "\n";
-//
-//    if (R_values.empty() || R_values[0] <= 0) {
-//        std::cerr << "[Resistor::writeMatrixSymbolic] ERROR: invalid resistance value\n";
-//        return;
-//    }
-//
-//    RCP<const Basic> Y_value = div(one, real_double(R_values[0]));
-//    std::cout << "  Calculated admittance Y_value = " << *Y_value << "\n";
-//
-//    if (node1) {
-//        if (busIndex.count(node1)) {
-//            int n1 = busIndex.at(node1);
-//            std::cout << "  Setting A(" << n1 << "," << n1 << ") += Y_value\n";
-//            A.set(n1, n1, add(A.get(n1, n1), Y_value));
-//
-//            if (node2) {
-//                if (busIndex.count(node2)) {
-//                    int n2 = busIndex.at(node2);
-//                    std::cout << "  Setting off-diagonal entries:\n";
-//                    std::cout << "    A(" << n1 << "," << n2 << ") -= Y_value\n";
-//                    std::cout << "    A(" << n2 << "," << n2 << ") += Y_value\n";
-//                    std::cout << "    A(" << n2 << "," << n1 << ") -= Y_value\n";
-//
-//                    A.set(n1, n2, sub(A.get(n1, n2), Y_value));
-//                    A.set(n2, n2, add(A.get(n2, n2), Y_value));
-//                    A.set(n2, n1, sub(A.get(n2, n1), Y_value));
-//                    std::cout << "  Done setting off-diagonal\n";
-//                }
-//                else {
-//                    std::cerr << "Warning: node2 not found in busIndex\n";
-//                }
-//            }
-//        }
-//        else {
-//            std::cerr << "Warning: node1 not found in busIndex\n";
-//        }
-//    }
-//    else if (node2) {
-//        if (busIndex.count(node2)) {
-//            int n2 = busIndex.at(node2);
-//            std::cout << "  Setting A(" << n2 << "," << n2 << ") += Y_value\n";
-//            A.set(n2, n2, add(A.get(n2, n2), Y_value));
-//        }
-//        else {
-//            std::cerr << " Warning: node2 not found in busIndex\n";
-//        }
-//    }
-//
-//    std::cout << "Finished for resistor '" << getElementSymbol() << "'\n";
-//}
 
 void Resistor::printElementValues() {
     std::cout << "Resistor values (Ohms): ";
@@ -213,12 +87,11 @@ void Resistor::printElementValues() {
         std::cout << r << " ";
     }
     std::cout << "\nAdmittance matrix (Y):\n";
-    for (const auto& row : Y_matrix) {
-        for (double val : row) {
-            std::cout << val << "\t";
+    // Fill in the complete Y parameters
+    for (int i = 0; i < Y_matrix.nrows(); i++)
+        for (int j = 0; j < Y_matrix.ncols(); j++) {
+            std::cout << Y_matrix.get(i, j)->__str__();
         }
-        std::cout << "\n";
-    }
 }
 
 Resistor::~Resistor() {}

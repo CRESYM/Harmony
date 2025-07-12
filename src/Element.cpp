@@ -2,8 +2,6 @@
 
 #include "Element.h"
 #include "Constants.h"
-#include <iostream>
-#include <vector>
 
 
 using namespace SymEngine;
@@ -49,50 +47,6 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
         }
     }
     return Y_val_exact;
-}
-
-// Generic MNA stamping 
-void Element::writeMNAmatrix(DenseMatrix& A,
-    int num_equations,
-    int index,
-    const RCP<const Basic>& value,
-    const std::unordered_map<Bus*, int>& busIndex)
-{
-    // Symbolic current variable like "vc1", "ir1", etc.
-    RCP<const Basic> current_symbol = symbol("v" + element_symbol + std::to_string(index));
-
-    int row = num_equations + index - 1;
-    int col = num_equations;  // Last column for extra variable (e.g., branch voltage)
-
-    A.set(row, col, current_symbol);  // Stamp current equation
-
-    auto buses = getBuses();  // [0] = node1, [1] = node2
-
-    if (buses[0] && busIndex.count(buses[0])) {
-        int n1 = busIndex.at(buses[0]);
-        A.set(n1, row, value);     // node1: KCL: +value
-        A.set(row, n1, one);       // branch eq: voltage +
-    }
-
-    if (buses[1] && busIndex.count(buses[1])) {
-        int n2 = busIndex.at(buses[1]);
-        A.set(n2, row, mul(integer(-1), value)); // node2: KCL: -value
-        A.set(row, n2, integer(-1));             // branch eq: voltage -
-    }
-}
-
-//void Element::writeMatrixSymbolic(DenseMatrix&, const std::unordered_map<Bus*, int>&) {
-//    throw std::runtime_error("writeMatrixSymbolic not implemented for this element.");
-//}
-
-void Element::writeMNAmatrixNumeric(Eigen::MatrixXd& A, Eigen::MatrixXd& E, Eigen::MatrixXd& B,
-        int num_equations,
-        int index,
-        const std::unordered_map<Bus*, int>& busIndex,
-        const std::unordered_map<Element*, int>& currentSourceIndex,
-        const std::unordered_map<Element*, int>& stateVarIndex)
-{
-    throw std::runtime_error("writeMNAmatrixNumeric must be implemented by derived classes");
 }
 
 // Function to print the Element's values and Y_matrix entries
