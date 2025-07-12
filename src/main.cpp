@@ -1,7 +1,6 @@
 ﻿#include "network.h"
 #include "Bus.h"
 #include "Include_components.h"
-#include "Impedance.h"
 #include "solveHmo_opf.h"
 #include <iomanip>
 
@@ -19,9 +18,9 @@ int main() {
 	// Transformer constructor check
 	
 
-    std::vector<double> transformer_values = { 4.3218, 0.45856, 0.7938, 0.084225, 1.0804e+06, 3000, 2.0, 0.0 }; // R_primary, L_primary, R_secondary, L_secondary, Mutual inductance
-    TransformerYY_real* transformerYY = new TransformerYY_real("T3", 3, transformer_values);
-    transformerYY->writeFile(10, 10000000, 100000);
+    //std::vector<double> transformer_values = { 4.3218, 0.45856, 0.7938, 0.084225, 1.0804e+06, 3000, 2.0, 0.0 }; // R_primary, L_primary, R_secondary, L_secondary, Mutual inductance
+    //TransformerYY_real* transformerYY = new TransformerYY_real("T3", 3, transformer_values);
+    //transformerYY->writeFile(10, 10000000, 100000);
 
 	//// TL constructor check
 	//std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
@@ -32,8 +31,6 @@ int main() {
 	// Generator constructor check
 	//std::vector<double> generator_values = { 1.0, 0.01, 1.0, 0.1 };
 	//Generator* g = new Generator("gen", 1, generator_values);
-
-	Network* myNetwork = new Network();
 
 	//vector<Bus*> start_buses;
 	//vector<Bus*> end_buses;
@@ -108,10 +105,11 @@ int main() {
 	//mmc.printEigenvalues();  // Display eigenvalues
 
 
-	// state_space
-	Bus* bus0 = new Bus("gnd", 1);
-	Bus* bus1 = new Bus("1", 1);
-	Bus* bus2 = new Bus("2", 1); // Bus for capacitor
+	Network* myNetwork = new Network();
+
+	Bus* bus0 = new Bus("gnd", 3);
+	Bus* bus1 = new Bus("1", 3);
+	Bus* bus2 = new Bus("2", 3); // Bus for capacitor
 
     // Add buses to network
     myNetwork->addBus(bus0->getBusName(), bus0);
@@ -119,32 +117,25 @@ int main() {
 	myNetwork->addBus(bus2->getBusName(), bus2); // Add bus2 for capacitor
 
     // Create and add elements
-	AC_source* ac = new AC_source("AC1", 1, {0.0});
+	AC_source* ac = new AC_source("AC1", 3, {0.0});
 	myNetwork->addElement(ac);
 	myNetwork->connectElementToBus(ac, 1, bus1); // Connect AC source to bus1
 	myNetwork->connectElementToBus(ac, 2, bus0); // Connect AC source to ground bus 
 
-    Resistor* r1 = new Resistor("R1", 1, { 2.0 });
+    Resistor* r1 = new Resistor("R1", 3, { 2.0 });
     myNetwork->addElement(r1);
 	myNetwork->connectElementToBus(r1, 1, bus1); // Connect resistor to bus1
 	myNetwork->connectElementToBus(r1, 2, bus2); // Connect resistor to ground bus
 
     // Add capacitor as you showed
-    Capacitor* c1 = new Capacitor("C1", 1, { 1e-6 }); // Name, pins, capacitance
+    Capacitor* c1 = new Capacitor("C1", 3, { 1e-6 }); // Name, pins, capacitance
     myNetwork->addElement(c1);
-	myNetwork->connectElementToBus(c1, 1, bus2); // Connect capacitor to bus2
 	myNetwork->connectElementToBus(c1, 2, bus0); // Connect capacitor to ground bus
-
+	myNetwork->connectElementToBus(c1, 1, bus2); // Connect capacitor to bus2
+	
 	// Create the StateSpaceModel object
 	StateSpaceModel model;
-    model.formState(myNetwork);
-	//model.formState_symbolic(myNetwork);
-
-    // Print matrices
-    std::cout << "A = \n" << model.getA() << "\n";
-    std::cout << "B = \n" << model.getB() << "\n";
-    //std::cout << "C = \n" << model.getC() << "\n";
-    //std::cout << "D = \n" << model.getD() << "\n";
+	model.formState(myNetwork, {bus1});
 
 
 //	//Haixiao

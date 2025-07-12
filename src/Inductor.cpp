@@ -36,9 +36,16 @@ Inductor::Inductor(const std::string& symbol, int pins, const std::vector<double
 void Inductor::writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_map<Bus*, int>& bus_indices, int location,
     std::map<Element*, std::vector<RCP<const Basic>>>& symbol_map)
 {
-    std::vector<Bus*> buses = getBuses();
-    Bus* node1 = buses.size() > 0 ? buses[0] : nullptr;
-    Bus* node2 = buses.size() > 1 ? buses[1] : nullptr;
+    Bus* node1 = nullptr;
+    Bus* node2 = nullptr;
+    for (auto& [bus, index] : connections) {
+        if (index == 1) {
+            node1 = bus;  // First bus connected to the element
+        }
+        else if (index == 2) {
+            node2 = bus;  // Second bus connected to the element
+        }
+    }
 
     std::vector<RCP<const Basic>> symbols;
 

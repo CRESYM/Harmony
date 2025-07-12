@@ -51,6 +51,7 @@ add_executable(
     testharmony
     testSimpleNetwork.cpp
     teststatespacemodel.cpp
+    testABCDforming.cpp
     testelement.cpp
     testimpedance.cpp
     testadmittance.cpp

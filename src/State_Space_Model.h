@@ -44,34 +44,6 @@ public:
         std::string toString() const; 
     };
 
-    // Nested Output class for storing output variable indexes
-    class Output {
-    private:
-        std::vector<int> indexes;
-
-    public:
-        void addIndex(int index) {
-            indexes.push_back(index);
-        }
-
-        const std::vector<int>& getIndexes() const {
-            return indexes;
-        }
-
-        int getNumber() const {
-            return indexes.size();
-        }
-
-        std::string toString() const {
-            std::ostringstream oss;
-            oss << "Output indexes: ";
-            for (int idx : indexes) {
-                oss << idx << " ";
-            }
-            return oss.str();
-        }
-    };
-
     StateSpaceModel() = default; 
 	// StateSpaceModel(Network* net);
 
@@ -91,18 +63,13 @@ public:
         const std::map<Bus*, std::vector<Element*>>& node_collection);
 
     // build A,B,C,D from a populated Network
-    void formState(Network* net);
+    void formState(Network* net, const std::vector<Bus*>& out);
 
     // Getters for Eigen::MatrixXd
     const Eigen::MatrixXd& getA() const { return A; } 
     const Eigen::MatrixXd& getB() const { return B; }
     const Eigen::MatrixXd& getC() const { return C; }
     const Eigen::MatrixXd& getD() const { return D; }
-
-
-    const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getXSymbols() const { return x_symbols; }
-    const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getUSymbols() const { return u_symbols; }
-    const std::vector<SymEngine::RCP<const SymEngine::Symbol>>& getYSymbols() const { return y_symbols; }
 
 private:
     static void traverseForLoops(
@@ -120,18 +87,14 @@ private:
     Eigen::MatrixXd C; 
     Eigen::MatrixXd D; 
 
-    std::vector<SymEngine::RCP<const SymEngine::Symbol>> x_symbols; // state
-    std::vector<SymEngine::RCP<const SymEngine::Symbol>> u_symbols; // input
-    std::vector<SymEngine::RCP<const SymEngine::Symbol>> y_symbols; // output
-
     int number_switches;
     int number_independent_sources;
     int number_nodes;
     int total_number_equations;
     int number_outputs;
     int number_state_variables;
-    
 
+	std::vector<Bus*> output; // Output variable indices
     std::unordered_map<Bus*, int> bus_indices;
     std::unordered_map<Element*, int> element_indices;
     std::map<Element*, std::vector<RCP<const Basic>>> symbols_bank;

@@ -46,30 +46,37 @@ Capacitor::~Capacitor()
 void Capacitor::writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_map<Bus*, int>& bus_indices, int location, 
     std::map<Element*, std::vector<RCP<const Basic>>>& symbol_map)
 {
-    std::vector<Bus*> buses = getBuses();
-    Bus* node1 = buses.size() > 0 ? buses[0] : nullptr;
-    Bus* node2 = buses.size() > 1 ? buses[1] : nullptr;
-
+    Bus* node1 = nullptr;
+    Bus* node2 = nullptr;
+    for (auto& [bus, index] : connections) {
+        if (index == 1) {
+            node1 = bus;  // First bus connected to the element
+        }
+        else if (index == 2) {
+            node2 = bus;  // Second bus connected to the element
+		}
+	}
+    
 	std::vector<RCP<const Basic>> symbols;
 
     for (int p = 0; p < input_pins; ++p) {
         int row = location + p;   // branch current row
      
-        RCP<const Basic> vc_sym = symbol("Ic_" + getElementSymbol() + std::to_string(p));
+        RCP<const Basic> vc_sym = symbol("Vc_" + getElementSymbol() + std::to_string(p));
 		symbols.push_back(vc_sym);
 
         matrix.set(row, matrix.ncols()-1, vc_sym);
         if (node1 && (bus_indices.count(node1) != 0)) { 
             int r = bus_indices[node1]+p;  
             RCP<const Basic> Csym = real_double(C[p]);
-            matrix.set(row, r, Csym);  
-            matrix.set(r, row, one);  
+            matrix.set(row, r, one);  
+            matrix.set(r, row, Csym);  
         }
         if (node2 && (bus_indices.count(node2) != 0)) { 
             int r = bus_indices[node2]+p;  
             RCP<const Basic> Csym = real_double(C[p]);
-            matrix.set(row, r, mul(integer(-1), Csym));
-            matrix.set(r, row, mul(integer(-1), one));
+            matrix.set(row, r, minus_one);
+            matrix.set(r, row, mul(minus_one, Csym));
         }
     }
 	symbol_map[this] = symbols;  // Store the symbols for this element

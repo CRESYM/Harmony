@@ -38,12 +38,20 @@ void StateSpaceModel::finalizeCounts(Network* net) {
 
 	// Update the locations in the model
     number_nodes = 0;
+    number_outputs = 0;
     // Assign indices to buses, excluding the reference bus (assuming "gnd" is ground)
     for (const auto& [name, busPtr] : buses) {
         if (busPtr->getBusName() == "gnd") continue;
         bus_indices[busPtr] = number_nodes; 
         number_nodes += busPtr->getPinNumber();
     }
+    for (int i = 0; i < output.size(); ++i) {
+        Bus* bus = output[i];
+        if (bus->getBusName() == "gnd") continue;
+        number_outputs += bus->getPinNumber();
+	}
+
+	// Assign indices to elements
 	// Assign indices to independent sources
     int location = number_nodes;
     for (const auto& element : list_independent_sources) {
@@ -61,6 +69,7 @@ void StateSpaceModel::finalizeCounts(Network* net) {
         location += element->getInputPins();
     }
 
+	// Calculate total number of equations
     total_number_equations = number_nodes + number_independent_sources + number_switches + number_state_variables;
 
     std::cout << "[Network] Nodes: " << number_nodes << std::endl;
@@ -72,8 +81,10 @@ void StateSpaceModel::finalizeCounts(Network* net) {
 }
 
 
-void StateSpaceModel::formState(Network* net)
+void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out)
 {
+	output = out;
+
     finalizeCounts(net); // Ensure counts are up-to-date
     std::unordered_map<std::string, Element*> elements = net->getElements();
 
@@ -102,13 +113,13 @@ void StateSpaceModel::formState(Network* net)
     vec_uint pivot_cols;
     reduced_row_echelon_form(matrix, matrix, pivot_cols);
 
- //   std::cout << "[StateSpaceModel] MNA after RREF." << std::endl;
- //   for (int i = 0; i < total_number_equations; ++i) {
- //       for (int j = 0; j < total_number_equations + 1; ++j) {
- //           std::cout << matrix.get(i, j)->__str__() << " ";
- //       }
- //       std::cout << std::endl;
- //   }
+    std::cout << "[StateSpaceModel] MNA after RREF." << std::endl;
+    for (int i = 0; i < total_number_equations; ++i) {
+        for (int j = 0; j < total_number_equations + 1; ++j) {
+            std::cout << matrix.get(i, j)->__str__() << " ";
+        }
+        std::cout << std::endl;
+    }
 	//std::cout << "[StateSpaceModel] Pivot columns: ";
  //   for (const auto& col : pivot_cols) {
  //       std::cout << col << " ";
@@ -121,7 +132,6 @@ void StateSpaceModel::formState(Network* net)
 	C = Eigen::MatrixXd::Zero(number_outputs, number_state_variables);
 	D = Eigen::MatrixXd::Zero(number_outputs, number_independent_sources);
 
-	int index_independent_source = 0;
     for (int i = 0; i < list_state_variables.size(); i++) {
         int location1 = element_indices[list_state_variables[i]];
 		// Fill A matrix
@@ -158,6 +168,48 @@ void StateSpaceModel::formState(Network* net)
             }
         }
     }
+
+    for (int i = 0; i < number_outputs; ++i) {
+        Bus* bus = output[i];
+        int bus_index = bus_indices[bus];
+        for (int j = 0; j < list_state_variables.size(); ++j) {
+            int location = element_indices[list_state_variables[j]];
+            for (int k = 0; k < list_state_variables[j]->getInputPins(); ++k) {
+                RCP<const Basic> value = matrix.get(bus_index + k, total_number_equations);
+                for (auto& [element, symbols] : symbols_bank) {
+                    if (element != list_state_variables[j]) {
+                        value = substitute_symbols(value, symbols, 0.0);
+                    }
+                    else {
+                        value = substitute_symbols(value, symbols, 1.0);
+                    }
+                }
+                C(i + k, j + k) = eval_basic(value);
+            }
+		}
+
+        for (int j = 0; j < list_independent_sources.size(); ++j) {
+            int location = element_indices[list_independent_sources[j]];
+            for (int k = 0; k < list_independent_sources[j]->getInputPins(); ++k) {
+                RCP<const Basic> value = matrix.get(bus_index + k, total_number_equations);
+                for (auto& [element, symbols] : symbols_bank) {
+                    if (element != list_independent_sources[j]) {
+                        value = substitute_symbols(value, symbols, 0.0);
+                    }
+                    else {
+                        value = substitute_symbols(value, symbols, 1.0);
+                    }
+                }
+                D(i + k, j + k) = eval_basic(value);
+            }
+        }
+    }
+
+	// Print the resulting matrices
+    std::cout << "[StateSpaceModel] A matrix: \n" << A << std::endl;
+    std::cout << "[StateSpaceModel] B matrix: \n" << B << std::endl;
+    std::cout << "[StateSpaceModel] C matrix: \n" << C << std::endl;
+	std::cout << "[StateSpaceModel] D matrix: \n" << D << std::endl;
 }
 
 

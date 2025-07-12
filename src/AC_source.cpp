@@ -71,9 +71,16 @@ AC_source::~AC_source() {
 void AC_source::writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_map<Bus*, int>& bus_indices, int location,
     std::map<Element*, std::vector<RCP<const Basic>>>& symbol_map)
 {
-    std::vector<Bus*> buses = getBuses();
-    Bus* node1 = buses.size() > 0 ? buses[0] : nullptr;
-    Bus* node2 = buses.size() > 1 ? buses[1] : nullptr;
+    Bus* node1 = nullptr;
+    Bus* node2 = nullptr;
+    for (auto& [bus, index] : connections) {
+        if (index == 1) {
+            node1 = bus;  // First bus connected to the element
+        }
+        else if (index == 2) {
+            node2 = bus;  // Second bus connected to the element
+        }
+    }
 
     std::vector<RCP<const Basic>> symbols;
 
@@ -84,13 +91,13 @@ void AC_source::writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_ma
 		symbols.push_back(v_sym);
 
         if (node1 && (bus_indices.count(node1) != 0)) {
-            int r = bus_indices[node1];
+            int r = bus_indices[node1]+p;
 			matrix.set(row, matrix.ncols() - 1, v_sym); // Set voltage symbol in the last column
             matrix.set(row, r, one);
             matrix.set(r, row, one);
         }
         if (node2 && (bus_indices.count(node2) != 0)) {
-            int r = bus_indices[node2];
+            int r = bus_indices[node2]+p;
 			matrix.set(row, matrix.ncols() - 1, mul(integer(-1), v_sym)); // Set voltage symbol in the last column
             matrix.set(row, r, mul(integer(-1), one));
             matrix.set(r, row, mul(integer(-1), one));
