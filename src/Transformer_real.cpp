@@ -24,7 +24,7 @@ Transformer_real::Transformer_real(const std::string& symbol, int pins, const st
 
     // Check if the values are properly initialized
     for (int i = 0; i < 2; ++i) {
-        if (R[i] == 0 || L[i] == 0 || a == 0) {
+        if ((R[i] == 0 && L[i] == 0) || a == 0) {
             std::cerr << "Transformer parameters not initialized correctly for winding " << i + 1 << "!" << std::endl;
             return;
         }

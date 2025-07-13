@@ -52,6 +52,7 @@ set(Element_Transformer_Header_Files
     src/Transformer_classic.h
     src/Transformer_Delta_Delta.h
     src/Transformer_Delta_Y.h
+    src/Transformer_Delta_Y_real.h
     src/Transformer_real.h
     src/Transformer_Y_Delta.h
     src/Transformer_Y_Y.h
@@ -112,6 +113,7 @@ set(Element_Transformer_Source_Files
     src/Transformer_classic.cpp
     src/Transformer_Delta_Delta.cpp
     src/Transformer_Delta_Y.cpp
+    src/Transformer_Delta_Y_real.cpp
     src/Transformer_real.cpp
     src/Transformer_Y_Delta.cpp
     src/Transformer_Y_Y.cpp

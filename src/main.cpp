@@ -15,17 +15,10 @@ int main() {
 	//	make_tuple(2, values_g, 1.0));
 
 
-	// Transformer constructor check
-	
-
-    //std::vector<double> transformer_values = { 4.3218, 0.45856, 0.7938, 0.084225, 1.0804e+06, 3000, 2.0, 0.0 }; // R_primary, L_primary, R_secondary, L_secondary, Mutual inductance
-    //TransformerYY_real* transformerYY = new TransformerYY_real("T3", 3, transformer_values);
-    //transformerYY->writeFile(10, 10000000, 100000);
-
 	//// TL constructor check
-	//std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
-	//TransmissionLine* transmission_line = new TransmissionLine("tl", 1, transmission_line_values);
-	//transmission_line->writeFile(10, 10000000, 1000);
+	std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
+	TransmissionLine* transmission_line = new TransmissionLine("tl", 1, transmission_line_values);
+	transmission_line->writeFile(10, 10000000, 1000);
 
 
 	// Generator constructor check
