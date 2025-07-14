@@ -53,6 +53,23 @@ public:
         C_matrix = Eigen::MatrixXd::Identity(6, 6);
         D_matrix = Eigen::MatrixXd::Zero(6, 8);
     };
+
+    MMC(const std::string& symbol, const std::vector<double>& converter_params, const std::vector<double>& controller_params) 
+        : MMC(symbol, converter_params) // Call the constructor with converter_params
+    {
+        // Initialize controllers and filters based on controller_params
+        init_Controller(controller_params);
+	}
+
+    MMC(const std::string& symbol, const std::vector<double>& converter_params, 
+        const std::vector<double>& controller_params, const std::vector<double>& filter_params)
+        : MMC(symbol, converter_params) // Call the constructor with converter_params
+    {
+        // Initialize controllers based on controller_params
+        init_Controller(controller_params);
+		// Initialize filters based on filter_params
+		init_Filter(filter_params);
+	}
   
 
     // Destructor
@@ -61,7 +78,7 @@ public:
     // Initialization methods
     void init_Controller(const std::vector<double>&converter_params);// Method to initialize controllers and Filters in MMC
     void init_Filter(const std::vector<double>& converter_params);
-	void init_MMC(); // Method to initialize MMC with the converter parameters
+	// void init_MMC(); // Method to initialize MMC with the converter parameters
     void update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc);
    
     
@@ -73,7 +90,6 @@ public:
     Eigen::VectorXd getEquilibriumState() const { return equilibrium_state; }
 
     Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u);
-    Eigen::VectorXd computeStateDerivativesLinear(const Eigen::VectorXd& x, const Eigen::VectorXd& u);
 
     Eigen::MatrixXd computeJacobianNumerically(const Eigen::VectorXd& x0, const Eigen::VectorXd& u0);
     
@@ -131,7 +147,12 @@ public:
             << "  Reactor Inductance (L_reactor): " << L_reactor << " H\n"
             << "  Reactor Resistance (R_reactor): " << R_reactor << " Omega\n"
             << "  Time Delay (t_delay): " << t_delay << " s\n";
-        //printSubElements();
+        for (const auto& pair : controls) {
+            const std::string& controllerName = pair.first;
+            Controller* controller = pair.second;
+            std::cout << "  Controller: " << controllerName << "\n";
+            controller->printValues(); // Print controller values
+		}
     }
 
 private:
@@ -154,6 +175,8 @@ private:
     double R_reactor; // Resistance of the phase reactor [Ω]
     double t_delay;   // Time delay [s]
     
+	// State variables
+    int number_of_states = 12;
    
     // System matrices
     Eigen::MatrixXd A_matrix, B_matrix, C_matrix, D_matrix;
@@ -162,13 +185,14 @@ private:
     // Sub-elements
     std::vector<std::pair<std::string, std::shared_ptr<Element>>> subElements;
 
-    std::map<std::string, Controller*> controls;
-    std::map<std::string, Filter*> filters;
+	std::map<std::string, Controller*> controls; // Map of existing controllers
+	std::map<std::string, Filter*> filters;      // Map of existing filters   
 
-    std::vector<std::string> controller_list = {
+	// List of controller and filter names, it can be changed only by developers
+    const std::vector<std::string> controller_list = {
         "pll",  "dc_voltage", "active_power", "ac_voltage", "reactive_power", "energy", "zcc", "occ", "ccc"
 	}; // List of controller names
-    std::vector<std::string> filter_list = {
+    const std::vector<std::string> filter_list = {
 		"AC_voltage_dq", "active_power", "reactive_power", "dc_voltage", "ac_voltage"
 	}; // List of filter names
 };

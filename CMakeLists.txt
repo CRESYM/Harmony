@@ -203,6 +203,7 @@ add_executable(
     ${Element_Source_Header_Files}
     ${Element_Transformer_Header_Files}
     ${Element_Transmission_Line_Header_Files}
+    ${Control_Header_Files}
     ${Solver_OPF_Header_Files}
     ${Solver_State_Space_Model_Header_Files}
 
@@ -215,6 +216,7 @@ add_executable(
     ${Element_Source_Source_Files}
     ${Element_Transformer_Source_Files}
     ${Element_Transmission_Line_Source_Files}
+    ${Control_Source_Files}
     ${Solver_OPF_Source_Files}
     ${Solver_State_Space_Model_Source_Files}
 

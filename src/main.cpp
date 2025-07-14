@@ -39,35 +39,17 @@ int main() {
 
 
 	//// Numerically computes the Jacobian matrices A = ∂f/∂x and B = ∂f/∂u at a specified operating point
-	MMC* mmc1 = new MMC(
-            "MMC1",         // Symbol
-            1000.0,         // Omega (Nominal Frequency in rad/s)
-            100.0,          // Active Power (P) in MW
-            50.0,           // Reactive Power (Q) in MVA
-            500.0,          // DC Power (P_dc) in kW
-            -100.0,         // Min Active Power (P_min) in MW
-            200.0,          // Max Active Power (P_max) in MW
-            -50.0,          // Min Reactive Power (Q_min) in MVA
-            100.0,          // Max Reactive Power (Q_max) in MVA
-            0.0,            // Theta (Voltage Angle in rad)
-            330.0,          // AC Voltage (V_m) in kV
-            640.0,          // DC Voltage (V_dc) in kV
-            0.05,           // Arm Inductance (L_arm) in H
-            1.07,           // Arm Resistance (R_arm) in Ω
-            0.01,           // Capacitance per Submodule (C_arm) in F
-            400,            // Number of Submodules (N)
-            0.06,           // Reactor Inductance (L_reactor) in H
-            0.535,          // Reactor Resistance (R_reactor) in Ω
-            0.00015         // Time Delay (t_delay) in seconds
-        );
-	mmc1->printElementValues();  // Print MMC parameters
+	std::vector<double> converter_params = { 50.0, 100.0e6, 0, 100e6, 50e6, 150e6, -50.0e6, 50.0e6, 0.0, 100.0e3, 200e3, 50e-3, 1.07, 0.01, 50, 0.06, 0.535, 0.00015};
+    std::vector<double> controller_params = { 0, 0, 0, 0, 0, 0, 
+		1, 19.93, 4500, 1, 166.67, // zcc controller parameters 
+		1, 117.93, 8.5e4, 2, 666.67, 0, // occ controller parameters
+        0 };
 
-
-	//// Nonlinear with Harmonic Injection
-	//std::cout << "\nNonlinear Analysis with Harmonics: \n";
+	MMC* mmc1 = new MMC("MMC1", converter_params, controller_params);
+    mmc1->printElementValues();  // Print MMC parameters
 
 	//// Define operating point
-	//Eigen::VectorXd x0 = Eigen::VectorXd::Zero(6);  // [ip1,ip2,ip3,in1,in2,in3]
+	// Eigen::VectorXd x0 = Eigen::VectorXd::Zero(6); 
 	//x0 << 200e3, 0, 15e3, 20e3, 20e3, 20e3;
 
 	//Eigen::VectorXd u0(8);                          // [VD1,VD2,VS1-VS6]
@@ -86,11 +68,11 @@ int main() {
 	//// Print the admittance matrix
 	//std::cout << "Admittance Matrix: " << Fnom << "):\n" << Y << std::endl;
 
-	//// Equilibrium Solution
-	//std::cout << "\nEquilibrium Solution: \n";
-	//mmc.solveEquilibrium();
-	//const Eigen::VectorXd x_eq = mmc.getEquilibriumState();
-	//std::cout << "Equilibrium state:\n" << x_eq.transpose() << "\n";
+	// Equilibrium Solution
+	std::cout << "\nEquilibrium Solution: \n";
+	mmc1->solveEquilibrium();
+	const Eigen::VectorXd x_eq = mmc1->getEquilibriumState();
+	std::cout << "Equilibrium state:\n" << x_eq.transpose() << "\n";
 
 	//// Verify equilibrium
 	//const Eigen::VectorXd dx_eq = mmc.computeStateDerivatives(x_eq.head(6), u0);

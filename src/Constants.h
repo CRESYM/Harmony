@@ -45,6 +45,7 @@
 #include <memory>  
 #include <unordered_map>
 #include <cmath>
+#include <functional>
 
 using SymEngine::RCP;
 using SymEngine::Basic;
