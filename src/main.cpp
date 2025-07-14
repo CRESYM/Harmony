@@ -16,9 +16,9 @@ int main() {
 
 
 	//// TL constructor check
-	std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
+	/*std::vector<double> transmission_line_values = { 0.01, 2.5e-7, 1e-9, 1e-11, 1000 };
 	TransmissionLine* transmission_line = new TransmissionLine("tl", 1, transmission_line_values);
-	transmission_line->writeFile(10, 10000000, 1000);
+	transmission_line->writeFile(10, 10000000, 1000);*/
 
 
 	// Generator constructor check
@@ -39,27 +39,28 @@ int main() {
 
 
 	//// Numerically computes the Jacobian matrices A = ∂f/∂x and B = ∂f/∂u at a specified operating point
-	//double Fnom = 50;
-	//double Vnom_sec = 333e3;
-	//double Pnom = 1000e6;
-	//double Vnom_dc = 640e3;
-	//double Nb_PM = 36;
-	//double C_PM = 1.758e-3;
-
-	//double Zbase = Vnom_sec * Vnom_sec / Pnom;
-	//double Larm_pu = 0.15;
-	//double Rarm_pu = Larm_pu / 100;
-
-	//double Larm = Larm_pu * (Zbase / (2 * M_PI * Fnom));
-	//double Rarm = Rarm_pu * Zbase;
-
-	//double w = 2 * M_PI * Fnom;
-
-	//MMC mmc("MMC1", w, 0, 0, 0,
-	//	-Pnom, Pnom, -Pnom, Pnom,  // Power limits
-	//	0, Vnom_sec, Vnom_dc,       // Angle, AC/DC voltages
-	//	Larm, Rarm, C_PM / Nb_PM,     // Arm parameters
-	//	Nb_PM, 0.0, 0.0, 150e-6);   // Submodules, reactor, delay
+	MMC* mmc1 = new MMC(
+            "MMC1",         // Symbol
+            1000.0,         // Omega (Nominal Frequency in rad/s)
+            100.0,          // Active Power (P) in MW
+            50.0,           // Reactive Power (Q) in MVA
+            500.0,          // DC Power (P_dc) in kW
+            -100.0,         // Min Active Power (P_min) in MW
+            200.0,          // Max Active Power (P_max) in MW
+            -50.0,          // Min Reactive Power (Q_min) in MVA
+            100.0,          // Max Reactive Power (Q_max) in MVA
+            0.0,            // Theta (Voltage Angle in rad)
+            330.0,          // AC Voltage (V_m) in kV
+            640.0,          // DC Voltage (V_dc) in kV
+            0.05,           // Arm Inductance (L_arm) in H
+            1.07,           // Arm Resistance (R_arm) in Ω
+            0.01,           // Capacitance per Submodule (C_arm) in F
+            400,            // Number of Submodules (N)
+            0.06,           // Reactor Inductance (L_reactor) in H
+            0.535,          // Reactor Resistance (R_reactor) in Ω
+            0.00015         // Time Delay (t_delay) in seconds
+        );
+	mmc1->printElementValues();  // Print MMC parameters
 
 
 	//// Nonlinear with Harmonic Injection

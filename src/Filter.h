@@ -1,18 +1,23 @@
 ﻿#ifndef FILTER_H
 #define FILTER_H
 
-#include "Element.h"
+#include "Control_block.h"
 
-class Filter : public Element {
+class Filter : public ControlBlock {
 public:
     // Constructor
-    Filter(const std::string& symbol, int pins, double timeConstant, double zeta, double bandwidth)
-        : Element(symbol, pins, pins), // Filters typically have the same number of input and output pins
-        timeConstant(timeConstant), zeta(zeta), bandwidth(bandwidth) {}
+    Filter(const std::string& symbol, const std::string& type, vector<double> values, int number_of_connections)
+		: ControlBlock(), filter_symbol(symbol), filter_size(number_of_connections), filter_type(type) {
+        if (values.size() != 3) {
+            throw std::invalid_argument("Filter values must contain time constant, damping ratio, and bandwidth.");
+        }
+        timeConstant = values[0]; // Time constant (T)
+        zeta = values[1];         // Damping ratio (ζ)
+		bandwidth = values[2];    // Bandwidth
+    }
 
     // Override method to print element-specific values
-    virtual void printElementValues() override {
-        Element::printElementInfo();
+    virtual void printValues() override {
         std::cout << "Filter Parameters:"
             << "  Time Constant (T): " << timeConstant << "\n"
             << "  Damping Ratio (ζ): " << zeta << "\n"
@@ -24,6 +29,9 @@ public:
 
 
 private:
+	string filter_symbol; // Symbol for the filter
+	string filter_type;   // Type of filter (e.g., LP, HP, BP)
+	int filter_size;          // Number of pins for the filter
     double timeConstant; // Time constant
     double zeta;         // Damping ratio
     double bandwidth;    // Bandwidth

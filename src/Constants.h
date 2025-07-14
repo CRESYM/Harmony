@@ -44,6 +44,7 @@
 #include <cctype> // Include the header for std::tolower
 #include <memory>  
 #include <unordered_map>
+#include <cmath>
 
 using SymEngine::RCP;
 using SymEngine::Basic;

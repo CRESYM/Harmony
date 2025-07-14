@@ -30,8 +30,6 @@ find_package(casadi CONFIG)
 set(Element_Header_Files src/Element.h)
 #set(Element_Admittance_Header_Files src/Admittance.h)
 set(Element_Converter_Header_Files
-    src/Controller.h
-    src/Filter.h
     src/MMC.h
 )
 set(Element_Generator_Header_Files src/Generator.h)
@@ -80,6 +78,11 @@ set(Solver_OPF_Header_Files
     src/solveHmo_opf.h
     src/Powerflow.h
 )
+set(Control_Header_Files
+    src/Control_block.h
+    src/Filter.h
+    src/Controller.h
+)
 set(Header_Files
     src/Bus.h
     src/Constants.h
@@ -91,8 +94,6 @@ set(Header_Files
 set(Element_Source_Files src/Element.cpp)
 #set(Element_Admittance_Source_Files src/Admittance.cpp)
 set(Element_Converter_Source_Files
-    src/Controller.cpp
-    src/Filter.cpp
     src/MMC.cpp
 )
 set(Element_Generator_Source_Files src/Generator.cpp)
@@ -142,6 +143,11 @@ set(Solver_OPF_Source_Files
     src/Powerflow_data.cpp
     src/Powerflow_network_params.cpp
 )
+set(Control_Source_Files
+    src/Control_block.cpp
+    src/Filter.cpp
+    src/Controller.cpp
+)
 set(Source_Files
     src/Bus.cpp
     src/Constants.cpp
@@ -162,6 +168,7 @@ if(WIN32) # workds for x64 as well
     source_group("Header Files\\Elements\\Source" FILES ${Element_Source_Header_Files})
     source_group("Header Files\\Elements\\Transformer" FILES ${Element_Transformer_Header_Files})
     source_group("Header Files\\Elements\\Transmission Line" FILES ${Element_Transmission_Line_Header_Files})
+    source_group("Header Files\\Control" FILES ${Control_Header_Files})
     source_group("Header Files\\Solver" FILES)
     source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Header_Files})
     source_group("Header Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Header_Files})
@@ -176,6 +183,7 @@ if(WIN32) # workds for x64 as well
     source_group("Source Files\\Elements\\Source" FILES ${Element_Source_Source_Files})
     source_group("Source Files\\Elements\\Transformer" FILES ${Element_Transformer_Source_Files})
     source_group("Source Files\\Elements\\Transmission_Line" FILES ${Element_Transmission_Line_Source_Files})
+    source_group("Source Files\\Control" FILES ${Control_Source_Files})
     source_group("Source Files\\Solver" FILES)
     source_group("Source Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
     source_group("Source Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Source_Files})

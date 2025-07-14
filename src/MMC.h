@@ -43,7 +43,11 @@ public:
         L_arm(converter_params[11]), R_arm(converter_params[12]), C_arm(converter_params[13]),
         N(static_cast<int>(converter_params[14])), L_reactor(converter_params[15]),
         R_reactor(converter_params[16]), t_delay(converter_params[17]) {
-        
+
+        // Initialize equilibrium state vector
+		equilibrium_state = Eigen::VectorXd::Zero(6); // 6 dynamic states
+
+		// Initialize system matrices to zero        
         A_matrix = Eigen::MatrixXd::Zero(6, 6);
         B_matrix = Eigen::MatrixXd::Zero(6, 8);
         C_matrix = Eigen::MatrixXd::Identity(6, 6);
@@ -57,6 +61,7 @@ public:
     // Initialization methods
     void init_Controller(const std::vector<double>&converter_params);// Method to initialize controllers and Filters in MMC
     void init_Filter(const std::vector<double>& converter_params);
+	void init_MMC(); // Method to initialize MMC with the converter parameters
     void update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc);
    
     
@@ -75,7 +80,7 @@ public:
     // Equilibrium point calculation
     void solveEquilibrium();
 
-    Eigen::MatrixXcd computeAdmittanceMatrix(std::complex<double> s);
+    Eigen::MatrixXcd compute_y_parameters_num(double omega) override;
 
     // System analysis
     void checkStability() const;
@@ -97,11 +102,11 @@ public:
             // Check the type of sub-element using dynamic_cast
             if (auto filter = dynamic_cast<Filter*>(subElement.get())) {
                 std::cout << "  (Filter)" << std::endl;
-                filter->printElementValues();  // If Filter, print its values
+                filter->printValues();  // If Filter, print its values
             }
             else if (auto controller = dynamic_cast<Controller*>(subElement.get())) {
                 std::cout << "  (Controller)" << std::endl;
-                controller->printElementValues();  // If Controller, print its values
+                controller->printValues();  // If Controller, print its values
             }
             else {
                 std::cout << "  (Unknown Element Type)" << std::endl;
@@ -120,13 +125,13 @@ public:
             << "  DC Voltage (V_dc): " << V_dc << " kV\n"
             << "  Nominal Frequency (omega_0): " << omega_0 << " rad/s\n"
             << "  Arm Inductance (L_arm): " << L_arm << " H\n"
-            << "  Arm Resistance (R_arm): " << R_arm << " Ω\n"
+            << "  Arm Resistance (R_arm): " << R_arm << " Omega\n"
             << "  Capacitance per Submodule (C_arm): " << C_arm << " F\n"
             << "  Number of Submodules (N): " << N << "\n"
             << "  Reactor Inductance (L_reactor): " << L_reactor << " H\n"
-            << "  Reactor Resistance (R_reactor): " << R_reactor << " Ω\n"
+            << "  Reactor Resistance (R_reactor): " << R_reactor << " Omega\n"
             << "  Time Delay (t_delay): " << t_delay << " s\n";
-        printSubElements();
+        //printSubElements();
     }
 
 private:
@@ -149,15 +154,7 @@ private:
     double R_reactor; // Resistance of the phase reactor [Ω]
     double t_delay;   // Time delay [s]
     
-    //Add Harmonic Parameters 
-    double A_harm = 0.0;         // Amplitude of upper arm harmonic injection
-    double B_harm = 0.0;         // Amplitude of lower arm harmonic injection
-    double phi1 = 0.0, phi2 = 0.0, phi3 = 0.0; // Phase shifts
-
-    // Custom arm resistance values (for nonlinear models or harmonic tuning)
-    double Rn_custom = 0.0;  // Negative arm resistance
-    double Rm_custom = 10.0; // Mutual resistance
-    
+   
     // System matrices
     Eigen::MatrixXd A_matrix, B_matrix, C_matrix, D_matrix;
     Eigen::VectorXd equilibrium_state;
@@ -165,8 +162,15 @@ private:
     // Sub-elements
     std::vector<std::pair<std::string, std::shared_ptr<Element>>> subElements;
 
-    std::map<std::string, std::shared_ptr<Controller>> controls;
-    std::map<std::string, std::shared_ptr<Filter>> filters;
+    std::map<std::string, Controller*> controls;
+    std::map<std::string, Filter*> filters;
+
+    std::vector<std::string> controller_list = {
+        "pll",  "dc_voltage", "active_power", "ac_voltage", "reactive_power", "energy", "zcc", "occ", "ccc"
+	}; // List of controller names
+    std::vector<std::string> filter_list = {
+		"AC_voltage_dq", "active_power", "reactive_power", "dc_voltage", "ac_voltage"
+	}; // List of filter names
 };
 
 #endif // MMC_H

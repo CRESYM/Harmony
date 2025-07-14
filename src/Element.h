@@ -44,8 +44,7 @@ public:
     virtual std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency);
     virtual DenseMatrix compute_y_parameters() { return Y_matrix; };
     virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num) { return substitute_symbol(Y_matrix, omega, omega_num); };
-
-    
+        
     // Function to retrieve the Y-parameter matrix
     DenseMatrix read_y_matrix() { return Y_matrix; }
 

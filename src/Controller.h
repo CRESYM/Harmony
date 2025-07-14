@@ -1,19 +1,26 @@
 ﻿#ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-#include "Element.h"
+#include "Control_block.h"
 
-class Controller : public Element {
+class Controller : ControlBlock {
 public:
-    // Constructor
-    Controller(const std::string& symbol, int pins, double Kp, double Ki, double zeta, double bandwidth, const std::vector<double>& ref)
-        : Element(symbol, pins, pins), // Controllers typically have the same number of input and output pins
-        Kp(Kp), Ki(Ki), zeta(zeta), bandwidth(bandwidth), reference(ref) {}
+	// Constructor takes a symbol, type, values (Kp, Ki), and number of signals
+    Controller(const std::string& symbol, const std::string& type, const std::vector<double>& value, int number_signals)
+        : ControlBlock(), controller_symbol(symbol), controller_type(type) {
+        if (value.size() != 2) {
+            throw std::invalid_argument("Controller values must contain at least Kp and Ki.");
+		}
+        Kp = value[0]; // Proportional gain
+        Ki = value[1]; // Integral gain
+        zeta = 0.0;    // Default damping ratio
+        bandwidth = 0.0; // Default bandwidth
+		reference.resize(number_signals, 0.0); // Initialize reference values
+    }
 
 
     // Override method to print element-specific values
-    virtual void printElementValues() override {
-        Element::printElementInfo();
+   virtual void printValues() override {
         std::cout << "Controller Parameters:\n"
             << "  Proportional Gain (Kp): " << Kp << "\n"
             << "  Integral Gain (Ki): " << Ki << "\n"
@@ -31,10 +38,13 @@ public:
 
 
 private: 
+	std::string controller_symbol; // Symbol for the controller
+	std::string controller_type;   // Type of controller (e.g., PI, PID)
     double Kp;                     // Proportional gain
     double Ki;                     // Integral gain
     double zeta;                   // Damping ratio
     double bandwidth;              // Bandwidth
+	bool active = false;           // Activation status
     std::vector<double> reference; // Reference values
 };
 
