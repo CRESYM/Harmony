@@ -40,10 +40,10 @@ int main() {
 
 	//// Numerically computes the Jacobian matrices A = ∂f/∂x and B = ∂f/∂u at a specified operating point
 	std::vector<double> converter_params = { 50.0, 100.0e6, 0, 100e6, 50e6, 150e6, -50.0e6, 50.0e6, 0.0, 100.0e3, 200e3, 50e-3, 1.07, 0.01, 50, 0.06, 0.535, 0.00015};
-    std::vector<double> controller_params = { 0, 0, 0, 0, 0, 0, 
-		1, 19.93, 4500, 1, 166.67, // zcc controller parameters 
-		1, 117.93, 8.5e4, 2, 666.67, 0, // occ controller parameters
-        0 };
+    std::vector<double> controller_params = { 0, 0, 0, 0, 0, 0,
+        1, 19.93, 4500, 1, 166.67, // zcc controller parameters 
+        1, 117.93, 8.5e4, 2, 666.67, 0, // occ controller parameters
+        1, 19.93, 4500, 2, 0, 0 };
 
 	MMC* mmc1 = new MMC("MMC1", converter_params, controller_params);
     mmc1->printElementValues();  // Print MMC parameters
