@@ -10,32 +10,6 @@
 
 class PowerFlow {
 public:
-    PowerFlow();
-
-    // Data loading
-    std::unordered_map<std::string, Eigen::MatrixXd> create_ac(const std::string& case_name);
-    std::unordered_map<std::string, Eigen::MatrixXd> create_dc(const std::string& case_name);
-
-    void params_ac(const std::string& acgrid_name);
-    void params_dc(const std::string& dcgrid_name);
-    void paramsHmo_ac(std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
-    void paramsHmo_dc(std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
-
-    // OPF solving
-    void solve_opf(const std::string& dc_name, const std::string& ac_name,
-        bool vscControl = true, bool writeTxt = false, bool plotResult = true);
-
-    void solveHmo_opf(std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF,
-        bool vscControl = true, bool writeTxt = false, bool plotResult = true);
-
-    // Visualization
-    void viz_opf();
-
-private:
-    // Internal helper
-    Eigen::MatrixXd readCSVtoCpp(const std::string& filename);
-    Eigen::SparseMatrix<std::complex<double>> makeYbus(double baseMVA,
-        const Eigen::MatrixXd& bus, const Eigen::MatrixXd& branch);
 
     // Internal data - AC
     std::unordered_map<std::string, Eigen::MatrixXd> network_ac;
@@ -72,7 +46,33 @@ private:
     std::vector<int> nbuses_ac_viz, ngens_ac_viz;
     std::vector<Eigen::VectorXd> vn2_ac_k, pgen_ac_k, qgen_ac_k;
     std::vector<Eigen::MatrixXd> pij_ac_k, qij_ac_k;
-    int nconvs_dc_viz, nbuses_dc_viz, ngrids_viz;
+    int nconvs_dc_viz, nbuses_dc_viz, ngrids_viz; 
+    
+    PowerFlow() {};
+
+    // Data loading
+    std::unordered_map<std::string, Eigen::MatrixXd> create_ac(const std::string& case_name);
+    std::unordered_map<std::string, Eigen::MatrixXd> create_dc(const std::string& case_name);
+
+    void params_ac(const std::string& acgrid_name);
+    void params_dc(const std::string& dcgrid_name);
+    void paramsHmo_ac(std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
+    void paramsHmo_dc(std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
+
+    // OPF solving
+    void solve_opf(const std::string& dc_name, const std::string& ac_name,
+        bool vscControl = true, bool writeTxt = false, bool plotResult = true);
+
+    void solveHmo_opf(std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF,
+        bool vscControl = true, bool writeTxt = false, bool plotResult = true);
+
+    // Visualization
+    void viz_opf();
+
+private:
+    // Internal helper
+    Eigen::MatrixXd readCSVtoCpp(const std::string& filename);
+    Eigen::SparseMatrix<std::complex<double>> makeYbus(double baseMVA, const Eigen::MatrixXd& bus, const Eigen::MatrixXd& branch);
 };
 
 #endif // POWERFLOW_H

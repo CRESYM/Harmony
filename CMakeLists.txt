@@ -142,6 +142,7 @@ set(Solver_OPF_Source_Files
     src/solveHmo_opf.cpp
     src/Powerflow_data.cpp
     src/Powerflow_network_params.cpp
+    src/Powerflow_solver.cpp
 )
 set(Control_Source_Files
     src/Control_block.cpp

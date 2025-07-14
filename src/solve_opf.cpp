@@ -14,9 +14,10 @@
 #include "gurobi_c++.h"
 #include "create_dc.h"
 #include "params_dc.h"
-#include "makeYbus.h"
-#include "create_ac.h"
-#include "params_ac.h"
+#include "Powerflow.h"
+//#include "makeYbus.h"
+//#include "create_ac.h"
+//#include "params_ac.h"
 #include "viz_opf.h"
 
 
@@ -56,7 +57,9 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name,
         auto& fbus_dc = sys_dc.fbus_dc;
         auto& tbus_dc = sys_dc.tbus_dc;
 
-        ACNetworkParams sys_ac = params_ac(ac_name);
+        //ACNetworkParams sys_ac = params_ac(ac_name);
+        PowerFlow sys_ac;
+        sys_ac.params_ac(ac_name);
         auto& network_ac = sys_ac.network_ac;
         auto& baseMVA_ac = sys_ac.baseMVA_ac;
         auto& bus_entire_ac = sys_ac.bus_entire_ac;
