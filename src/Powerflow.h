@@ -53,11 +53,10 @@ public:
     // Data loading
     std::unordered_map<std::string, Eigen::MatrixXd> create_ac(const std::string& case_name);
     std::unordered_map<std::string, Eigen::MatrixXd> create_dc(const std::string& case_name);
+    static Eigen::SparseMatrix<double> absoluteSparseMatrix(const Eigen::SparseMatrix<std::complex<double>>& matrix);
 
-    void params_ac(const std::string& acgrid_name);
-    void params_dc(const std::string& dcgrid_name);
-    void paramsHmo_ac(std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
-    void paramsHmo_dc(std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
+    void load_params_ac(const std::string& acgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
+    void load_params_dc(const std::string& dcgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
 
     // OPF solving
     void solve_opf(const std::string& dc_name, const std::string& ac_name,
@@ -67,7 +66,7 @@ public:
         bool vscControl = true, bool writeTxt = false, bool plotResult = true);
 
     // Visualization
-    void viz_opf();
+    //void viz_opf();
 
 private:
     // Internal helper
