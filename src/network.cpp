@@ -3,10 +3,7 @@
 #include "Bus.h"
 
 
-
-
 Network::Network() : pins(0) {
-    state_space_model = new StateSpaceModel();
 }
 
 

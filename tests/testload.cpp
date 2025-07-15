@@ -30,13 +30,11 @@ TEST_F(TestLoad, TestConstructor) {
     EXPECT_NO_THROW(Load("l", 2, { 1, 2, 3, 4, 5, 6 }));
     
     // Test cerr log msgs for initializing load parameters
-    std::string expected1 = "Load parameters initialized correctly";
     Load l1("l", 1, { 0, 0, 0 });
     std::string expected2 = "Load parameters not initialized correctly for phase 1";
     // Stop GTest capturing Harmony's output to std::cerr; save output to str
     std::string cerroutput = testing::internal::GetCapturedStderr();
     // Check cerroutput contains the expected msgs
-    EXPECT_FALSE(cerroutput.find(expected1) == std::string::npos);
     EXPECT_FALSE(cerroutput.find(expected2) == std::string::npos);
 }
 

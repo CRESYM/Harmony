@@ -1,4 +1,5 @@
 ﻿#include "Element.h"
+#include "../Bus.h"
 
 // Destructor for Element
 Element::~Element() {}

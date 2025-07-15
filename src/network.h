@@ -2,11 +2,9 @@
 #define NETWORK_H
 
 #include "Constants.h"
-#include "State_Space_Model.h"
 
 class Bus;
 class Element;
-class StateSpaceModel;
 
 // Type alias for a pair of element designator and pin name, used to map buses to connected elements in the network
 using Net = std::unordered_map<Bus*, std::vector<Element*>>;
@@ -20,10 +18,6 @@ private:
 
     int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation
     
-    //state_space_model
-	StateSpaceModel* state_space_model; // State space model of the network
-
- 
     //store Dictionary OPF
     std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
 

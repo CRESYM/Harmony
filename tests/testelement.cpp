@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "Load.h"
+#include "./Elements/Impedance/Load.h"
 #include "Bus.h"
 #include "utils.h"
 
