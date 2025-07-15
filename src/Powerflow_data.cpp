@@ -62,11 +62,11 @@ std::unordered_map<std::string, Eigen::MatrixXd> PowerFlow::create_ac(const std:
     std::unordered_map<std::string, Eigen::MatrixXd> ac;
 
     try {
-        ac["baseMVA"] = readCSVtoCpp(case_name + "_baseMVA_ac.csv");
-        ac["bus"] = readCSVtoCpp(case_name + "_bus_ac.csv");
-        ac["branch"] = readCSVtoCpp(case_name + "_branch_ac.csv");
-        ac["generator"] = readCSVtoCpp(case_name + "_gen_ac.csv");
-        ac["gencost"] = readCSVtoCpp(case_name + "_gencost_ac.csv");
+        ac["baseMVA"] = readCSVtoCpp("data/" + case_name + "_baseMVA_ac.csv");
+        ac["bus"] = readCSVtoCpp("data/" + case_name + "_bus_ac.csv");
+        ac["branch"] = readCSVtoCpp("data/" + case_name + "_branch_ac.csv");
+        ac["generator"] = readCSVtoCpp("data/" + case_name + "_gen_ac.csv");
+        ac["gencost"] = readCSVtoCpp("data/" + case_name + "_gencost_ac.csv");
     }
     catch (const std::exception& e) {
         std::cerr << "Error in create_ac: " << e.what() << std::endl;
@@ -81,11 +81,11 @@ std::unordered_map<std::string, Eigen::MatrixXd> PowerFlow::create_dc(const std:
     std::unordered_map<std::string, Eigen::MatrixXd> dc;
 
     try {
-        dc["baseMW"] = readCSVtoCpp(case_name + "_baseMW_dc.csv");
-        dc["pol"] = readCSVtoCpp(case_name + "_pol_dc.csv");
-        dc["bus"] = readCSVtoCpp(case_name + "_bus_dc.csv");
-        dc["branch"] = readCSVtoCpp(case_name + "_branch_dc.csv");
-        dc["converter"] = readCSVtoCpp(case_name + "_conv_dc.csv");
+        dc["baseMW"] = readCSVtoCpp("data/" + case_name + "_baseMW_dc.csv");
+        dc["pol"] = readCSVtoCpp("data/" + case_name + "_pol_dc.csv");
+        dc["bus"] = readCSVtoCpp("data/" + case_name + "_bus_dc.csv");
+        dc["branch"] = readCSVtoCpp("data/" + case_name + "_branch_dc.csv");
+        dc["converter"] = readCSVtoCpp("data/" + case_name + "_conv_dc.csv");
     }
     catch (const std::exception& e) {
         std::cerr << "Error in create_dc: " << e.what() << std::endl;

@@ -29,13 +29,14 @@
 
 std::unordered_map<std::string, Eigen::MatrixXd> create_ac(const std::string& case_name) {
     std::unordered_map<std::string, Eigen::MatrixXd> ac;
-
+    // Set data directory prefix
+    const std::string data_dir = "data/";
     // List of required CSV file names
-    const std::string baseMVA_file = case_name + "_baseMVA_ac.csv";
-    const std::string bus_file = case_name + "_bus_ac.csv";
-    const std::string branch_file = case_name + "_branch_ac.csv";
-    const std::string gen_file = case_name + "_gen_ac.csv";
-    const std::string gencost_file = case_name + "_gencost_ac.csv";
+    const std::string baseMVA_file = data_dir + case_name + "_baseMVA_ac.csv";
+    const std::string bus_file = data_dir + case_name + "_bus_ac.csv";
+    const std::string branch_file = data_dir + case_name + "_branch_ac.csv";
+    const std::string gen_file = data_dir + case_name + "_gen_ac.csv";
+    const std::string gencost_file = data_dir + case_name + "_gencost_ac.csv";
 
     // Check missing files, if not, then save as the matrix
     try {

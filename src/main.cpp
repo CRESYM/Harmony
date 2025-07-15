@@ -8,7 +8,7 @@
 int main() {
 
 	example_MMC();
-
+	example_OPF();
 
 
 	return 0;
