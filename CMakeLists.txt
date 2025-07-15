@@ -78,6 +78,11 @@ set(Solver_OPF_Header_Files
     src/solveHmo_opf.h
     src/Powerflow.h
 )
+set(Solver_Helper_Functions_Header_Files
+    src/Solver/Helper_Functions/Helper_Functions.h
+    src/Solver/Helper_Functions/Differential_equations.h
+    src/Solver/Helper_Functions/Symbolic_functions.h
+)
 set(Control_Header_Files
     src/Control_block.h
     src/Filter.h
@@ -148,6 +153,10 @@ set(Solver_OPF_Source_Files
     src/Powerflow_network_params.cpp
     src/Powerflow_solver.cpp
 )
+set(Solver_Helper_Functions_Source_Files
+    src/Solver/Helper_Functions/Differential_equations.cpp
+    src/Solver/Helper_Functions/Symbolic_functions.cpp
+)
 set(Control_Source_Files
     src/Control_block.cpp
     src/Filter.cpp
@@ -183,12 +192,12 @@ if(WIN32) # workds for x64 as well
     source_group("Header Files\\Solver" FILES)
     source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Header_Files})
     source_group("Header Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Header_Files})
+    source_group("Header Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Header_Files})
     source_group("Header Files\\Examples" FILES ${Examples_Header_files})
 
 
     source_group("Source Files" FILES ${Source_Files})
     source_group("Source Files\\Elements" FILES ${Element_Source_Files})
-    #source_group("Source Files\\Elements\\Admittance" FILES ${Element_Admittance_Source_Files})
     source_group("Source Files\\Elements\\Converter" FILES ${Element_Converter_Source_Files})
     source_group("Source Files\\Elements\\Generator" FILES ${Element_Generator_Source_Files})
     source_group("Source Files\\Elements\\Impedance" FILES ${Element_Impedance_Source_Files})
@@ -199,6 +208,7 @@ if(WIN32) # workds for x64 as well
     source_group("Source Files\\Solver" FILES)
     source_group("Source Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
     source_group("Source Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Source_Files})
+    source_group("Source Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Source_Files})
     source_group("Source Files\\Examples" FILES ${Examples_Source_files})
 endif()
 
@@ -217,6 +227,7 @@ add_executable(
     ${Element_Transmission_Line_Header_Files}
     ${Control_Header_Files}
     ${Solver_OPF_Header_Files}
+    ${Solver_Helper_Functions_Header_Files}
     ${Solver_State_Space_Model_Header_Files}
     ${Examples_Header_files}
 
@@ -231,6 +242,7 @@ add_executable(
     ${Element_Transmission_Line_Source_Files}
     ${Control_Source_Files}
     ${Solver_OPF_Source_Files}
+    ${Solver_Helper_Functions_Source_Files}
     ${Solver_State_Space_Model_Source_Files}
     ${Examples_Source_files}
 

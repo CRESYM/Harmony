@@ -29,14 +29,15 @@ public:
     MMC(const std::string& symbol, const std::vector<double>& converter_params,
         const std::vector<double>& controller_params, const std::vector<double>& filter_params);
 
+    // Initialization methods
+    void init_Controller(const std::vector<double>& converter_params);// Method to initialize controllers and Filters in MMC
+    void init_Filter(const std::vector<double>& converter_params);
+    void update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc);
+
     // Destructor
     ~MMC() {};
     
-    // Initialization methods
-    void init_Controller(const std::vector<double>&converter_params);// Method to initialize controllers and Filters in MMC
-    void init_Filter(const std::vector<double>& converter_params);
-	// void init_MMC(); // Method to initialize MMC with the converter parameters
-    void update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc);
+    
    
     
     //getter
@@ -46,12 +47,12 @@ public:
     Eigen::MatrixXd getD() const { return D_matrix; }
     Eigen::VectorXd getEquilibriumState() const { return equilibrium_state; }
 
-    Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u);
-
-    Eigen::MatrixXd computeJacobianNumerically(const Eigen::VectorXd& x0, const Eigen::VectorXd& u0);
+    
     
     // Equilibrium point calculation
     void solveEquilibrium();
+    Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u);
+    void computeJacobian(const Eigen::VectorXd& x0, const Eigen::VectorXd& u0);
 
     Eigen::MatrixXcd compute_y_parameters_num(double omega) override;
 

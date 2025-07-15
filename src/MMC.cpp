@@ -184,7 +184,7 @@ void MMC::update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc
     }
 }
 
-Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u) {
+MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u) {
     double Leqac = L_arm / 2.0 + L_reactor;
     double Reqac = R_arm / 2.0 + R_reactor;
     double Ce = 6.0 * C_arm / N;
@@ -208,19 +208,7 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
     double vMDelta_d_ref = 0, vMDelta_q_ref = 0, vMDelta_Zd_ref = 0, vMDelta_Zq_ref = 0;
 	double vMSigma_d_ref = 0, vMSigma_q_ref = 0, vMSigma_z_ref = 0;
 
-    //Eigen::VectorXd xdelay = x.segment(index, 15); // 3rd order Padé for 5 signals
-
-    //// Delay update equations
-    //F.segment(index, 15) = Adelay * xdelay + Bdelay * m_input;
-    //Eigen::VectorXd mdelay = Cdelay * xdelay + Ddelay * m_input;
-
-    //// Extract delayed modulation signals
-    //double mDelta_d = mdelay(0);
-    //double mDelta_q = mdelay(1);
-    //double mSigma_d = mdelay(2);
-    //double mSigma_q = mdelay(3);
-    //double mSigma_z = mdelay(4);
-
+    
     i = 0;
 	// Placeholders for values used in control loops
     Eigen::VectorXd state_variables; // Placeholder for state variables
@@ -389,10 +377,30 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
     double mDelta_d = m_input(0);
     double mDelta_q = m_input(1);
     double mDelta_Zd = m_input(2);
-    double mDelta_Zq = m_input(3); 
+    double mDelta_Zq = m_input(3);
     double mSigma_d = m_input(4);
     double mSigma_q = m_input(5);
     double mSigma_z = m_input(6);
+
+    if (t_delay) {
+        // Create delay matrices for 5 signals
+        auto [AB, CD] = padeDelaySystemMulti(t_delay, 5);
+        auto [Adelay, Bdelay] = AB;
+        auto [Cdelay, Ddelay] = CD;
+
+        // Apply update logic
+        Eigen::VectorXd xdelay = x.segment(i, 15);             // 3rd-order Padé × 5 signals = 15 states
+        F.segment(i, 15) = Adelay * xdelay + Bdelay * m_input; // m_input is 5×1
+        Eigen::VectorXd mdelay = Cdelay * xdelay + Ddelay * m_input;
+        i += 15; // Move to next state variables
+
+        // Extract delayed signals
+        mDelta_d = mdelay(0);
+        mDelta_q = mdelay(1);
+        mSigma_d = mdelay(2);
+        mSigma_q = mdelay(3);
+        mSigma_z = mdelay(4);
+    }
 
     // Assuming state x = [iΔd, iΔq, iΣd, iΣq, iΣz, vCΔd, vCΔq, vCΔZd, vCΔZq, vCΣd, vCΣq, vCΣz]
     // Indices:      0     1     2     3     4      5       6       7        8       9       10      11
@@ -450,83 +458,61 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
     return F;
 }
 
-// Computes Jacobian matrices A = ∂f/∂x and B = ∂f/∂u numerically
-// x0, u0: Operating point vectors for state and input
-Eigen::MatrixXd MMC::computeJacobianNumerically(const Eigen::VectorXd& x0, const Eigen::VectorXd& u0) {
-    const double eps = 1e-3;
-    const int n = x0.size();
-    const int m = u0.size();
+// Computes the Jacobian matrices A and B numerically using finite differences
+void MMC::computeJacobian(const Eigen::VectorXd& x0, const Eigen::VectorXd& u0) {
+    // Bind the member function computeStateDerivatives as a lambda
+    auto f = [&](const Eigen::VectorXd& x, const Eigen::VectorXd& u) {
+        return computeStateDerivatives(x, u);
+        };
 
-    Eigen::MatrixXd A = Eigen::MatrixXd::Zero(n, n);
-    Eigen::MatrixXd B = Eigen::MatrixXd::Zero(n, m);
-    
-    Eigen::VectorXd f0 = computeStateDerivatives(x0, u0); // f(x0, u0)
+    // Compute both A = ∂f/∂x and B = ∂f/∂u
+    std::pair<Eigen::MatrixXd, Eigen::MatrixXd> jacobians = computeJacobians(x0, u0, f);
+    Eigen::MatrixXd A = jacobians.first;
+    Eigen::MatrixXd B = jacobians.second;
 
-    // Compute ∂f/∂x
-    for (int i = 0; i < n; ++i) {
-        Eigen::VectorXd x_pert = x0;
-        x_pert(i) += eps;
-        A.col(i) = (computeStateDerivatives(x_pert, u0) - f0) / eps;
-    }
-
-    for (int i = 0; i < m; ++i) {
-        Eigen::VectorXd u_pert = u0;
-        u_pert(i) += eps;
-        B.col(i) = (computeStateDerivatives(x0, u_pert) - f0) / eps;
-    }
-
+    // Store in class variables
     A_matrix = A;
     B_matrix = B;
 
-    return A;
+    int num_states = A_matrix.cols();
+    C_matrix = Eigen::MatrixXd::Zero(3, num_states);
+
+    C_matrix(1, 0) = 1; 
+    C_matrix(2, 1) = 1;  
+
+    if (controls.count("dc")) {
+        C_matrix(0, 4) = 3;  // corresponds to C[1,5] in Julia
+    }
+	else { // to repair the C matrix
+        //C_matrix(0, vdc_position - 1) = 1; 
+    }
+
+    D_matrix = Eigen::MatrixXd::Zero(3, 3);
 }
 
 // Solves f(x,u) = 0 for a steady-state operating point x, using Newton-Raphson
 void MMC::solveEquilibrium() {
-    const int max_iter = 1000;
-    const double tol = 1e-9;
+    const int n = number_of_states;
 
-    const int n = number_of_states;  // Only the dynamic states
-    Eigen::VectorXd x = 0.001 * Eigen::VectorXd::Ones(n);
-	x(number_of_states - 1) = V_dc; // Set the last state to zero (e.g., DC voltage)
+    // Initial guess
+    Eigen::VectorXd x0 = 0.001 * Eigen::VectorXd::Ones(n);
+    x0(n - 1) = V_dc;
 
-    // Operating point input voltages
+    // Define input vector u (DC voltage and AC voltages)
     Eigen::VectorXd u(3);
-    u << V_dc, V_m*cos(omega_0), -V_m*sin(omega_0);
+    u << V_dc, V_m* cos(omega_0), -V_m * sin(omega_0);
 
-    for (int iter = 0; iter < max_iter; ++iter) {
-        Eigen::VectorXd f_val = computeStateDerivatives(x, u);
-        double norm_f = f_val.norm();
-        if (norm_f < tol) {
-            std::cout << "Equilibrium found in " << iter << " iterations. Residual = " << norm_f << "\n";
-            break;
-        }
+    // Wrap member function as a lambda
+    DerivFunc f = [&](const Eigen::VectorXd& x, const Eigen::VectorXd& u) {
+        return computeStateDerivatives(x, u);
+        };
 
-        // Compute numerical Jacobian df/dx
-        Eigen::MatrixXd J = Eigen::MatrixXd::Zero(n, n);
-        double eps = 1e-10;
-        for (int i = 0; i < n; ++i) {
-            Eigen::VectorXd x_eps = x;
-            x_eps(i) += eps;
-            J.col(i) = (computeStateDerivatives(x_eps, u) - f_val) / eps;
-        }
+    // Call external equilibrium solver
+    Eigen::VectorXd x_eq = findEquilibrium(x0, u, f);
 
-        // Solve for Newton step
-        Eigen::VectorXd dx = J.fullPivLu().solve(-f_val);
-        x += dx;
-
-        if (dx.norm() < tol) {
-            std::cout << "Converged (Newton step small) in " << iter << " iterations.\n";
-            break;
-        }
-
-        if (iter == max_iter - 1) {
-            std::cerr << "WARNING: Equilibrium solver did not converge.\n";
-        }
-    }
-
-    equilibrium_state = Eigen::VectorXd::Zero(number_of_states);  // match 13-d state
-    equilibrium_state.head(number_of_states) = x;  // store equilibrium
+    // Store result
+    equilibrium_state = Eigen::VectorXd::Zero(number_of_states);
+    equilibrium_state.head(number_of_states) = x_eq;
 }
 
 
