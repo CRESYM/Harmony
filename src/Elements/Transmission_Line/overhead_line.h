@@ -1,9 +1,10 @@
 ﻿#ifndef OVERHEAD_LINE_H
 #define OVERHEAD_LINE_H
 
-#include "Element.h"
 #include "Transmissionline.h"
+#include "../Element.h"
 
+class Element; // Forward declaration of Element class
 
 class Overhead_Line : public Element {
 private:

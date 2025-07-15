@@ -1,7 +1,7 @@
 ﻿#ifndef _ADMITTANCE_H_
 #define _ADMITTANCE_H_
 
-#include "Element.h"
+#include "../Element.h"
 
 /*
 Creates admittance with specified number of input/output pins which represent phases. 

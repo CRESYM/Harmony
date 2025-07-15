@@ -1,8 +1,5 @@
 ﻿#include "Capacitor.h"
-#include "Bus.h"
-#include <symengine/expression.h>
 
-using namespace SymEngine;
 
 // Frequency-domain constructor Supports both single-phase and multi-phase
 Capacitor::Capacitor(const std::string& symbol, int pins, const std::vector<double>& capacitance)

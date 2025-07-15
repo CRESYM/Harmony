@@ -1,10 +1,8 @@
 #include "network.h"      // For access to the Network class and its members
-#include "Element.h"      // For Element* operations (e.g., compute_y_parameters, getConnections)
+#include "./Elements/Element.h"      // For Element* operations (e.g., compute_y_parameters, getConnections)
 #include "Bus.h"          // For Bus* methods like getBusName, getPinNumber, etc.
 
-#include <algorithm>      // For std::sort, std::find, std::unique
-#include <stdexcept>      // For std::invalid_argument
-#include <iostream>       // For debug prints (if kept)
+
 
 void Network::compute_equivalent_impedance(std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements) {
     if (start_buses.empty())

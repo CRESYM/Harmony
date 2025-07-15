@@ -1,11 +1,7 @@
 #ifndef BUS_H
 #define BUS_H
 
-#include <vector>
-#include <string>
-#include <symengine/matrix.h>
-
-using namespace SymEngine;
+#include "Constants.h"
 
 class Element;  // Forward declaration of the Element class
 

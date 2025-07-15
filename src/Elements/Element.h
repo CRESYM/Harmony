@@ -1,8 +1,8 @@
 #ifndef ELEMENT_H
 #define ELEMENT_H
 
-#include "Constants.h"
-#include "./Solver/Helper_Functions/Helper_Functions.h"
+#include "../Constants.h"
+#include "../Solver/Helper_Functions/Helper_Functions.h"
 
 class Bus; // Forward declaration of Bus class
 

@@ -1,7 +1,7 @@
 #ifndef LOAD
 #define LOAD
 
-#include "Element.h"
+#include "../Element.h"
 
 /*
 Creates load with resistive, inductive and capacitive components in series. Its constructor 

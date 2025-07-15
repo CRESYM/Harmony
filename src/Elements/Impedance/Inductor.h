@@ -1,8 +1,7 @@
 #ifndef INDUCTOR_H
 #define INDUCTOR_H
 
-#include "Element.h"
-#include "Bus.h"
+#include "../Element.h"
 
 using SymEngine::RCP;
 using SymEngine::Basic;

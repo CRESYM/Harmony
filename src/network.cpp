@@ -1,8 +1,8 @@
 ﻿#include "network.h"
-#include "Element.h" 
+#include "./Elements/Element.h" 
 #include "Bus.h"
-#include <algorithm>
-#include <stdexcept>
+
+
 
 
 Network::Network() : pins(0) {

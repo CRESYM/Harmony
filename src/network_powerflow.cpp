@@ -1,20 +1,9 @@
 ﻿#include "network.h"
-#include "Element.h"
 #include "Bus.h"
-#include "Constants.h"
-#include "Generator.h"
-#include "Load.h"
-#include "Impedance.h"
+#include "Include_components.h"
 #include "solveHmo_opf.h"
 
-#include <algorithm>
-#include <Eigen/Dense>
-#include <unordered_map>
-#include <cmath>
 
-#include <iomanip>         
-
-using Eigen::MatrixXd;
 
 template<typename Table>
 Eigen::MatrixXd map2dense(const Table& tbl,

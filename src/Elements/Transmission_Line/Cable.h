@@ -1,7 +1,9 @@
 ﻿#ifndef _CABLE_H_
 #define _CABLE_H_
 
-#include "Element.h"
+#include "../Element.h"
+
+class Element; // Forward declaration of Element class
 
 // Define the Cable class as a subtype (<:) of abstract type Element
 class Cable : public Element {

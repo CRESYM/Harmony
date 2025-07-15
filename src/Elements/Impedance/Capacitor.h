@@ -1,8 +1,8 @@
 ﻿#ifndef CAPACITOR_H
 #define CAPACITOR_H
 
-#include "Element.h"
-#include <symengine/basic.h>
+#include "../Element.h"
+
 class Bus;
 
 class Capacitor : public Element {

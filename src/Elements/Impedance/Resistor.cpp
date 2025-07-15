@@ -1,11 +1,5 @@
 #include "Resistor.h"
-#include <symengine/symbol.h>
-#include <symengine/basic.h>
-#include <symengine/add.h>
-#include <symengine/mul.h>
-#include <symengine/integer.h>
 
-using namespace SymEngine;
 
 Resistor::Resistor(const std::string& symbol, int pins, const std::vector<double>& R)
     : Element(symbol, pins, pins)

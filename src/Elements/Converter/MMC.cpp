@@ -1,8 +1,8 @@
 ﻿#include "MMC.h"
 
-#include "Controller.h"
-#include "Filter.h"
-#include "Integrator.h" // Add this include to ensure Integrator is recognized
+#include "../../Controller.h"
+#include "../../Filter.h"
+#include "../../Integrator.h" // Add this include to ensure Integrator is recognized
 
 // Constructors
 MMC::MMC(const std::string& symbol,

@@ -1,7 +1,7 @@
 #ifndef _IMPEDANCE_H_
 #define _IMPEDANCE_H_
 
-#include "Element.h"
+#include "../Element.h"
 
 /*
 Creates impedance with specified number of input/output pins which represent phases.

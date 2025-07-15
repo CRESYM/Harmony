@@ -1,7 +1,7 @@
 ﻿#ifndef STATE_SPACE_MODEL
 #define STATE_SPACE_MODEL
 
-#include "Element.h"  
+#include "./Elements/Element.h"  
 #include "Bus.h"      
 #include "network.h"
 

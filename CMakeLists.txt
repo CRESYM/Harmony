@@ -27,39 +27,41 @@ find_package(casadi CONFIG)
 # They need to be configured after add_executable(Harmony ...)
 
 # Group header files
-set(Element_Header_Files src/Element.h)
+set(Element_Header_Files src/Elements/Element.h)
 #set(Element_Admittance_Header_Files src/Admittance.h)
 set(Element_Converter_Header_Files
-    src/MMC.h
+    src/Elements/Converter/MMC.h
 )
-set(Element_Generator_Header_Files src/Generator.h)
 set(Element_Impedance_Header_Files
-    src/Impedance.h
-    src/Load.h
-    src/Resistor.h
-    src/Admittance.h
-    src/Capacitor.h
-    src/Switch.h
-    src/Inductor.h
+    src/Elements/Impedance/Impedance.h
+    src/Elements/Impedance/Load.h
+    src/Elements/Impedance/Resistor.h
+    src/Elements/Impedance/Admittance.h
+    src/Elements/Impedance/Capacitor.h
+    src/Elements/Impedance/Inductor.h
+)
+set(Element_Switch_Header_Files
+    src/Elements/Switch/Switch.h
 )
 set(Element_Source_Header_Files 
-    src/AC_source.h
+    src/Elements/Source/AC_source.h
+    src/Elements/Source/Generator.h
 )
 set(Element_Transformer_Header_Files
-    src/Transformer_base.h
-    src/Transformer_classic.h
-    src/Transformer_Delta_Delta.h
-    src/Transformer_Delta_Y.h
-    src/Transformer_Delta_Y_real.h
-    src/Transformer_real.h
-    src/Transformer_Y_Delta.h
-    src/Transformer_Y_Y.h
-    src/Transformer_Y_Y_real.h
+    src/Elements/Transformer/Transformer_base.h
+    src/Elements/Transformer/Transformer_classic.h
+    src/Elements/Transformer/Transformer_Delta_Delta.h
+    src/Elements/Transformer/Transformer_Delta_Y.h
+    src/Elements/Transformer/Transformer_Delta_Y_real.h
+    src/Elements/Transformer/Transformer_real.h
+    src/Elements/Transformer/Transformer_Y_Delta.h
+    src/Elements/Transformer/Transformer_Y_Y.h
+    src/Elements/Transformer/Transformer_Y_Y_real.h
 )
 set(Element_Transmission_Line_Header_Files
-    src/Cable.h
-    src/overhead_line.h
-    src/Transmissionline.h
+    src/Elements/Transmission_Line/Cable.h
+    src/Elements/Transmission_Line/overhead_line.h
+    src/Elements/Transmission_Line/Transmissionline.h
 )
 set(Solver_State_Space_Model_Header_Files
     src/State_Space_Model.h
@@ -100,39 +102,40 @@ set(Examples_Header_files
 )
 
 # Group source files
-set(Element_Source_Files src/Element.cpp)
-#set(Element_Admittance_Source_Files src/Admittance.cpp)
+set(Element_Source_Files src/Elements/Element.cpp)
 set(Element_Converter_Source_Files
-    src/MMC.cpp
+    src/Elements/Converter/MMC.cpp
 )
-set(Element_Generator_Source_Files src/Generator.cpp)
 set(Element_Impedance_Source_Files
-    src/Impedance.cpp
-    src/Load.cpp
-    src/Resistor.cpp
-    src/Admittance.cpp
-    src/Capacitor.cpp
-    src/Switch.cpp
-    src/Inductor.cpp
+    src/Elements/Impedance/Impedance.cpp
+    src/Elements/Impedance/Load.cpp
+    src/Elements/Impedance/Resistor.cpp
+    src/Elements/Impedance/Admittance.cpp
+    src/Elements/Impedance/Capacitor.cpp
+    src/Elements/Impedance/Inductor.cpp
+)
+set(Element_Switch_Source_Files
+    src/Elements/Switch/Switch.cpp
 )
 set(Element_Source_Source_Files 
-    src/AC_source.cpp
+    src/Elements/Source/AC_source.cpp
+    src/Elements/Source/Generator.cpp
 )
 set(Element_Transformer_Source_Files
-    src/Transformer_base.cpp
-    src/Transformer_classic.cpp
-    src/Transformer_Delta_Delta.cpp
-    src/Transformer_Delta_Y.cpp
-    src/Transformer_Delta_Y_real.cpp
-    src/Transformer_real.cpp
-    src/Transformer_Y_Delta.cpp
-    src/Transformer_Y_Y.cpp
-    src/Transformer_Y_Y_real.cpp
+    src/Elements/Transformer/Transformer_base.cpp
+    src/Elements/Transformer/Transformer_classic.cpp
+    src/Elements/Transformer/Transformer_Delta_Delta.cpp
+    src/Elements/Transformer/Transformer_Delta_Y.cpp
+    src/Elements/Transformer/Transformer_Delta_Y_real.cpp
+    src/Elements/Transformer/Transformer_real.cpp
+    src/Elements/Transformer/Transformer_Y_Delta.cpp
+    src/Elements/Transformer/Transformer_Y_Y.cpp
+    src/Elements/Transformer/Transformer_Y_Y_real.cpp
 )
 set(Element_Transmission_Line_Source_Files
-    src/Cable.cpp
-    src/overhead_line.cpp
-    src/Transmissionline.cpp
+    src/Elements/Transmission_Line/Cable.cpp
+    src/Elements/Transmission_Line/overhead_line.cpp
+    src/Elements/Transmission_Line/Transmissionline.cpp
 )
 set(Solver_State_Space_Model_Source_Files
     src/State_Space_Model.cpp
@@ -188,6 +191,7 @@ if(WIN32) # workds for x64 as well
     source_group("Header Files\\Elements\\Source" FILES ${Element_Source_Header_Files})
     source_group("Header Files\\Elements\\Transformer" FILES ${Element_Transformer_Header_Files})
     source_group("Header Files\\Elements\\Transmission Line" FILES ${Element_Transmission_Line_Header_Files})
+    source_group("Header Files\\Elements\\Switch" FILES ${Element_Switch_Header_Files})
     source_group("Header Files\\Control" FILES ${Control_Header_Files})
     source_group("Header Files\\Solver" FILES)
     source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Header_Files})
@@ -204,6 +208,7 @@ if(WIN32) # workds for x64 as well
     source_group("Source Files\\Elements\\Source" FILES ${Element_Source_Source_Files})
     source_group("Source Files\\Elements\\Transformer" FILES ${Element_Transformer_Source_Files})
     source_group("Source Files\\Elements\\Transmission_Line" FILES ${Element_Transmission_Line_Source_Files})
+    source_group("Source Files\\Elements\\Switch" FILES ${Element_Switch_Source_Files})
     source_group("Source Files\\Control" FILES ${Control_Source_Files})
     source_group("Source Files\\Solver" FILES)
     source_group("Source Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
@@ -218,7 +223,6 @@ add_executable(
     Harmony
     ${Header_Files}
     ${Element_Header_Files}
-    #${Element_Admittance_Header_Files}
     ${Element_Converter_Header_Files}
     ${Element_Generator_Header_Files}
     ${Element_Impedance_Header_Files}
@@ -233,7 +237,6 @@ add_executable(
 
     ${Source_Files}
     ${Element_Source_Files}
-    #${Element_Admittance_Source_Files}
     ${Element_Converter_Source_Files}
     ${Element_Generator_Source_Files}
     ${Element_Impedance_Source_Files}

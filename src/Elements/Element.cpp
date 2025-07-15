@@ -1,10 +1,4 @@
-﻿// element.cpp
-
-#include "Element.h"
-#include "Constants.h"
-
-
-using namespace SymEngine;
+﻿#include "Element.h"
 
 // Destructor for Element
 Element::~Element() {}

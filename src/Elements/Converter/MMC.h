@@ -2,6 +2,8 @@
 #define MMC_H
 
 #include "../Element.h"
+//#include "Filter.h"
+//#include "Controller.h"
 
 // Forward declarations
 class Controller;

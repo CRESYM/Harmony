@@ -1,9 +1,6 @@
 #include "Bus.h"
-#include "Element.h"
+#include "./Elements/Element.h"
 
-#include <iostream>
-#include <sstream>  // Include for string streams
-#include <symengine/printers.h>  // Correct header for printing
 
 // Constructor for Bus
 Bus::Bus(const std::string& name, int number) : busName(name), numberPins(number) {}

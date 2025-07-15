@@ -1,8 +1,7 @@
 ﻿#ifndef SWITCH_H
 #define SWITCH_H
 
-#include "Element.h"
-#include <vector>
+#include "../Element.h"
 
 class Switch : public Element {
 public:

@@ -2,39 +2,40 @@
 #define INCLUDE_COMPONENTS_H
 
 // ELEMENTS
-#include "Element.h"
+#include "./Elements/Element.h"
 
 // Impedances
-#include "Admittance.h"
-#include "Impedance.h"
-#include "Resistor.h"
-#include "Load.h"
-#include "Capacitor.h"
-#include "Switch.h"
-#include "Inductor.h"
+#include "./Elements/Impedance/Admittance.h"
+#include "./Elements/Impedance/Impedance.h"
+#include "./Elements/Impedance/Resistor.h"
+#include "./Elements/Impedance/Load.h"
+#include "./Elements/Impedance/Capacitor.h"
+#include "./Elements/Impedance/Inductor.h"
+
+#include "./Elements/Switch/Switch.h"
 
 // Transformers
-#include "Transformer_base.h"
-#include "Transformer_real.h"
-#include "Transformer_classic.h"
-#include "Transformer_Delta_Delta.h"
-#include "Transformer_Y_Delta.h"
-#include "Transformer_Delta_Y.h"
-#include "Transformer_Delta_Y_real.h"
-#include "Transformer_Y_Y.h"
-#include "Transformer_Y_Y_real.h"
+#include "./Elements/Transformer/Transformer_base.h"
+#include "./Elements/Transformer/Transformer_real.h"
+#include "./Elements/Transformer/Transformer_classic.h"
+#include "./Elements/Transformer/Transformer_Delta_Delta.h"
+#include "./Elements/Transformer/Transformer_Y_Delta.h"
+#include "./Elements/Transformer/Transformer_Delta_Y.h"
+#include "./Elements/Transformer/Transformer_Delta_Y_real.h"
+#include "./Elements/Transformer/Transformer_Y_Y.h"
+#include "./Elements/Transformer/Transformer_Y_Y_real.h"
 
 // Sources
-#include "AC_source.h"
-#include "Generator.h"
+#include "./Elements/Source/AC_source.h"
+#include "./Elements/Source/Generator.h"
 
 // Lines
-#include "Transmissionline.h"
-#include "overhead_line.h"
-#include "Cable.h"
+#include "./Elements/Transmission_Line/Transmissionline.h"
+#include "./Elements/Transmission_Line/overhead_line.h"
+#include "./Elements/Transmission_Line/Cable.h"
 
 // Power Electronics
-#include "MMC.h"
+#include "./Elements/Converter/MMC.h"
 
 
 #include "solve_opf.h"

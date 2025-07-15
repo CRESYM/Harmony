@@ -1,8 +1,7 @@
 #ifndef GENERATOR_H
 #define GENERATOR_H
 
-#include "Element.h"
-#include <array>
+#include "../Element.h"
 
 class Generator : public Element {
 public:

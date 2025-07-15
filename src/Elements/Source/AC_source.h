@@ -1,7 +1,7 @@
 #ifndef AC_SOURCE_H
 #define AC_SOURCE_H
 
-#include "Element.h"
+#include "../Element.h"
 
 /*
 AC source is modeled as ideal AC voltage source with added series impedance. Its parameters are

@@ -1,7 +1,7 @@
 #ifndef _RESISTOR_H_
 #define _RESISTOR_H_
 
-#include "Element.h"
+#include "../Element.h"
 
 class Resistor : public Element {
 public:

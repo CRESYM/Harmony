@@ -1,6 +1,7 @@
 ﻿#ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+// SymEngine library for symbolic mathematics
 #include <symengine/basic.h>
 #include <symengine/symbol.h>
 #include <symengine/add.h>
@@ -23,6 +24,9 @@
 #include <symengine/matrix_expressions.h>
 #include <symengine/matrices/immutable_dense_matrix.h>
 #include <symengine/polys/basic_conversions.h>
+#include <symengine/printers.h>  // Correct header for printing
+
+
 // Eigen library for linear algebra
 #include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
@@ -47,6 +51,7 @@
 #include <cmath>
 #include <functional>
 #include <iomanip>
+
 
 using SymEngine::RCP;
 using SymEngine::Basic;

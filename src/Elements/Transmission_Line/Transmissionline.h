@@ -1,7 +1,9 @@
 #ifndef TRANSMISSIONLINE_H
 #define TRANSMISSIONLINE_H
 
-#include "Element.h"
+#include "../Element.h"
+
+class Element; // Forward declaration of Element class
 
 class TransmissionLine : public Element {
 public:
