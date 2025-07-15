@@ -42,8 +42,8 @@ int main() {
     double f = 50;
 	double omega = 2 * M_PI * f; // Nominal frequency in rad/s
 	std::vector<double> converter_params = { omega, 100.0e6, 0, 0.0, 100.0e3, 200e3, 50e-3, 1.07, 0.01, 50, 0.06, 0.535, 0.00015};
-    std::vector<double> controller_params = { 0, 0, 
-        1, 6.6667e-07, 3.3333e-04, 1, 100e6, // active power
+    std::vector<double> controller_params = { 0, 0, 0,
+        //1, 6.6667e-07, 3.3333e-04, 1, 100e6, // active power
         0, 
         1, 6.6667e-07, 3.3333e-04, 1, 0, // reactive power
         1, 120, 400, 1, 0, // energy controller parameters 

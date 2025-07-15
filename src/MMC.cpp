@@ -1,7 +1,75 @@
 ﻿#include "MMC.h"
+
 #include "Controller.h"
 #include "Filter.h"
+#include "Integrator.h" // Add this include to ensure Integrator is recognized
 
+// Constructors
+MMC::MMC(const std::string& symbol,
+    double omega, double activePower, double reactivePower,
+    double angle, double acVoltage, double dcVoltage,
+    double armInductance, double armResistance, double armCapacitance,
+    int numSubmodules, double reactorInductance, double reactorResistance,
+    double timeDelay)
+    : Element(symbol, 3, 1), // AC side - input pins; DC side - output pins
+    omega_0(omega), P(activePower), Q(reactivePower), theta(angle), V_m(acVoltage), V_dc(dcVoltage),
+    L_arm(armInductance), R_arm(armResistance), C_arm(armCapacitance),
+    N(numSubmodules), L_reactor(reactorInductance), R_reactor(reactorResistance), t_delay(timeDelay)
+{
+    // Initialize active and reactive power limits for power flow calculations
+    P_dc = P;
+    P_min = 0.5 * P;
+    P_max = 1.5 * P;
+    Q_min = -P;
+    Q_max = P;
+
+    A_matrix = Eigen::MatrixXd::Zero(6, 6);
+    B_matrix = Eigen::MatrixXd::Zero(6, 8);
+    C_matrix = Eigen::MatrixXd::Identity(6, 6);
+    D_matrix = Eigen::MatrixXd::Zero(6, 8);
+}
+
+MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params)
+    : Element(symbol, 3, 1), // AC side - input pins; DC side - output pins
+    omega_0(converter_params[0]), P(converter_params[1]), Q(converter_params[2]),
+    theta(converter_params[3]), V_m(converter_params[4]), V_dc(converter_params[5]),
+    L_arm(converter_params[6]), R_arm(converter_params[7]), C_arm(converter_params[8]),
+    N(static_cast<int>(converter_params[9])), L_reactor(converter_params[10]),
+    R_reactor(converter_params[11]), t_delay(converter_params[12]) {
+
+    // Initialize active and reactive power limits for power flow calculations
+    P_dc = P;
+    P_min = 0.5 * P;
+    P_max = 1.5 * P;
+    Q_min = -P;
+    Q_max = P;
+
+    // Initialize equilibrium state vector
+    equilibrium_state = Eigen::VectorXd::Zero(6); // 6 dynamic states
+
+    // Initialize system matrices to zero        
+    A_matrix = Eigen::MatrixXd::Zero(6, 6);
+    B_matrix = Eigen::MatrixXd::Zero(6, 8);
+    C_matrix = Eigen::MatrixXd::Identity(6, 6);
+    D_matrix = Eigen::MatrixXd::Zero(6, 8);
+};
+
+MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params, const std::vector<double>& controller_params)
+    : MMC(symbol, converter_params) // Call the constructor with converter_params
+{
+    // Initialize controllers and filters based on controller_params
+    init_Controller(controller_params);
+}
+
+MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params,
+    const std::vector<double>& controller_params, const std::vector<double>& filter_params)
+    : MMC(symbol, converter_params) // Call the constructor with converter_params
+{
+    // Initialize controllers based on controller_params
+    init_Controller(controller_params);
+    // Initialize filters based on filter_params
+    init_Filter(filter_params);
+}
 
 // Initialize the controller(s) in MMC using provided parameters
 void MMC::init_Controller(const std::vector<double>& controller_params) {
@@ -10,10 +78,10 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
             if (static_cast<bool>(controller_params[i])) {
                 if ((i + 3) >= controller_params.size()) {
                     throw std::invalid_argument("Insufficient parameters for controller initialization.");
-				}
+                }
                 std::string controller_type = "PI"; // Default controller type
                 std::vector<double> values = {controller_params[i+1], controller_params[i+2]};
-				int number_of_values = static_cast<int>(controller_params[i+3]); // Default number of values for PI controller
+                int number_of_values = static_cast<int>(controller_params[i+3]); // Default number of values for PI controller
                 std::vector<double> refs;
                 if ((i + 3 + number_of_values) < controller_params.size()) {
                     refs = std::vector<double>(controller_params.begin() + i + 4, controller_params.begin() + i + 4 + number_of_values);
@@ -22,15 +90,22 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
                     refs.resize(number_of_values, 0.0); // Initialize references to zero if not provided
                 }
                 number_of_states += number_of_values; // Update the number of states based on the number of values
+                // Create a new controller and add it to the controls map
                 controls[controller_name] = new Controller(controller_name, controller_type, values, number_of_values, refs);
+
+                if (controller_name == "PLL")
+                    control_blocks["pll"] = new Integrator();
+
                 i += 4 + number_of_values;
             }
             else {
                 i += 1; // Skip to the next controller
-			}
-		}	
-	}
+            }
+        }    
+    }
 }
+
+// Existing code...
 
 // Initialize the filter(s) in MMC using provided parameters
 void MMC::init_Filter(const std::vector<double>& filter_params) {
@@ -155,6 +230,55 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
 
 	// LOOPS ARE ADDED IN FORMAT: outer loop that creates reference for inner loop and then inner loop
     // 
+    // PLL
+    // Define matrices for PLL
+    Eigen::Matrix2d T_theta;
+    Eigen::Matrix2d I_theta;
+    Eigen::Matrix2d T_2theta;
+    Eigen::Matrix2d I_2theta;
+    T_theta.setIdentity();
+    I_theta.setIdentity();
+    T_2theta.setIdentity();
+    I_2theta.setIdentity();
+
+	// Adding PLL control loop
+    if (controls.count("pll")) {
+        double theta_c = x(i+1);
+        double cos_theta = std::cos(theta_c);
+        double sin_theta = std::sin(theta_c);
+
+        // Transformation matrices
+        T_theta << cos_theta, -sin_theta, sin_theta, cos_theta;
+        I_theta << cos_theta, sin_theta, -sin_theta, cos_theta;
+
+        double cos_2theta = std::cos(-2 * theta_c);
+        double sin_2theta = std::sin(-2 * theta_c);
+
+        T_2theta << cos_2theta, -sin_2theta, sin_2theta, cos_2theta;
+        I_2theta << cos_2theta, sin_2theta, -sin_2theta, cos_2theta;
+
+        Eigen::Vector2d Vg = T_theta * Eigen::Vector2d(u[1], u[2]);
+
+        Vgd = Vg(0);
+        Vgq = Vg(1);
+
+		state_variables = controls["pll"]->define_differential_equations(x(i), Vgq, 0);
+        // PLL control output
+        F(i) = state_variables(i);
+		double delta_omega = state_variables(1); // Reference frequency
+        w = omega_0 + delta_omega;
+
+        // Go through the integrator to get theta
+		F(i + 1) = control_blocks["pll"]->define_differential_equations(delta_omega); // PLL output   
+
+        i += 2;
+    }
+    else {
+        Vgd = u(1);
+        Vgq = u(2);
+        w = omega_0;
+    }
+     
     // OUTER LOOPS
 	// Adding energy control loop
     if (controls.count("energy")) {
@@ -367,8 +491,8 @@ void MMC::solveEquilibrium() {
 	x(number_of_states - 1) = V_dc; // Set the last state to zero (e.g., DC voltage)
 
     // Operating point input voltages
-    Eigen::VectorXd u(1);
-    u << 0;
+    Eigen::VectorXd u(3);
+    u << V_dc, V_m*cos(omega_0), -V_m*sin(omega_0);
 
     for (int iter = 0; iter < max_iter; ++iter) {
         Eigen::VectorXd f_val = computeStateDerivatives(x, u);
@@ -448,4 +572,28 @@ void MMC::checkStability() const {
 void MMC::printEigenvalues() const {
     Eigen::EigenSolver<Eigen::MatrixXd> es(A_matrix);
     std::cout << "Eigenvalues:\n" << es.eigenvalues() << "\n";
+}
+
+void MMC::printElementValues() {
+    Element::printElementInfo();
+    std::cout << "MMC Parameters:\n"
+        << "  Active Power (P): " << P / 1e6 << " MW\n"
+        << "  Reactive Power (Q): " << Q / 1e6 << " MVA\n"
+        << "  DC Power (P_dc): " << P_dc / 1e6 << " MW\n"
+        << "  AC Voltage Amplitude (V_m): " << V_m / 1e3 << " kV\n"
+        << "  DC Voltage (V_dc): " << V_dc / 1e3 << " kV\n"
+        << "  Nominal Frequency (omega_0): " << omega_0 << " rad/s\n"
+        << "  Arm Inductance (L_arm): " << L_arm << " H\n"
+        << "  Arm Resistance (R_arm): " << R_arm << " Omega\n"
+        << "  Capacitance per Submodule (C_arm): " << C_arm << " F\n"
+        << "  Number of Submodules (N): " << N << "\n"
+        << "  Reactor Inductance (L_reactor): " << L_reactor << " H\n"
+        << "  Reactor Resistance (R_reactor): " << R_reactor << " Omega\n"
+        << "  Time Delay (t_delay): " << t_delay << " s\n";
+    for (const auto& pair : controls) {
+        const std::string& controllerName = pair.first;
+        Controller* controller = pair.second;
+        std::cout << "  Controller: " << controllerName << "\n";
+        controller->printValues(); // Print controller values
+    }
 }

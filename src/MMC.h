@@ -2,83 +2,32 @@
 #define MMC_H
 
 #include "Element.h"
-#include "Filter.h"
-#include "Controller.h"
+//#include "Filter.h"
+//#include "Controller.h"
 
 // Forward declarations
 class Controller;
 class Filter;
+class ControlBlock;
+class Integrator;
 
 class MMC : public Element {
 public:
     // Constructor 
-    MMC(const std::string& symbol, 
-        double omega, double activePower, double reactivePower, 
-        double angle, double acVoltage, double dcVoltage, 
+    MMC(const std::string& symbol,
+        double omega, double activePower, double reactivePower,
+        double angle, double acVoltage, double dcVoltage,
         double armInductance, double armResistance, double armCapacitance,
         int numSubmodules, double reactorInductance, double reactorResistance,
-        double timeDelay)
-		: Element(symbol, 3, 1), // AC side - input pins; DC side - output pins
-        omega_0(omega), P(activePower), Q(reactivePower), theta(angle), V_m(acVoltage), V_dc(dcVoltage),
-        L_arm(armInductance), R_arm(armResistance), C_arm(armCapacitance),
-        N(numSubmodules), L_reactor(reactorInductance), R_reactor(reactorResistance), t_delay(timeDelay) 
-    {
-        // Initialize active and reactive power limits for power flow calculations
-        P_dc = P;
-        P_min = 0.5 * P;
-        P_max = 1.5 * P;
-        Q_min = -P;
-        Q_max = P;
-
-        A_matrix = Eigen::MatrixXd::Zero(6, 6);
-        B_matrix = Eigen::MatrixXd::Zero(6, 8);
-        C_matrix = Eigen::MatrixXd::Identity(6, 6);
-        D_matrix = Eigen::MatrixXd::Zero(6, 8);
-    }
+        double timeDelay);
 
     // Constructor to initialize MMC with the converter_params (from init_MMC)
-    MMC(const std::string& symbol, const std::vector<double>& converter_params)
-        : Element(symbol, 3, 1), // AC side - input pins; DC side - output pins
-        omega_0(converter_params[0]), P(converter_params[1]), Q(converter_params[2]),
-        theta(converter_params[3]), V_m(converter_params[4]), V_dc(converter_params[5]),
-        L_arm(converter_params[6]), R_arm(converter_params[7]), C_arm(converter_params[8]),
-        N(static_cast<int>(converter_params[9])), L_reactor(converter_params[10]),
-        R_reactor(converter_params[11]), t_delay(converter_params[12]) {
+    MMC(const std::string& symbol, const std::vector<double>& converter_params);
 
-		// Initialize active and reactive power limits for power flow calculations
-        P_dc = P;
-        P_min = 0.5 * P;
-		P_max = 1.5 * P;
-        Q_min = -P;
-		Q_max = P;
+    MMC(const std::string& symbol, const std::vector<double>& converter_params, const std::vector<double>& controller_params);
 
-        // Initialize equilibrium state vector
-		equilibrium_state = Eigen::VectorXd::Zero(6); // 6 dynamic states
-
-		// Initialize system matrices to zero        
-        A_matrix = Eigen::MatrixXd::Zero(6, 6);
-        B_matrix = Eigen::MatrixXd::Zero(6, 8);
-        C_matrix = Eigen::MatrixXd::Identity(6, 6);
-        D_matrix = Eigen::MatrixXd::Zero(6, 8);
-    };
-
-    MMC(const std::string& symbol, const std::vector<double>& converter_params, const std::vector<double>& controller_params) 
-        : MMC(symbol, converter_params) // Call the constructor with converter_params
-    {
-        // Initialize controllers and filters based on controller_params
-        init_Controller(controller_params);
-	}
-
-    MMC(const std::string& symbol, const std::vector<double>& converter_params, 
-        const std::vector<double>& controller_params, const std::vector<double>& filter_params)
-        : MMC(symbol, converter_params) // Call the constructor with converter_params
-    {
-        // Initialize controllers based on controller_params
-        init_Controller(controller_params);
-		// Initialize filters based on filter_params
-		init_Filter(filter_params);
-	}
-  
+    MMC(const std::string& symbol, const std::vector<double>& converter_params,
+        const std::vector<double>& controller_params, const std::vector<double>& filter_params);
 
     // Destructor
     ~MMC() {};
@@ -110,58 +59,8 @@ public:
     void checkStability() const;
     void printEigenvalues() const;
 
-    // Add a filter or controller
-    void addSubElement(const std::string& subElementName, const std::shared_ptr<Element>& subElement) {
-        subElements.push_back({ subElementName, subElement });
-    }
-
-    // Print all sub-elements (filters/controllers)
-    void printSubElements() const override {
-        std::cout << "MMC Sub-Elements:" << std::endl;
-        for (const auto& pair : subElements) {
-            const std::string& subElementName = pair.first; // Key
-            const std::shared_ptr<Element>& subElement = pair.second; // Value
-            std::cout << "  Sub-Element Name: " << subElementName << std::endl;
-
-            // Check the type of sub-element using dynamic_cast
-            if (auto filter = dynamic_cast<Filter*>(subElement.get())) {
-                std::cout << "  (Filter)" << std::endl;
-                filter->printValues();  // If Filter, print its values
-            }
-            else if (auto controller = dynamic_cast<Controller*>(subElement.get())) {
-                std::cout << "  (Controller)" << std::endl;
-                controller->printValues();  // If Controller, print its values
-            }
-            else {
-                std::cout << "  (Unknown Element Type)" << std::endl;
-            }
-        }
-    }
-
     // Override to print MMC-specific parameters
-    virtual void printElementValues() override {
-        Element::printElementInfo();
-        std::cout << "MMC Parameters:\n"
-            << "  Active Power (P): " << P / 1e6 << " MW\n"
-            << "  Reactive Power (Q): " << Q / 1e6 << " MVA\n"
-            << "  DC Power (P_dc): " << P_dc / 1e6 << " MW\n"
-            << "  AC Voltage Amplitude (V_m): " << V_m / 1e3 << " kV\n"
-            << "  DC Voltage (V_dc): " << V_dc / 1e3 << " kV\n"
-            << "  Nominal Frequency (omega_0): " << omega_0 << " rad/s\n"
-            << "  Arm Inductance (L_arm): " << L_arm << " H\n"
-            << "  Arm Resistance (R_arm): " << R_arm << " Omega\n"
-            << "  Capacitance per Submodule (C_arm): " << C_arm << " F\n"
-            << "  Number of Submodules (N): " << N << "\n"
-            << "  Reactor Inductance (L_reactor): " << L_reactor << " H\n"
-            << "  Reactor Resistance (R_reactor): " << R_reactor << " Omega\n"
-            << "  Time Delay (t_delay): " << t_delay << " s\n";
-        for (const auto& pair : controls) {
-            const std::string& controllerName = pair.first;
-            Controller* controller = pair.second;
-            std::cout << "  Controller: " << controllerName << "\n";
-            controller->printValues(); // Print controller values
-		}
-    }
+    virtual void printElementValues() override;
 
 private:
     double omega_0;  // Nominal frequency
@@ -195,6 +94,7 @@ private:
 
 	std::map<std::string, Controller*> controls; // Map of existing controllers
 	std::map<std::string, Filter*> filters;      // Map of existing filters   
+	std::map<std::string, Integrator*> control_blocks; // Map of control blocks
 
 	// List of controller and filter names, it can be changed only by developers
     const std::vector<std::string> controller_list = {

@@ -23,9 +23,6 @@ Eigen::VectorXd Controller::define_differential_equations(const Eigen::VectorXd&
     for (int i = 0; i < reference.size(); ++i) {
         // Example: Proportional-Integral control equation
         // dx/dt = Kp * (reference[i] - x[i]) + Ki * u[i];
-        // Here, we would typically compute the derivative of the state variable.
-        // This is a placeholder for the actual implementation.
-
 		dx_dt(i) = (reference[i] - u(i));
 		output(i) = Kp * dx_dt(i) + Ki * x(i) + c(i);
 	}

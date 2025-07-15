@@ -82,6 +82,7 @@ set(Control_Header_Files
     src/Control_block.h
     src/Filter.h
     src/Controller.h
+    src/Integrator.h
 )
 set(Header_Files
     src/Bus.h
@@ -148,6 +149,7 @@ set(Control_Source_Files
     src/Control_block.cpp
     src/Filter.cpp
     src/Controller.cpp
+    src/Integrator.cpp
 )
 set(Source_Files
     src/Bus.cpp

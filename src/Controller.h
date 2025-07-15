@@ -20,8 +20,8 @@ public:
         }
     }
 
-    virtual Eigen::VectorXd define_differential_equations(const Eigen::VectorXd& x, const Eigen::VectorXd& u, const Eigen::VectorXd& c) override;
-	virtual Eigen::VectorXd define_differential_equations(const double x, const double u, const double c) override;
+    Eigen::VectorXd define_differential_equations(const Eigen::VectorXd& x, const Eigen::VectorXd& u, const Eigen::VectorXd& c);
+	Eigen::VectorXd define_differential_equations(const double x, const double u, const double c);
 
 
     // Override method to print element-specific values
