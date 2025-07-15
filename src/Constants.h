@@ -46,6 +46,7 @@
 #include <unordered_map>
 #include <cmath>
 #include <functional>
+#include <iomanip>
 
 using SymEngine::RCP;
 using SymEngine::Basic;

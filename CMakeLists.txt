@@ -90,6 +90,9 @@ set(Header_Files
     src/Include_components.h
     src/network.h
 )
+set(Examples_Header_files
+    src/examples/Examples.h
+)
 
 # Group source files
 set(Element_Source_Files src/Element.cpp)
@@ -159,6 +162,11 @@ set(Source_Files
     src/network_powerflow.cpp
     src/network_stability.cpp
 )
+set(Examples_Source_files
+    src/examples/example_OPF.cpp
+    src/examples/example_MMC.cpp
+    src/examples/example_constructors.cpp
+)
 
 # Add source_groups to create file filters (groups) in Visual Studio project
 if(WIN32) # workds for x64 as well
@@ -175,6 +183,7 @@ if(WIN32) # workds for x64 as well
     source_group("Header Files\\Solver" FILES)
     source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Header_Files})
     source_group("Header Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Header_Files})
+    source_group("Header Files\\Examples" FILES ${Examples_Header_files})
 
 
     source_group("Source Files" FILES ${Source_Files})
@@ -190,6 +199,7 @@ if(WIN32) # workds for x64 as well
     source_group("Source Files\\Solver" FILES)
     source_group("Source Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
     source_group("Source Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Source_Files})
+    source_group("Source Files\\Examples" FILES ${Examples_Source_files})
 endif()
 
 
@@ -208,6 +218,7 @@ add_executable(
     ${Control_Header_Files}
     ${Solver_OPF_Header_Files}
     ${Solver_State_Space_Model_Header_Files}
+    ${Examples_Header_files}
 
     ${Source_Files}
     ${Element_Source_Files}
@@ -221,6 +232,7 @@ add_executable(
     ${Control_Source_Files}
     ${Solver_OPF_Source_Files}
     ${Solver_State_Space_Model_Source_Files}
+    ${Examples_Source_files}
 
 )
 
