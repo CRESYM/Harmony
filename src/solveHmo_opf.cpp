@@ -12,9 +12,10 @@
 #include <Eigen/Sparse>
 #include <matplot/matplot.h>
 #include "gurobi_c++.h"
-#include "paramsHmo_dc.h"
-#include "makeYbus.h"
-#include "paramsHmo_ac.h"
+#include "Powerflow.h"
+//#include "paramsHmo_dc.h"
+//#include "makeYbus.h"
+//#include "paramsHmo_ac.h"
 #include "viz_opf.h"
 
 
@@ -29,7 +30,10 @@ void solveHmo_opf(
     auto start = std::chrono::high_resolution_clock::now();
     try {
 
-        DCNetworkParams sys_dc = paramsHmo_dc(dataOPF);
+        //DCNetworkParams sys_dc = paramsHmo_dc(dataOPF);
+        PowerFlow sys_dc;
+        //sys_dc.paramsHmo_dc(dataOPF);
+        sys_dc.load_params_dc("", dataOPF);
         auto& baseMW_dc = sys_dc.baseMW_dc;
         auto& pol_dc = sys_dc.pol_dc;
         auto& bus_dc = sys_dc.bus_dc;
@@ -56,7 +60,10 @@ void solveHmo_opf(
         auto& fbus_dc = sys_dc.fbus_dc;
         auto& tbus_dc = sys_dc.tbus_dc;
 
-        ACNetworkParams  sys_ac = paramsHmo_ac(dataOPF);
+        //ACNetworkParams  sys_ac = paramsHmo_ac(dataOPF);
+        PowerFlow sys_ac;
+        //sys_ac.paramsHmo_ac(dataOPF);
+        sys_ac.load_params_ac("", dataOPF);
         auto& baseMVA_ac = sys_ac.baseMVA_ac;
         auto& bus_entire_ac = sys_ac.bus_entire_ac;
         auto& branch_entire_ac = sys_ac.branch_entire_ac;

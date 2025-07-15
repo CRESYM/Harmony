@@ -12,8 +12,8 @@
 #include <Eigen/Sparse>
 #include <matplot/matplot.h>
 #include "gurobi_c++.h"
-#include "create_dc.h"
-#include "params_dc.h"
+//#include "create_dc.h"
+//#include "params_dc.h"
 #include "Powerflow.h"
 //#include "makeYbus.h"
 //#include "create_ac.h"
@@ -29,7 +29,10 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name,
     auto start = std::chrono::high_resolution_clock::now();
     try {
 
-        DCNetworkParams sys_dc = params_dc(dc_name);
+        //DCNetworkParams sys_dc = params_dc(dc_name);
+        PowerFlow sys_dc;
+        //sys_dc.params_dc(dc_name);
+        sys_dc.load_params_dc(dc_name, {});
         auto& network_dc = sys_dc.network_dc;
         auto& baseMW_dc = sys_dc.baseMW_dc;
         auto& pol_dc = sys_dc.pol_dc;
@@ -59,7 +62,8 @@ void solve_opf(const std::string& dc_name, const std::string& ac_name,
 
         //ACNetworkParams sys_ac = params_ac(ac_name);
         PowerFlow sys_ac;
-        sys_ac.params_ac(ac_name);
+       // sys_ac.params_ac(ac_name);
+        sys_ac.load_params_ac(ac_name, {});
         auto& network_ac = sys_ac.network_ac;
         auto& baseMVA_ac = sys_ac.baseMVA_ac;
         auto& bus_entire_ac = sys_ac.bus_entire_ac;
