@@ -13,20 +13,23 @@ class MMC : public Element {
 public:
     // Constructor 
     MMC(const std::string& symbol, 
-        double omega, double activePower, double reactivePower, double dcPower,
-        double minActivePower, double maxActivePower, double minReactivePower,
-        double maxReactivePower, double angle, double acVoltage, double dcVoltage, // move to converter -> element (parent) class as a parent of mmc
+        double omega, double activePower, double reactivePower, 
+        double angle, double acVoltage, double dcVoltage, 
         double armInductance, double armResistance, double armCapacitance,
         int numSubmodules, double reactorInductance, double reactorResistance,
         double timeDelay)
 		: Element(symbol, 3, 1), // AC side - input pins; DC side - output pins
-        omega_0(omega), P(activePower), Q(reactivePower), P_dc(dcPower),
-        P_min(minActivePower), P_max(maxActivePower), Q_min(minReactivePower),
-        Q_max(maxReactivePower), theta(angle), V_m(acVoltage), V_dc(dcVoltage),
+        omega_0(omega), P(activePower), Q(reactivePower), theta(angle), V_m(acVoltage), V_dc(dcVoltage),
         L_arm(armInductance), R_arm(armResistance), C_arm(armCapacitance),
-        N(numSubmodules), L_reactor(reactorInductance),
-        R_reactor(reactorResistance), t_delay(timeDelay) 
+        N(numSubmodules), L_reactor(reactorInductance), R_reactor(reactorResistance), t_delay(timeDelay) 
     {
+        // Initialize active and reactive power limits for power flow calculations
+        P_dc = P;
+        P_min = 0.5 * P;
+        P_max = 1.5 * P;
+        Q_min = -P;
+        Q_max = P;
+
         A_matrix = Eigen::MatrixXd::Zero(6, 6);
         B_matrix = Eigen::MatrixXd::Zero(6, 8);
         C_matrix = Eigen::MatrixXd::Identity(6, 6);
@@ -37,12 +40,17 @@ public:
     MMC(const std::string& symbol, const std::vector<double>& converter_params)
         : Element(symbol, 3, 1), // AC side - input pins; DC side - output pins
         omega_0(converter_params[0]), P(converter_params[1]), Q(converter_params[2]),
-        P_dc(converter_params[3]), P_min(converter_params[4]), P_max(converter_params[5]),
-        Q_min(converter_params[6]), Q_max(converter_params[7]),
-        theta(converter_params[8]), V_m(converter_params[9]), V_dc(converter_params[10]),
-        L_arm(converter_params[11]), R_arm(converter_params[12]), C_arm(converter_params[13]),
-        N(static_cast<int>(converter_params[14])), L_reactor(converter_params[15]),
-        R_reactor(converter_params[16]), t_delay(converter_params[17]) {
+        theta(converter_params[3]), V_m(converter_params[4]), V_dc(converter_params[5]),
+        L_arm(converter_params[6]), R_arm(converter_params[7]), C_arm(converter_params[8]),
+        N(static_cast<int>(converter_params[9])), L_reactor(converter_params[10]),
+        R_reactor(converter_params[11]), t_delay(converter_params[12]) {
+
+		// Initialize active and reactive power limits for power flow calculations
+        P_dc = P;
+        P_min = 0.5 * P;
+		P_max = 1.5 * P;
+        Q_min = -P;
+		Q_max = P;
 
         // Initialize equilibrium state vector
 		equilibrium_state = Eigen::VectorXd::Zero(6); // 6 dynamic states
@@ -134,11 +142,11 @@ public:
     virtual void printElementValues() override {
         Element::printElementInfo();
         std::cout << "MMC Parameters:\n"
-            << "  Active Power (P): " << P << " MW\n"
-            << "  Reactive Power (Q): " << Q << " MVA\n"
-            << "  DC Power (P_dc): " << P_dc << " kW\n"
-            << "  AC Voltage Amplitude (V_m): " << V_m << " kV\n"
-            << "  DC Voltage (V_dc): " << V_dc << " kV\n"
+            << "  Active Power (P): " << P / 1e6 << " MW\n"
+            << "  Reactive Power (Q): " << Q / 1e6 << " MVA\n"
+            << "  DC Power (P_dc): " << P_dc / 1e6 << " MW\n"
+            << "  AC Voltage Amplitude (V_m): " << V_m / 1e3 << " kV\n"
+            << "  DC Voltage (V_dc): " << V_dc / 1e3 << " kV\n"
             << "  Nominal Frequency (omega_0): " << omega_0 << " rad/s\n"
             << "  Arm Inductance (L_arm): " << L_arm << " H\n"
             << "  Arm Resistance (R_arm): " << R_arm << " Omega\n"

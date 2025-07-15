@@ -39,14 +39,17 @@ int main() {
 
 
 	//// Numerically computes the Jacobian matrices A = ∂f/∂x and B = ∂f/∂u at a specified operating point
-	std::vector<double> converter_params = { 50.0, 100.0e6, 0, 100e6, 50e6, 150e6, -50.0e6, 50.0e6, 0.0, 100.0e3, 200e3, 50e-3, 1.07, 0.01, 50, 0.06, 0.535, 0.00015};
-    std::vector<double> controller_params = { 0, 0, 0, 0, 0, 0,
+    double f = 50;
+	double omega = 2 * M_PI * f; // Nominal frequency in rad/s
+	std::vector<double> converter_params = { omega, 100.0e6, 0, 0.0, 100.0e3, 200e3, 50e-3, 1.07, 0.01, 50, 0.06, 0.535, 0.00015};
+    std::vector<double> controller_params = { 0, 0, 0, 0, 0,
+        1, 120, 400, 1, 0, // energy controller parameters 
         1, 19.93, 4500, 1, 166.67, // zcc controller parameters 
         1, 117.93, 8.5e4, 2, 666.67, 0, // occ controller parameters
-        1, 19.93, 4500, 2, 0, 0 };
+		1, 19.93, 4500, 2, 0, 0 }; // ccc controller parameters
 
 	MMC* mmc1 = new MMC("MMC1", converter_params, controller_params);
-    mmc1->printElementValues();  // Print MMC parameters
+    
 
 	//// Define operating point
 	// Eigen::VectorXd x0 = Eigen::VectorXd::Zero(6); 
@@ -73,6 +76,8 @@ int main() {
 	mmc1->solveEquilibrium();
 	const Eigen::VectorXd x_eq = mmc1->getEquilibriumState();
 	std::cout << "Equilibrium state:\n" << x_eq.transpose() << "\n";
+
+    mmc1->printElementValues();  // Print MMC parameters
 
 	//// Verify equilibrium
 	//const Eigen::VectorXd dx_eq = mmc.computeStateDerivatives(x_eq.head(6), u0);
@@ -355,11 +360,6 @@ int main() {
             1000.0,         // Omega (Nominal Frequency in rad/s)
             100.0,          // Active Power (P) in MW
             50.0,           // Reactive Power (Q) in MVA
-            500.0,          // DC Power (P_dc) in kW
-            -100.0,         // Min Active Power (P_min) in MW
-            200.0,          // Max Active Power (P_max) in MW
-            -50.0,          // Min Reactive Power (Q_min) in MVA
-            100.0,          // Max Reactive Power (Q_max) in MVA
             0.0,            // Theta (Voltage Angle in rad)
             330.0,          // AC Voltage (V_m) in kV
             640.0,          // DC Voltage (V_dc) in kV
@@ -405,11 +405,6 @@ int main() {
             1000.0,         // Omega (Nominal Frequency in rad/s)
             100.0,          // Active Power (P) in MW
             50.0,           // Reactive Power (Q) in MVA
-            500.0,          // DC Power (P_dc) in kW
-            -100.0,         // Min Active Power (P_min) in MW
-            200.0,          // Max Active Power (P_max) in MW
-            -50.0,          // Min Reactive Power (Q_min) in MVA
-            100.0,          // Max Reactive Power (Q_max) in MVA
             0.0,            // Theta (Voltage Angle in rad)
             330.0,          // AC Voltage (V_m) in kV
             640.0,          // DC Voltage (V_dc) in kV
@@ -455,11 +450,6 @@ int main() {
             1000.0,         // Omega (Nominal Frequency in rad/s)
             100.0,          // Active Power (P) in MW
             50.0,           // Reactive Power (Q) in MVA
-            500.0,          // DC Power (P_dc) in kW
-            -100.0,         // Min Active Power (P_min) in MW
-            200.0,          // Max Active Power (P_max) in MW
-            -50.0,          // Min Reactive Power (Q_min) in MVA
-            100.0,          // Max Reactive Power (Q_max) in MVA
             0.0,            // Theta (Voltage Angle in rad)
             330.0,          // AC Voltage (V_m) in kV
             640.0,          // DC Voltage (V_dc) in kV

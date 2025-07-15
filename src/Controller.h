@@ -42,8 +42,14 @@ public:
     void updateParameters(double newKp, double newKi, double newZeta, double newBandwidth);
 
     void setReference(const std::vector<double>& ref) {
-        reference = ref; // Set reference values
+        for (size_t i = 0; i < ref.size(); ++i) {
+            reference[i] = ref[i]; // Set reference values
+		}
 	}
+
+    void setReference(const double ref, int i) {
+        reference[i] = ref; // Set reference values
+    }
 
     std::vector<double> getReference() const {
         return reference; // Get reference values

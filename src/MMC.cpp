@@ -147,14 +147,100 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
     //double mSigma_z = mdelay(4);
 
     i = 0;
-	
-    // Adding control loops
+	// Placeholders for values used in control loops
+    Eigen::VectorXd state_variables; // Placeholder for state variables
+    Eigen::VectorXd x1 = Eigen::VectorXd(2);
+    Eigen::VectorXd u1 = Eigen::VectorXd(2);
+    Eigen::VectorXd c1 = Eigen::VectorXd(2);
+	double x2 = 0; // Placeholder for second state variable
+
+	// LOOPS ARE ADDED IN FORMAT: outer loop that creates reference for inner loop and then inner loop
+    // 
+    // OUTER LOOPS
+	// Adding energy control loop
+    if (controls.count("energy")) {
+        double Pac = (3 / 2) * (Vgd * iDelta_d + Vgq * iDelta_q);
+        double wSigmaz = 3 * (C_arm * (pow(vCDelta_d,2) + pow(vCDelta_q,2) + pow(vCDelta_Zd,2) 
+            + pow(vCDelta_Zq,2) + pow(vCSigma_d,2) + pow(vCSigma_q,2) + 2 * pow(vCSigma_z,2))) / (2 * N);
+		controls["energy"]->setReference(3.0 * C_arm * Vdc * Vdc / N, 0);
+		//std::cout << controls["energy"]->getReference() << endl;
+
+		x2 = x(i); // integral of energy error
+        state_variables = controls["energy"]->define_differential_equations(x(i), wSigmaz, Pac);
+        F(i) = state_variables(0);
+        double iSigma_z_ref = state_variables(1) / 3 / Vdc;
+		i += 1; // Move to next state variables
+
+        if (controls.count("zcc"))
+			controls["zcc"]->setReference({ iSigma_z_ref }); // Set reference for zero circulating current controller
+        else
+			throw std::runtime_error("Zero circulating current controller not available for energy control loop.");
+    } 
+    
+	// NOTE: Only one of the following two loops will be executed, depending on the controller availability
+	// Adding active power control loop
+    if (controls.count("active_power")) {
+        double Pac = (3 / 2) * (Vgd * iDelta_d + Vgq * iDelta_q);
+        x2 = x(i); // integral of active power error
+        u1 << Pac; // Pac
+        c1 << 0; // Vdc
+        state_variables = controls["active_power"]->define_differential_equations(x1, u1, c1);
+		F(i) = state_variables(0);
+		double iDelta_d_ref = state_variables(1);
+		i += 1; // Move to next state variables
+
+		if (controls.count("occ"))
+            controls["occ"]->setReference(iDelta_d_ref, 0); // Set reference for outer control loop
+		else
+			throw std::runtime_error("Outer current control loop is not available.");
+    }
+	// Adding DC voltage control loop
+    else if (controls.count("dc_voltage")) {
+		double Idc = P_dc / Vdc; // DC current
+        double Vdc = x(i); // DC voltage
+        x2 = x(i); // integral of DC voltage error
+        u1 << Vdc; // Vdc
+        c1 << P_dc; // Pdc
+        state_variables = controls["dc_voltage"]->define_differential_equations(x1, u1, c1);
+
+		i += 2; // Move to next state variables
+    }
+
+	// Adding reactive power control loop
+    if (controls.count("reactive_power")) {
+        double Qac = (3 / 2) * (Vgd * iDelta_q - Vgq * iDelta_d);
+        x2 = x(i); // integral of reactive power error
+        state_variables = controls["reactive_power"]->define_differential_equations(x2, Qac, 0);
+        F(i) = state_variables(0);
+        double iDelta_q_ref = -state_variables(1);
+        i += 1; // Move to next state variables
+
+        if (controls.count("occ"))
+            controls["occ"]->setReference(iDelta_q_ref, 1); // Set reference for outer control loop
+        else
+            throw std::runtime_error("Outer current control loop is not available.");
+    }
+	// Adding AC voltage control loop
+    else if (controls.count("ac_voltage")) {
+        x2 = x(i); // integral of AC voltage error
+        u1 << Vgd, Vgq; // Vgd, Vgq
+        c1 << P, Q; // P, Q
+        state_variables = controls["ac_voltage"]->define_differential_equations(x1, u1, c1);
+	}
+
+	// Adding zero current control loop that gets reference from energy control loop, or given
+    if (controls.count("zcc"))
+    {
+        double x2 = x(i);
+        state_variables = controls["zcc"]->define_differential_equations(x2, iSigma_z, (-Vdc / 2));
+        F(i) = state_variables(0);
+        vMSigma_z_ref = -state_variables(1);
+        i += 1; // Move to next state variables
+    }
+
+    // Adding inner control loops
     if (controls.count("occ")) {
 		// Define x, u, and c for OCC controller
-        Eigen::VectorXd state_variables; // Placeholder for state variables
-        Eigen::VectorXd x1 = Eigen::VectorXd(2);
-        Eigen::VectorXd u1 = Eigen::VectorXd(2);
-        Eigen::VectorXd c1 = Eigen::VectorXd(2);
         x1 << x(i), x(i + 1); // Initialize x1 with the first two state variables
         u1 << iDelta_d, iDelta_q; // Initialize u1 with the first two state variables
         c1 << w * Leqac * iDelta_q + Vgd, -w * Leqac * iDelta_d + Vgq; // Initialize c1 with the voltage references
@@ -165,25 +251,12 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
         vMDelta_q_ref = state_variables(3);
         i += 2; // Move to next state variables
     }
-    if (controls.count("zcc"))
-    {
-        Eigen::VectorXd state_variables; // Placeholder for state variables
-        double x2 = x(i);
-        state_variables = controls["occ"]->define_differential_equations(x2, iSigma_z, (-Vdc / 2));
-		F(i) = state_variables(0);
-        vMSigma_z_ref = -state_variables(1);
-        i += 1; // Move to next state variables
-    }
+
     if (controls.count("ccc")) {
-        // Define x, u, and c for OCC controller
-        Eigen::VectorXd state_variables; // Placeholder for state variables
-        Eigen::VectorXd x1 = Eigen::VectorXd(2);
-        Eigen::VectorXd u1 = Eigen::VectorXd(2);
-        Eigen::VectorXd c1 = Eigen::VectorXd(2);
         x1 << x(i), x(i + 1); // Initialize x1 with the first two state variables
         u1 << iSigma_d, iSigma_q; // Initialize u1 with the first two state variables
         c1 << -2 * w * L_arm * iSigma_q, 2 * w * L_arm * iSigma_d; // Initialize c1 with the voltage references
-        state_variables = controls["occ"]->define_differential_equations(x1, u1, c1);
+        state_variables = controls["ccc"]->define_differential_equations(x1, u1, c1);
         F(i) = state_variables(0);
         F(i + 1) = state_variables(1);
         vMSigma_d_ref = -state_variables(2);
@@ -193,15 +266,15 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
 
     // Compute un-delayed modulation signals
     Eigen::VectorXd m_input(7);
-    m_input << -2 * vMDelta_d_ref / V_dc, -2 * vMDelta_q_ref / V_dc, -2*vMDelta_Zd_ref / V_dc, -2*vMDelta_Zq_ref / V_dc, 2 * vMSigma_d_ref / V_dc, 2 * vMSigma_q_ref / V_dc, 2 * vMSigma_z_ref / V_dc;
+    m_input << -2 * vMDelta_d_ref / Vdc, -2 * vMDelta_q_ref / Vdc, -2*vMDelta_Zd_ref / Vdc, -2*vMDelta_Zq_ref / V_dc, 2 * vMSigma_d_ref / Vdc, 2 * vMSigma_q_ref / Vdc, 2 * vMSigma_z_ref / Vdc;
 
-    double mDelta_d = m_input[0];
-    double mDelta_q = m_input[1];
-    double mDelta_Zd = m_input[2];
-    double mDelta_Zq = m_input[3]; 
-    double mSigma_d = m_input[4];
-    double mSigma_q = m_input[5];
-    double mSigma_z = m_input[6];
+    double mDelta_d = m_input(0);
+    double mDelta_q = m_input(1);
+    double mDelta_Zd = m_input(2);
+    double mDelta_Zq = m_input(3); 
+    double mSigma_d = m_input(4);
+    double mSigma_q = m_input(5);
+    double mSigma_z = m_input(6);
 
     // Assuming state x = [iΔd, iΔq, iΣd, iΣq, iΣz, vCΔd, vCΔq, vCΔZd, vCΔZq, vCΣd, vCΣq, vCΣz]
     // Indices:      0     1     2     3     4      5       6       7        8       9       10      11
@@ -293,13 +366,11 @@ Eigen::MatrixXd MMC::computeJacobianNumerically(const Eigen::VectorXd& x0, const
 // Solves f(x,u) = 0 for a steady-state operating point x, using Newton-Raphson
 void MMC::solveEquilibrium() {
     const int max_iter = 1000;
-    const double tol = 1e-6;
-    double t = 5.0;
+    const double tol = 1e-9;
 
     const int n = number_of_states;  // Only the dynamic states
     Eigen::VectorXd x = 0.001 * Eigen::VectorXd::Ones(n);
 	x(number_of_states - 1) = V_dc; // Set the last state to zero (e.g., DC voltage)
-	//x(number_of_states - 1 - 5) = P / 3 / V_dc; // Set the active power state (e.g., Pdc/3Vdc)
 
     // Operating point input voltages
     Eigen::VectorXd u(1);
@@ -315,7 +386,7 @@ void MMC::solveEquilibrium() {
 
         // Compute numerical Jacobian df/dx
         Eigen::MatrixXd J = Eigen::MatrixXd::Zero(n, n);
-        double eps = 1e-6;
+        double eps = 1e-9;
         for (int i = 0; i < n; ++i) {
             Eigen::VectorXd x_eps = x;
             x_eps(i) += eps;
@@ -338,8 +409,6 @@ void MMC::solveEquilibrium() {
 
     equilibrium_state = Eigen::VectorXd::Zero(number_of_states);  // match 13-d state
     equilibrium_state.head(number_of_states) = x;  // store equilibrium
-
-    // equilibrium_state = Eigen::VectorXd::Zero(13);
 }
 
 
