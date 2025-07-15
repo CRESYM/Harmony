@@ -198,9 +198,10 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
 		i += 2; // Move to next state variables
     }
 
+    // NOTE: Only one of the following two loops will be executed, depending on the controller availability
 	// Adding reactive power control loop
     if (controls.count("reactive_power")) {
-        double Qac = (3 / 2) * (Vgd * iDelta_q - Vgq * iDelta_d);
+        double Qac = (3 / 2) * (-Vgd * iDelta_q + Vgq * iDelta_d);
         state_variables = controls["reactive_power"]->define_differential_equations(x(i), Qac, 0);
         F(i) = state_variables(0); // dxiQac_dt = (Qac_ref - Qac);
         double iDelta_q_ref = -state_variables(1);
@@ -213,10 +214,13 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
     }
 	// Adding AC voltage control loop
     else if (controls.count("ac_voltage")) {
-        //x2 = x(i); // integral of AC voltage error
-        //u1 << Vgd, Vgq; // Vgd, Vgq
-        //c1 << P, Q; // P, Q
-        //state_variables = controls["ac_voltage"]->define_differential_equations(x1, u1, c1);
+        state_variables = controls["ac_voltage"]->define_differential_equations(x(i), Vgd, 0);
+		F(i) = state_variables(0); // dxiVgd_dt = (Vgd_ref - Vgd);
+		double iDelta_q_ref = state_variables(1);
+        if (controls.count("occ"))
+            controls["occ"]->setReference(iDelta_q_ref, 1); // Set reference for outer control loop
+        else
+            throw std::runtime_error("Outer current control loop is not available.");
 	}
 
 	// Adding zero current control loop that gets reference from energy control loop, or given
