@@ -43,7 +43,7 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
             return;
         }
         else {
-            std::cerr << "Load parameters initialized correctly for phase " << i + 1 << "!" << std::endl;
+            // std::cerr << "Load parameters initialized correctly for phase " << i + 1 << "!" << std::endl;
         }
     }
 

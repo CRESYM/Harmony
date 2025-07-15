@@ -152,7 +152,6 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
     Eigen::VectorXd x1 = Eigen::VectorXd(2);
     Eigen::VectorXd u1 = Eigen::VectorXd(2);
     Eigen::VectorXd c1 = Eigen::VectorXd(2);
-	double x2 = 0; // Placeholder for second state variable
 
 	// LOOPS ARE ADDED IN FORMAT: outer loop that creates reference for inner loop and then inner loop
     // 
@@ -165,10 +164,9 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
 		controls["energy"]->setReference(3.0 * C_arm * Vdc * Vdc / N, 0);
 		//std::cout << controls["energy"]->getReference() << endl;
 
-		x2 = x(i); // integral of energy error
         state_variables = controls["energy"]->define_differential_equations(x(i), wSigmaz, Pac);
-        F(i) = state_variables(0);
-        double iSigma_z_ref = state_variables(1) / 3 / Vdc;
+        F(i) = state_variables(0); // dxwSigmaz_dt = (wSigmaz_ref -  wSigmaz);
+        double iSigma_z_ref = state_variables(1) / 3 / Vdc; 
 		i += 1; // Move to next state variables
 
         if (controls.count("zcc"))
@@ -181,11 +179,8 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
 	// Adding active power control loop
     if (controls.count("active_power")) {
         double Pac = (3 / 2) * (Vgd * iDelta_d + Vgq * iDelta_q);
-        x2 = x(i); // integral of active power error
-        u1 << Pac; // Pac
-        c1 << 0; // Vdc
-        state_variables = controls["active_power"]->define_differential_equations(x1, u1, c1);
-		F(i) = state_variables(0);
+        state_variables = controls["active_power"]->define_differential_equations(x(i), Pac, 0);
+		F(i) = state_variables(0); // dxiPac_dt = (Pac_ref - Pac);
 		double iDelta_d_ref = state_variables(1);
 		i += 1; // Move to next state variables
 
@@ -195,13 +190,10 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
 			throw std::runtime_error("Outer current control loop is not available.");
     }
 	// Adding DC voltage control loop
-    else if (controls.count("dc_voltage")) {
+    else if (controls.count("dc_voltage")) { // to complete later, more difficult
 		double Idc = P_dc / Vdc; // DC current
         double Vdc = x(i); // DC voltage
-        x2 = x(i); // integral of DC voltage error
-        u1 << Vdc; // Vdc
-        c1 << P_dc; // Pdc
-        state_variables = controls["dc_voltage"]->define_differential_equations(x1, u1, c1);
+        state_variables = controls["dc_voltage"]->define_differential_equations(x(i), Vdc, P_dc);
 
 		i += 2; // Move to next state variables
     }
@@ -209,9 +201,8 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
 	// Adding reactive power control loop
     if (controls.count("reactive_power")) {
         double Qac = (3 / 2) * (Vgd * iDelta_q - Vgq * iDelta_d);
-        x2 = x(i); // integral of reactive power error
-        state_variables = controls["reactive_power"]->define_differential_equations(x2, Qac, 0);
-        F(i) = state_variables(0);
+        state_variables = controls["reactive_power"]->define_differential_equations(x(i), Qac, 0);
+        F(i) = state_variables(0); // dxiQac_dt = (Qac_ref - Qac);
         double iDelta_q_ref = -state_variables(1);
         i += 1; // Move to next state variables
 
@@ -222,18 +213,17 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
     }
 	// Adding AC voltage control loop
     else if (controls.count("ac_voltage")) {
-        x2 = x(i); // integral of AC voltage error
-        u1 << Vgd, Vgq; // Vgd, Vgq
-        c1 << P, Q; // P, Q
-        state_variables = controls["ac_voltage"]->define_differential_equations(x1, u1, c1);
+        //x2 = x(i); // integral of AC voltage error
+        //u1 << Vgd, Vgq; // Vgd, Vgq
+        //c1 << P, Q; // P, Q
+        //state_variables = controls["ac_voltage"]->define_differential_equations(x1, u1, c1);
 	}
 
 	// Adding zero current control loop that gets reference from energy control loop, or given
     if (controls.count("zcc"))
     {
-        double x2 = x(i);
-        state_variables = controls["zcc"]->define_differential_equations(x2, iSigma_z, (-Vdc / 2));
-        F(i) = state_variables(0);
+        state_variables = controls["zcc"]->define_differential_equations(x(i), iSigma_z, (-Vdc / 2));
+        F(i) = state_variables(0); // dxiSigmaz_dt = (iSigmaz_ref -  iSigmaz);
         vMSigma_z_ref = -state_variables(1);
         i += 1; // Move to next state variables
     }
@@ -245,8 +235,8 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
         u1 << iDelta_d, iDelta_q; // Initialize u1 with the first two state variables
         c1 << w * Leqac * iDelta_q + Vgd, -w * Leqac * iDelta_d + Vgq; // Initialize c1 with the voltage references
         state_variables = controls["occ"]->define_differential_equations(x1, u1, c1);
-        F(i) = state_variables(0);
-        F(i + 1) = state_variables(1);
+        F(i) = state_variables(0); // dxiDeltad_dt = (iDeltad_ref -  iDeltad);
+        F(i + 1) = state_variables(1); // dxiDeltaq_dt = (iDeltaq_ref -  iDeltaq);
         vMDelta_d_ref = state_variables(2);
         vMDelta_q_ref = state_variables(3);
         i += 2; // Move to next state variables
@@ -257,8 +247,8 @@ Eigen::MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eig
         u1 << iSigma_d, iSigma_q; // Initialize u1 with the first two state variables
         c1 << -2 * w * L_arm * iSigma_q, 2 * w * L_arm * iSigma_d; // Initialize c1 with the voltage references
         state_variables = controls["ccc"]->define_differential_equations(x1, u1, c1);
-        F(i) = state_variables(0);
-        F(i + 1) = state_variables(1);
+        F(i) = state_variables(0); // dxiSigmad_dt = (iSigmad_ref - iSigmad);
+        F(i + 1) = state_variables(1); // dxiSigmaq_dt = (iSigmaq_ref - iSigmaq);
         vMSigma_d_ref = -state_variables(2);
         vMSigma_q_ref = -state_variables(3);
         i += 2; // Move to next state variables
@@ -386,7 +376,7 @@ void MMC::solveEquilibrium() {
 
         // Compute numerical Jacobian df/dx
         Eigen::MatrixXd J = Eigen::MatrixXd::Zero(n, n);
-        double eps = 1e-9;
+        double eps = 1e-10;
         for (int i = 0; i < n; ++i) {
             Eigen::VectorXd x_eps = x;
             x_eps(i) += eps;
