@@ -105,24 +105,35 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
     }
 }
 
-// Existing code...
 
 // Initialize the filter(s) in MMC using provided parameters
+// This method assumes that the filter parameters are provided in a specific format
+// first value is a boolean indicating whether the filter is enabled,
+// followed by the filter type, order (i.e., 1st or 2nd), values.
 void MMC::init_Filter(const std::vector<double>& filter_params) {
     for (int i = 0; i < filter_params.size(); ) {
         for (auto& filter_name : filter_list) {
             if (static_cast<bool>(filter_params[i])) {
-                if ((i + 4) >= filter_params.size()) {
+                if ((i + 3) >= filter_params.size()) {
                     throw std::invalid_argument("Insufficient parameters for filter initialization.");
                 }
                 std::string filter_type = "LP"; // Default controller type
-                std::vector<double> values = { filter_params[i + 1], filter_params[i + 2], filter_params[i+3]};
-                int number_of_values = static_cast<int>(filter_params[i + 4]); // Default number of values for PI controller
-                filters[filter_name] = new Filter(filter_name, filter_type, values, number_of_values);
+				int filter_order = 2; // Default filter size
+                vector<double> values = { filter_params[i + 1], filter_params[i + 2], filter_params[i + 3]};
+				int filter_size = 1; // Default filter size
+
+                if (filter_name == "ac_voltage_dq") {
+					filter_size = 2; // AC voltage dq filter has two inputs
+					filter_order = 1; // AC voltage dq filter is a first-order filter
+                }
+
+                filters[filter_name] = new Filter(filter_name, filter_type, filter_order, values, filter_size);
+
+                number_of_states += filter_size; // Update the number of states based on the number of values
                 i += 4;
             }
             else {
-                i += 1; // Skip to the next controller
+                i += 1; // Skip to the next filter
             }
         }
     }

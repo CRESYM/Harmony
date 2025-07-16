@@ -67,17 +67,7 @@ set(Solver_State_Space_Model_Header_Files
     src/Solver/StateSpaceModel/State_Space_Model.h
 )
 set(Solver_OPF_Header_Files
-    #src/Solver/OPF/create_ac.h
-    #src/Solver/OPF/create_dc.h
-    #src/Solver/OPF/csv_reader.h
-    #src/Solver/OPF/makeYbus.h
-    #src/Solver/OPF/params_ac.h
-    #src/Solver/OPF/params_dc.h
-    #src/Solver/OPF/solve_opf.h
     src/Solver/OPF/viz_opf.h
-    #src/Solver/OPF/paramsHmo_ac.h
-    #src/Solver/OPF/paramsHmo_dc.h
-    #src/Solver/OPF/solveHmo_opf.h
     src/Solver/OPF/Powerflow.h
 )
 set(Solver_Helper_Functions_Header_Files
@@ -141,17 +131,7 @@ set(Solver_State_Space_Model_Source_Files
     src/Solver/StateSpaceModel/State_Space_Model.cpp
 )
 set(Solver_OPF_Source_Files
-    #src/Solver/OPF/create_ac.cpp
-    #src/Solver/OPF/create_dc.cpp
-    #src/Solver/OPF/csv_reader.cpp
-    #src/Solver/OPF/makeYbus.cpp
-    #src/Solver/OPF/params_ac.cpp
-    #src/Solver/OPF/params_dc.cpp
-    #src/Solver/OPF/solve_opf.cpp
     src/Solver/OPF/viz_opf.cpp
-    #src/Solver/OPF/paramsHmo_ac.cpp
-    #src/Solver/OPF/paramsHmo_dc.cpp
-    #src/Solver/OPF/solveHmo_opf.cpp
     src/Solver/OPF/Powerflow_data.cpp
     src/Solver/OPF/Powerflow_network_params.cpp
     src/Solver/OPF/Powerflow_solver.cpp

@@ -102,7 +102,7 @@ private:
         "pll",  "dc_voltage", "active_power", "ac_voltage", "reactive_power", "energy", "zcc", "occ", "ccc"
 	}; // List of controller names
     const std::vector<std::string> filter_list = {
-		"AC_voltage_dq", "active_power", "reactive_power", "dc_voltage", "ac_voltage"
+		"ac_voltage_dq", "active_power", "reactive_power", "dc_voltage", "ac_voltage"
 	}; // List of filter names
 };
 
