@@ -85,7 +85,8 @@ private:
     
 	// State variables
     int number_of_states = 12;
-   
+	int vdc_index = 0; // Index for DC voltage in state vector
+
     // System matrices
     Eigen::MatrixXd A_matrix, B_matrix, C_matrix, D_matrix;
     Eigen::VectorXd equilibrium_state;

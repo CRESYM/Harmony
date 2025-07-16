@@ -9,8 +9,9 @@ void example_MMC() {
 	double f = 50;
 	double omega = 2 * M_PI * f; // Nominal frequency in rad/s
 	std::vector<double> converter_params = { omega, 100.0e6, 0, 0.0, 100.0e3, 200e3, 50e-3, 1.07, 0.01, 50, 0.06, 0.535, 0 };
-	std::vector<double> controller_params = { 0, 0, 0,
-		//1, 6.6667e-07, 3.3333e-04, 1, 100e6, // active power
+	std::vector<double> controller_params = { 0, 0,
+		//1, 0.01, 2, 2, 0, 200e3, // DC voltage controller parameters
+		0,//1, 6.6667e-07, 3.3333e-04, 1, 100e6, // active power
 		0,
 		1, 6.6667e-07, 3.3333e-04, 1, 0, // reactive power
 		1, 120, 400, 1, 0, // energy controller parameters 
@@ -47,7 +48,7 @@ void example_MMC() {
 	const Eigen::VectorXd x_eq = mmc1->getEquilibriumState();
 	std::cout << "Equilibrium state:\n" << x_eq.transpose() << "\n";
 
-	mmc1->printElementValues();  // Print MMC parameters
+	// mmc1->printElementValues();  // Print MMC parameters
 
 	//// Verify equilibrium
 	//const Eigen::VectorXd dx_eq = mmc.computeStateDerivatives(x_eq.head(6), u0);

@@ -8,7 +8,7 @@
 
 using DerivFunc = std::function<Eigen::VectorXd(const Eigen::VectorXd&, const Eigen::VectorXd&)>;
 extern Eigen::VectorXd findEquilibrium(const Eigen::VectorXd& x0, const Eigen::VectorXd& u, DerivFunc f,
-    double tol = 1e-9, int max_iter = 1e5);
+    double tol = 1e-8, int max_iter = 1e6);
 
 using DerivFunc = std::function<Eigen::VectorXd(const Eigen::VectorXd&, const Eigen::VectorXd&)>;
 extern std::pair<Eigen::MatrixXd, Eigen::MatrixXd> computeJacobians(

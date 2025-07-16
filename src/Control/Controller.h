@@ -55,6 +55,26 @@ public:
         return reference; // Get reference values
 	}
 
+	// Getters for controller parameters
+    std::string getControllerSymbol() const {
+        return controller_symbol; // Get controller symbol
+    }
+    std::string getControllerType() const {
+        return controller_type; // Get controller type
+    }
+    double getKp() const {
+        return Kp; // Get proportional gain
+    }
+    double getKi() const {
+        return Ki; // Get integral gain
+    }
+    double getZeta() const {
+        return zeta; // Get damping ratio
+    }
+    double getBandwidth() const {
+        return bandwidth; // Get bandwidth
+	}
+
 private: 
 	std::string controller_symbol; // Symbol for the controller
 	std::string controller_type;   // Type of controller (e.g., PI, PID)

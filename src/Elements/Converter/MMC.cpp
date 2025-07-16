@@ -92,9 +92,11 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
                 number_of_states += number_of_values; // Update the number of states based on the number of values
                 // Create a new controller and add it to the controls map
                 controls[controller_name] = new Controller(controller_name, controller_type, values, number_of_values, refs);
-
-                if (controller_name == "PLL")
-                    control_blocks["pll"] = new Integrator();
+                
+                if (controller_name == "dc_voltage") {
+					vdc_index = number_of_states - 12 - 2; // Update vdc_index 
+					cout << "DC voltage controller initialized with index: " << vdc_index << endl;
+				}
 
                 i += 4 + number_of_values;
             }
@@ -207,12 +209,12 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     double vCSigma_d = x(i + 9), vCSigma_q = x(i + 10), vCSigma_z = x(i + 11);
 
     // Constants for now
-	double Vdc = (controls.count("dc_voltage")) ? u(0) : V_dc; // DC voltage
+	double Vdc = (controls.count("dc_voltage")) ? x(vdc_index) : u(0); // DC voltage
 	double w = omega_0; // Angular frequency (rad/s)
 	double Vgd = u(1); // d-axis voltage
 	double Vgq = u(2); // q-axis voltage
-    double Pac = (3 / 2) * (Vgd * iDelta_d + Vgq * iDelta_q);
-    double Qac = (3 / 2) * (-Vgd * iDelta_q + Vgq * iDelta_d);
+    double Pac = 1.5 * (Vgd * iDelta_d + Vgq * iDelta_q);
+    double Qac = 1.5 * (-Vgd * iDelta_q + Vgq * iDelta_d);
 	double Vac_mag = 1.5 * sqrt(Vgd * Vgd + Vgq * Vgq); // AC voltage magnitude
 
     int number_of_states = x.size();
@@ -220,7 +222,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
 
     // Extract control reference voltages (user must assign these before this call)
     double vMDelta_d_ref = 0, vMDelta_q_ref = 0, vMDelta_Zd_ref = 0, vMDelta_Zq_ref = 0;
-	double vMSigma_d_ref = 0, vMSigma_q_ref = 0, vMSigma_z_ref = 0;
+	double vMSigma_d_ref = 0, vMSigma_q_ref = 0, vMSigma_z_ref = Vdc / 2;
 
     
     i = 0;
@@ -275,11 +277,15 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
 
         i += 2;
     }
-    else {
-        Vgd = u(1);
-        Vgq = u(2);
-        w = omega_0;
-    }
+    // Apply dq transformations
+    Eigen::Vector2d i_delta_vec = T_theta * Vector2d(iDelta_d, iDelta_q);
+    Eigen::Vector2d i_sigma_vec = T_2theta * Vector2d(iSigma_d, iSigma_q);
+
+    iDelta_d = i_delta_vec(0);
+    iDelta_q = i_delta_vec(1);
+
+    iSigma_d = i_sigma_vec(0);
+    iSigma_q = i_sigma_vec(1);
 
     // First to add filters
     if (filters.count("ac_voltage_dq")) {
@@ -331,29 +337,13 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
 	}
      
     // OUTER LOOPS
-	// Adding energy control loop
-    if (controls.count("energy")) {
-        double wSigmaz = 3 * (C_arm * (pow(vCDelta_d,2) + pow(vCDelta_q,2) + pow(vCDelta_Zd,2) 
-            + pow(vCDelta_Zq,2) + pow(vCSigma_d,2) + pow(vCSigma_q,2) + 2 * pow(vCSigma_z,2))) / (2 * N);
-		controls["energy"]->setReference(3.0 * C_arm * Vdc * Vdc / N, 0);
-
-        state_variables = controls["energy"]->define_differential_equations(x(i), wSigmaz, Pac);
-        F(i) = state_variables(0); // dxwSigmaz_dt = (wSigmaz_ref -  wSigmaz);
-        double iSigma_z_ref = state_variables(1) / 3 / Vdc; 
-		i += 1; // Move to next state variables
-
-        if (controls.count("zcc"))
-			controls["zcc"]->setReference({ iSigma_z_ref }); // Set reference for zero circulating current controller
-        else
-			throw std::runtime_error("Zero circulating current controller not available for energy control loop.");
-    } 
-    
+  
 	// NOTE: Only one of the following two loops will be executed, depending on the controller availability
 	// Adding active power control loop
     if (controls.count("active_power")) {
         state_variables = controls["active_power"]->define_differential_equations(x(i), Pac, 0);
 		F(i) = state_variables(0); // dxiPac_dt = (Pac_ref - Pac);
-        double iDelta_d_ref = state_variables(1); // to check!!!
+        double iDelta_d_ref = state_variables(1); 
 		i += 1; // Move to next state variables
 
 		if (controls.count("occ"))
@@ -363,9 +353,23 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     }
 	// Adding DC voltage control loop
     else if (controls.count("dc_voltage")) { // to complete later, more difficult
-		double Idc = P_dc / Vdc; // DC current
-        state_variables = controls["dc_voltage"]->define_differential_equations(x(i), Vdc, P_dc);
+		double Idc = P_dc/Vdc; // DC current
+		controls["dc_voltage"]->setReference((Idc - 3 * iSigma_z) / Ce, 0); // Set reference for DC voltage control loop
+		// Define x, u, and c for DC voltage control loop
+        x1 << x(i), x(i + 1); // Initialize x1 with the first two state variables
+        u1 << 0, Vdc; // Initialize u1 with the first two state variables
+        c1 << 0, 0; // Initialize c1 with the voltage references
 
+        state_variables = controls["dc_voltage"]->define_differential_equations(x1, u1, c1);
+		F(i) = state_variables(0); // dxiVdc_dt = (Idc - 3iSigma_z) / Ce;
+		F(i + 1) = state_variables(1); // dxi_dt = (Vdc_ref - Vdc);
+		//Vdc = x(i); // Update Vdc from control output, overwrite standard output which is usually Kp * dx_dt + Ki * x
+		// here we need only Vdc, not dx_dt; i.e. Ki = 1, Kp = 0
+        double iDelta_d_ref = -state_variables(3); 
+        if (controls.count("occ"))
+            controls["occ"]->setReference(iDelta_d_ref, 0); // Set reference for outer control loop
+        else
+			throw std::runtime_error("Outer current control loop is not available.");
 		i += 2; // Move to next state variables
     }
 
@@ -387,12 +391,33 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         state_variables = controls["ac_voltage"]->define_differential_equations(x(i), Vgd, 0);
 		F(i) = state_variables(0); // dxiVgd_dt = (Vgd_ref - Vgd);
 		double iDelta_q_ref = state_variables(1);
+
+		i += 1; // Move to next state variables
+
         if (controls.count("occ"))
             controls["occ"]->setReference(iDelta_q_ref, 1); // Set reference for outer control loop
         else
             throw std::runtime_error("Outer current control loop is not available.");
 	}
 
+    // Adding energy control loop
+    if (controls.count("energy")) {
+        double wSigmaz = 3 * (C_arm * (pow(vCDelta_d, 2) + pow(vCDelta_q, 2) + pow(vCDelta_Zd, 2)
+            + pow(vCDelta_Zq, 2) + pow(vCSigma_d, 2) + pow(vCSigma_q, 2) + 2 * pow(vCSigma_z, 2))) / (2 * N);
+        controls["energy"]->setReference(3.0 * C_arm * Vdc * Vdc / N, 0);
+
+        state_variables = controls["energy"]->define_differential_equations(x(i), wSigmaz, Pac);
+        F(i) = state_variables(0); // dxwSigmaz_dt = (wSigmaz_ref -  wSigmaz);
+        double iSigma_z_ref = state_variables(1) / 3 / Vdc;
+        i += 1; // Move to next state variables
+
+        if (controls.count("zcc"))
+            controls["zcc"]->setReference({ iSigma_z_ref }); // Set reference for zero circulating current controller
+        else
+            throw std::runtime_error("Zero circulating current controller not available for energy control loop.");
+    }
+
+	// INNER LOOPS
 	// Adding zero current control loop that gets reference from energy control loop, or given
     if (controls.count("zcc"))
     {
@@ -404,6 +429,20 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
 
     // Adding inner control loops
     if (controls.count("occ")) {
+        vector<double> refs = controls["occ"]->getReference();
+
+		// Check if references are provided for active power and dc voltage, and if not, apply dq transformations
+        if (!controls.count("active_power") || !controls.count("dc_voltage")) {
+            // Apply dq transformations
+            Eigen::Vector2d i_delta_ref_vec = T_theta * Vector2d(refs[0], refs[1]);
+
+            double iDelta_d_ref = i_delta_ref_vec(0);
+            double iDelta_q_ref = i_delta_ref_vec(1);
+
+			// Set references for OCC controller
+            controls["occ"]->setReference({ iDelta_d_ref, iDelta_q_ref });
+        }
+
 		// Define x, u, and c for OCC controller
         x1 << x(i), x(i + 1); // Initialize x1 with the first two state variables
         u1 << iDelta_d, iDelta_q; // Initialize u1 with the first two state variables
@@ -413,10 +452,32 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         F(i + 1) = state_variables(1); // dxiDeltaq_dt = (iDeltaq_ref -  iDeltaq);
         vMDelta_d_ref = state_variables(2);
         vMDelta_q_ref = state_variables(3);
+
+        // PLL conversion of the input angle
+        Vector2d vM_ref_c(vMDelta_d_ref, vMDelta_q_ref);
+        Vector2d vM_ref = I_theta * vM_ref_c;
+        vMDelta_d_ref = vM_ref(0);
+        vMDelta_q_ref = vM_ref(1);
+
+		// Restore the reference for outer current control to the one without PLL
+		controls["occ"]->setReference(refs);
+
         i += 2; // Move to next state variables
     }
 
     if (controls.count("ccc")) {
+        vector<double> refs = controls["ccc"]->getReference();
+        if (!controls.count("reactive_power") || !controls.count("ac_voltage")) {
+            // Apply dq transformations
+            Eigen::Vector2d i_sigma_ref_vec = T_theta * Vector2d(refs[0], refs[1]);
+
+            double iSigma_d_ref = i_sigma_ref_vec(0);
+            double iSigma_q_ref = i_sigma_ref_vec(1);
+
+            // Set references for OCC controller
+            controls["ccc"]->setReference({ iSigma_d_ref, iSigma_q_ref });
+        }
+
         x1 << x(i), x(i + 1); // Initialize x1 with the first two state variables
         u1 << iSigma_d, iSigma_q; // Initialize u1 with the first two state variables
         c1 << -2 * w * L_arm * iSigma_q, 2 * w * L_arm * iSigma_d; // Initialize c1 with the voltage references
@@ -425,6 +486,16 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         F(i + 1) = state_variables(1); // dxiSigmaq_dt = (iSigmaq_ref - iSigmaq);
         vMSigma_d_ref = -state_variables(2);
         vMSigma_q_ref = -state_variables(3);
+
+		// PLL conversion of the input angle
+        Vector2d vM_sigma_ref_c(vMSigma_d_ref, vMSigma_q_ref);
+        Vector2d vM_sigma_ref = I_2theta * vM_sigma_ref_c;
+        vMSigma_d_ref = vM_sigma_ref(0);
+        vMSigma_q_ref = vM_sigma_ref(1);
+
+		// Restore the reference for circulating current control to the one without PLL
+        controls["ccc"]->setReference(refs);
+
         i += 2; // Move to next state variables
     }
 
@@ -558,7 +629,11 @@ void MMC::solveEquilibrium() {
 
     // Define input vector u (DC voltage and AC voltages)
     Eigen::VectorXd u(3);
-    u << V_dc, V_m* cos(omega_0), -V_m * sin(omega_0);
+    if (controls.count("dc_voltage")) {
+        u << 0.01, V_m* cos(omega_0), V_m* sin(omega_0);
+    } else {
+        u << V_dc, V_m * cos(omega_0), V_m * sin(omega_0); 
+	}
 
     // Wrap member function as a lambda
     DerivFunc f = [&](const Eigen::VectorXd& x, const Eigen::VectorXd& u) {
