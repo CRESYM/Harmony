@@ -129,7 +129,7 @@ void MMC::init_Filter(const std::vector<double>& filter_params) {
 
                 filters[filter_name] = new Filter(filter_name, filter_type, filter_order, values, filter_size);
 
-                number_of_states += filter_size; // Update the number of states based on the number of values
+                number_of_states += filter_size*filter_order; // Update the number of states based on the number of values
                 i += 4;
             }
             else {
@@ -200,20 +200,23 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     double Reqac = R_arm / 2.0 + R_reactor;
     double Ce = 6.0 * C_arm / N;
 
-    // Constants for now
-	double Vdc = V_dc; // DC voltage
-	double w = omega_0; // Angular frequency (rad/s)
-	double Vgd = V_m * std::cos(theta); // d-axis voltage
-	double Vgq = -V_m * std::sin(theta); // q-axis voltage
-
-    int number_of_states = x.size();
-    Eigen::VectorXd F = Eigen::VectorXd::Zero(number_of_states);
-
-	// Extract state variables from the end of the state vector
-	int i = x.size() - 12; // Assuming the last 12 elements are the state variables
+    // Extract state variables from the end of the state vector
+    int i = x.size() - 12; // Assuming the last 12 elements are the state variables
     double iDelta_d = x(i), iDelta_q = x(i + 1), iSigma_d = x(i + 2), iSigma_q = x(i + 3), iSigma_z = x(i + 4);
     double vCDelta_d = x(i + 5), vCDelta_q = x(i + 6), vCDelta_Zd = x(i + 7), vCDelta_Zq = x(i + 8);
     double vCSigma_d = x(i + 9), vCSigma_q = x(i + 10), vCSigma_z = x(i + 11);
+
+    // Constants for now
+	double Vdc = (controls.count("dc_voltage")) ? u(0) : V_dc; // DC voltage
+	double w = omega_0; // Angular frequency (rad/s)
+	double Vgd = u(1); // d-axis voltage
+	double Vgq = u(2); // q-axis voltage
+    double Pac = (3 / 2) * (Vgd * iDelta_d + Vgq * iDelta_q);
+    double Qac = (3 / 2) * (-Vgd * iDelta_q + Vgq * iDelta_d);
+	double Vac_mag = 1.5 * sqrt(Vgd * Vgd + Vgq * Vgq); // AC voltage magnitude
+
+    int number_of_states = x.size();
+    Eigen::VectorXd F = Eigen::VectorXd::Zero(number_of_states);
 
     // Extract control reference voltages (user must assign these before this call)
     double vMDelta_d_ref = 0, vMDelta_q_ref = 0, vMDelta_Zd_ref = 0, vMDelta_Zq_ref = 0;
@@ -277,15 +280,62 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         Vgq = u(2);
         w = omega_0;
     }
+
+    // First to add filters
+    if (filters.count("ac_voltage_dq")) {
+        // Define x, u, and c for AC voltage dq filter (1st order)
+        x1 << x(i), x(i+1); // Initialize x1 with the first two state variables
+        u1 << Vgd, Vgq; // Initialize u1 with the first two state variables
+        state_variables = filters["ac_voltage_dq"]->define_differential_equations(x1, u1);
+        F(i) = state_variables(0); 
+        F(i+1) = state_variables(1); 
+		Vgd = state_variables(2); // Update Vgd from filter output
+		Vgq = state_variables(3); // Update Vgq from filter output
+		i += 2; // Move to next state variables
+    }
+    if (filters.count("active_power")) {
+        // Define x, u, and c for active power (2nd order)
+        x1 << x(i), x(i + 1); // Initialize x1 with the first two state variables
+        state_variables = filters["active_power"]->define_differential_equations(x1, Pac);
+        F(i) = state_variables(0);
+        F(i + 1) = state_variables(1);
+        Pac = state_variables(2); // Update Pac from filter output, and use in the following equations
+        i += 2; // Move to next state variables
+    }
+    if (filters.count("reactive_power")) {
+        // Define x, u, and c for active power (2nd order)
+        x1 << x(i), x(i + 1); // Initialize x1 with the first two state variables
+        state_variables = filters["reactive_power"]->define_differential_equations(x1, Qac);
+        F(i) = state_variables(0);
+        F(i + 1) = state_variables(1);
+        Qac = state_variables(2); // Update Pac from filter output, and use in the following equations
+        i += 2; // Move to next state variables
+    }
+    if (filters.count("dc_voltage")) {
+        // Define x, u, and c for DC voltage (2nd order)
+        x1 << x(i), x(i + 1); // Initialize x1 with the first two state variables
+        state_variables = filters["dc_voltage"]->define_differential_equations(x1, Vdc);
+        F(i) = state_variables(0);
+        F(i + 1) = state_variables(1);
+        Vdc = state_variables(2); // Update Vdc from filter output, and use in the following equations
+        i += 2; // Move to next state variables
+	}
+    if (filters.count("ac_voltage")) {
+        // Define x, u, and c for AC voltage (2nd order)
+        x1 << x(i), x(i + 1); // Initialize x1 with the first two state variables
+        state_variables = filters["ac_voltage"]->define_differential_equations(x1, Vac_mag);
+        F(i) = state_variables(0);
+        F(i + 1) = state_variables(1);
+        Vac_mag = state_variables(2); // Update Vgd from filter output
+        i += 2; // Move to next state variables
+	}
      
     // OUTER LOOPS
 	// Adding energy control loop
     if (controls.count("energy")) {
-        double Pac = (3 / 2) * (Vgd * iDelta_d + Vgq * iDelta_q);
         double wSigmaz = 3 * (C_arm * (pow(vCDelta_d,2) + pow(vCDelta_q,2) + pow(vCDelta_Zd,2) 
             + pow(vCDelta_Zq,2) + pow(vCSigma_d,2) + pow(vCSigma_q,2) + 2 * pow(vCSigma_z,2))) / (2 * N);
 		controls["energy"]->setReference(3.0 * C_arm * Vdc * Vdc / N, 0);
-		//std::cout << controls["energy"]->getReference() << endl;
 
         state_variables = controls["energy"]->define_differential_equations(x(i), wSigmaz, Pac);
         F(i) = state_variables(0); // dxwSigmaz_dt = (wSigmaz_ref -  wSigmaz);
@@ -301,10 +351,9 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
 	// NOTE: Only one of the following two loops will be executed, depending on the controller availability
 	// Adding active power control loop
     if (controls.count("active_power")) {
-        double Pac = (3 / 2) * (Vgd * iDelta_d + Vgq * iDelta_q);
         state_variables = controls["active_power"]->define_differential_equations(x(i), Pac, 0);
 		F(i) = state_variables(0); // dxiPac_dt = (Pac_ref - Pac);
-		double iDelta_d_ref = state_variables(1);
+        double iDelta_d_ref = state_variables(1); // to check!!!
 		i += 1; // Move to next state variables
 
 		if (controls.count("occ"))
@@ -315,7 +364,6 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
 	// Adding DC voltage control loop
     else if (controls.count("dc_voltage")) { // to complete later, more difficult
 		double Idc = P_dc / Vdc; // DC current
-        double Vdc = x(i); // DC voltage
         state_variables = controls["dc_voltage"]->define_differential_equations(x(i), Vdc, P_dc);
 
 		i += 2; // Move to next state variables
@@ -324,7 +372,6 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     // NOTE: Only one of the following two loops will be executed, depending on the controller availability
 	// Adding reactive power control loop
     if (controls.count("reactive_power")) {
-        double Qac = (3 / 2) * (-Vgd * iDelta_q + Vgq * iDelta_d);
         state_variables = controls["reactive_power"]->define_differential_equations(x(i), Qac, 0);
         F(i) = state_variables(0); // dxiQac_dt = (Qac_ref - Qac);
         double iDelta_q_ref = -state_variables(1);
