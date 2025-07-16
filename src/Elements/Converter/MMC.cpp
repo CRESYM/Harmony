@@ -320,7 +320,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         Vdc = state_variables(2); // Update Vdc from filter output, and use in the following equations
         i += 2; // Move to next state variables
 	}
-    if (filters.count("ac_voltage")) {
+	if (filters.count("ac_voltage")) { // NOT USED YET
         // Define x, u, and c for AC voltage (2nd order)
         x1 << x(i), x(i + 1); // Initialize x1 with the first two state variables
         state_variables = filters["ac_voltage"]->define_differential_equations(x1, Vac_mag);
