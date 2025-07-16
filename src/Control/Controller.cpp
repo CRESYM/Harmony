@@ -1,7 +1,13 @@
 ﻿#include "Controller.h"
 
-
-// updateParameters: Update controller parameters (if dynamic change is needed)
+/**
+ * @brief Update controller parameters (if dynamic change is needed).
+ * 
+ * @param newKp New proportional gain.
+ * @param newKi New integral gain.
+ * @param newZeta New damping ratio.
+ * @param newBandwidth New bandwidth (Hz).
+ */
 void Controller::updateParameters(double newKp, double newKi, double newZeta, double newBandwidth) {
     Kp = newKp;
     Ki = newKi;
@@ -14,40 +20,45 @@ void Controller::updateParameters(double newKp, double newKi, double newZeta, do
         << "  New Bandwidth: " << bandwidth << " Hz\n";
 }
 
-
+/**
+ * @brief Defines the differential equations for a vector PI controller.
+ * 
+ * This function computes the error between the reference and input, updates the integrator state,
+ * and calculates the PI controller output for each channel. The returned vector concatenates the
+ * state derivatives and controller outputs.
+ * 
+ * @param x Integrator state vector.
+ * @param u Input (measured) vector.
+ * @param c Constant/reference output signal vector.
+ * @return Eigen::VectorXd Concatenated vector of state derivatives and controller outputs.
+ */
 Eigen::VectorXd Controller::define_differential_equations(const Eigen::VectorXd& x, const Eigen::VectorXd& u, const Eigen::VectorXd& c) {
-	// The function takes state-variables x and inputs u to define the differential equations for the controller.
-    // And the constant to define the reference output signal.
-	Eigen::MatrixXd dx_dt(reference.size(), 1); // Placeholder for the derivative of state variables
-	Eigen::MatrixXd output(reference.size(), 1); // Placeholder for the output of the controller
+    Eigen::MatrixXd dx_dt(reference.size(), 1); // Error signal (state derivative)
+    Eigen::MatrixXd output(reference.size(), 1); // PI controller output
     for (int i = 0; i < reference.size(); ++i) {
-        // Example: Proportional-Integral control equation
-        // dx/dt = Kp * (reference[i] - x[i]) + Ki * u[i];
-		dx_dt(i) = (reference[i] - u(i));
-		output(i) = Kp * dx_dt(i) + Ki * x(i) + c(i);
-	}
-
-	// Merge the output into the state vector
-	Eigen::VectorXd state_derivative = Eigen::VectorXd::Zero(x.size() + output.size());
-	state_derivative << dx_dt, output;
-
-    // Return the state derivative
-	return state_derivative;
+        dx_dt(i) = (reference[i] - u(i));
+        output(i) = Kp * dx_dt(i) + Ki * x(i) + c(i);
+    }
+    Eigen::VectorXd state_derivative = Eigen::VectorXd::Zero(x.size() + output.size());
+    state_derivative << dx_dt, output;
+    return state_derivative;
 }
 
+/**
+ * @brief Defines the differential equations for a scalar PI controller.
+ * 
+ * This function computes the error between the reference and input, updates the integrator state,
+ * and calculates the PI controller output. The returned vector contains the state derivative and controller output.
+ * 
+ * @param x Integrator state (scalar).
+ * @param u Input (measured) value.
+ * @param c Constant/reference output signal.
+ * @return Eigen::VectorXd Vector containing state derivative and controller output.
+ */
 Eigen::VectorXd Controller::define_differential_equations(const double x, const double u, const double c) {
-    // The function takes state-variables x and inputs u to define the differential equations for the controller.
-    // And the constant to define the reference output signal.
-    double dx_dt; // Placeholder for the derivative of state variables
-    double output; // Placeholder for the output of the controller
-   
-    dx_dt = (reference[0] - u);
-    output = Kp * dx_dt + Ki * x + c;
-
-    // Merge the output into the state vector
+    double dx_dt = (reference[0] - u);
+    double output = Kp * dx_dt + Ki * x + c;
     Eigen::VectorXd state_derivative = Eigen::VectorXd::Zero(2);
     state_derivative << dx_dt, output;
-
-    // Return the state derivative
     return state_derivative;
 }

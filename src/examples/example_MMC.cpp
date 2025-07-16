@@ -8,9 +8,12 @@ void example_MMC() {
 	//// Numerically computes the Jacobian matrices A = ∂f/∂x and B = ∂f/∂u at a specified operating point
 	double f = 50;
 	double omega = 2 * M_PI * f; // Nominal frequency in rad/s
-	std::vector<double> converter_params = { omega, 100.0e6, 0, 0.0, 100.0e3, 200e3, 50e-3, 1.07, 0.01, 100, 0.06, 0.535, 10e-6 };
-	std::vector<double> controller_params = { 0, 0,
-		//1, 0.01, 2, 2, 0, 200e3, // DC voltage controller parameters
+	std::vector<double> converter_params = { omega, 100.0e6, 0, 0.0, 100.0e3, 200e3, 50e-3, 1.07, 0.01, 100, 0.06, 0.535, 0 };
+	std::vector<double> controller_params = { 
+		//1, 0,001103374, 0,00073, 1, 0, // PLL controller parameters
+		0, 
+		0, 
+		//1, 0.01, 2, 1, 200e3, // DC voltage controller parameters
 		1, 6.6667e-07, 3.3333e-04, 1, 100e6, // active power
 		0,
 		1, 6.6667e-07, 3.3333e-04, 1, 0, // reactive power

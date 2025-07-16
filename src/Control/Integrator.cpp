@@ -1,20 +1,13 @@
 #include "Integrator.h"
 
-Eigen::VectorXd Integrator::define_differential_equations(const Eigen::VectorXd& x) {
-    Eigen::MatrixXd dx_dt(x.size(), 1); // Placeholder for the derivative of state variables
-    Eigen::MatrixXd output(x.size(), 1); // Placeholder for the output of the controller
-    for (int i = 0; i < x.size(); ++i) {
-        dx_dt(i) = x(i);
-    }
-
-    return dx_dt;
+// For scalar input: dx/dt = error
+double Integrator::define_differential_equations(const double error) {
+    // The derivative of the integrator state is the error signal
+    return error;
 }
 
-double Integrator::define_differential_equations(const double x) {
-    double dx_dt; // Placeholder for the derivative of state variables
-
-    dx_dt = x;
-
-    // Return the state derivative
-    return dx_dt;
+// For vector input: dx/dt = error vector
+Eigen::VectorXd Integrator::define_differential_equations(const Eigen::VectorXd& error) {
+    // The derivative of the integrator state is the error signal vector
+    return error;
 }
