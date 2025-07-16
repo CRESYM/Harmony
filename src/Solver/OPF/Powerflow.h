@@ -59,11 +59,18 @@ public:
     void load_params_dc(const std::string& dcgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
 
     // OPF solving
-    void solve_opf(const std::string& dc_name, const std::string& ac_name,
-        bool vscControl = true, bool writeTxt = false, bool plotResult = true);
+    //void solve_opf(const std::string& dc_name, const std::string& ac_name,
+    //    bool vscControl = true, bool writeTxt = false, bool plotResult = true);
 
-    void solveHmo_opf(std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF,
-        bool vscControl = true, bool writeTxt = false, bool plotResult = true);
+    //void solveHmo_opf(std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF,
+    //    bool vscControl = true, bool writeTxt = false, bool plotResult = true);
+    void solve_unified_opf(
+        const std::string& dc_name,
+        const std::string& ac_name,
+        std::unordered_map<std::string, Eigen::MatrixXd>* dataOPF,
+        bool vscControl,
+        bool writeTxt,
+        bool plotResult);
 
     // Visualization
     //void viz_opf();

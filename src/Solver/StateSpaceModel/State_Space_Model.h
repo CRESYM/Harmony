@@ -1,9 +1,9 @@
 ﻿#ifndef STATE_SPACE_MODEL
 #define STATE_SPACE_MODEL
 
-#include "./Elements/Element.h"  
-#include "Bus.h"      
-#include "network.h"
+#include "../../Elements/Element.h"  
+#include "../../Bus.h"      
+#include "../../network.h"
 
 class Network; // Forward declaration of Network class
 class Element; // Forward declaration of Element class

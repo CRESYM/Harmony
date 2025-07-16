@@ -75,7 +75,7 @@ public:
     void checkStability(const Eigen::MatrixXd& A_matrix);
 
     //Power flow computation //network_powerflow.cpp
-    std::map<std::string, double> PowerFlow();
+    std::map<std::string, double> PowerFlowComputation();
 
     void addBusAC(std::vector<std::vector<std::string>>& dict_ac,
         const std::vector<std::string>& bus_info,

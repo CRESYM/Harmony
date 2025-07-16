@@ -64,21 +64,21 @@ set(Element_Transmission_Line_Header_Files
     src/Elements/Transmission_Line/Transmissionline.h
 )
 set(Solver_State_Space_Model_Header_Files
-    src/State_Space_Model.h
+    src/Solver/StateSpaceModel/State_Space_Model.h
 )
 set(Solver_OPF_Header_Files
-    src/create_ac.h
-    src/create_dc.h
-    src/csv_reader.h
-    src/makeYbus.h
-    src/params_ac.h
-    src/params_dc.h
-    src/solve_opf.h
-    src/viz_opf.h
-    src/paramsHmo_ac.h
-    src/paramsHmo_dc.h
-    src/solveHmo_opf.h
-    src/Powerflow.h
+    #src/Solver/OPF/create_ac.h
+    #src/Solver/OPF/create_dc.h
+    #src/Solver/OPF/csv_reader.h
+    #src/Solver/OPF/makeYbus.h
+    #src/Solver/OPF/params_ac.h
+    #src/Solver/OPF/params_dc.h
+    #src/Solver/OPF/solve_opf.h
+    src/Solver/OPF/viz_opf.h
+    #src/Solver/OPF/paramsHmo_ac.h
+    #src/Solver/OPF/paramsHmo_dc.h
+    #src/Solver/OPF/solveHmo_opf.h
+    src/Solver/OPF/Powerflow.h
 )
 set(Solver_Helper_Functions_Header_Files
     src/Solver/Helper_Functions/Helper_Functions.h
@@ -86,10 +86,10 @@ set(Solver_Helper_Functions_Header_Files
     src/Solver/Helper_Functions/Symbolic_functions.h
 )
 set(Control_Header_Files
-    src/Control_block.h
-    src/Filter.h
-    src/Controller.h
-    src/Integrator.h
+    src/Control/Control_block.h
+    src/Control/Filter.h
+    src/Control/Controller.h
+    src/Control/Integrator.h
 )
 set(Header_Files
     src/Bus.h
@@ -138,33 +138,33 @@ set(Element_Transmission_Line_Source_Files
     src/Elements/Transmission_Line/Transmissionline.cpp
 )
 set(Solver_State_Space_Model_Source_Files
-    src/State_Space_Model.cpp
+    src/Solver/StateSpaceModel/State_Space_Model.cpp
 )
 set(Solver_OPF_Source_Files
-    src/create_ac.cpp
-    src/create_dc.cpp
-    src/csv_reader.cpp
-    src/makeYbus.cpp
-    src/params_ac.cpp
-    src/params_dc.cpp
-    src/solve_opf.cpp
-    src/viz_opf.cpp
-    src/paramsHmo_ac.cpp
-    src/paramsHmo_dc.cpp
-    src/solveHmo_opf.cpp
-    src/Powerflow_data.cpp
-    src/Powerflow_network_params.cpp
-    src/Powerflow_solver.cpp
+    #src/Solver/OPF/create_ac.cpp
+    #src/Solver/OPF/create_dc.cpp
+    #src/Solver/OPF/csv_reader.cpp
+    #src/Solver/OPF/makeYbus.cpp
+    #src/Solver/OPF/params_ac.cpp
+    #src/Solver/OPF/params_dc.cpp
+    #src/Solver/OPF/solve_opf.cpp
+    src/Solver/OPF/viz_opf.cpp
+    #src/Solver/OPF/paramsHmo_ac.cpp
+    #src/Solver/OPF/paramsHmo_dc.cpp
+    #src/Solver/OPF/solveHmo_opf.cpp
+    src/Solver/OPF/Powerflow_data.cpp
+    src/Solver/OPF/Powerflow_network_params.cpp
+    src/Solver/OPF/Powerflow_solver.cpp
 )
 set(Solver_Helper_Functions_Source_Files
     src/Solver/Helper_Functions/Differential_equations.cpp
     src/Solver/Helper_Functions/Symbolic_functions.cpp
 )
 set(Control_Source_Files
-    src/Control_block.cpp
-    src/Filter.cpp
-    src/Controller.cpp
-    src/Integrator.cpp
+    src/Control/Control_block.cpp
+    src/Control/Filter.cpp
+    src/Control/Controller.cpp
+    src/Control/Integrator.cpp
 )
 set(Source_Files
     src/Bus.cpp

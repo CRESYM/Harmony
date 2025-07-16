@@ -38,15 +38,15 @@
 #include "./Elements/Converter/MMC.h"
 
 
-#include "solve_opf.h"
+//#include "solve_opf.h"
 
-#include "State_Space_Model.h"
+#include "./Solver/StateSpaceModel/State_Space_Model.h"
 
 // CONTROL BLOCKS
-#include "Control_block.h"
-#include "Integrator.h"
-#include "Controller.h"
-#include "Filter.h"
+#include "./Control/Control_block.h"
+#include "./Control/Integrator.h"
+#include "./Control/Controller.h"
+#include "./Control/Filter.h"
 
 
 

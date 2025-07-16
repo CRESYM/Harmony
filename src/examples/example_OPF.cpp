@@ -3,7 +3,7 @@
 #include "../network.h"
 #include "../Bus.h"
 #include "../Include_components.h"
-#include "../solveHmo_opf.h"
+#include "../Solver/OPF/powerflow.h"
 
 
 void example_OPF() {
@@ -410,5 +410,5 @@ void example_OPF() {
     net.make_Converter(mmc3, globals, info_conv3, false);
 
     /*----- 3 OPF Implementatiopn ----- */
-    net.make_OPF(net, false, false, false);
+    net.make_OPF(net,false, false, false);
 }

@@ -1,8 +1,8 @@
 ﻿#include "network.h"
 #include "Bus.h"
 #include "Include_components.h"
-#include "solveHmo_opf.h"
-
+//#include "solveHmo_opf.h"
+#include "./Solver/OPF/powerflow.h"
 
 
 template<typename Table>
@@ -734,7 +734,7 @@ void Network::make_Load(Element* element,
     }
 }
 
-std::map<std::string, double> Network::PowerFlow() {
+std::map<std::string, double> Network::PowerFlowComputation() {
     std::map<std::string, double> global_dict;
 
     double omega = 2 * M_PI * 50;
@@ -833,5 +833,7 @@ void Network::make_OPF(const Network& net,
         dataOPF["converter"](2, 6) = 5;
     }
 
-    solveHmo_opf(dataOPF, vscControl, writeTxt, plotResult);
+    //solveHmo_opf(dataOPF, vscControl, writeTxt, plotResult);
+    PowerFlow pf;
+    pf.solve_unified_opf("","", &dataOPF, vscControl, writeTxt, plotResult);
 }

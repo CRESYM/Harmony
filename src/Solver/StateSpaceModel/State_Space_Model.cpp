@@ -1,6 +1,6 @@
 ﻿#include "State_Space_Model.h"
-#include "network.h"      
-#include "Include_components.h"
+#include "../../network.h"      
+#include "../../Include_components.h"
 
 void StateSpaceModel::finalizeCounts(Network* net) {
 	std::unordered_map<std::string, Element*> elements = net->getElements();
