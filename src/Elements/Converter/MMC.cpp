@@ -105,6 +105,9 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
             }
         }    
     }
+    if (t_delay > 0) {
+		number_of_states += 15; // Add states for delay system
+	}
 }
 
 
@@ -403,12 +406,12 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     // Adding energy control loop
     if (controls.count("energy")) {
         double wSigmaz = 3 * (C_arm * (pow(vCDelta_d, 2) + pow(vCDelta_q, 2) + pow(vCDelta_Zd, 2)
-            + pow(vCDelta_Zq, 2) + pow(vCSigma_d, 2) + pow(vCSigma_q, 2) + 2 * pow(vCSigma_z, 2))) / (2 * N);
+            + pow(vCDelta_Zq, 2) + pow(vCSigma_d, 2) + pow(vCSigma_q, 2) + 2 * pow(vCSigma_z, 2))) / (2.0 * N);
         controls["energy"]->setReference(3.0 * C_arm * Vdc * Vdc / N, 0);
 
         state_variables = controls["energy"]->define_differential_equations(x(i), wSigmaz, Pac);
         F(i) = state_variables(0); // dxwSigmaz_dt = (wSigmaz_ref -  wSigmaz);
-        double iSigma_z_ref = state_variables(1) / 3 / Vdc;
+        double iSigma_z_ref = state_variables(1) / 3.0 / Vdc;
         i += 1; // Move to next state variables
 
         if (controls.count("zcc"))
@@ -631,7 +634,8 @@ void MMC::solveEquilibrium() {
     Eigen::VectorXd u(3);
     if (controls.count("dc_voltage")) {
         u << 0.01, V_m* cos(omega_0), V_m* sin(omega_0);
-    } else {
+    } 
+    else {
         u << V_dc, V_m * cos(omega_0), V_m * sin(omega_0); 
 	}
 
