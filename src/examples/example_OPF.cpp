@@ -7,135 +7,43 @@
 
 
 void example_OPF() {
-    ///* ---------- 0 Set Network Object ---------- */
+    /* ---------- 0 Set Network Object ---------- */
     Network net;
-    const auto& data = net.getNetData();
+    /* ---------- 1.1 Create AC Buses ---------- */
+    net.addDefaultACBuses();
+    /*  ---------- 1.2 Add AC Loads  ---------- */
+    for (int i = 1; i <= 5; ++i) {
+        std::string load_name = "LOAD0" + std::to_string(i);
+        std::string bus_name = "ACBUS0" + std::to_string(i);
 
-    ///* ---------- 1.1 Create AC Buses ---------- */
+        Bus* bus = net.getBuses().at(bus_name);
+
+        Load* load = new Load(load_name, 3);
+        std::vector<std::string> element_info = load->getElementInfo();
+
+        net.addElement("LOAD", load_name, 3, element_info, 0, bus, true);
+    }
+
+    /*  ---------- 1.3 Add AC Generators  ---------- */
+    Bus* bus1 = net.getBuses().at("ACBUS01");
+    Bus* bus2 = net.getBuses().at("ACBUS02");
+
+    // Generator 1
+    Generator* gen1 = new Generator("GEN01", 3);
+    net.addElement("GENERATOR", "GEN01", 3, gen1->getElementInfo(), 0, bus1, false);
+
+    // Generator 2
+    Generator* gen2 = new Generator("GEN02", 3);
+    net.addElement("GENERATOR", "GEN02", 3, gen2->getElementInfo(), 0, bus2, false);
+
+
+    //Refactor until here
     Bus* bus1_ac = new Bus("ACBUS01", 3);
     Bus* bus2_ac = new Bus("ACBUS02", 3);
     Bus* bus3_ac = new Bus("ACBUS03", 3);
     Bus* bus4_ac = new Bus("ACBUS04", 3);
     Bus* bus5_ac = new Bus("ACBUS05", 3);
-    std::vector<std::vector<std::string>> dict_ac;
-    net.addBusAC(dict_ac, { "ACBUS01", "1", "100", "345", "1.1", "0.9" }, false);
-    net.addBusAC(dict_ac, { "ACBUS02", "1", "100", "345", "1.1", "0.9" }, false);
-    net.addBusAC(dict_ac, { "ACBUS03", "1", "100", "345", "1.1", "0.9" }, false);
-    net.addBusAC(dict_ac, { "ACBUS04", "1", "100", "345", "1.1", "0.9" }, false);
-    net.addBusAC(dict_ac, { "ACBUS05", "1", "100", "345", "1.1", "0.9" }, false);
-
-    /* ---------- 1.2 Add AC Loads  ---------- */
-    std::vector<double> load_params1 = { 1, 1, 1 };
-    Load* load1 = new Load("LOAD01", 3, load_params1);
-    net.connectElementToBus(load1, 1, bus1_ac);
-
-    std::vector<double> load_params2 = { 1, 1, 1 };
-    Load* load2 = new Load("LOAD02", 3, load_params2);
-    net.connectElementToBus(load2, 1, bus2_ac);
-
-    Network* myNetwork = new Network();
-
-    std::vector<double> load_params3 = { 1, 1, 1 };
-    Load* load3 = new Load("LOAD03", 3, load_params3);
-    net.connectElementToBus(load3, 1, bus3_ac);
-
-    std::vector<double> load_params4 = { 1, 1, 1 };
-    Load* load4 = new Load("LOAD04", 3, load_params4);
-    net.connectElementToBus(load4, 1, bus4_ac);
-
-    std::vector<double> load_params5 = { 1, 1, 1 };
-    Load* load5 = new Load("LOAD05", 3, load_params4);
-    net.connectElementToBus(load5, 1, bus5_ac);
-
-    std::vector<std::vector<std::string>> dict_load;
-    std::vector<std::string> load_info1 = {
-        "Load01",   // 0  load_name
-        "1",        // 1  grid_area
-        "345",      // 2  rated_voltage_kv [kV]
-        "0",      // 3  R [Ω]
-        "0",        // 4  L [H]
-        "0",        // 5  C [F]
-    };
-    net.make_Load(load1, load_info1, false);
-
-    std::vector<std::string> load_info2 = {
-        "Load02",    // 0  load_name
-        "1",         // 1  grid_area
-        "345",       // 2  rated_voltage_kv [kV]
-        "5950",      // 3  R [Ω]
-        "37.9",      // 4  L [H]
-        "0",         // 5  C [F]
-    };
-    net.make_Load(load2, load_info2, false);
-
-    std::vector<std::string> load_info3 = {
-     "Load03",    // 0  load_name
-     "1",         // 1  grid_area
-     "345",       // 2  rated_voltage_kv [kV]
-     "2650",      // 3  R [Ω]
-     "25.2",      // 4  L [H]
-     "0",         // 5  C [F]
-    };
-    net.make_Load(load3, load_info3, false);
-
-    std::vector<std::string> load_info4 = {
-      "Load04",    // 0  load_name
-      "1",         // 1  grid_area
-      "345",       // 2  rated_voltage_kv [kV]
-      "2976",      // 3  R [Ω]
-      "75.7",      // 4  L [H]
-      "0",         // 5  C [F]
-    };
-    net.make_Load(load4, load_info4, false);
-
-    std::vector<std::string> load_info5 = {
-        "Load05",    // 0  load_name
-        "1",         // 1  grid_area
-        "345",       // 2  rated_voltage_kv [kV]
-        "1984",      // 3  R [Ω]
-        "37.9",      // 4  L [H]
-        "0",         // 5  C [F]
-    };
-    net.make_Load(load5, load_info5, false);
-
-    /*  ---------- 1.3 Add AC Generators  ---------- */
-    std::vector<double> gen1_params = { 0.02, 0.3, 0.05, 7.0 };
-    Generator* gen1 = new Generator("GEN01", 3, gen1_params);
-    net.connectElementToBus(gen1, 1, bus1_ac);
-
-    std::vector<double> gen2_params = { 0.02, 0.3, 0.05, 7.0 };
-    Generator* gen2 = new Generator("GEN02", 3, gen2_params);
-    net.connectElementToBus(gen2, 1, bus2_ac);
-
-    std::vector<std::vector<std::string>> dict_gen;
-
-    std::vector<std::string> gen_info1 = {
-        "GEN01",    // 0  generator_name
-        "1",        // 1  grid_area
-        "345",      // 2  rated_voltage_kv [kV]
-        "200",      // 3  P_max  [MW]
-        " 10",      // 4  P_min  [MW]
-        "84",       // 5  Q_max  [MVAr]
-        "84",       // 6  Q_min  [MVAr]
-        "0.11",     // 7  cost_quadratic_coeff
-        "50",       // 8  cost_linear_coeff
-        "150"       // 9  cost_constant_coeff
-    };
-    net.make_Generator(gen1, gen_info1, false);
-
-    std::vector<std::string> gen_info2 = {
-        "GEN02",    // 0  generator_name
-        "1",        // 1  grid_area
-        "345",      // 2  rated_voltage_kv [kV]
-        "40",       // 3  P_max  [MW]
-        "40",       // 4  P_min  [MW]
-        "-31",      // 5  Q_max  [MVAr]
-        "-33",      // 6  Q_min  [MVAr]
-        "0.085",    // 7  cost_quadratic_coeff
-        "1.2",      // 8  cost_linear_coeff
-        "600"       // 9  cost_constant_coeff
-    };
-    net.make_Generator(gen2, gen_info2, false);
+   
 
     ///*  ---------- 1.4 Add Branches  ---------- */
     // AC Branches

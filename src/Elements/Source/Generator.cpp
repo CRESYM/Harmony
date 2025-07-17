@@ -41,6 +41,21 @@ Generator::Generator(const std::string& symbol, int pins, const std::vector<doub
 
 }
 
+Generator::Generator(const std::string& name, int phases) : Element(name, phases) {
+    static std::unordered_map<std::string, std::vector<std::string>> default_info = {
+        {"GEN01", {"GEN01", "1", "345", "200", "10", "84", "84", "0.11", "50", "150"}},
+        {"GEN02", {"GEN02", "1", "345", "40", "40", "-31", "-33", "0.085", "1.2", "600"}}
+    };
+
+    auto it = default_info.find(name);
+    element_info = (it != default_info.end()) ? it->second : std::vector<std::string>{ name, "1", "345", "0", "0", "0", "0", "0", "0", "0" };
+}
+
+std::vector<std::string> Generator::getElementInfo() const {
+    return element_info;
+}
+
+
 // Power flow computation for AC networks
 void Generator::computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
     std::map<std::string, double>& globalParams) const {

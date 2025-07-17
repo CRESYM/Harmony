@@ -26,6 +26,13 @@ public:
     */
     Load(const std::string& symbol, int pins, std::vector<double> values);
 
+    // New constructor taking only load name, sets params internally
+    Load(const std::string& name, int phases);
+
+    std::vector<std::string> getElementInfo() const;
+
+
+
     // Destructor
     ~Load() {}
     
@@ -63,6 +70,9 @@ private:
     std::vector<double> R;  // Resistance for each phase
     std::vector<double> L;  // Inductance for each phase
     std::vector<double> C;  // Capacitance for each phase
+
+    std::vector<std::string> element_info;
+
 
 };
 #endif

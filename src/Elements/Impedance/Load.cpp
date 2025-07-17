@@ -103,6 +103,24 @@ void Load::computePowerFlowAC(std::map<std::string, std::map<std::string, double
     branchData[std::to_string(key)]["b_to"] = 0;
 }
 
+Load::Load(const std::string& name, int phases) : Element(name, phases) {
+    static std::unordered_map<std::string, std::vector<std::string>> default_info = {
+        {"LOAD01", {"LOAD01", "1", "345", "0",    "0",    "0"}},
+        {"LOAD02", {"LOAD02", "1", "345", "5950", "37.9", "0"}},
+        {"LOAD03", {"LOAD03", "1", "345", "2650", "25.2", "0"}},
+        {"LOAD04", {"LOAD04", "1", "345", "2976", "75.7", "0"}},
+        {"LOAD05", {"LOAD05", "1", "345", "1984", "37.9", "0"}}
+    };
+
+    auto it = default_info.find(name);
+    element_info = (it != default_info.end()) ? it->second : std::vector<std::string>{ name, "1", "345", "0", "0", "0" };
+}
+
+std::vector<std::string> Load::getElementInfo() const {
+    return element_info;
+}
+
+
 // Power flow computation for DC networks
 void Load::computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
     std::map<std::string, double>& globalParams) const {

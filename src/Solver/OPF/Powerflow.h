@@ -1,12 +1,7 @@
 #ifndef POWERFLOW_H
 #define POWERFLOW_H
 
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
-#include <unordered_map>
-#include <string>
-#include <vector>
-#include <complex>
+#include "../../Constants.h"
 
 class PowerFlow {
 public:
@@ -40,6 +35,11 @@ public:
     Eigen::VectorXi convState_dc;
     Eigen::VectorXi fbus_dc, tbus_dc;
 
+    // DC optimization variables
+    Eigen::VectorXd pn_dc, pc_dc_k, qc_dc_k, v2s_dc_k, v2c_dc_k, Ic_dc, lc_dc;
+    Eigen::VectorXd Ctt_dc, Ccc_dc, Ctc_dc, Stc_dc, Cct_dc, Sct_dc, convPloss_dc;
+    Eigen::MatrixXd lij_dc_k;
+
     // Visualization buffers
     Eigen::VectorXd vn2_dc_k, ps_dc_k, qs_dc_k;
     Eigen::MatrixXd pij_dc_k;
@@ -53,19 +53,15 @@ public:
     // Data loading
     std::unordered_map<std::string, Eigen::MatrixXd> create_ac(const std::string& case_name);
     std::unordered_map<std::string, Eigen::MatrixXd> create_dc(const std::string& case_name);
+
+    void declareDcVariables(GRBModel& model);
+    void declareACVariables(GRBModel& model);
     static Eigen::SparseMatrix<double> absoluteSparseMatrix(const Eigen::SparseMatrix<std::complex<double>>& matrix);
 
     void load_params_ac(const std::string& acgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
     void load_params_dc(const std::string& dcgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
 
-    // OPF solving
-    //void solve_opf(const std::string& dc_name, const std::string& ac_name,
-    //    bool vscControl = true, bool writeTxt = false, bool plotResult = true);
-
-    //void solveHmo_opf(std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF,
-    //    bool vscControl = true, bool writeTxt = false, bool plotResult = true);
-    void solve_unified_opf(
-        const std::string& dc_name,
+    void solve_opf(const std::string& dc_name,
         const std::string& ac_name,
         std::unordered_map<std::string, Eigen::MatrixXd>* dataOPF,
         bool vscControl,

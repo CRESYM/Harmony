@@ -24,6 +24,7 @@ private:
     std::unordered_map<std::string, int> busName2Id_;
 
 
+
 public:
 
     // Constructor to initialize the network with zero pins
@@ -49,6 +50,14 @@ public:
 
     // Function to add an element to the network using a specific designator
     void addElement(const std::string& designator, Element* elem);
+
+    Element* addElement(const std::string& elementType,
+        const std::string& designator,
+        int pins,
+        const std::vector<std::string>& element_info,
+        int busNum,
+        Bus* busPtr,
+        bool print_info);
 
     // Function to connect an element to a specific bus at a particular terminal
     void connectElementToBus(Element* elem, int terminal, Bus* bus);
@@ -115,6 +124,10 @@ public:
 
     const auto& getNetData() const { return data; }
     auto& getNetData() { return data; }
+
+    // New helper to add default AC buses
+    void addDefaultACBuses();  // creates and adds buses to the network using Bus::getDefaultACBusInfo()
+    void addDefaultDCBuses();
 
 };
 

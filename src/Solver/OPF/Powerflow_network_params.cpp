@@ -1,6 +1,4 @@
 #include "powerflow.h"
-#include <set>
-#include <iostream>
 
 Eigen::SparseMatrix<double> PowerFlow::absoluteSparseMatrix(const Eigen::SparseMatrix<std::complex<double>>& matrix) {
     Eigen::SparseMatrix<double> absMatrix(matrix.rows(), matrix.cols());

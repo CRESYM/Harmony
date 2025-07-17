@@ -1,7 +1,6 @@
 ﻿#include "network.h"
 #include "Bus.h"
 #include "Include_components.h"
-//#include "solveHmo_opf.h"
 #include "./Solver/OPF/powerflow.h"
 
 
@@ -25,6 +24,14 @@ Eigen::MatrixXd map2dense(const Table& tbl,
     return M;
 }
 
+void Network::addDefaultACBuses() {
+    const auto& defaultBuses = Bus::getDefaultACBusInfo();
+    std::vector<std::vector<std::string>> dummy_dict;
+
+    for (const auto& bus_info : defaultBuses) {
+        this->addBusAC(dummy_dict, bus_info, false);
+    }
+}
 
 void Network::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     const std::vector<std::string>& bus_info,
@@ -57,16 +64,10 @@ void Network::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
         v_lower_pu = v_lower / rated_kv;
     }
 
-    if (v_lower_pu > v_upper_pu) {
-        std::cerr << "[addBusAC] Error: voltage_lower (" << v_lower_pu
-            << " pu) is greater than voltage_upper (" << v_upper_pu << " pu) for bus "
-            << bus_name << ".\n";
-    }
-
     auto exists = std::any_of(dict_ac.begin(), dict_ac.end(),
         [&](const auto& row) { return row[0] == bus_name; });
     if (exists)
-        throw std::runtime_error("[addBusAC] Error: Duplicate entry for bus '" + bus_name + "'.");
+        throw std::runtime_error("[Error: Duplicate entry for bus '" + bus_name + "'.");
 
     dict_ac.push_back({
        bus_id,
@@ -97,6 +98,9 @@ void Network::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     busRow["Vmin"] = v_lower_pu;
     busRow["grid"] = std::stod(area_id);
 
+    if (buses.find(bus_name) == buses.end()) {
+        buses[bus_name] = new Bus(bus_name, 3);  // '3' is example for bus type/phases
+    }
 
     if (print_info)
     {
@@ -117,8 +121,21 @@ void Network::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
         }
         std::cout << std::endl;
     }
+
+    if (print_info) {
+        std::cout << "Bus '" << bus_name << "' successfully added.\n";
+    }
 }
 
+void Network::addDefaultDCBuses() {
+    const auto& defaultDCBusInfo = Bus::getDefaultDCBusInfo();
+    for (const auto& bus_info : defaultDCBusInfo) {
+        std::string busName = bus_info[0];
+        int numPins = 2;  // DC is typically 2-pin
+        Bus* bus = new Bus(busName, numPins);
+        addBus(busName, bus);
+    }
+}
 
 void Network::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
     const std::vector<std::string>& bus_info,
@@ -734,6 +751,48 @@ void Network::make_Load(Element* element,
     }
 }
 
+Element* Network::addElement(const std::string& elementType,
+    const std::string& designator,
+    int pins,
+    const std::vector<std::string>& element_info,
+    int busNum,
+    Bus* busPtr,
+    bool print_info)
+{
+    std::cout << "Adding element: " << designator << " of type: " << elementType << std::endl;
+    Element* elem = nullptr;
+
+    // Create element object based on type
+    if (elementType == "LOAD") {
+        elem = new Load(designator, pins);
+        // Insert element into network
+        elements[designator] = elem;
+
+        // Connect element to bus
+        if (busPtr) {
+            connections[busPtr].push_back(elem);
+        }
+
+        make_Load(elem, element_info, print_info);
+    }
+    else if (elementType == "GENERATOR") {
+        elem = new Generator(designator, pins);
+        elements[designator] = elem;
+
+        if (busPtr) {
+            connections[busPtr].push_back(elem);
+        }
+
+        make_Generator(elem, element_info, print_info);
+    }
+    else {
+        throw std::runtime_error("Unsupported element type: " + elementType);
+    }
+
+    return elem;
+}
+
+
 std::map<std::string, double> Network::PowerFlowComputation() {
     std::map<std::string, double> global_dict;
 
@@ -835,5 +894,5 @@ void Network::make_OPF(const Network& net,
 
     //solveHmo_opf(dataOPF, vscControl, writeTxt, plotResult);
     PowerFlow pf;
-    pf.solve_unified_opf("","", &dataOPF, vscControl, writeTxt, plotResult);
+    pf.solve_opf("","", &dataOPF, vscControl, writeTxt, plotResult);
 }
