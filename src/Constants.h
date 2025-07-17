@@ -32,6 +32,7 @@ using namespace matplot;
 
 // Eigen library for linear algebra
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 #include <unsupported/Eigen/MatrixFunctions>
 
 #define _USE_MATH_DEFINES
@@ -54,7 +55,12 @@ using namespace matplot;
 #include <cmath>
 #include <functional>
 #include <iomanip>
+#include <filesystem>
+#include <chrono>
+#include <set>
 
+#include <matplot/matplot.h>
+#include "gurobi_c++.h"
 
 using SymEngine::RCP;
 using SymEngine::Basic;
@@ -67,7 +73,6 @@ using namespace std;
 using namespace std::complex_literals;
 using namespace SymEngine; // Use the SymEngine namespace
 using namespace Eigen;
-
 
 
 #endif // CONSTANTS_H

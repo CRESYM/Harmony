@@ -7,6 +7,10 @@ class Generator : public Element {
 public:
     // Constructor
     Generator(const std::string& symbol, int pins, const std::vector<double>& values);
+    
+    // New constructor taking only generator name, sets params internally
+    Generator(const std::string& name, int phases); 
+    std::vector<std::string> getElementInfo() const;
 
     // Destructor
     ~Generator() {}
@@ -39,6 +43,8 @@ private:
     double L_f = 0.01; // Default value
     double X_d = 1.0;  // Default value
     double T_f = 0.1;  // Default value
+
+    std::vector<std::string> element_info;
 
     //std::vector<std::complex<double>> voltage_values;  // Voltages for each phase
 

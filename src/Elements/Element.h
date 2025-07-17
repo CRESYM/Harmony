@@ -14,6 +14,8 @@ public:
         Y_matrix = createZeroMatrix(2*inputPins, 2*outputPins);
     }
 
+    Element(const std::string& name, int phases) {};
+
     // Virtual destructor for resource cleanup in derived classes
     virtual ~Element();
 
