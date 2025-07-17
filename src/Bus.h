@@ -27,23 +27,19 @@ public:
     // Function to print all the elements connected to this bus
     void printConnectedElements();
 
+    void setOPFInfo(const std::vector<std::string>& info) {
+        busOPFInfo = info;
+	}
 
-    // Default parameter values for bus creation
-    static const std::vector<std::string> DefaultACBusParams;
-    static const std::vector<std::string> DefaultDCBusParams;
-
-    // Predefined bus configurations
-    static const std::vector<std::vector<std::string>>& getDefaultACBusInfo();
-    static const std::vector<std::vector<std::string>>& getDefaultDCBusInfo();
+    std::vector<std::string> getOPFInfo() const {
+        return busOPFInfo;
+	}
 
 private:
     std::string busName; // The name of the bus
     int numberPins; // The number of pins (phases) of the bus
     std::vector<Element*> connectedElements;  // Elements connected to this bus
-
-    // Static vectors containing default buses info
-    static std::vector<std::vector<std::string>> defaultACBusInfo;
-    static std::vector<std::vector<std::string>> defaultDCBusInfo;
+	std::vector<std::string> busOPFInfo; // Additional information about the bus
 };
 
 #endif // BUS_H

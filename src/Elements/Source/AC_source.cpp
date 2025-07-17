@@ -60,11 +60,82 @@ AC_source::AC_source(const std::string& symbol, int pins, const std::vector<doub
         }
 }
 
+AC_source::AC_source(const std::string& symbol, int pins, const double Z)
+    : Element(symbol, pins, pins)
+{
+    if (pins > 0) { // Check for valid number of pins
+        for (int i = 0; i < pins; i++)
+            Y_matrix.set(i, i, div(integer(1), real_double(Z)));
+    }
+    else
+        throw invalid_argument("Invalid number of pins, must be greater than 0!");
+
+    // Fill in the complete Y parameters
+    for (int i = 0; i < pins; i++)
+        for (int j = 0; j < pins; j++) {
+            Y_matrix.set(pins + i, j, sub(zero, Y_matrix.get(i, j)));
+            Y_matrix.set(pins + i, pins + j, Y_matrix.get(i, j));
+            Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
+        }
+}
+
 // Destructor
 AC_source::~AC_source() {
     // No need for manual memory management for DenseMatrix or other standard library components
     // std::cout << "AC source object for " << getElementSymbol() << " destroyed." << std::endl;
 }
+
+
+// Power flow computation for AC networks
+void AC_source::computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+    std::map<std::string, double>& globalParams) const {
+    int key = branchData.size();  // Unique branch identifier
+    branchData[std::to_string(key)]["generator"] = 1;
+
+    // Compute generator impedance at operational frequency
+    std::complex<double> s = globalParams["omega"] * std::complex<double>(0, 1);
+
+    // Convert SymEngine expression to double
+    double Y_00_real = SymEngine::eval_double(*Y_matrix.get(0, 0));
+    std::complex<double> Y_00(Y_00_real, 0.0);
+
+    if (Y_00 == std::complex<double>(0, 0)) {
+        throw std::runtime_error("Y_matrix(0,0) is zero, division by zero error.");
+    }
+
+    std::complex<double> Z_eq = std::complex<double>(1.0) / Y_00 / globalParams["Z_base"];
+
+    branchData[std::to_string(key)]["br_r"] = std::real(Z_eq);
+    branchData[std::to_string(key)]["br_x"] = std::imag(Z_eq);
+    branchData[std::to_string(key)]["g_fr"] = 0;
+    branchData[std::to_string(key)]["b_fr"] = 0;
+    branchData[std::to_string(key)]["g_to"] = 0;
+    branchData[std::to_string(key)]["b_to"] = 0;
+}
+
+// Power flow computation for DC networks
+void AC_source::computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+    std::map<std::string, double>& globalParams) const {
+    int key = branchDCData.size();  // Unique DC branch identifier
+    branchDCData[std::to_string(key)]["l"] = 0.0;
+    branchDCData[std::to_string(key)]["c"] = 0.0;
+
+    // Compute Y parameters at low frequency (DC)
+    std::complex<double> s = std::complex<double>(0, 1e-6);
+
+    // Convert SymEngine expression to double
+    double Y_00_real = SymEngine::eval_double(*Y_matrix.get(0, 0));
+    std::complex<double> Y_00(Y_00_real, 0.0);
+
+    if (Y_00 == std::complex<double>(0, 0)) {
+        throw std::runtime_error("Y_matrix(0,0) is zero, division by zero error.");
+    }
+
+    std::complex<double> Z_eq = std::complex<double>(1.0) / Y_00 / globalParams["Z_base"];
+
+    branchDCData[std::to_string(key)]["r"] = std::real(Z_eq);
+}
+
 
 
 

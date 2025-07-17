@@ -31,6 +31,16 @@ void fillWithZero(DenseMatrix& mat) {
 			mat.set(i, j, zero);
 }
 
+Eigen::SparseMatrix<double> absoluteSparseMatrix(const Eigen::SparseMatrix<std::complex<double>>& matrix) {
+	Eigen::SparseMatrix<double> absMatrix(matrix.rows(), matrix.cols());
+	for (int k = 0; k < matrix.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<std::complex<double>>::InnerIterator it(matrix, k); it; ++it) {
+			absMatrix.insert(it.row(), it.col()) = std::abs(it.value());
+		}
+	}
+	return absMatrix;
+}
+
 // Functions for conversion between symbolic and complex or real double scalar/eigen matrix
 complex<double> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value) {
 	RCP<const Symbol> symbol = SymEngine::symbol(symbol_name);

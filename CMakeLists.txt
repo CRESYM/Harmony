@@ -34,11 +34,14 @@ set(Element_Converter_Header_Files
 )
 set(Element_Impedance_Header_Files
     src/Elements/Impedance/Impedance.h
-    src/Elements/Impedance/Load.h
     src/Elements/Impedance/Resistor.h
     src/Elements/Impedance/Admittance.h
     src/Elements/Impedance/Capacitor.h
     src/Elements/Impedance/Inductor.h
+)
+set(Element_Load_Header_Files
+    src/Elements/Load/Load.h
+    src/Elements/Load/Load_PQ.h
 )
 set(Element_Switch_Header_Files
     src/Elements/Switch/Switch.h
@@ -99,11 +102,14 @@ set(Element_Converter_Source_Files
 )
 set(Element_Impedance_Source_Files
     src/Elements/Impedance/Impedance.cpp
-    src/Elements/Impedance/Load.cpp
     src/Elements/Impedance/Resistor.cpp
     src/Elements/Impedance/Admittance.cpp
     src/Elements/Impedance/Capacitor.cpp
     src/Elements/Impedance/Inductor.cpp
+)
+set(Element_Load_Source_Files
+    src/Elements/Load/Load.cpp
+    src/Elements/Load/Load_PQ.cpp
 )
 set(Element_Switch_Source_Files
     src/Elements/Switch/Switch.cpp
@@ -153,7 +159,6 @@ set(Source_Files
     src/Constants.cpp
     src/main.cpp
     src/network.cpp
-    src/network_powerflow.cpp
     src/network_stability.cpp
 )
 set(Examples_Source_files
@@ -171,6 +176,7 @@ if(WIN32) # workds for x64 as well
     source_group("Header Files\\Elements\\Converter" FILES ${Element_Converter_Header_Files})
     source_group("Header Files\\Elements\\Generator" FILES ${Element_Generator_Header_Files})
     source_group("Header Files\\Elements\\Impedance" FILES ${Element_Impedance_Header_Files})
+    source_group("Header Files\\Elements\\Load" FILES ${Element_Load_Header_Files})
     source_group("Header Files\\Elements\\Source" FILES ${Element_Source_Header_Files})
     source_group("Header Files\\Elements\\Transformer" FILES ${Element_Transformer_Header_Files})
     source_group("Header Files\\Elements\\Transmission Line" FILES ${Element_Transmission_Line_Header_Files})
@@ -188,6 +194,7 @@ if(WIN32) # workds for x64 as well
     source_group("Source Files\\Elements\\Converter" FILES ${Element_Converter_Source_Files})
     source_group("Source Files\\Elements\\Generator" FILES ${Element_Generator_Source_Files})
     source_group("Source Files\\Elements\\Impedance" FILES ${Element_Impedance_Source_Files})
+    source_group("Source Files\\Elements\\Load" FILES ${Element_Load_Source_Files})
     source_group("Source Files\\Elements\\Source" FILES ${Element_Source_Source_Files})
     source_group("Source Files\\Elements\\Transformer" FILES ${Element_Transformer_Source_Files})
     source_group("Source Files\\Elements\\Transmission_Line" FILES ${Element_Transmission_Line_Source_Files})

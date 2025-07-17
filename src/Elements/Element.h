@@ -14,8 +14,6 @@ public:
         Y_matrix = createZeroMatrix(2*inputPins, 2*outputPins);
     }
 
-    Element(const std::string& name, int phases) {};
-
     // Virtual destructor for resource cleanup in derived classes
     virtual ~Element();
 
@@ -26,6 +24,11 @@ public:
     std::vector<Bus*> getBuses();
     Bus* getOtherBus(Bus*);
     std::map<Bus*, int> getConnections() { return connections; }
+    std::vector<std::string> getOPFInfo() const {
+        return element_OPF_info;
+    }
+
+    void setOPFInfo(std::vector<std::string>& info) { element_OPF_info = info; }
 
     // Attach bus pointer to the proper terminal
     void attachBus(Bus*, int);
@@ -51,14 +54,9 @@ public:
     virtual DenseMatrix compute_y_parameters() { return Y_matrix; };
     virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num) { return substitute_symbol(Y_matrix, omega, omega_num); };
         
-    // Function to retrieve the Y-parameter matrix
-    DenseMatrix read_y_matrix() { return Y_matrix; }
-
     // Generic MNA stamping 
     virtual void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) {};
     
-    virtual bool getPhaseState(int i) const { return true; } // Default to closed
-
 
     // Virtual power flow computation methods (override in subclasses)
     virtual void computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
@@ -72,6 +70,7 @@ protected:
     int input_pins; // Number of input pins/phases
     int output_pins;  // Number of output pins/phases
     std::map<Bus* , int> connections; // Map of bus connections to the element's terminal
+    std::vector<std::string> element_OPF_info;
 
     DenseMatrix Y_matrix; // Y-parameter matrix representing the admittance of the element
 };

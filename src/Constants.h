@@ -74,5 +74,25 @@ using namespace std::complex_literals;
 using namespace SymEngine; // Use the SymEngine namespace
 using namespace Eigen;
 
+template<typename Table>
+Eigen::MatrixXd map2dense(const Table& tbl,
+    const std::vector<std::string>& colNames)
+{
+    const int nRow = static_cast<int>(tbl.size());
+    const int nCol = static_cast<int>(colNames.size());
+    Eigen::MatrixXd M(nRow, nCol);
+
+    for (const auto& [rowKey, colMap] : tbl)
+    {
+        int r = std::stoi(rowKey);
+        for (int c = 0; c < nCol; ++c)
+        {
+            auto it = colMap.find(colNames[c]);
+            M(r, c) = (it != colMap.end()) ? it->second : 0.0;
+        }
+    }
+    return M;
+}
+
 
 #endif // CONSTANTS_H

@@ -27,6 +27,14 @@ public:
      * - values: DenseMatrix representing the impedance values
      */
     Impedance(const std::string& symbol, int pins, DenseMatrix values);
+    
+    Impedance(const std::string& symbol, int pins, const std::vector<double>& values);
+
+	Impedance(const std::string& symbol, int pins, const double values);
+
+    Impedance(const std::string& symbol, int pins, const std::vector<complex<double>>& values);
+
+    Impedance(const std::string& symbol, int pins, const complex<double> values);
 
     // Destructor to handle any clean-up tasks
     ~Impedance();
@@ -40,8 +48,6 @@ public:
         std::map<std::string, double>& globalParams) const override;
 
 private:
-    // No additional private members in this class, as the behavior is inherited from Element
-    //DenseMatrix Y_matrix; // Admittance matrix
 };
 
 #endif // _IMPEDANCE_H_

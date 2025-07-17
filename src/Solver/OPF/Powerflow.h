@@ -3,9 +3,59 @@
 
 #include "../../Constants.h"
 
+class Element;
+class Network;
+
 class PowerFlow {
 public:
 
+    
+    PowerFlow() {};
+
+    // Data loading
+    std::unordered_map<std::string, Eigen::MatrixXd> create_ac(const std::string& case_name);
+    std::unordered_map<std::string, Eigen::MatrixXd> create_dc(const std::string& case_name);
+
+    //Power flow computation //network_powerflow.cpp
+
+    void addBusAC(std::vector<std::vector<std::string>>& dict_ac,
+        const std::vector<std::string>& bus_info, bool print_info = false);
+
+    void addBusDC(std::vector<std::vector<std::string>>& dict_dc,
+        const std::vector<std::string>& bus_info, bool print_info = false);
+
+    void make_BranchAC(Element* element, std::map<std::string, double>& global_params,
+        const std::vector<std::string>& br_info, bool print_info = false);
+
+    void make_BranchDC(Element* element, std::map<std::string, double>& global_params,
+        const std::vector<std::string>& br_info, bool print_info = false);
+
+    void make_Generator(Element* element, const std::vector<std::string>& gen_info,
+        bool print_info = false);
+
+    void make_Load(Element* element, const std::vector<std::string>& load_info,
+        bool print_info = false);
+
+    void make_Converter(Element* element, std::map<std::string, double>& global_params,
+        const std::vector<std::string>& conv_info, bool print_info = false);
+
+    void make_OPF(const Network& net, bool vscControl = true, bool writeTxt = false,
+        bool plotResult = false);
+
+    void load_params_ac(const std::string& acgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
+    void load_params_dc(const std::string& dcgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
+
+    void solve_opf(const std::string& dc_name,
+        const std::string& ac_name, std::unordered_map<std::string, Eigen::MatrixXd>* dataOPF,
+        bool vscControl, bool writeTxt, bool plotResult);
+
+    const auto& getNetData() const { return data; }
+    auto& getNetData() { return data; }
+
+    // Visualization
+    //void viz_opf();
+
+private:
     // Internal data - AC
     std::unordered_map<std::string, Eigen::MatrixXd> network_ac;
     double baseMVA_ac;
@@ -46,32 +96,14 @@ public:
     std::vector<int> nbuses_ac_viz, ngens_ac_viz;
     std::vector<Eigen::VectorXd> vn2_ac_k, pgen_ac_k, qgen_ac_k;
     std::vector<Eigen::MatrixXd> pij_ac_k, qij_ac_k;
-    int nconvs_dc_viz, nbuses_dc_viz, ngrids_viz; 
-    
-    PowerFlow() {};
+    int nconvs_dc_viz, nbuses_dc_viz, ngrids_viz;
 
-    // Data loading
-    std::unordered_map<std::string, Eigen::MatrixXd> create_ac(const std::string& case_name);
-    std::unordered_map<std::string, Eigen::MatrixXd> create_dc(const std::string& case_name);
 
-    void declareDcVariables(GRBModel& model);
-    void declareACVariables(GRBModel& model);
-    static Eigen::SparseMatrix<double> absoluteSparseMatrix(const Eigen::SparseMatrix<std::complex<double>>& matrix);
+    //store Dictionary OPF
+    std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
 
-    void load_params_ac(const std::string& acgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
-    void load_params_dc(const std::string& dcgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
+    std::unordered_map<std::string, int> busName2Id_;
 
-    void solve_opf(const std::string& dc_name,
-        const std::string& ac_name,
-        std::unordered_map<std::string, Eigen::MatrixXd>* dataOPF,
-        bool vscControl,
-        bool writeTxt,
-        bool plotResult);
-
-    // Visualization
-    //void viz_opf();
-
-private:
     // Internal helper
     Eigen::MatrixXd readCSVtoCpp(const std::string& filename);
     Eigen::SparseMatrix<std::complex<double>> makeYbus(double baseMVA, const Eigen::MatrixXd& bus, const Eigen::MatrixXd& branch);

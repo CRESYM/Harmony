@@ -36,6 +36,8 @@ extern 	double eval_basic(const RCP<const Basic>& expr);
 extern MatrixXd kron_reduction(MatrixXd, vector<int>);
 extern DenseMatrix kron_reduction(DenseMatrix, vector<int>);
 
+extern Eigen::SparseMatrix<double> absoluteSparseMatrix(const Eigen::SparseMatrix<std::complex<double>>& matrix);
+
 // Helper symbolic operations
 extern RCP<const Basic> inv(const RCP<const Basic>& val);
 extern RCP<const Basic> addSym(const RCP<const Basic>& a, const RCP<const Basic>& b);

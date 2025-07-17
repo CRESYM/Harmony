@@ -15,11 +15,19 @@ public:
     // Constructor
     AC_source(const std::string& symbol, int pins, DenseMatrix Z);
 	AC_source(const std::string& symbol, int pins, const std::vector<double>& Z);
+	AC_source(const std::string& symbol, int pins, const double Z);
 
     // Destructor
     ~AC_source();
 
     void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
+
+	// Power flow computations for AC and DC networks
+    void computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+        std::map<std::string, double>& globalParams) const override;
+
+    void computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+        std::map<std::string, double>& globalParams) const override;
 
     // Function to print AC source values
     void printElementValues();

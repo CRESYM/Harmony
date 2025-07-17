@@ -18,13 +18,7 @@ private:
 
     int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation
     
-    //store Dictionary OPF
-    std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
-
-    std::unordered_map<std::string, int> busName2Id_;
-
-
-
+    
 public:
 
     // Constructor to initialize the network with zero pins
@@ -51,14 +45,6 @@ public:
     // Function to add an element to the network using a specific designator
     void addElement(const std::string& designator, Element* elem);
 
-    Element* addElement(const std::string& elementType,
-        const std::string& designator,
-        int pins,
-        const std::vector<std::string>& element_info,
-        int busNum,
-        Bus* busPtr,
-        bool print_info);
-
     // Function to connect an element to a specific bus at a particular terminal
     void connectElementToBus(Element* elem, int terminal, Bus* bus);
 
@@ -82,52 +68,6 @@ public:
 
     // System analysis
     void checkStability(const Eigen::MatrixXd& A_matrix);
-
-    //Power flow computation //network_powerflow.cpp
-    std::map<std::string, double> PowerFlowComputation();
-
-    void addBusAC(std::vector<std::vector<std::string>>& dict_ac,
-        const std::vector<std::string>& bus_info,
-        bool print_info = false);
-
-    void addBusDC(std::vector<std::vector<std::string>>& dict_dc,
-        const std::vector<std::string>& bus_info,
-        bool print_info = false);
-
-    void make_BranchAC(Element* element,
-        std::map<std::string, double>& global_params,
-        const std::vector<std::string>& br_info,
-        bool print_info = false);
-
-    void make_BranchDC(Element* element,
-        std::map<std::string, double>& global_params,
-        const std::vector<std::string>& br_info,
-        bool print_info = false);
-
-    void make_Generator(Element* element,
-        const std::vector<std::string>& gen_info,
-        bool print_info = false);
-
-    void make_Load(Element* element,
-        const std::vector<std::string>& load_info,
-        bool print_info = false);
-
-    void make_Converter(Element* element,
-        std::map<std::string, double>& global_params,
-        const std::vector<std::string>& conv_info,
-        bool print_info = false);
-
-    void make_OPF(const Network& net,
-        bool vscControl = true,
-        bool writeTxt = false,
-        bool plotResult = false);
-
-    const auto& getNetData() const { return data; }
-    auto& getNetData() { return data; }
-
-    // New helper to add default AC buses
-    void addDefaultACBuses();  // creates and adds buses to the network using Bus::getDefaultACBusInfo()
-    void addDefaultDCBuses();
 
 };
 

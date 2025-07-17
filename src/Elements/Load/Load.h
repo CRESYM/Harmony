@@ -1,5 +1,5 @@
-#ifndef LOAD
-#define LOAD
+#ifndef _LOAD_H_
+#define _LOAD_H_
 
 #include "../Element.h"
 
@@ -25,12 +25,6 @@ public:
     * - values: Vector of values containing either 3 entries or 3 * pins entries for R, L, and C.
     */
     Load(const std::string& symbol, int pins, std::vector<double> values);
-
-    // New constructor taking only load name, sets params internally
-    Load(const std::string& name, int phases);
-
-    std::vector<std::string> getElementInfo() const;
-
 
 
     // Destructor
@@ -71,8 +65,6 @@ private:
     std::vector<double> L;  // Inductance for each phase
     std::vector<double> C;  // Capacitance for each phase
 
-    std::vector<std::string> element_info;
-
-
+	// element_OPF_info is containing values for element_symbol, grid_area, rated_voltage_kv, R, L, C
 };
 #endif

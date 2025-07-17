@@ -9,7 +9,7 @@
  * or with phase-specific values for R, L, and C.
  */
 Load::Load(const std::string& symbol, int pins, std::vector<double> values) : Element(symbol, pins, pins) {
-    if (pins <= 0){
+    if (pins <= 0) {
         throw std::invalid_argument("Invalid number of pins, must be greater than 0!");
     }
 
@@ -31,7 +31,7 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
     }
     else
         throw std::invalid_argument("Invalid number of values, it should be equal to the number pins, or 3 x number of pins.");
-    
+
     // Check for initialization
     for (int i = 0; i < pins; ++i) {
         if (R[i] == 0 && L[i] == 0 && C[i] == 0) {
@@ -57,15 +57,22 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
         // Calculate the impedance part from inductance: jωL
         RCP<const Basic> j_omega_L = mul(j, mul(omega, L_val));
         // Calculate the capacitive impedance: j/(ωC)
-        RCP<const Basic> j_omega_C = mul(j, div(real_double(-1), mul(omega, C_val)));
+        RCP<const Basic> j_omega_C;
+        if (C[i] != 0) {
+            j_omega_C = mul(j, div(real_double(-1), mul(omega, C_val)));
+		}
+        else {
+			j_omega_C = real_double(0);  // No capacitive effect if C is zero
+        }
+        
 
         // Impedance
         RCP<const Basic> Z_RLC = add(add(R_val, j_omega_L), j_omega_C);
 
         // Admittance
-        Y_matrix.set(i,i, div(real_double(1), Z_RLC));
+        Y_matrix.set(i, i, div(real_double(1), Z_RLC));
     }
-
+ 
     // Fill in the complete Y parameters (for symmetrical matrix representation)
     for (int i = 0; i < pins; i++)
         for (int j = 0; j < pins; j++) {
@@ -73,6 +80,8 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : El
             Y_matrix.set(pins + i, pins + j, Y_matrix.get(i, j));
             Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
         }
+
+    element_OPF_info = { symbol, "1", to_string(R[0]), to_string(L[0]), to_string(C[0]) };
 }
 
 
@@ -101,23 +110,6 @@ void Load::computePowerFlowAC(std::map<std::string, std::map<std::string, double
     branchData[std::to_string(key)]["b_fr"] = 0;
     branchData[std::to_string(key)]["g_to"] = 0;
     branchData[std::to_string(key)]["b_to"] = 0;
-}
-
-Load::Load(const std::string& name, int phases) : Element(name, phases) {
-    static std::unordered_map<std::string, std::vector<std::string>> default_info = {
-        {"LOAD01", {"LOAD01", "1", "345", "0",    "0",    "0"}},
-        {"LOAD02", {"LOAD02", "1", "345", "5950", "37.9", "0"}},
-        {"LOAD03", {"LOAD03", "1", "345", "2650", "25.2", "0"}},
-        {"LOAD04", {"LOAD04", "1", "345", "2976", "75.7", "0"}},
-        {"LOAD05", {"LOAD05", "1", "345", "1984", "37.9", "0"}}
-    };
-
-    auto it = default_info.find(name);
-    element_info = (it != default_info.end()) ? it->second : std::vector<std::string>{ name, "1", "345", "0", "0", "0" };
-}
-
-std::vector<std::string> Load::getElementInfo() const {
-    return element_info;
 }
 
 

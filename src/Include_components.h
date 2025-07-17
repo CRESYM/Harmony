@@ -8,10 +8,14 @@
 #include "./Elements/Impedance/Admittance.h"
 #include "./Elements/Impedance/Impedance.h"
 #include "./Elements/Impedance/Resistor.h"
-#include "./Elements/Impedance/Load.h"
 #include "./Elements/Impedance/Capacitor.h"
 #include "./Elements/Impedance/Inductor.h"
 
+// Loads
+#include "./Elements/Load/Load.h"
+#include "./Elements/Load/Load_PQ.h"
+
+// Switches and Breakers
 #include "./Elements/Switch/Switch.h"
 
 // Transformers
