@@ -8,9 +8,9 @@
 int main() {
 
 	// example_MMC();
-	//example_OPF();
+	example_OPF();
 
-	example_visuals();
+	// example_visuals();
 
 	return 0;
 

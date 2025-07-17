@@ -78,8 +78,6 @@ void example_OPF() {
     DenseMatrix ACZ3(1, 1);
     double ACR3 = 0.06;
     double ACX3 = 0.18;
-    // RCP<const Basic> ACZsym3 = add(real_double(ACR3),
-    //    mul(I, real_double(ACX3)));
     RCP<const Basic> ACZsym3 = real_double(ACR3);
     ACZ3.set(0, 0, ACZsym3);
     Impedance* br3_ac = new Impedance("br3_ac", 3, ACZ3);
@@ -91,8 +89,6 @@ void example_OPF() {
     DenseMatrix ACZ4(1, 1);
     double ACR4 = 0.06;
     double ACX4 = 0.18;
-    // RCP<const Basic> ACZsym4 = add(real_double(ACR4),
-    //    mul(I, real_double(ACX4)));
     RCP<const Basic> ACZsym4 = real_double(ACR4);
     ACZ4.set(0, 0, ACZsym4);
     Impedance* br4_ac = new Impedance("br4_ac", 3, ACZ4);
@@ -104,8 +100,6 @@ void example_OPF() {
     DenseMatrix ACZ5(1, 1);
     double ACR5 = 0.04;
     double ACX5 = 0.12;
-    // RCP<const Basic> ACZsym5 = add(real_double(ACR5),
-    //    mul(I, real_double(ACX5)));
     RCP<const Basic> ACZsym5 = real_double(ACR5);
     ACZ5.set(0, 0, ACZsym5);
     Impedance* br5_ac = new Impedance("br5_ac", 3, ACZ5);
@@ -131,8 +125,6 @@ void example_OPF() {
     DenseMatrix ACZ7(1, 1);
     double ACR7 = 0.08;
     double ACX7 = 0.24;
-    //RCP<const Basic> ACZsym7 = add(real_double(ACR7),
-    //    mul(I, real_double(ACX7)));
     RCP<const Basic> ACZsym7 = real_double(ACR7);
     ACZ7.set(0, 0, ACZsym7);
     Impedance* br7_ac = new Impedance("br7_ac", 3, ACZ7);
