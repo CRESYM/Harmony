@@ -74,6 +74,7 @@ set(Solver_Helper_Functions_Header_Files
     src/Solver/Helper_Functions/Helper_Functions.h
     src/Solver/Helper_Functions/Differential_equations.h
     src/Solver/Helper_Functions/Symbolic_functions.h
+    src/Solver/Helper_Functions/Visualization.h
 )
 set(Control_Header_Files
     src/Control/Control_block.h
@@ -139,6 +140,7 @@ set(Solver_OPF_Source_Files
 set(Solver_Helper_Functions_Source_Files
     src/Solver/Helper_Functions/Differential_equations.cpp
     src/Solver/Helper_Functions/Symbolic_functions.cpp
+    src/Solver/Helper_Functions/Visualization.cpp
 )
 set(Control_Source_Files
     src/Control/Control_block.cpp
@@ -158,6 +160,7 @@ set(Examples_Source_files
     src/examples/example_OPF.cpp
     src/examples/example_MMC.cpp
     src/examples/example_constructors.cpp
+    src/examples/example_visuals.cpp
 )
 
 # Add source_groups to create file filters (groups) in Visual Studio project

@@ -26,6 +26,9 @@
 #include <symengine/polys/basic_conversions.h>
 #include <symengine/printers.h>  // Correct header for printing
 
+#include<matplot/matplot.h>
+using namespace matplot;
+
 
 // Eigen library for linear algebra
 #include <Eigen/Dense>

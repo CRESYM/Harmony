@@ -3,5 +3,6 @@
 
 #include "Symbolic_functions.h"
 #include "Differential_equations.h"
+#include "Visualization.h"
 
 #endif

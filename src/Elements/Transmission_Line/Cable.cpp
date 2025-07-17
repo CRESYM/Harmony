@@ -132,12 +132,12 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 
 			// Iterate over conductors to find maximum radius
 			for (const auto& conductor : conductors) {
-				d_ij = max(d_ij, conductor.second->ro);
+				d_ij = std::max(d_ij, conductor.second->ro);
 			}
 
 			// Iterate over insulators to find maximum radius
 			for (const auto& insulator : insulators) {
-				d_ij = max(d_ij, insulator.second->ro);
+				d_ij = std::max(d_ij, insulator.second->ro);
 			}
 
 			double x = d_ij;
@@ -238,13 +238,13 @@ Cable::Cable(const string& symbol, int pins, const string& type_constructor,
 				if (i == j) {
 					double max_conductor_radius = 0;
 					for (const auto& conductor : conductors) {
-						max_conductor_radius = max(max_conductor_radius, conductor.second->ro);
+						max_conductor_radius = std::max(max_conductor_radius, conductor.second->ro);
 					}
 					double max_insulator_radius = 0;
 					for (const auto& insulator : insulators) {
-						max_insulator_radius = max(max_insulator_radius, insulator.second->ro);
+						max_insulator_radius = std::max(max_insulator_radius, insulator.second->ro);
 					}
-					D1 = max(max_conductor_radius, max_insulator_radius);
+					D1 = std::max(max_conductor_radius, max_insulator_radius);
 					D2 = H;
 				}
 				else {

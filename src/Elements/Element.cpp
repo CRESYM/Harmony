@@ -1,6 +1,9 @@
 ﻿#include "Element.h"
 #include "../Bus.h"
 
+// Helper functions
+#include "../Solver/Helper_Functions/Helper_Functions.h"
+
 // Destructor for Element
 Element::~Element() {}
 
@@ -79,4 +82,38 @@ void Element::writeFile(double start_frequency, int end_frequency, int number_of
     }
     
     myfile.close();
+}
+
+// Function to plot the Y-parameter matrix in logarithmic scale and in dB and angles
+void Element::plotYParameters(double start_frequency, int end_frequency, int number_of_points) {
+    std::vector<double> angular_frequencies;
+    std::vector<std::vector<double>> magnitudes(number_of_points, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));
+    std::vector<std::vector<double>> phases(number_of_points, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));
+    std::vector<std::string> labels;
+    double gap = (end_frequency - start_frequency) / (number_of_points - 1);
+    double frequency = start_frequency;
+    for (int p = 0; p < number_of_points; p++) {
+        angular_frequencies.push_back(frequency);
+        std::vector<std::vector<complex<double>>> Y = compute_y_parameters(frequency);
+        
+        for (int i = 0; i < 2 * input_pins; ++i) {
+            for (int j = 0; j < 2 * output_pins; ++j) {
+                double magnitude = 20 * log10(std::abs(Y[i][j]));
+                double phase = std::arg(Y[i][j]) * 180.0 / M_PI; // Convert to degrees
+                
+                magnitudes[p][i+j] = magnitude;
+                phases[p][i+j] = phase;
+            }
+        }
+        frequency += gap; // increase frequency
+    }
+
+    // Making labels
+    for (int i = 0; i < 2 * input_pins; ++i) {
+        for (int j = 0; j < 2 * output_pins; ++j) {
+            labels.push_back("Y_{" + to_string(i+1) + to_string(j+1) + "}");
+        }
+    }
+
+    bode_plot(angular_frequencies, magnitudes, phases, labels, "Y-Parameters of " + element_symbol);
 }
