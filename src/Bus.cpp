@@ -2,7 +2,15 @@
 #include "./Elements/Element.h"
 
 // Constructor for Bus
-Bus::Bus(const std::string& name, int number) : busName(name), numberPins(number) {}
+Bus::Bus(const std::string& name, int number) : busName(name), numberPins(number) {
+    if (number <= 0) {
+        throw std::invalid_argument("Number of pins must be greater than zero.");
+	}
+    else if (number == 1)
+	    busOPFInfo = { name, "1", "1.1", "0.9" }; // Default OPF info, can be modified later
+    else if (number == 3)
+		busOPFInfo = { name, "1", "100", "345", "1.1", "0.9" }; // Default OPF info for 3-phase bus
+}
 
 // Destructor
 Bus::~Bus() {

@@ -15,11 +15,6 @@ void example_OPF() {
     Bus* bus3_ac = new Bus("ACBUS03", 3);
     Bus* bus4_ac = new Bus("ACBUS04", 3);
     Bus* bus5_ac = new Bus("ACBUS05", 3);
-	bus1_ac->setOPFInfo({ "ACBUS01", "1", "100", "345", "1.1", "0.9" });
-	bus2_ac->setOPFInfo({ "ACBUS02", "1", "100", "345", "1.1", "0.9" });
-	bus3_ac->setOPFInfo({ "ACBUS03", "1", "100", "345", "1.1", "0.9" });
-	bus4_ac->setOPFInfo({ "ACBUS04", "1", "100", "345", "1.1", "0.9" });
-	bus5_ac->setOPFInfo({ "ACBUS05", "1", "100", "345", "1.1", "0.9" });
 
     /*  ---------- 1.2 Add AC Loads  ---------- */
     
@@ -80,8 +75,6 @@ void example_OPF() {
         "600"       // 9  cost_constant_coeff
     };
 	gen2->setOPFInfo(gen_info2);
-
-	cout << "[Debug] Created AC buses and connected loads and generators." << endl;
 
     ///*  ---------- 1.4 Add Branches  ---------- */
     double ACR1 = 0.02; double ACX1 = 0.06;
@@ -146,9 +139,6 @@ void example_OPF() {
     Bus* bus1_dc = new Bus("DCBUS01", 1);
     Bus* bus2_dc = new Bus("DCBUS02", 1);
     Bus* bus3_dc = new Bus("DCBUS03", 1);
-	bus1_dc->setOPFInfo({ "DCBUS01", "1", "1.1", "0.9" });
-	bus2_dc->setOPFInfo({ "DCBUS02", "1", "1.1", "0.9" });
-	bus3_dc->setOPFInfo({ "DCBUS03", "1", "1.1", "0.9" });
     
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
@@ -172,7 +162,7 @@ void example_OPF() {
     net.connectElementToBus(br3_dc, /*terminal=*/1, bus2_dc);
     net.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
     std::vector<std::string> info_br3_dc = { "DCBR3" };
-	br1_ac->setOPFInfo(info_br3_dc);
+	br3_dc->setOPFInfo(info_br3_dc);
 
     /*  ---------- 2.3 Create Converters ---------- */
     MMC* mmc1 = new MMC(
@@ -193,31 +183,6 @@ void example_OPF() {
     );
     net.connectElementToBus(mmc1, 1, bus2_ac);
     net.connectElementToBus(mmc1, 2, bus1_dc);
-
-    std::vector<std::string> info_conv1 = {
-     "MMC1",          // 0  generator_name
-     "1",             // 1  grid_area
-     "1",             // 2  type_dc 
-     "1",             // 3  type_ac
-     "0.0015",        // 4  rftc
-     "0.1121",        // 5  xtfc
-     "0.0887",        // 6  bf
-     "0.0001",        // 7  rc
-     "0.16428",       // 8  xc
-     "345",           // 9  basekVac
-     "1.1",           // 10 Vmmax
-     "0.9",           // 11 Vmmin
-     "1.2",           // 12 Imax
-     "1.103",         // 13 LossAC
-     "0.887",         // 14 LossB
-     "2.885",         // 15 LossCrec
-     "4.371",         // 16 LossCinv
-     "0",             // 17 droop
-     "0",             // 18 Pdcset
-     "0",             // 19 Vdcset
-     "0",             // 20 Dvdsetc
-    };
-	mmc1->setOPFInfo(info_conv1);
 
 
     MMC* mmc2 = new MMC(
@@ -283,34 +248,7 @@ void example_OPF() {
     net.connectElementToBus(mmc3, 1, bus5_ac);
     net.connectElementToBus(mmc3, 2, bus3_dc);
 
-    std::vector<std::string> info_conv3 = {
-     "MMC3",          // 0  generator_name
-     "1",             // 1  grid_area
-     "1",             // 2  type_dc 
-     "1",             // 3  type_ac
-     "0.0015",        // 4  rftc
-     "0.1121",        // 5  xtfc
-     "0.0887",        // 6  bf
-     "0.0001",        // 7  rc
-     "0.16428",       // 8  xc
-     "345",           // 9  basekVac
-     "1.1",           // 10 Vmmax
-     "0.9",           // 11 Vmmin
-     "1.2",           // 12 Imax
-     "1.103",         // 13 LossAC
-     "0.887",         // 14 LossB
-     "2.885",         // 15 LossCrec
-     "4.371",         // 16 LossCinv
-     "0",             // 17 droop
-     "0",             // 18 Pdcset
-     "0",             // 19 Vdcset
-     "0",             // 20 Dvdsetc
-    };
-	mmc3->setOPFInfo(info_conv3);
-  
-    
-
     /*----- 3 OPF Implementatiopn ----- */
-	//PowerFlow pf;
-    //pf.make_OPF(net, false, true, false);
+	PowerFlow pf;
+    pf.make_OPF(&net, false, true, false);
 }

@@ -39,7 +39,7 @@ public:
     void make_Converter(Element* element, std::map<std::string, double>& global_params,
         const std::vector<std::string>& conv_info, bool print_info = false);
 
-    void make_OPF(const Network& net, bool vscControl = true, bool writeTxt = false,
+    void make_OPF(Network* net, bool vscControl = true, bool writeTxt = false,
         bool plotResult = false);
 
     void load_params_ac(const std::string& acgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);

@@ -39,7 +39,9 @@ private:
     std::string busName; // The name of the bus
     int numberPins; // The number of pins (phases) of the bus
     std::vector<Element*> connectedElements;  // Elements connected to this bus
-	std::vector<std::string> busOPFInfo; // Additional information about the bus
+
+	std::vector<std::string> busOPFInfo; // Additional information about the bus OPF model
+	// This includes area and voltage limits.
 };
 
 #endif // BUS_H

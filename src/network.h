@@ -56,6 +56,8 @@ public:
 
     // Print all the current connections between buses and elements in the network
     void printConnections();
+	void printBuses();
+    void printElements();
 
     // Getters for private members variables for buses, elements, and connections
     const std::unordered_map<std::string, Bus*>& getBuses() const { return buses; }

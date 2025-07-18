@@ -693,7 +693,7 @@ void PowerFlow::make_Load(Element* element, const std::vector<std::string>& load
 }
 
 
-void PowerFlow::make_OPF(const Network& net, bool vscControl,
+void PowerFlow::make_OPF(Network* net, bool vscControl,
     bool writeTxt, bool plotResult)
 {
     //const auto& data = net.getNetData();
@@ -702,10 +702,13 @@ void PowerFlow::make_OPF(const Network& net, bool vscControl,
      {"Z_base", 1.0}
     };
 
-    cout << "\n[make_OPF] Start making OPF data...\n";
 
-    for (auto& [element_name, element] : net.getElements())
+    cout << "\n[make_OPF] Start making OPF data...\n";
+        
+    auto& elements = net->getElements();
+    for (const auto& [element_name, element] : elements)
     {
+		cout << "[make_OPF] Processing element: " << element_name << endl;
         if (dynamic_cast<Load*>(element)) {
             make_Load(element, element->getOPFInfo(), writeTxt);
         }
@@ -714,7 +717,6 @@ void PowerFlow::make_OPF(const Network& net, bool vscControl,
         }
         else if (dynamic_cast<Impedance*>(element)) {
             if (element->getInputPins() == 3) {
-                cout << "make_BranchAC" << endl;
                 make_BranchAC(element, globals, element->getOPFInfo(), writeTxt);
             }
             else if (element->getInputPins() == 1) {
@@ -733,9 +735,11 @@ void PowerFlow::make_OPF(const Network& net, bool vscControl,
         }
     }
 
+	cout << "[make_OPF] Finished processing elements.\n";
+
     std::vector<std::vector<std::string>> dict_dc;
     std::vector<std::vector<std::string>> dict_ac;
-    for (const auto& [bus_name, bus] : net.getBuses())
+    for (const auto& [bus_name, bus] : net->getBuses())
     {
         if (bus->getPinNumber() == 3) {
             addBusAC(dict_ac, bus->getOPFInfo(), writeTxt);
@@ -748,6 +752,7 @@ void PowerFlow::make_OPF(const Network& net, bool vscControl,
         }
     }
 
+	//data["busDC"] = dict_dc;
 
     /* 2. Transform to Eigen::MatrixXd */
     MatrixXd busDC = map2dense(data.at("busDC"),
@@ -927,6 +932,7 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
         qd_ac[ng] = bus_ac[ng].col(3) / baseMVA_ac;
     }
 }
+
 void PowerFlow::load_params_dc(const std::string& dcgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF) {
     if (!dcgrid_name.empty()) {
         // Load DC grid from file

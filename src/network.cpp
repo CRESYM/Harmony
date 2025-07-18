@@ -47,6 +47,9 @@ void Network::addElement(const std::string& designator, Element* elem) {
 
 // Function to connect an element to a bus
 void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
+    if (elements.find(elem->getElementSymbol()) == elements.end()) {
+		elements[elem->getElementSymbol()] = elem;  // Add the element if it doesn't exist
+	}
     int pins;
     if (terminal == 1) {
         pins = elem->getInputPins();
@@ -109,7 +112,19 @@ void Network::printConnections() {
         for (Element* elem : connection.second) {
             std::cout << "  - " << elem->getElementSymbol() << std::endl; // Use the getter method
         }
-        std::cout << "Total number of pins is " << pins << std::endl;
+        //std::cout << "Total number of pins is " << pins << std::endl;
+    }
+}
+
+void Network::printBuses() {
+    for (const auto& bus : buses) {
+        std::cout << "Bus: " << bus.first << ", Pin Number: " << bus.second->getPinNumber() << std::endl;
+    }
+}
+
+void Network::printElements() {
+    for (const auto& elem : elements) {
+        std::cout << "Element: " << elem.first << ", Symbol: " << elem.second->getElementSymbol() << std::endl;
     }
 }
 

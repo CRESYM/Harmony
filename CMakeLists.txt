@@ -216,6 +216,7 @@ add_executable(
     ${Element_Converter_Header_Files}
     ${Element_Generator_Header_Files}
     ${Element_Impedance_Header_Files}
+    ${Element_Load_Header_Files}
     ${Element_Source_Header_Files}
     ${Element_Transformer_Header_Files}
     ${Element_Transmission_Line_Header_Files}
@@ -230,6 +231,7 @@ add_executable(
     ${Element_Converter_Source_Files}
     ${Element_Generator_Source_Files}
     ${Element_Impedance_Source_Files}
+    ${Element_Load_Source_Files}
     ${Element_Source_Source_Files}
     ${Element_Transformer_Source_Files}
     ${Element_Transmission_Line_Source_Files}
