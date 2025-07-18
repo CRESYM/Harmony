@@ -41,6 +41,25 @@ Eigen::SparseMatrix<double> absoluteSparseMatrix(const Eigen::SparseMatrix<std::
 	return absMatrix;
 }
 
+// Convert Eigen MatrixXcd to SymEngine DenseMatrix
+DenseMatrix eigenToSymEngineDenseMatrix(const MatrixXcd& eigenMat) {
+	size_t rows = eigenMat.rows();
+	size_t cols = eigenMat.cols();
+
+	DenseMatrix symMat(rows, cols); // SymEngine DenseMatrix
+
+	for (size_t i = 0; i < rows; ++i) {
+		for (size_t j = 0; j < cols; ++j) {
+			std::complex<double> c = eigenMat(i, j);
+			// Convert to SymEngine ComplexDouble
+			RCP<const Basic> elem = complex_double(c.real(), c.imag());
+			symMat.set(i, j, elem);
+		}
+	}
+
+	return symMat;
+}
+
 // Functions for conversion between symbolic and complex or real double scalar/eigen matrix
 complex<double> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value) {
 	RCP<const Symbol> symbol = SymEngine::symbol(symbol_name);

@@ -19,6 +19,8 @@ extern RCP<const Basic> s; // s = j * omega
 extern DenseMatrix createZeroMatrix(int size1, int size2);
 extern void fillWithZero(DenseMatrix& mat);
 
+extern DenseMatrix eigenToSymEngineDenseMatrix(const MatrixXcd& eigenMat);
+
 extern complex<double> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value);
 extern complex<double> substitute_symbol(const RCP<const Basic>& expr, RCP<const Basic> symbol_name, double value);
 extern complex<double> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, complex<double> value);

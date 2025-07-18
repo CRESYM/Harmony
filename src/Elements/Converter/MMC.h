@@ -37,9 +37,7 @@ public:
     // Destructor
     ~MMC() {};
     
-    
-   
-    
+        
     //getter
     Eigen::MatrixXd getA() const { return A_matrix; }
     Eigen::MatrixXd getB() const { return B_matrix; }
@@ -52,8 +50,9 @@ public:
     // Equilibrium point calculation
     void solveEquilibrium();
     Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u);
-    void computeJacobian(const Eigen::VectorXd& x0, const Eigen::VectorXd& u0);
+    void computeABCD();
 
+	// Y-parameter computation
     Eigen::MatrixXcd compute_y_parameters_num(double omega) override;
 
     // System analysis

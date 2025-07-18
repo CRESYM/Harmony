@@ -24,38 +24,26 @@ void example_MMC() {
 
 	MMC* mmc1 = new MMC("MMC1", converter_params, controller_params);
 
-
-	//// Define operating point
-	// Eigen::VectorXd x0 = Eigen::VectorXd::Zero(6); 
-	//x0 << 200e3, 0, 15e3, 20e3, 20e3, 20e3;
-
-	//Eigen::VectorXd u0(8);                          // [VD1,VD2,VS1-VS6]
-	//u0 << 0, 0, 400, 400, -400, 400, -400, 400;
-	//double t = 5.0;
-
-	//// Numerical Jacobian
-	//mmc.computeJacobianNumerically(x0, u0);
-	//std::cout << "\nA (numerical):\n" << mmc.getA() << "\n";
-	//std::cout << "\nB (numerical):\n" << mmc.getB() << "\n";
-
-	//// Admittance matrix
-	//std::complex<double> s = std::complex<double>(0, 2 * M_PI * Fnom);
-	//Eigen::MatrixXcd Y = mmc.computeAdmittanceMatrix(s);
-
-	//// Print the admittance matrix
-	//std::cout << "Admittance Matrix: " << Fnom << "):\n" << Y << std::endl;
-
 	// Equilibrium Solution
 	std::cout << "\nEquilibrium Solution: \n";
 	mmc1->solveEquilibrium();
 	const Eigen::VectorXd x_eq = mmc1->getEquilibriumState();
 	std::cout << "Equilibrium state:\n" << x_eq.transpose() << "\n";
 
-	// mmc1->printElementValues();  // Print MMC parameters
+	// Numerical Jacobian
+	mmc1->computeABCD();
+	std::cout << "\nA:\n" << mmc1->getA() << "\n";
+	std::cout << "\nB:\n" << mmc1->getB() << "\n";
 
-	//// Verify equilibrium
-	//const Eigen::VectorXd dx_eq = mmc.computeStateDerivatives(x_eq.head(6), u0);
-	//std::cout << "||dx|| at equilibrium: " << dx_eq.norm() << "\n";
+	 //Admittance matrix
+	Eigen::MatrixXcd Y = mmc1->compute_y_parameters_num(omega);
+
+	// Print the admittance matrix
+	std::cout << "Admittance Matrix: " << omega << "):\n" << Y << std::endl;
+
+
+
+	// mmc1->printElementValues();  // Print MMC parameters
 
 	//mmc.printEigenvalues();  // Display eigenvalues
 }

@@ -274,12 +274,12 @@ void MMC::init_Filter(const std::vector<double>& filter_params) {
  * @param Pdc DC power.
  */
 void MMC::update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc) {
-    this->V_m = Vm;
+    V_m = Vm;
     this->theta = theta;
-    this->V_dc = Vdc;
-    this->P = Pac;
-    this->Q = Qac;
-    this->P_dc = Pdc;
+    V_dc = Vdc;
+    P = Pac;
+    Q = Qac;
+    P_dc = Pdc;
 
     const double Vgd = Vm * std::cos(theta);
     const double Vgq = -Vm * std::sin(theta);
@@ -348,7 +348,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
 
     // Extract state variables from the end of the state vector
     int i = number_of_states - 12;
-    double iDelta_d = x(i), iDelta_q = x(i + 1), iSigma_d = x(i + 2), iSigma_q = x(i + 3), iSigma_z = x(i + 4);
+    double iDelta_d = x(i), iDelta_q = x(i + 1), iSigma_z = x(i + 2), iSigma_d = x(i + 3), iSigma_q = x(i + 4);
     double vCDelta_d = x(i + 5), vCDelta_q = x(i + 6), vCDelta_Zd = x(i + 7), vCDelta_Zq = x(i + 8);
     double vCSigma_d = x(i + 9), vCSigma_q = x(i + 10), vCSigma_z = x(i + 11);
 
@@ -631,7 +631,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     double dvCDeltaZd_dt = (N * (iDelta_d * mSigma_d + 2 * iSigma_d * mDelta_d + iDelta_q * mSigma_q + 2 * iSigma_q * mDelta_q + 4 * iSigma_z * mDelta_Zd)) / (8 * C_arm) - 3 * vCDelta_Zq * w;
     double dvCDeltaZq_dt = 3 * vCDelta_Zd * w + (N * (iDelta_q * mSigma_d - iDelta_d * mSigma_q + 2 * iSigma_d * mDelta_q - 2 * iSigma_q * mDelta_d + 4 * iSigma_z * mDelta_Zq)) / (8 * C_arm);
 
-    F(i++) = diDeltad_dt; F(i++) = diDeltaq_dt; F(i++) = diSigmad_dt; F(i++) = diSigmaq_dt; F(i++) = diSigmaz_dt;
+    F(i++) = diDeltad_dt; F(i++) = diDeltaq_dt; F(i++) = diSigmaz_dt; F(i++) = diSigmad_dt; F(i++) = diSigmaq_dt;
     F(i++) = dvCDeltad_dt; F(i++) = dvCDeltaq_dt; F(i++) = dvCDeltaZd_dt; F(i++) = dvCDeltaZq_dt;
     F(i++) = dvCSigmad_dt; F(i++) = dvCSigmaq_dt; F(i++) = dvCSigmaz_dt;
 
@@ -649,7 +649,17 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
  * @param x0 Operating point state vector.
  * @param u0 Operating point input vector.
  */
-void MMC::computeJacobian(const Eigen::VectorXd& x0, const Eigen::VectorXd& u0) {
+void MMC::computeABCD() {
+    const Eigen::VectorXd& x0 = equilibrium_state;
+    Eigen::VectorXd& u0 = VectorXd(3);
+    // Define input vector u0 (DC voltage and AC voltages)
+    if (controls.count("dc_voltage")) {
+        u0 << P_dc / V_dc, V_m* cos(omega_0), V_m* sin(omega_0);
+    }
+    else {
+        u0 << V_dc, V_m* cos(omega_0), V_m* sin(omega_0);
+    }
+
     // Bind the member function computeStateDerivatives as a lambda
     auto f = [&](const Eigen::VectorXd& x, const Eigen::VectorXd& u) {
         return computeStateDerivatives(x, u);
@@ -660,24 +670,55 @@ void MMC::computeJacobian(const Eigen::VectorXd& x0, const Eigen::VectorXd& u0) 
     Eigen::MatrixXd A = jacobians.first;
     Eigen::MatrixXd B = jacobians.second;
 
+    // make Y matrix
+    const int n = A.rows();
+
     // Store in class variables
-    A_matrix = A;
-    B_matrix = B;
+    A_matrix = A.block(n - 12, n - 12, 3, 3);
+    B_matrix = B.block(n - 12, 0, 3, 3);
 
     int num_states = A_matrix.cols();
-    C_matrix = Eigen::MatrixXd::Zero(3, num_states);
+    C_matrix = Eigen::MatrixXd::Zero(3,num_states);
 
     C_matrix(1, 0) = 1; 
     C_matrix(2, 1) = 1;  
 
-    if (controls.count("dc")) {
-        C_matrix(0, 4) = 3;  // corresponds to C[1,5] in Julia
+    if (!controls.count("dc")) {
+        C_matrix(0, 4) = 3;
     }
 	else { // to repair the C matrix
-        //C_matrix(0, vdc_position - 1) = 1; 
+        C_matrix(0, vdc_index - 1) = 1; 
     }
 
     D_matrix = Eigen::MatrixXd::Zero(3, 3);
+
+    /*DenseMatrix I;
+    SymEngine::eye(I, 3);
+    DenseMatrix A_s;
+    mul_dense_scalar(A_s, s, I);
+    add_dense_dense(A_s, A_s, eigenToSymEngineDenseMatrix(-A_matrix));
+    DenseMatrix inv_A_s = A_s.inv();
+
+    DenseMatrix B_c = eigenToSymEngineDenseMatrix(B_matrix);
+    DenseMatrix C_c = eigenToSymEngineDenseMatrix(C_matrix);
+    DenseMatrix D_c = eigenToSymEngineDenseMatrix(D_matrix);
+	mul_dense_dense(Y_matrix, C_c, inv_A_s);
+	mul_dense_dense(Y_matrix, Y_matrix, B_c);
+	add_dense_dense(Y_matrix, Y_matrix, D_c);
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < n; ++j) {
+            Y_matrix.set(i, j, Y.get(i, j));
+        }
+	}
+
+    Y_matrix.set(1, 1, neg(Y_matrix.get(1, 1))); // Correct the sign for the second row, second column
+    Y_matrix.set(2, 2, neg(Y_matrix.get(2, 2))); // Correct the sign for the third row, third column
+
+    if (controls.count("dc")) {
+		RCP<const Basic> value = real_double(-C_arm * (6.0 / N));
+        Y_matrix.set(0, 0, mul(real_double(2.0), (Y_matrix.get(0, 0), mul(s, value)))); // Correct the sign for the first row, first column
+	} */
 }
 
 /**
@@ -688,8 +729,24 @@ void MMC::solveEquilibrium() {
 
     // Initial guess
     Eigen::VectorXd x0 = 0.01 * Eigen::VectorXd::Ones(n);
+    const double Vgd = V_m * std::cos(theta);
+    const double Vgq = -V_m * std::sin(theta);
+    const double denom = Vgd * Vgd + Vgq * Vgq;
+
+    if (denom < 1e-6) {
+        throw std::runtime_error("Voltage magnitude too small for dq transformation.");
+    }
+
+    const double Id = (2.0 / 3.0) * (Vgd * P + Vgq * Q) / denom;
+    const double Iq = (2.0 / 3.0) * (Vgq * P - Vgd * Q) / denom;
+
+	x0(n - 12) = Id; // iDelta_d
+	x0(n - 11) = Iq; // iDelta_q
+	x0(n - 10) = P_dc / 3.0 / V_dc; // iSigma_z
+	x0(n - 9) = 0; // iSigma_d
+	x0(n - 8) = 0; // iSigma_q
     x0(n - 1) = V_dc;
-	x0(n - 1 - 7) = P_dc / 3.0 / V_dc;
+	
 
     // Define input vector u (DC voltage and AC voltages)
     Eigen::VectorXd u(3);
@@ -729,8 +786,16 @@ Eigen::MatrixXcd MMC::compute_y_parameters_num(double omega) {
     Eigen::MatrixXcd B_c = B_matrix.cast<std::complex<double>>();
     Eigen::MatrixXcd C_c = C_matrix.cast<std::complex<double>>();
     Eigen::MatrixXcd D_c = D_matrix.cast<std::complex<double>>();
+	Eigen::MatrixXcd Y = C_c * inv_A_s * B_c + D_c;
 
-    return C_c * inv_A_s * B_c + D_c;
+	Y(1, 1) = -Y(1, 1); // Correct the sign for the second row, second column
+	Y(2, 2) = -Y(2, 2); // Correct the sign for the third row, third column
+
+    if (controls.count("dc")) {
+        Y(0, 0) = 2.0 * (Y(0, 0) - s_num *  C_arm * (6.0/N)); // Correct the sign for the first row, first column
+    }
+
+    return Y;
 }
 
 /**
