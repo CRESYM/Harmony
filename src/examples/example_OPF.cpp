@@ -128,24 +128,24 @@ void example_OPF() {
     net.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
 
     /*  ---------- 2.3 Create Converters ---------- */
- //   MMC* mmc1 = new MMC(
- //       "MMC1",         // Symbol
- //       1000.0,         // Omega (Nominal Frequency in rad/s)
- //       100.0,          // Active Power (P) in MW
- //       50.0,           // Reactive Power (Q) in MVA
- //       0.0,            // Theta (Voltage Angle in rad)
- //       330.0,          // AC Voltage (V_m) in kV
- //       640.0,          // DC Voltage (V_dc) in kV
- //       0.05,           // Arm Inductance (L_arm) in H
- //       1.07,           // Arm Resistance (R_arm) in Ω
- //       0.01,           // Capacitance per Submodule (C_arm) in F
- //       400,            // Number of Submodules (N)
- //       0.06,           // Reactor Inductance (L_reactor) in H
- //       0.535,          // Reactor Resistance (R_reactor) in Ω
- //       0.00015         // Time Delay (t_delay) in seconds
- //   );
- //   net.connectElementToBus(mmc1, 1, bus2_ac);
- //   net.connectElementToBus(mmc1, 2, bus1_dc);
+    //MMC* mmc1 = new MMC(
+    //    "MMC1",         // Symbol
+    //    1000.0,         // Omega (Nominal Frequency in rad/s)
+    //    100.0,          // Active Power (P) in MW
+    //    50.0,           // Reactive Power (Q) in MVA
+    //    0.0,            // Theta (Voltage Angle in rad)
+    //    330.0,          // AC Voltage (V_m) in kV
+    //    640.0,          // DC Voltage (V_dc) in kV
+    //    0.05,           // Arm Inductance (L_arm) in H
+    //    1.07,           // Arm Resistance (R_arm) in Ω
+    //    0.01,           // Capacitance per Submodule (C_arm) in F
+    //    400,            // Number of Submodules (N)
+    //    0.06,           // Reactor Inductance (L_reactor) in H
+    //    0.535,          // Reactor Resistance (R_reactor) in Ω
+    //    0.00015         // Time Delay (t_delay) in seconds
+    //);
+    //net.connectElementToBus(mmc1, 1, bus2_ac);
+    //net.connectElementToBus(mmc1, 2, bus1_dc);
 
 
  //   MMC* mmc2 = new MMC(
@@ -223,5 +223,5 @@ void example_OPF() {
     global_dict["DCbaseKV"] = 500.0; // Base voltage for DC, can be adjusted as needed
     global_dict["Z_base"] = 1.0; // Base impedance, can be adjusted as needed
 
-    pf.make_OPF(&net, global_dict, false, false, false);
+    pf.make_OPF(&net, global_dict, false, true, false);
 }

@@ -616,7 +616,7 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     {
 		cout << "[make_OPF] Processing element: " << element_name << endl;
         if (dynamic_cast<Load*>(element)) {
-            make_Load(element, global_dict, true); // writeTxt);
+            make_Load(element, global_dict, writeTxt);
         }
         else if (dynamic_cast<Generator*>(element)) {
             make_Generator(element, global_dict, writeTxt);
@@ -628,10 +628,10 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     {
         if (dynamic_cast<Impedance*>(element)) {
             if (element->getInputPins() == 3) {
-                make_BranchAC(element, global_dict, true); // writeTxt);
+                make_BranchAC(element, global_dict, writeTxt);
             }
             else if (element->getInputPins() == 1) {
-                make_BranchDC(element, global_dict, true); // writeTxt);
+                make_BranchDC(element, global_dict, writeTxt);
             }
             else {
                 throw std::runtime_error("[make_OPF] Error: Unsupported impedance pin number.");
