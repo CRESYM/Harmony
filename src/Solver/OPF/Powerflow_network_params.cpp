@@ -725,14 +725,6 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     dataOPF["generator"] = std::move(genAC);
     dataOPF["gencost"] = std::move(gencostAC);
 
-    // Below need to be revise later
-    //if (dataOPF["converter"].rows() >= 3) {
-    //    dataOPF["converter"](0, 5) = -60;  // P_g
-    //    dataOPF["converter"](0, 6) = -40;  // Q_g
-    //    dataOPF["converter"](2, 5) = 35;
-    //    dataOPF["converter"](2, 6) = 5;
-    //}
-
 	cout << "[make_OPF] Finished transforming data to Eigen::MatrixXd.\n";
 
     //solveHmo_opf(dataOPF, vscControl, writeTxt, plotResult);
