@@ -1,23 +1,16 @@
 #ifndef GENERATOR_H
 #define GENERATOR_H
 
-#include "../Element.h"
+#include "Source_base.h"
 
-class Generator : public Element {
+class Generator : public Source_base {
 public:
     // Constructor
     Generator(const std::string& symbol, int pins, const std::vector<double>& values);
  
-
     // Destructor
     ~Generator() {}
 
-    // Power flow computations for AC and DC networks
-    void computePowerFlowAC(std::map<std::string, double>& branchData,
-        std::map<std::string, double>& globalParams) const override;
-
-    void computePowerFlowDC(std::map<std::string, double>& branchDCData,
-        std::map<std::string, double>& globalParams) const override;
 
 private:
     double R_f = 1.0;  // Default value

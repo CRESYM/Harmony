@@ -431,52 +431,56 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
         gRow[key] = 0; // Empty structure for each
     }
 
-	
-   
+    std::string rowCost = std::to_string(data["genCostAC"].size());
+    auto& cRow = data["genCostAC"][rowCost];
+    std::vector<std::string> cost_keys = {
+        "model","startup","shutdown","n","c2","c1","c0","grid"
+	};
+    for (const auto& key : keys) {
+        cRow[key] = 0; // Empty structure for each
+    }
+
     gRow["bus"] = bus_id;
-    //gRow["Qmax"] = Qmax;
-    //gRow["Qmin"] = Qmin;
     gRow["Vg"] = 1.0;
     gRow["mBase"] = 100.0;
     gRow["status"] = 1.0;
-    //gRow["Pmax"] = Pmax;
-    //gRow["Pmin"] = Pmin;
-
-    element->computePowerFlowAC(gRow, global_params);
-
-    const std::string& area_id = to_string(gRow["area"]);
-    const std::string& pmax_s = gen_info[3];
-    const std::string& pmin_s = gen_info[4];
-    const std::string& qmax_s = gen_info[5];
-    const std::string& qmin_s = gen_info[6];
-    const std::string& a_s = gen_info[7];
-    const std::string& b_s = gen_info[8];
-    const std::string& c_s = gen_info[9];
-
-    double Pmax = std::stod(pmax_s), Pmin = std::stod(pmin_s);
-    double Qmax = std::stod(qmax_s), Qmin = std::stod(qmin_s); */
-
-        /*if (Pmin > Pmax) {
-            throw std::invalid_argument("[make_Generator] Error: P_min > P_max for generator " + gen_name);
-        }
-
-        if (Qmin > Qmax) {
-            throw std::invalid_argument("[make_Generator] Error: Q_min > Q_max for generator " + gen_name);
-        }
-    //gRow["grid"] = std::stod(area_id);
-
-    /* ---------- Write data["genCostAC"] ---------- */
-    std::string rowCost = std::to_string(data["genCostAC"].size());
-    auto& cRow = data["genCostAC"][rowCost];
+    gRow["grid"] = 1; // Default area ID, can be changed based on your logic
 
     cRow["model"] = 2.0;
     cRow["startup"] = 1500.0;
     cRow["shutdown"] = 0.0;
-    cRow["n"] = 3.0;
-    /*cRow["c2"] = std::stod(a_s);
-    cRow["c1"] = std::stod(b_s);
-    cRow["c0"] = std::stod(c_s);
-    cRow["grid"] = std::stod(area_id);*/
+    cRow["n"] = 3.0;   
+	cRow["grid"] = 1; // Default, can be changed based on your logic
+
+	// Here is easier to get the data from the element
+	map<string, double> gen_info = element->getOPFInfo();
+
+    for (const auto& [key, value] : gen_info) {
+        if (gRow.find(key) == gRow.end()) {
+			cRow[key] = value; // Fill in the cost data
+        }
+        else
+		    gRow[key] = value; // Fill in the generator data
+	}
+	cRow["grid"] = gRow["grid"]; // Ensure grid is consistent
+
+	const std::string& gen_name = element->getElementSymbol();
+    const std::string& area_id = to_string(gRow["area"]);
+    const std::string& pmax_s = to_string(gRow["Pmax"]);
+    const std::string& pmin_s = to_string(gRow["Pmin"]);
+    const std::string& qmax_s = to_string(gRow["Qmax"]);
+    const std::string& qmin_s = to_string(gRow["Qmax"]);
+
+    double Pmax = std::stod(pmax_s), Pmin = std::stod(pmin_s);
+    double Qmax = std::stod(qmax_s), Qmin = std::stod(qmin_s); 
+
+    if (Pmin > Pmax) {
+        throw std::invalid_argument("[make_Generator] Error: P_min > P_max for generator " + gen_name);
+    }
+
+    if (Qmin > Qmax) {
+        throw std::invalid_argument("[make_Generator] Error: Q_min > Q_max for generator " + gen_name);
+    }
 
     if (print_info)
     {

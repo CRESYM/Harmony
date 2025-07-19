@@ -2,7 +2,7 @@
 
 // Constructor
 Generator::Generator(const std::string& symbol, int pins, const std::vector<double>& values)
-    : Element(symbol, pins, pins) {
+    : Source_base(symbol, pins) {
 
     if (values.size() == 4) {
         R_f = values[0];
@@ -39,34 +39,4 @@ Generator::Generator(const std::string& symbol, int pins, const std::vector<doub
         Y_matrix.set(pins + i, pins + i, Y22);  // Y22
     }
 }
-
-// Power flow computation for AC networks
-void Generator::computePowerFlowAC(std::map<std::string, double>& branchData,
-    std::map<std::string, double>& globalParams) const {
-    branchData["generator"] = 1;
-
-    // Compute generator impedance at operational frequency
-    std::complex<double> s = globalParams["omega"] * std::complex<double>(0, 1);
-    std::complex<double> Z_eq(R_f, X_d);  // Generator impedance
-
-    branchData["br_r"] = std::real(Z_eq);
-    branchData["br_x"] = std::imag(Z_eq);
-    branchData["g_fr"] = 0;
-    branchData["b_fr"] = 0;
-    branchData["g_to"] = 0;
-    branchData["b_to"] = 0;
-}
-
-// Power flow computation for DC networks
-void Generator::computePowerFlowDC(std::map<std::string, double>& branchDCData,
-    std::map<std::string, double>& globalParams) const {
-    branchDCData["l"] = 0.0;
-    branchDCData["c"] = 0.0;
-
-    // Compute generator impedance at DC (zero frequency)
-    std::complex<double> Z_eq(R_f, 0.0);  // DC resistance
-
-    branchDCData["r"] = std::real(Z_eq);
-}
-
 

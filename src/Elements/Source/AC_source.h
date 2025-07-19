@@ -1,7 +1,7 @@
 #ifndef AC_SOURCE_H
 #define AC_SOURCE_H
 
-#include "../Element.h"
+#include "Source_base.h"
 
 /*
 AC source is modeled as ideal AC voltage source with added series impedance. Its parameters are
@@ -10,7 +10,7 @@ pins number is added also as its input.
 Additionally, after initial creation needs to be added power flow data:
 voltage magnitude and phase shift, active and reactive powers, and their max and min values.
 */
-class AC_source : public Element {
+class AC_source : public Source_base {
 public:
     // Constructor
     AC_source(const std::string& symbol, int pins, DenseMatrix Z);
@@ -22,29 +22,12 @@ public:
 
     void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
 
-	// Power flow computations for AC and DC networks
-    void computePowerFlowAC(std::map<std::string, double>& branchData,
-        std::map<std::string, double>& globalParams) const override;
-
-    void computePowerFlowDC(std::map<std::string, double>& branchDCData,
-        std::map<std::string, double>& globalParams) const override;
-
     // Function to print AC source values
     void printElementValues();
 
 private:
     // Properties
-    DenseMatrix Z; // Source series impedance [Omega]
-    double V;      // Voltage amplitude [kV]
-    double theta;  // Phase shift [radians]
 
-    // Properties used for power flow
-    double P;      // Active power output [MW]
-    double Q;      // Reactive power output [MVAr]
-    double P_min;  // Min active power output [MW]
-    double P_max;  // Max active power output [MW]
-    double Q_min;  // Min reactive power output [MVA]
-    double Q_max;  // Max reactive power output [MVA]
 };
 
 #endif

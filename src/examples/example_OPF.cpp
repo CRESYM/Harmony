@@ -40,35 +40,27 @@ void example_OPF() {
 
 	/*  ---------- 1.3 Add AC Generators  ---------- */
     // Generator 1
+    std::vector<double> gen1_params = { 0.02, 0.3, 0.05, 7.0 };
+    Generator* gen1 = new Generator("GEN01", 3, gen1_params);
+    net.connectElementToBus(gen1, 1, bus1_ac);
+    map<string, double> gen_info1 = {
+        {"Pmax", 200.0}, {"Pmin", 10.0},
+        {"Qmax", 84.0}, {"Qmin", 84.0},
+        {"c2", 0.11}, {"c1", 50.0},
+        {"c0", 150}
+    };
+	gen1->setOPFInfo(gen_info1);
 
- //   std::vector<double> gen1_params = { 0.02, 0.3, 0.05, 7.0 };
- //   Generator* gen1 = new Generator("GEN01", 3, gen1_params);
- //   
- //   net.connectElementToBus(gen1, 1, bus1_ac);
- //   std::vector<std::string> gen_info1 = {
- //       "200",      // 3  P_max  [MW]
- //       " 10",      // 4  P_min  [MW]
- //       "84",       // 5  Q_max  [MVAr]
- //       "84",       // 6  Q_min  [MVAr]
- //       "0.11",     // 7  cost_quadratic_coeff
- //       "50",       // 8  cost_linear_coeff
- //       "150"       // 9  cost_constant_coeff
- //   };
-	//gen1->setOPFInfo(gen_info1);
-
- //   std::vector<double> gen2_params = { 0.02, 0.3, 0.05, 7.0 };
- //   Generator* gen2 = new Generator("GEN02", 3, gen2_params);
- //   net.connectElementToBus(gen2, 1, bus2_ac);
- //   std::vector<std::string> gen_info2 = {
- //       "40",       // 3  P_max  [MW]
- //       "40",       // 4  P_min  [MW]
- //       "-31",      // 5  Q_max  [MVAr]
- //       "-33",      // 6  Q_min  [MVAr]
- //       "0.085",    // 7  cost_quadratic_coeff
- //       "1.2",      // 8  cost_linear_coeff
- //       "600"       // 9  cost_constant_coeff
- //   };
-	//gen2->setOPFInfo(gen_info2);
+    std::vector<double> gen2_params = { 0.02, 0.3, 0.05, 7.0 };
+    Generator* gen2 = new Generator("GEN02", 3, gen2_params);
+    net.connectElementToBus(gen2, 1, bus2_ac);
+    map<string, double> gen_info2 = {
+        {"Pmax", 40.0}, {"Pmin", 40.0},
+        {"Qmax", -31.0}, {"Qmin", -33.0},
+        {"c2", 0.085}, {"c1", 1.2},
+        {"c0", 600}
+	};
+	gen2->setOPFInfo(gen_info2);
 
     ///*  ---------- 1.4 Add Branches  ---------- */
     double ACR1 = 0.02; double ACX1 = 0.06;

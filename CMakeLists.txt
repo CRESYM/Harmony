@@ -49,6 +49,7 @@ set(Element_Switch_Header_Files
     src/Elements/Switch/Switch.h
 )
 set(Element_Source_Header_Files 
+    src/Elements/Source/Source_base.h
     src/Elements/Source/AC_source.h
     src/Elements/Source/Generator.h
 )
@@ -119,6 +120,7 @@ set(Element_Switch_Source_Files
     src/Elements/Switch/Switch.cpp
 )
 set(Element_Source_Source_Files 
+    src/Elements/Source/Source_base.cpp
     src/Elements/Source/AC_source.cpp
     src/Elements/Source/Generator.cpp
 )
