@@ -27,11 +27,15 @@ public:
     // Function to print all the elements connected to this bus
     void printConnectedElements();
 
-    void setOPFInfo(const std::vector<std::string>& info) {
+	// Functions for setting and getting OPF information
+    void computePowerFlowAC(std::map<std::string, double>& busAC,
+        std::map<std::string, double>& globalParams) const;
+    void computePowerFlowDC(std::map<std::string, double>& busDC,
+        std::map<std::string, double>& globalParams) const;
+    void setOPFInfo(const std::map<std::string, double>& info) {
         busOPFInfo = info;
 	}
-
-    std::vector<std::string> getOPFInfo() const {
+    std::map<std::string, double> getOPFInfo() const {
         return busOPFInfo;
 	}
 
@@ -40,7 +44,7 @@ private:
     int numberPins; // The number of pins (phases) of the bus
     std::vector<Element*> connectedElements;  // Elements connected to this bus
 
-	std::vector<std::string> busOPFInfo; // Additional information about the bus OPF model
+	std::map<std::string, double> busOPFInfo; // Additional information about the bus OPF model
 	// This includes area and voltage limits.
 };
 

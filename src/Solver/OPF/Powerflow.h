@@ -5,6 +5,7 @@
 
 class Element;
 class Network;
+class Bus;
 
 class PowerFlow {
 public:
@@ -19,27 +20,27 @@ public:
     //Power flow computation //network_powerflow.cpp
 
     void addBusAC(std::vector<std::vector<std::string>>& dict_ac,
-        const std::vector<std::string>& bus_info, bool print_info = false);
+        Bus* bus, std::map<std::string, double>& global_params, bool print_info = false);
 
     void addBusDC(std::vector<std::vector<std::string>>& dict_dc,
-        const std::vector<std::string>& bus_info, bool print_info = false);
+        Bus* bus, std::map<std::string, double>& global_params, bool print_info = false);
 
     void make_BranchAC(Element* element, std::map<std::string, double>& global_params,
-        const std::vector<std::string>& br_info, bool print_info = false);
+        bool print_info = false);
 
     void make_BranchDC(Element* element, std::map<std::string, double>& global_params,
         bool print_info = false);
 
-    void make_Generator(Element* element, const std::vector<std::string>& gen_info,
+    void make_Generator(Element* element, std::map<std::string, double>& global_params, 
         bool print_info = false);
 
-    void make_Load(Element* element, const std::vector<std::string>& load_info,
+    void make_Load(Element* element, std::map<std::string, double>& global_params,
         bool print_info = false);
 
     void make_Converter(Element* element, std::map<std::string, double>& global_params,
-        const std::vector<std::string>& conv_info, bool print_info = false);
+        bool print_info = false);
 
-    void make_OPF(Network* net, bool vscControl = true, bool writeTxt = false,
+    void make_OPF(Network* net, std::map<std::string, double>& global_params, bool vscControl = true, bool writeTxt = false,
         bool plotResult = false);
 
     void load_params_ac(const std::string& acgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);

@@ -24,6 +24,9 @@ void Impedance_base::computePowerFlowAC(std::map<std::string, double>& branchDat
     branchData["r"] = std::real(Z_eq);
     branchData["x"] = std::imag(Z_eq);
     branchData["b"] = 0;
+
+    for (auto& [key, value] : element_OPF_info)
+        branchData[key] = value;
 }
 
 // Power flow computation for DC networks
@@ -38,4 +41,7 @@ void Impedance_base::computePowerFlowDC(std::map<std::string, double>& branchDCD
     std::complex<double> Z_eq = std::complex<double>(1.0) / Y_00 / globalParams["Z_base"];
 
     branchDCData["r"] = std::real(Z_eq);
+
+    for (auto& [key, value] : element_OPF_info)
+        branchDCData[key] = value;
 }

@@ -6,10 +6,7 @@ Bus::Bus(const std::string& name, int number) : busName(name), numberPins(number
     if (number <= 0) {
         throw std::invalid_argument("Number of pins must be greater than zero.");
 	}
-    else if (number == 1)
-	    busOPFInfo = { name, "1", "1.1", "0.9" }; // Default OPF info, can be modified later
-    else if (number == 3)
-		busOPFInfo = { name, "1", "100", "345", "1.1", "0.9" }; // Default OPF info for 3-phase bus
+	busOPFInfo = { }; // Initialize OPF info as empty
 }
 
 // Destructor
@@ -34,5 +31,16 @@ void Bus::printConnectedElements() {
     for (Element* elem : connectedElements) {
         std::cout << "  - " << elem->getElementSymbol() << std::endl; // Use getter method here
     }
+}
+
+void Bus::computePowerFlowAC(std::map<std::string, double>& busAC,
+    std::map<std::string, double>& globalParams) const {
+    for (auto& [key, value] : busOPFInfo)
+        busAC[key] = value;
+}
+void Bus::computePowerFlowDC(std::map<std::string, double>& busDC,
+    std::map<std::string, double>& globalParams) const {
+    for (auto& [key, value] : busOPFInfo)
+        busDC[key] = value;
 }
 

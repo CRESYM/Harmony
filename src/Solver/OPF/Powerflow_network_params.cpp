@@ -7,22 +7,39 @@
 
 
 void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
-    const std::vector<std::string>& bus_info,
-    bool print_info /* =false*/)
+    Bus* bus, std::map<std::string, double>& global_params, bool print_info /* =false*/)
 {
     int id = static_cast<int>(dict_ac.size()) + 1;
 
     std::string bus_id = std::to_string(id);
-    std::string bus_name = bus_info[0];
-    std::string area_id = bus_info[1];
-    std::string base_mw_str = bus_info[2];
-    std::string rated_kv_str = bus_info[3];
-    std::string upper_str = bus_info[4];
-    std::string lower_str = bus_info[5];
+    std::string bus_name = bus->getBusName(); // bus_info[0];
 
-    double rated_kv = std::stod(rated_kv_str);
-    double v_upper = std::stod(upper_str);
-    double v_lower = std::stod(lower_str);
+    std::string row = std::to_string(id - 1);
+    auto& busRow = data["busAC"][row];
+    busRow["bus_i"] = id;
+    busRow["type"] = 1.0;
+    busRow["Pd"] = 0.0;
+    busRow["Qd"] = 0.0;
+    busRow["Gs"] = 0.0;
+    busRow["Bs"] = 0.0;
+	busRow["area"] = 1; // Default, but bus can overwrite it
+	busRow["Vm"] = 1.0; // Default, but bus can overwrite it
+    busRow["Va"] = 0.0;
+    busRow["baseKV"] = global_params["ACbasekV"];
+    busRow["zone"] = 1.0;
+    busRow["Vmax"] = 1.1; // Default, but bus can overwrite it    
+	busRow["Vmin"] = 0.9; // Default, but bus can overwrite it
+    busRow["grid"] = 1; // Default, but bus can overwrite it
+
+	bus->computePowerFlowAC(busRow, global_params);
+
+	string area_id = std::to_string(busRow["area"]);
+	double v_upper = busRow["Vmax"];
+	double v_lower = busRow["Vmin"];
+	double rated_kv = busRow["baseKV"];
+	string rated_kv_str = std::to_string(rated_kv);
+	double base_mw = global_params["baseMVA"];
+	string base_mw_str = std::to_string(base_mw);
 
     bool is_pu = (v_upper <= 2.0 && v_lower <= 2.0);
 
@@ -54,28 +71,6 @@ void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
 
     busName2Id_[bus_name] = id;
 
-    std::string row = std::to_string(id - 1);
-    auto& busRow = data["busAC"][row];
-    busRow["bus_i"] = id;
-    busRow["type"] = 1.0;
-    busRow["Pd"] = 0.0;
-    busRow["Qd"] = 0.0;
-    busRow["Gs"] = 0.0;
-    busRow["Bs"] = 0.0;
-    busRow["area"] = 1.0;
-    busRow["Vm"] = 1.0;
-    busRow["Va"] = 0.0;
-    busRow["baseKV"] = rated_kv;
-    busRow["zone"] = 1.0;
-    busRow["Vmax"] = v_upper_pu;
-    busRow["Vmin"] = v_lower_pu;
-    busRow["grid"] = std::stod(area_id);
-
-	//buses = Network::getBuses();
-    //if (buses.find(bus_name) == buses.end()) {
-    //    buses[bus_name] = new Bus(bus_name, 3);  // '3' is example for bus type/phases
-    //}
-
     if (print_info)
     {
         std::cout << "\n[data.busAC]  ("
@@ -102,34 +97,39 @@ void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
 }
 
 void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
-    const std::vector<std::string>& bus_info,
+    Bus* bus, std::map<std::string, double>& global_params,
     bool  print_info /* =false*/)
 {
     int id = static_cast<int>(dict_dc.size()) + 1;
 
-    if (bus_info.size() != 4) {
-
-        std::cerr << "[addBusAC] Error: Expected 4 fields:\n "
-            << " [0] bus_name\n "
-            << " [1] rated_voltage_kv [kV]\n "
-            << " [2] voltage_upper [pu or kV]\n "
-            << " [3] voltage_lower [pu or kV]\n "
-            << " but received " << bus_info.size() << ".\n";
-
-        std::cerr << "  Received: { ";
-        for (const auto& s : bus_info) std::cerr << '"' << s << "\" ";
-        std::cerr << "}\n";
-    }
-
     std::string bus_id = std::to_string(id);
-    std::string bus_name = bus_info[0];
-    std::string rated_kv_str = bus_info[1];
-    std::string upper_str = bus_info[2];
-    std::string lower_str = bus_info[3];
+    std::string bus_name = bus->getBusName(); 
 
-    double rated_kv = std::stod(rated_kv_str);
-    double v_upper = std::stod(upper_str);
-    double v_lower = std::stod(lower_str);
+    std::string row = std::to_string(id - 1);
+    auto& busDCRow = data["busDC"][row];
+    busDCRow["bus_i"] = id;
+    busDCRow["type"] = 1.0;
+    busDCRow["Pd"] = 0.0;
+    busDCRow["Qd"] = 0.0;
+    busDCRow["Gs"] = 0.0;
+    busDCRow["Bs"] = 0.0;
+    busDCRow["area"] = 1.0;
+    busDCRow["Vm"] = 1.0;
+    busDCRow["Va"] = 0.0;
+    busDCRow["baseKV"] = global_params["DCbasekV"];
+    busDCRow["zone"] = 1.0;
+    busDCRow["Vmax"] = 1.1;
+    busDCRow["Vmin"] = 0.9;
+
+    bus->computePowerFlowDC(busDCRow, global_params);
+
+    string area_id = std::to_string(busDCRow["area"]);
+    double v_upper = busDCRow["Vmax"];
+    double v_lower = busDCRow["Vmin"];
+    double rated_kv = busDCRow["baseKV"];
+    string rated_kv_str = std::to_string(rated_kv);
+    double base_mw = global_params["baseMVA"];
+    string base_mw_str = std::to_string(base_mw);
 
     bool is_pu = (v_upper <= 2.0 && v_lower <= 2.0);
 
@@ -165,21 +165,6 @@ void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
 
     busName2Id_[bus_name] = id;
 
-    std::string row = std::to_string(id - 1);
-    auto& busDCRow = data["busDC"][row];
-    busDCRow["bus_i"] = id;
-    busDCRow["type"] = 1.0;
-    busDCRow["Pd"] = 0.0;
-    busDCRow["Qd"] = 0.0;
-    busDCRow["Gs"] = 0.0;
-    busDCRow["Bs"] = 0.0;
-    busDCRow["area"] = 1.0;
-    busDCRow["Vm"] = 1.0;
-    busDCRow["Va"] = 0.0;
-    busDCRow["baseKV"] = rated_kv;
-    busDCRow["zone"] = 1.0;
-    busDCRow["Vmax"] = v_upper_pu;
-    busDCRow["Vmin"] = v_lower_pu;
 
     if (print_info)
     {
@@ -205,7 +190,7 @@ void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
 
 
 void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& global_params,
-    const std::vector<std::string>& br_info, bool print_info /* = false */)
+    bool print_info /* = false */)
 {
     std::string row = std::to_string(data["branchAC"].size());
     data["branchDC"][row] = {}; // Ensure there's at least one row
@@ -218,8 +203,6 @@ void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& g
         data["branchDC"][row][key] = 0; // Empty structure for each
     }
 
-    element->computePowerFlowDC(data["branchAC"][row], global_params);
-
     std::vector<Bus*> ends = element->getBuses();
 
     if (ends.size() != 2)
@@ -229,8 +212,8 @@ void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& g
     const std::string& fBus_name = ends[0]->getBusName();
     const std::string& tBus_name = ends[1]->getBusName();
 
-    int fId = element->getBusIndex(ends[0]);
-    int tId = element->getBusIndex(ends[1]);
+    int fId = busName2Id_[fBus_name];
+    int tId = busName2Id_[tBus_name];
 
     cout << "BranchAC: " << row << std::endl;
 
@@ -251,6 +234,8 @@ void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& g
     brRow["angmax"] = 360.0;
     brRow["grid"] = std::stod(area_id);
 
+    element->computePowerFlowDC(data["branchAC"][row], global_params);
+
     if (print_info)
     {
         constexpr const char* cols[14] = {
@@ -268,6 +253,7 @@ void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& g
         std::cout << std::endl;
     }
 
+    cout << "BranchAC: " << data["branchAC"].size() << " successfully created.\n";
 }
 
 
@@ -285,8 +271,6 @@ void PowerFlow::make_BranchDC(Element* element, std::map<std::string, double>& g
     for (const auto& key : keys) {
         data["branchDC"][row][key] = 0; // Empty structure for each
     }
-    
-    element->computePowerFlowDC(data["branchDC"][row], global_params);
 
     std::vector<Bus*> ends = element->getBuses();
 
@@ -297,10 +281,8 @@ void PowerFlow::make_BranchDC(Element* element, std::map<std::string, double>& g
     const std::string& fBus_name = ends[0]->getBusName();
     const std::string& tBus_name = ends[1]->getBusName(); 
 
-    int fId = element->getBusIndex(ends[0]);
-    int tId = element->getBusIndex(ends[1]);
-
-    cout << "BranchDC: " << row  << std::endl;
+    int fId = busName2Id_[fBus_name];
+    int tId = busName2Id_[tBus_name];
 
     /* ------- Write data["branchDC"] ------- */
     auto& brRow = data["branchDC"][row];
@@ -315,6 +297,8 @@ void PowerFlow::make_BranchDC(Element* element, std::map<std::string, double>& g
     brRow["status"] = 1.0;
     brRow["angmin"] = -0.0;
     brRow["angmax"] = 0.0;
+
+    element->computePowerFlowDC(data["branchDC"][row], global_params);
 
     if (print_info)
     {
@@ -333,41 +317,13 @@ void PowerFlow::make_BranchDC(Element* element, std::map<std::string, double>& g
         std::cout << std::endl;
     }
 
+	cout << "BranchDC: " << data["branchDC"].size() << " successfully created.\n";
+
 }
 
 void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& global_params,
-    const std::vector<std::string>& conv_info, bool print_info /*=false*/)
+    bool print_info /*=false*/)
 {
-    if (conv_info.size() != 21) {
-        std::cerr << "[make_Converter] Error: Expected 21 fields:\n"
-            << " [0] converter_name \n "
-            << " [1] grid_area \n "
-            << " [2] type_dc\n "
-            << " [3] type_ac\n "
-            << " [4] rftc\n "
-            << " [5] xtfc\n "
-            << " [6] bf \n "
-            << " [7] rc \n "
-            << " [8] xc \n "
-            << " [9] basekVac \n "
-            << " [10] Vmmax \n "
-            << " [11] Vmmin \n "
-            << " [12] Imax \n "
-            << " [13] LossAC \n "
-            << " [14] LossB \n "
-            << " [15] LossCrec \n "
-            << " [16] LossCinv \n "
-            << " [17] droop \n "
-            << " [18] Pdcset \n "
-            << " [19] Vdcset \n "
-            << " [20] Dvdcset \n"
-            << " but received " << conv_info.size() << ".\n";
-
-        std::cerr << "  Received: { ";
-        for (const auto& s : conv_info) std::cerr << '"' << s << "\" ";
-        std::cerr << "}\n";
-    }
-
     std::vector<Bus*> ends = element->getBuses();
 
     if (ends.size() != 2)
@@ -408,8 +364,8 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
     std::string rowKey = std::to_string(data["conv"].size());
     auto& convRow = data["conv"][rowKey];
 
-    for (size_t i = 0; i < 20; ++i)
-        convRow[keys[i]] = std::stod(conv_info[i + 1]);
+    //for (size_t i = 0; i < 20; ++i)
+    //    convRow[keys[i]] = std::stod(conv_info[i + 1]);
 
     convRow["busdc_i"] = busdc_i;
     convRow["busac_i"] = busac_i;
@@ -442,10 +398,10 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
 }
 
 
-void PowerFlow::make_Generator(Element* element, const std::vector<std::string>& gen_info,
+void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
-    if (gen_info.size() != 10)
+    /*if (gen_info.size() != 10)
         throw std::runtime_error("[make_Generator] Expect 10 fields, got "
             + std::to_string(gen_info.size()));
 
@@ -460,18 +416,15 @@ void PowerFlow::make_Generator(Element* element, const std::vector<std::string>&
     const std::string& c_s = gen_info[9];
 
     double Pmax = std::stod(pmax_s), Pmin = std::stod(pmin_s);
-    double Qmax = std::stod(qmax_s), Qmin = std::stod(qmin_s);
+    double Qmax = std::stod(qmax_s), Qmin = std::stod(qmin_s);*/
 
-    if (Pmin > Pmax) {
+    /*if (Pmin > Pmax) {
         throw std::invalid_argument("[make_Generator] Error: P_min > P_max for generator " + gen_name);
     }
 
     if (Qmin > Qmax) {
         throw std::invalid_argument("[make_Generator] Error: Q_min > Q_max for generator " + gen_name);
-    }
-
-    //std::map<std::string, double> dummy;
-    //element->computePowerFlowAC(data["gen"], dummy);
+    }*/
 
     vector<Bus*> buses = element->getBuses();
 	Bus* bus = nullptr;
@@ -497,13 +450,13 @@ void PowerFlow::make_Generator(Element* element, const std::vector<std::string>&
     gRow["bus"] = bus_id;
     gRow["Pg"] = 0.0;
     gRow["Qg"] = 0.0;
-    gRow["Qmax"] = Qmax;
-    gRow["Qmin"] = Qmin;
+    //gRow["Qmax"] = Qmax;
+    //gRow["Qmin"] = Qmin;
     gRow["Vg"] = 1.0;
     gRow["mBase"] = 100.0;
     gRow["status"] = 1.0;
-    gRow["Pmax"] = Pmax;
-    gRow["Pmin"] = Pmin;
+    //gRow["Pmax"] = Pmax;
+    //gRow["Pmin"] = Pmin;
     gRow["Pc1"] = 0.0;
     gRow["Pc2"] = 0.0;
     gRow["Qc1min"] = 0.0;
@@ -515,7 +468,7 @@ void PowerFlow::make_Generator(Element* element, const std::vector<std::string>&
     gRow["ramp_30"] = 0.0;
     gRow["ramp_q"] = 0.0;
     gRow["apf"] = 0.0;
-    gRow["grid"] = std::stod(area_id);
+    //gRow["grid"] = std::stod(area_id);
 
     /* ---------- Write data["genCostAC"] ---------- */
     std::string rowCost = std::to_string(data["genCostAC"].size());
@@ -525,10 +478,10 @@ void PowerFlow::make_Generator(Element* element, const std::vector<std::string>&
     cRow["startup"] = 1500.0;
     cRow["shutdown"] = 0.0;
     cRow["n"] = 3.0;
-    cRow["c2"] = std::stod(a_s);
+    /*cRow["c2"] = std::stod(a_s);
     cRow["c1"] = std::stod(b_s);
     cRow["c0"] = std::stod(c_s);
-    cRow["grid"] = std::stod(area_id);
+    cRow["grid"] = std::stod(area_id);*/
 
     if (print_info)
     {
@@ -556,12 +509,22 @@ void PowerFlow::make_Generator(Element* element, const std::vector<std::string>&
     }
 }
 
-void PowerFlow::make_Load(Element* element, const std::vector<std::string>& load_info,
+void PowerFlow::make_Load(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
-    /*std::map<std::string, double> dummy;
-    element->computePowerFlowAC(data["load"], dummy);*/
+    std::string row = std::to_string(data["busAC"].size());
+    data["busAC"][row] = {}; // Ensure there's at least one row
+    std::vector<std::string> keys = {
+        "bus_i","type","Pd","Qd","Gs","Bs","area","Vm","Va",
+            "baseKV","zone","Vmax","Vmin","grid"
+    };
 
+    for (const auto& key : keys) {
+        data["busAC"][row][key] = 0; // Empty structure for each
+    }
+
+    std::string load_name = element->getElementSymbol();
+    
 	vector<Bus*> buses = element->getBuses(); // Get the buses connected to the load element
     Bus* attachedBus = nullptr;
 
@@ -574,67 +537,12 @@ void PowerFlow::make_Load(Element* element, const std::vector<std::string>& load
         throw std::runtime_error(
             "[make_Load] Error: load element is not connected to any bus");
 
-    const std::string& bus_name = attachedBus->getBusName();
+    const std::string& bus_name = attachedBus->getBusName();    
 
-    if (load_info.size() != 6) {
-        std::cerr << "[make_Load] Error: Expected 6 fields:\n"
-            << " [0] load_name\n "
-            << " [1] grid_area\n "
-            << " [2] rated_voltage_kv [kV]\n "
-            << " [3] R [Ω]\n "
-            << " [4] L [H]\n "
-            << " [5] C [F]\n "
-            << " but received " << load_info.size() << ".\n ";
-
-        std::cerr << "  Received: { ";
-        for (const auto& s : load_info) std::cerr << '"' << s << "\" ";
-        std::cerr << "}\n";
-
-    }
-
-    std::string r = std::to_string(data["load"].size() - 1);
-    double br_r_pu = data["load"][r]["br_r"];
-    double br_x_pu = data["load"][r]["br_x"];
-
-    std::string load_name = load_info[0];
-    std::string area_str = load_info[1];
-    std::string v_kv_str = load_info[2];
-    std::string R_str = load_info[3];
-    std::string L_str = load_info[4];
-    std::string C_str = load_info[5];
-
-    double V_LL = std::stod(v_kv_str);
-    double R = std::stod(R_str);
-    double L = std::stod(L_str);
-    double C = std::stod(C_str);
-
-    if (R < 0 || L < 0 || C < 0)
-        throw std::invalid_argument("[make_Error] Error: R, L, C must be non-negative");
-
-    /* ---------- Calculate Pd + Qd ---------- */
-    const double omega = 2 * M_PI * 50.0;
-    double V_phase = V_LL * 1e3 / std::sqrt(3.0);
-
-    double G = (R == 0.0) ? 0.0 : 1.0 / R;
-    double B_L = (L == 0.0) ? 0.0 : -1.0 / (omega * L);
-    double B_C = (C == 0.0) ? 0.0 : omega * C;
-    double B = B_L + B_C;
-
-    double Pd_MW = 3.0 * V_phase * V_phase * G / 1e6;
-    double Qd_MVAr = -3.0 * V_phase * V_phase * B / 1e6;
-
-    std::string row = std::to_string(data["load"].size());
-    data["load"][row]["Pd"] = Pd_MW;
-    data["load"][row]["Qd"] = Qd_MVAr;
-
-    auto itBusId = busName2Id_.find(bus_name);
-    if (itBusId == busName2Id_.end())
-        throw std::runtime_error("[make_Load] Error: Bus name that load connected is not found ");
-
-    std::string busRowKey = std::to_string(itBusId->second - 1);
-    auto& busRow = data["busAC"][busRowKey];
-    busRow["Pd"] += Pd_MW;
-    busRow["Qd"] += Qd_MVAr;
+    auto& busRow = data["busAC"][row];
+	busRow["bus_i"] = busName2Id_[bus_name];
+	busRow["area"] = 1; // Load type
+	busRow["Vm"] = global_params["basekV"]; // Voltage magnitude in kV
 
     if (print_info)
     {
@@ -658,23 +566,11 @@ void PowerFlow::make_Load(Element* element, const std::vector<std::string>& load
 }
 
 
-void PowerFlow::make_OPF(Network* net, bool vscControl,
+void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dict, bool vscControl,
     bool writeTxt, bool plotResult)
 {
-    //const auto& data = net.getNetData();
-    std::map<std::string, double> global_dict;
-    double omega = 2 * M_PI * 50;
-    global_dict["omega"] = omega;
-    global_dict["baseMVA"] = 100;
-	global_dict["baseKV"] = 345.0; // Base voltage in kV, can be adjusted as needed
-	global_dict["Z_base"] = 1.0; // Base impedance, can be adjusted as needed
-
-    // Define data structures
-    std::vector<std::vector<std::string>> dict_ac;
-    std::vector<std::vector<std::string>> dict_dc;
-
-    // Define and initialize data map
-    std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
+    //// Define and initialize data map
+    //std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
 
     // Initialize specific elements of the data map
     data["source_type"]["matpower"]["0"] = 0;
@@ -683,8 +579,6 @@ void PowerFlow::make_OPF(Network* net, bool vscControl,
     data["per_unit"]["true"]["0"] = 1;
     data["dcpol"]["2"]["0"] = 1;
     data["baseMVA"]["100"]["0"] = 100;
-
-    
 
     // Initialize empty elements of the data map
     std::vector<std::string> keys = {
@@ -699,20 +593,43 @@ void PowerFlow::make_OPF(Network* net, bool vscControl,
     // Define and initialize data map
 
     cout << "\n[make_OPF] Start making OPF data...\n";
-        
+
+	// Process buses
+    // Define data structures
+    std::vector<std::vector<std::string>> dict_ac;
+    std::vector<std::vector<std::string>> dict_dc;
+    for (const auto& [bus_name, bus] : net->getBuses())
+    {
+		cout << "[make_OPF] Processing bus: " << bus_name << endl;
+        if (bus->getPinNumber() == 3) {
+            addBusAC(dict_ac, bus, global_dict, writeTxt);
+        }
+        else if (bus->getPinNumber() == 1) {
+            addBusDC(dict_dc, bus, global_dict, writeTxt);
+        }
+        else {
+            throw std::runtime_error("[make_OPF] Error: Unsupported bus type.");
+        }
+    }
+	// Process elements: loads, generators, which contribute to the buses data    
     auto& elements = net->getElements();
     for (const auto& [element_name, element] : elements)
     {
 		cout << "[make_OPF] Processing element: " << element_name << endl;
         if (dynamic_cast<Load*>(element)) {
-            make_Load(element, element->getOPFInfo(), writeTxt);
+            make_Load(element, global_dict, writeTxt);
         }
         else if (dynamic_cast<Generator*>(element)) {
-            make_Generator(element, element->getOPFInfo(), writeTxt);
+            make_Generator(element, global_dict, writeTxt);
         }
-        else if (dynamic_cast<Impedance*>(element)) {
+    }
+
+	// Process branches: AC and DC branches, i.e., transmission lines, impedances, etc.
+    for (const auto& [element_name, element] : elements)
+    {
+        if (dynamic_cast<Impedance*>(element)) {
             if (element->getInputPins() == 3) {
-                make_BranchAC(element, global_dict, element->getOPFInfo(), writeTxt);
+                make_BranchAC(element, global_dict, writeTxt);
             }
             else if (element->getInputPins() == 1) {
                 make_BranchDC(element, global_dict, writeTxt);
@@ -723,29 +640,14 @@ void PowerFlow::make_OPF(Network* net, bool vscControl,
 
         }
         else if (dynamic_cast<MMC*>(element)) {
-            make_Converter(element, global_dict, element->getOPFInfo(), writeTxt);
+            make_Converter(element, global_dict, writeTxt);
         }
         else {
             throw std::runtime_error("Unsupported element type.");
         }
-    }
+	}
 
 	cout << "[make_OPF] Finished processing elements.\n";
-
-    for (const auto& [bus_name, bus] : net->getBuses())
-    {
-        if (bus->getPinNumber() == 3) {
-            addBusAC(dict_ac, bus->getOPFInfo(), writeTxt);
-        }
-        else if (bus->getPinNumber() == 1) {
-            addBusDC(dict_dc, bus->getOPFInfo(), writeTxt);
-        }
-        else {
-            throw std::runtime_error("[make_OPF] Error: Unsupported bus type.");
-        }
-    }
-
-	//data["busDC"].push_back(dict_dc);
 
     /* 2. Transform to Eigen::MatrixXd */
         // Initialize specific elements of the data map

@@ -50,6 +50,9 @@ void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
     if (elements.find(elem->getElementSymbol()) == elements.end()) {
 		elements[elem->getElementSymbol()] = elem;  // Add the element if it doesn't exist
 	}
+    if (buses.find(bus->getBusName()) == buses.end()) {
+        buses[bus->getBusName()] = bus;  // Add the bus if it doesn't exist
+	}
     int pins;
     if (terminal == 1) {
         pins = elem->getInputPins();

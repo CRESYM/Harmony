@@ -5,12 +5,18 @@
   
 class LoadPQ : public Load_base {  
 public:  
-    LoadPQ(const std::string& symbol, int pins);  
+    LoadPQ(const std::string& symbol, int pins, vector<double> values);  
   
     // Destructor  
     ~LoadPQ() {}  
+
+	// Power flow computation for AC networks
+    void LoadPQ::computePowerFlowAC(std::map<std::string, double>& busAC,
+        std::map<std::string, double>& global_params) const override;
   
 private:  
+	double P;  // Active power 
+	double Q;  // Reactive power
   
 };  
   

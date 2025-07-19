@@ -80,10 +80,26 @@ Load::Load(const std::string& symbol, int pins, std::vector<double> values) : Lo
             Y_matrix.set(pins + i, pins + j, Y_matrix.get(i, j));
             Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
         }
-
-    element_OPF_info = { symbol, "1", to_string(R[0]), to_string(L[0]), to_string(C[0]) };
 }
 
+// Power flow computation for AC networks
+void Load::computePowerFlowAC(std::map<std::string, double>& busAC,
+    std::map<std::string, double>& global_params) const {
 
+    double V_LL = global_params["basekV"];
+    const double omega = global_params["omega"];
+    double V_phase = V_LL * 1e3 / std::sqrt(3.0);
+
+    double G = (R[0] == 0) ? 0.0 : 1.0 / R[0];
+    double B_L = (L[0] == 0.0) ? 0.0 : -1.0 / (omega * L[0]);
+    double B_C = (C[0] == 0.0) ? 0.0 : omega * C[0];
+    double B = B_L + B_C;
+
+    double Pd = 3.0 * V_phase * V_phase * G / global_params["baseMVA"];
+    double Qd = -3.0 * V_phase * V_phase * B / global_params["baseMVA"];
+
+    busAC["Pd"] += Pd;
+    busAC["Qd"] += Qd;
+}
 
 

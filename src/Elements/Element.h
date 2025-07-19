@@ -31,11 +31,7 @@ public:
 	}
     Bus* getOtherBus(Bus*);
     std::map<Bus*, int> getConnections() { return connections; }
-    std::vector<std::string> getOPFInfo() const {
-        return element_OPF_info;
-    }
-
-    void setOPFInfo(std::vector<std::string>& info) { element_OPF_info = info; }
+    
 
     // Attach bus pointer to the proper terminal
     void attachBus(Bus*, int);
@@ -72,12 +68,18 @@ public:
     virtual void computePowerFlowDC(std::map<std::string, double>& branchDCData,
         std::map<std::string, double>& globalParams) const {}
 
+    std::map<std::string, double> getOPFInfo() const {
+        return element_OPF_info;
+    }
+
+    void setOPFInfo(std::map<std::string, double>& info) { element_OPF_info = info; }
+
 protected:
     std::string element_symbol; // Element symbol (e.g., R, L, C)
     int input_pins; // Number of input pins/phases
     int output_pins;  // Number of output pins/phases
     std::map<Bus* , int> connections; // Map of bus connections to the element's terminal
-    std::vector<std::string> element_OPF_info;
+    std::map<std::string, double> element_OPF_info = {};
 
     DenseMatrix Y_matrix; // Y-parameter matrix representing the admittance of the element
 };
