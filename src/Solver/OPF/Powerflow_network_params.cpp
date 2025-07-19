@@ -193,14 +193,14 @@ void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& g
     bool print_info /* = false */)
 {
     std::string row = std::to_string(data["branchAC"].size());
-    data["branchDC"][row] = {}; // Ensure there's at least one row
+    data["branchAC"][row] = {}; // Ensure there's at least one row
     std::vector<std::string> keys = {
         "fbus","tbus","r","x","b","rateA","rateB","rateC",
             "ratio","angle","status","angmin","angmax","grid"
     };
 
     for (const auto& key : keys) {
-        data["branchDC"][row][key] = 0; // Empty structure for each
+        data["branchAC"][row][key] = 0; // Empty structure for each
     }
 
     std::vector<Bus*> ends = element->getBuses();
@@ -214,8 +214,6 @@ void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& g
 
     int fId = busName2Id_[fBus_name];
     int tId = busName2Id_[tBus_name];
-
-    cout << "BranchAC: " << row << std::endl;
 
     /* ------- Write data["branchAC"] ------- */
     auto& brRow = data["branchAC"][row];
@@ -253,7 +251,9 @@ void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& g
         std::cout << std::endl;
     }
 
-    cout << "BranchAC: " << data["branchAC"].size() << " successfully created.\n";
+    if (print_info) {
+        std::cout << "Branch '" << branch_name << "' successfully added.\n";
+	}
 }
 
 
@@ -317,8 +317,9 @@ void PowerFlow::make_BranchDC(Element* element, std::map<std::string, double>& g
         std::cout << std::endl;
     }
 
-	cout << "BranchDC: " << data["branchDC"].size() << " successfully created.\n";
-
+    if (print_info) {
+        std::cout << "Branch '" << branch_name << "' successfully added.\n";
+    }
 }
 
 void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& global_params,
@@ -401,31 +402,6 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
 void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
-    /*if (gen_info.size() != 10)
-        throw std::runtime_error("[make_Generator] Expect 10 fields, got "
-            + std::to_string(gen_info.size()));
-
-    const std::string& gen_name = gen_info[0];
-    const std::string& area_id = gen_info[1];
-    const std::string& pmax_s = gen_info[3];
-    const std::string& pmin_s = gen_info[4];
-    const std::string& qmax_s = gen_info[5];
-    const std::string& qmin_s = gen_info[6];
-    const std::string& a_s = gen_info[7];
-    const std::string& b_s = gen_info[8];
-    const std::string& c_s = gen_info[9];
-
-    double Pmax = std::stod(pmax_s), Pmin = std::stod(pmin_s);
-    double Qmax = std::stod(qmax_s), Qmin = std::stod(qmin_s);*/
-
-    /*if (Pmin > Pmax) {
-        throw std::invalid_argument("[make_Generator] Error: P_min > P_max for generator " + gen_name);
-    }
-
-    if (Qmin > Qmax) {
-        throw std::invalid_argument("[make_Generator] Error: Q_min > Q_max for generator " + gen_name);
-    }*/
-
     vector<Bus*> buses = element->getBuses();
 	Bus* bus = nullptr;
 
@@ -446,10 +422,18 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
     /* ---------- Write data["genAC"] ---------- */
     std::string rowGen = std::to_string(data["genAC"].size());
     auto& gRow = data["genAC"][rowGen];
+    std::vector<std::string> keys = {
+            "bus","Pg","Qg","Qmax","Qmin","Vg","mBase","status","Pmax","Pmin",
+            "Pc1","Pc2","Qc1min","Qc1max","Qc2min","Qc2max",
+            "ramp_agc","ramp_10","ramp_30","ramp_q","apf","grid"
+    };
+    for (const auto& key : keys) {
+        gRow[key] = 0; // Empty structure for each
+    }
 
+	
+   
     gRow["bus"] = bus_id;
-    gRow["Pg"] = 0.0;
-    gRow["Qg"] = 0.0;
     //gRow["Qmax"] = Qmax;
     //gRow["Qmin"] = Qmin;
     gRow["Vg"] = 1.0;
@@ -457,17 +441,28 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
     gRow["status"] = 1.0;
     //gRow["Pmax"] = Pmax;
     //gRow["Pmin"] = Pmin;
-    gRow["Pc1"] = 0.0;
-    gRow["Pc2"] = 0.0;
-    gRow["Qc1min"] = 0.0;
-    gRow["Qc1max"] = 0.0;
-    gRow["Qc2min"] = 0.0;
-    gRow["Qc2max"] = 0.0;
-    gRow["ramp_agc"] = 0.0;
-    gRow["ramp_10"] = 0.0;
-    gRow["ramp_30"] = 0.0;
-    gRow["ramp_q"] = 0.0;
-    gRow["apf"] = 0.0;
+
+    element->computePowerFlowAC(gRow, global_params);
+
+    const std::string& area_id = to_string(gRow["area"]);
+    const std::string& pmax_s = gen_info[3];
+    const std::string& pmin_s = gen_info[4];
+    const std::string& qmax_s = gen_info[5];
+    const std::string& qmin_s = gen_info[6];
+    const std::string& a_s = gen_info[7];
+    const std::string& b_s = gen_info[8];
+    const std::string& c_s = gen_info[9];
+
+    double Pmax = std::stod(pmax_s), Pmin = std::stod(pmin_s);
+    double Qmax = std::stod(qmax_s), Qmin = std::stod(qmin_s); */
+
+        /*if (Pmin > Pmax) {
+            throw std::invalid_argument("[make_Generator] Error: P_min > P_max for generator " + gen_name);
+        }
+
+        if (Qmin > Qmax) {
+            throw std::invalid_argument("[make_Generator] Error: Q_min > Q_max for generator " + gen_name);
+        }
     //gRow["grid"] = std::stod(area_id);
 
     /* ---------- Write data["genCostAC"] ---------- */
@@ -617,7 +612,7 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     {
 		cout << "[make_OPF] Processing element: " << element_name << endl;
         if (dynamic_cast<Load*>(element)) {
-            make_Load(element, global_dict, writeTxt);
+            make_Load(element, global_dict, true); // writeTxt);
         }
         else if (dynamic_cast<Generator*>(element)) {
             make_Generator(element, global_dict, writeTxt);
@@ -629,10 +624,10 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     {
         if (dynamic_cast<Impedance*>(element)) {
             if (element->getInputPins() == 3) {
-                make_BranchAC(element, global_dict, writeTxt);
+                make_BranchAC(element, global_dict, true); // writeTxt);
             }
             else if (element->getInputPins() == 1) {
-                make_BranchDC(element, global_dict, writeTxt);
+                make_BranchDC(element, global_dict, true); // writeTxt);
             }
             else {
                 throw std::runtime_error("[make_OPF] Error: Unsupported impedance pin number.");

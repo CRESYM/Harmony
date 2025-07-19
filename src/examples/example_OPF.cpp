@@ -46,9 +46,6 @@ void example_OPF() {
  //   
  //   net.connectElementToBus(gen1, 1, bus1_ac);
  //   std::vector<std::string> gen_info1 = {
- //       "GEN01",    // 0  generator_name
- //       "1",        // 1  grid_area
- //       "345",      // 2  rated_voltage_kv [kV]
  //       "200",      // 3  P_max  [MW]
  //       " 10",      // 4  P_min  [MW]
  //       "84",       // 5  Q_max  [MVAr]
@@ -63,9 +60,6 @@ void example_OPF() {
  //   Generator* gen2 = new Generator("GEN02", 3, gen2_params);
  //   net.connectElementToBus(gen2, 1, bus2_ac);
  //   std::vector<std::string> gen_info2 = {
- //       "GEN02",    // 0  generator_name
- //       "1",        // 1  grid_area
- //       "345",      // 2  rated_voltage_kv [kV]
  //       "40",       // 3  P_max  [MW]
  //       "40",       // 4  P_min  [MW]
  //       "-31",      // 5  Q_max  [MVAr]
@@ -130,22 +124,16 @@ void example_OPF() {
     Impedance* br1_dc = new Impedance("br1_dc", 1, DCR1);
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
-    std::vector<std::string> info_br1_dc = { "DCBR1" };
-	//br1_dc->setOPFInfo(info_br1_dc);
 
     double DCR2 = 0.073;
     Impedance* br2_dc = new Impedance("br2_dc", 1, DCR2);
     net.connectElementToBus(br2_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br2_dc, /*terminal=*/2, bus3_dc);
-    std::vector<std::string> info_br2_dc = { "DCBR2" };
-	//br2_dc->setOPFInfo(info_br2_dc);
 
     double DCR3 = 0.052;
     Impedance* br3_dc = new Impedance("br3_dc", 1, DCR3);
     net.connectElementToBus(br3_dc, /*terminal=*/1, bus2_dc);
     net.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
-    std::vector<std::string> info_br3_dc = { "DCBR3" };
-	//br3_dc->setOPFInfo(info_br3_dc);
 
     /*  ---------- 2.3 Create Converters ---------- */
  //   MMC* mmc1 = new MMC(
@@ -243,5 +231,5 @@ void example_OPF() {
     global_dict["DCbaseKV"] = 500.0; // Base voltage for DC, can be adjusted as needed
     global_dict["Z_base"] = 1.0; // Base impedance, can be adjusted as needed
 
-    pf.make_OPF(&net, global_dict, false, true, false);
+    pf.make_OPF(&net, global_dict, false, false, false);
 }
