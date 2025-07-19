@@ -90,10 +90,6 @@ void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
         }
         std::cout << std::endl;
     }
-
-    if (print_info) {
-        std::cout << "Bus '" << bus_name << "' successfully added.\n";
-    }
 }
 
 void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
@@ -614,11 +610,12 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     auto& elements = net->getElements();
     for (const auto& [element_name, element] : elements)
     {
-		cout << "[make_OPF] Processing element: " << element_name << endl;
-        if (dynamic_cast<Load*>(element)) {
+        if (dynamic_cast<Load*>(element) || dynamic_cast<LoadPQ*>(element)) {
+            cout << "[make_OPF] Processing element: " << element_name << endl;
             make_Load(element, global_dict, writeTxt);
         }
-        else if (dynamic_cast<Generator*>(element)) {
+        else if (dynamic_cast<Source_base*>(element)) {
+            cout << "[make_OPF] Processing element: " << element_name << endl;
             make_Generator(element, global_dict, writeTxt);
         }
     }
@@ -642,7 +639,6 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
             make_Converter(element, global_dict, writeTxt);
         }
         else {
-            throw std::runtime_error("Unsupported element type.");
         }
 	}
 
@@ -698,13 +694,14 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     dataOPF["gencost"] = std::move(gencostAC);
 
     // Below need to be revise later
-    if (dataOPF["converter"].rows() >= 3) {
-        dataOPF["converter"](0, 5) = -60;  // P_g
-        dataOPF["converter"](0, 6) = -40;  // Q_g
-        dataOPF["converter"](2, 5) = 35;
-        dataOPF["converter"](2, 6) = 5;
-    }
+    //if (dataOPF["converter"].rows() >= 3) {
+    //    dataOPF["converter"](0, 5) = -60;  // P_g
+    //    dataOPF["converter"](0, 6) = -40;  // Q_g
+    //    dataOPF["converter"](2, 5) = 35;
+    //    dataOPF["converter"](2, 6) = 5;
+    //}
 
+	cout << "[make_OPF] Finished transforming data to Eigen::MatrixXd.\n";
 
     //solveHmo_opf(dataOPF, vscControl, writeTxt, plotResult);
     solve_opf("", "", &dataOPF, vscControl, writeTxt, plotResult);
