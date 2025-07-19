@@ -88,6 +88,8 @@ private:
 
     // System matrices
     Eigen::MatrixXd A_matrix, B_matrix, C_matrix, D_matrix;
+	Eigen::MatrixXd Adelay, Bdelay, Cdelay, Ddelay; // Delay system matrices
+	int pade_order = 2; // Order of Padé approximation for delays
     Eigen::VectorXd equilibrium_state;
     
     // Sub-elements

@@ -21,67 +21,78 @@ using DerivFunc = std::function<Eigen::VectorXd(const Eigen::VectorXd&, const Ei
  */
 Eigen::VectorXd findEquilibrium(const Eigen::VectorXd& x0, const Eigen::VectorXd& u, DerivFunc f,
     double tol, int max_iter) {
+
     Eigen::VectorXd x = x0;
     const int n = x.size();
-
     if (n == 0 || u.size() == 0) {
         throw std::invalid_argument("Initial state and input vectors must be non-empty.");
     }
 
+    const double eps = 1e-8;
+    double lambda = 1e-3;
+
     for (int iter = 0; iter < max_iter; ++iter) {
-        Eigen::VectorXd f_val = f(x, u);
-        double norm_f = f_val.norm();
-        if (norm_f < tol) {
-            std::cout << "Equilibrium found in " << iter << " iterations. Residual = " << norm_f << "\n";
+        VectorXd fx = f(x, u);
+        double fx_norm = fx.norm();
+
+        std::cout << "Iter " << iter
+            << " | ‖f(x)‖ = " << fx_norm
+            << " | λ = " << lambda << std::endl;
+
+        if (fx_norm < tol) {
+            std::cout << "✅ Converged (residual tolerance) in " << iter << " iterations.\n";
             return x;
         }
 
-        // Jacobian ∂f/∂x (numerical, adaptive epsilon)
-        double eps_base = 1e-7;
-        Eigen::MatrixXd J(n, n);
+        // Numerical Jacobian (central difference)
+        MatrixXd J(fx.size(), n);
         for (int i = 0; i < n; ++i) {
-            Eigen::VectorXd x_eps = x;
-            double eps = eps_base * std::max(1.0, std::abs(x(i)));
-            x_eps(i) += eps;
-            J.col(i) = (f(x_eps, u) - f_val) / eps;
+            VectorXd x_eps_plus = x;
+            VectorXd x_eps_minus = x;
+            x_eps_plus(i) += eps;
+            x_eps_minus(i) -= eps;
+
+            VectorXd f_plus = f(x_eps_plus, u);
+            VectorXd f_minus = f(x_eps_minus, u);
+
+            J.col(i) = (f_plus - f_minus) / (2 * eps);
         }
 
-        // Use pseudo-inverse for stiff/ill-conditioned Jacobian
-        Eigen::JacobiSVD<Eigen::MatrixXd> svd(J, Eigen::ComputeThinU | Eigen::ComputeThinV);
-        double pinvtol = 1e-8;
-        Eigen::VectorXd S = svd.singularValues();
-        Eigen::MatrixXd S_inv = Eigen::MatrixXd::Zero(n, n);
-        for (int i = 0; i < n; ++i) {
-            if (S(i) > pinvtol) S_inv(i, i) = 1.0 / S(i);
-        }
-        Eigen::MatrixXd J_pinv = svd.matrixV() * S_inv * svd.matrixU().transpose();
-        Eigen::VectorXd dx = J_pinv * (-f_val);
+        // Levenberg-Marquardt step: (JᵀJ + λI) dx = -Jᵀ f
+        MatrixXd JTJ = J.transpose() * J;
+        VectorXd JTr = J.transpose() * fx;
+        MatrixXd H = JTJ + lambda * MatrixXd::Identity(n, n);
 
-        // Damped Newton step (line search)
-        double alpha = 1.0;
-        Eigen::VectorXd x_new;
-        double norm_f_new;
-        for (int ls = 0; ls < 10; ++ls) {
-            x_new = x + alpha * dx;
-            norm_f_new = f(x_new, u).norm();
-            if (norm_f_new < norm_f) {
-                break; // Accept step
-            }
-            alpha *= 0.5; // Reduce step size
-        }
-        x = x_new;
+        // Solve for dx
+        VectorXd dx = -H.ldlt().solve(JTr);
 
         if (dx.norm() < tol) {
-            std::cout << "Converged (Newton step small) in " << iter << " iterations.\n";
+            std::cout << "✅ Converged (small step) in " << iter << " iterations.\n";
             return x;
         }
 
-        if (iter == max_iter - 1) {
-            std::cerr << "WARNING: Equilibrium solver did not converge after " << max_iter << " iterations. Final residual: " << norm_f << "\n";
+        VectorXd x_trial = x + dx;
+        VectorXd fx_trial = f(x_trial, u);
+        double fx_trial_norm = fx_trial.norm();
+
+        // Compute gain ratio rho
+        double denom = dx.transpose() * (lambda * dx - JTr);
+        if (std::abs(denom) < 1e-12) denom = (denom < 0 ? -1e-12 : 1e-12); // prevent div0
+        double rho = (fx.squaredNorm() - fx_trial.squaredNorm()) / denom;
+
+        if (rho > 0) {
+            // Accept step, reduce lambda
+            x = x_trial;
+            lambda *= std::max(1.0 / 3.0, 1.0 - std::pow(2 * rho - 1, 3));
+            lambda = std::max(lambda, 1e-12);
+        }
+        else {
+            // Reject step, increase lambda
+            lambda *= 10.0;
         }
     }
-
-    return x;
+	std::cerr << "⚠️ Solver did not converge after " << max_iter << " iterations. Final residual: " << f(x, u).norm() << "\n";
+    return x;  // Return last iterate anyway
 }
 
 /**
@@ -133,8 +144,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> computeJacobians(
  * @param tdelay Time delay to approximate.
  * @return Pair of pairs: ((A, B), (C, D)) matrices for the delay system.
  */
-std::pair<std::pair<Eigen::MatrixXd, Eigen::MatrixXd>, std::pair<Eigen::MatrixXd, Eigen::MatrixXd>>
-    padeDelaySystem3(double tdelay) {
+void padeDelaySystem3(double tdelay, MatrixXd& Adelay, MatrixXd& Bdelay, MatrixXd& Cdelay, MatrixXd& Ddelay) {
     const double T = tdelay;
 
     // Padé 3rd-order approximation coefficients
@@ -149,26 +159,20 @@ std::pair<std::pair<Eigen::MatrixXd, Eigen::MatrixXd>, std::pair<Eigen::MatrixXd
     double b0 = 120.0;
 
     // A matrix (companion form)
-    Eigen::MatrixXd A(3, 3);
-    A << -a2 / a3, -a1 / a3, -a0 / a3,
+    Adelay << -a2 / a3, -a1 / a3, -a0 / a3,
         1, 0, 0,
         0, 1, 0;
 
     // B matrix
-    Eigen::MatrixXd B(3, 1);
-    B << 1, 0, 0;
+    Bdelay << 1, 0, 0;
 
     // C matrix
-    Eigen::MatrixXd C(1, 3);
-    C << (b2 - b3 * a2 / a3) / a3,
+    Cdelay << (b2 - b3 * a2 / a3) / a3,
         (b1 - b3 * a1 / a3) / a3,
         (b0 - b3 * a0 / a3) / a3;
 
     // D matrix
-    Eigen::MatrixXd D(1, 1);
-    D << b3 / a3;
-
-    return { {A, B}, {C, D} };
+    Ddelay << b3 / a3;
 }
 
 /**
@@ -180,8 +184,7 @@ std::pair<std::pair<Eigen::MatrixXd, Eigen::MatrixXd>, std::pair<Eigen::MatrixXd
  * @param num_signals Number of delayed signals.
  * @return Pair of pairs: ((A, B), (C, D)) block matrices for the multi-delay system.
  */
-std::pair<std::pair<Eigen::MatrixXd, Eigen::MatrixXd>, std::pair<Eigen::MatrixXd, Eigen::MatrixXd>>
-    padeDelaySystemMulti3(double tdelay, int num_signals) {
+void padeDelaySystemMulti3(double tdelay, MatrixXd& Adelay, MatrixXd& Bdelay, MatrixXd& Cdelay, MatrixXd& Ddelay, int num_signals) {
     const double T = tdelay;
 
     // Padé 3rd-order approximation coefficients
@@ -196,12 +199,12 @@ std::pair<std::pair<Eigen::MatrixXd, Eigen::MatrixXd>, std::pair<Eigen::MatrixXd
     double b0 = 120.0;
 
     // Single A, B, C, D matrices
-    Eigen::MatrixXd A(3, 3);
+	Eigen::MatrixXd A(3, 3);
     A << -a2 / a3, -a1 / a3, -a0 / a3,
         1, 0, 0,
         0, 1, 0;
 
-    Eigen::MatrixXd B(3, 1);
+	Eigen::MatrixXd B(3, 1);
     B << 1, 0, 0;
 
     Eigen::MatrixXd C(1, 3);
@@ -209,17 +212,11 @@ std::pair<std::pair<Eigen::MatrixXd, Eigen::MatrixXd>, std::pair<Eigen::MatrixXd
         (b1 - b3 * a1 / a3) / a3,
         (b0 - b3 * a0 / a3) / a3;
 
-    Eigen::MatrixXd D(1, 1);
+	Eigen::MatrixXd D(1, 1);
     D << b3 / a3;
 
     // Dimensions
     const int n = 3 * num_signals;
-
-    // Initialize block matrices
-    Eigen::MatrixXd Adelay = Eigen::MatrixXd::Zero(n, n);
-    Eigen::MatrixXd Bdelay = Eigen::MatrixXd::Zero(n, num_signals);
-    Eigen::MatrixXd Cdelay = Eigen::MatrixXd::Zero(num_signals, n);
-    Eigen::MatrixXd Ddelay = Eigen::MatrixXd::Zero(num_signals, num_signals);
 
     for (int i = 0; i < num_signals; ++i) {
         int row = i * 3;
@@ -230,8 +227,6 @@ std::pair<std::pair<Eigen::MatrixXd, Eigen::MatrixXd>, std::pair<Eigen::MatrixXd
         Cdelay.block(i, row, 1, 3) = C;
         Ddelay(i, col) = D(0, 0);
     }
-
-    return { {Adelay, Bdelay}, {Cdelay, Ddelay} };
 }
 
 
@@ -243,8 +238,7 @@ std::pair<std::pair<Eigen::MatrixXd, Eigen::MatrixXd>, std::pair<Eigen::MatrixXd
  * @param tdelay Time delay to approximate.
  * @return Pair of pairs: ((A, B), (C, D)) matrices for the delay system.
  */
-std::pair<std::pair<Eigen::MatrixXd, Eigen::MatrixXd>, std::pair<Eigen::MatrixXd, Eigen::MatrixXd>>
-padeDelaySystem2(double tdelay) {
+void padeDelaySystem2(double tdelay, MatrixXd& Adelay, MatrixXd& Bdelay, MatrixXd& Cdelay, MatrixXd& Ddelay) {
     const double T = tdelay;
 
     // Padé 2nd-order approximation coefficients
@@ -257,24 +251,18 @@ padeDelaySystem2(double tdelay) {
     double b0 = -12.0;
 
     // A matrix (companion form)
-    Eigen::MatrixXd A(2, 2);
-    A << -a1 / a2, -a0 / a2,
+    Adelay << -a1 / a2, -a0 / a2,
         1, 0;
 
     // B matrix
-    Eigen::MatrixXd B(2, 1);
-    B << 1, 0;
+    Bdelay << 1, 0;
 
     // C matrix
-    Eigen::MatrixXd C(1, 2);
-    C << (b1 - b2 * a1 / a2) / a2,
+    Cdelay << (b1 - b2 * a1 / a2) / a2,
         (b0 - b2 * a0 / a2) / a2;
 
     // D matrix
-    Eigen::MatrixXd D(1, 1);
-    D << b2 / a2;
-
-    return { {A, B}, {C, D} };
+    Ddelay << b2 / a2;
 }
 
 /**
@@ -286,8 +274,7 @@ padeDelaySystem2(double tdelay) {
  * @param num_signals Number of delayed signals.
  * @return Pair of pairs: ((A, B), (C, D)) block matrices for the multi-delay system.
  */
-std::pair<std::pair<Eigen::MatrixXd, Eigen::MatrixXd>, std::pair<Eigen::MatrixXd, Eigen::MatrixXd>>
-padeDelaySystemMulti2(double tdelay, int num_signals) {
+void padeDelaySystemMulti2(double tdelay, MatrixXd& Adelay, MatrixXd& Bdelay, MatrixXd& Cdelay, MatrixXd& Ddelay, int num_signals) {
     const double T = tdelay;
 
     // Padé 2nd-order approximation coefficients
@@ -318,10 +305,6 @@ padeDelaySystemMulti2(double tdelay, int num_signals) {
     const int n = 2 * num_signals;
 
     // Initialize block matrices
-    Eigen::MatrixXd Adelay = Eigen::MatrixXd::Zero(n, n);
-    Eigen::MatrixXd Bdelay = Eigen::MatrixXd::Zero(n, num_signals);
-    Eigen::MatrixXd Cdelay = Eigen::MatrixXd::Zero(num_signals, n);
-    Eigen::MatrixXd Ddelay = Eigen::MatrixXd::Zero(num_signals, num_signals);
 
     for (int i = 0; i < num_signals; ++i) {
         int row = i * 2;
@@ -332,6 +315,4 @@ padeDelaySystemMulti2(double tdelay, int num_signals) {
         Cdelay.block(i, row, 1, 2) = C;
         Ddelay(i, col) = D(0, 0);
     }
-
-    return { {Adelay, Bdelay}, {Cdelay, Ddelay} };
 }

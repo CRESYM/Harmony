@@ -5,6 +5,7 @@
 #include "./Elements/Element.h"
 
 // Impedances
+#include "./Elements/Impedance/Impedance_base.h"
 #include "./Elements/Impedance/Admittance.h"
 #include "./Elements/Impedance/Impedance.h"
 #include "./Elements/Impedance/Resistor.h"
@@ -12,6 +13,7 @@
 #include "./Elements/Impedance/Inductor.h"
 
 // Loads
+#include "./Elements/Load/Load_base.h"
 #include "./Elements/Load/Load.h"
 #include "./Elements/Load/Load_PQ.h"
 

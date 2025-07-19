@@ -22,6 +22,13 @@ public:
     int getOutputPins() const { return output_pins; }
     std::string getElementSymbol() const { return element_symbol; }
     std::vector<Bus*> getBuses();
+    int getBusIndex(Bus* bus) {
+        auto it = connections.find(bus);
+        if (it != connections.end()) {
+            return it->second; // Return the index of the bus in the connections map
+        }
+        return -1; // Return -1 if the bus is not found
+	}
     Bus* getOtherBus(Bus*);
     std::map<Bus*, int> getConnections() { return connections; }
     std::vector<std::string> getOPFInfo() const {
@@ -59,10 +66,10 @@ public:
     
 
     // Virtual power flow computation methods (override in subclasses)
-    virtual void computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+    virtual void computePowerFlowAC(std::map<std::string, double>& branchData,
         std::map<std::string, double>& globalParams) const {}
 
-    virtual void computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+    virtual void computePowerFlowDC(std::map<std::string, double>& branchDCData,
         std::map<std::string, double>& globalParams) const {}
 
 protected:

@@ -28,7 +28,7 @@ public:
         const std::vector<std::string>& br_info, bool print_info = false);
 
     void make_BranchDC(Element* element, std::map<std::string, double>& global_params,
-        const std::vector<std::string>& br_info, bool print_info = false);
+        bool print_info = false);
 
     void make_Generator(Element* element, const std::vector<std::string>& gen_info,
         bool print_info = false);

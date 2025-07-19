@@ -87,10 +87,9 @@ AC_source::~AC_source() {
 
 
 // Power flow computation for AC networks
-void AC_source::computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+void AC_source::computePowerFlowAC(std::map<std::string, double>& branchData,
     std::map<std::string, double>& globalParams) const {
-    int key = branchData.size();  // Unique branch identifier
-    branchData[std::to_string(key)]["generator"] = 1;
+    branchData["generator"] = 1;
 
     // Compute generator impedance at operational frequency
     std::complex<double> s = globalParams["omega"] * std::complex<double>(0, 1);
@@ -105,20 +104,19 @@ void AC_source::computePowerFlowAC(std::map<std::string, std::map<std::string, d
 
     std::complex<double> Z_eq = std::complex<double>(1.0) / Y_00 / globalParams["Z_base"];
 
-    branchData[std::to_string(key)]["br_r"] = std::real(Z_eq);
-    branchData[std::to_string(key)]["br_x"] = std::imag(Z_eq);
-    branchData[std::to_string(key)]["g_fr"] = 0;
-    branchData[std::to_string(key)]["b_fr"] = 0;
-    branchData[std::to_string(key)]["g_to"] = 0;
-    branchData[std::to_string(key)]["b_to"] = 0;
+    branchData["br_r"] = std::real(Z_eq);
+    branchData["br_x"] = std::imag(Z_eq);
+    branchData["g_fr"] = 0;
+    branchData["b_fr"] = 0;
+    branchData["g_to"] = 0;
+    branchData["b_to"] = 0;
 }
 
 // Power flow computation for DC networks
-void AC_source::computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+void AC_source::computePowerFlowDC(std::map<std::string, double>& branchDCData,
     std::map<std::string, double>& globalParams) const {
-    int key = branchDCData.size();  // Unique DC branch identifier
-    branchDCData[std::to_string(key)]["l"] = 0.0;
-    branchDCData[std::to_string(key)]["c"] = 0.0;
+    branchDCData["l"] = 0.0;
+    branchDCData["c"] = 0.0;
 
     // Compute Y parameters at low frequency (DC)
     std::complex<double> s = std::complex<double>(0, 1e-6);
@@ -133,7 +131,7 @@ void AC_source::computePowerFlowDC(std::map<std::string, std::map<std::string, d
 
     std::complex<double> Z_eq = std::complex<double>(1.0) / Y_00 / globalParams["Z_base"];
 
-    branchDCData[std::to_string(key)]["r"] = std::real(Z_eq);
+    branchDCData["r"] = std::real(Z_eq);
 }
 
 

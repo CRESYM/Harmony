@@ -33,6 +33,7 @@ set(Element_Converter_Header_Files
     src/Elements/Converter/MMC.h
 )
 set(Element_Impedance_Header_Files
+    src/Elements/Impedance/Impedance_base.h
     src/Elements/Impedance/Impedance.h
     src/Elements/Impedance/Resistor.h
     src/Elements/Impedance/Admittance.h
@@ -40,6 +41,7 @@ set(Element_Impedance_Header_Files
     src/Elements/Impedance/Inductor.h
 )
 set(Element_Load_Header_Files
+    src/Elements/Load/Load_base.h
     src/Elements/Load/Load.h
     src/Elements/Load/Load_PQ.h
 )
@@ -101,6 +103,7 @@ set(Element_Converter_Source_Files
     src/Elements/Converter/MMC.cpp
 )
 set(Element_Impedance_Source_Files
+    src/Elements/Impedance/Impedance_base.cpp
     src/Elements/Impedance/Impedance.cpp
     src/Elements/Impedance/Resistor.cpp
     src/Elements/Impedance/Admittance.cpp
@@ -108,6 +111,7 @@ set(Element_Impedance_Source_Files
     src/Elements/Impedance/Inductor.cpp
 )
 set(Element_Load_Source_Files
+    src/Elements/Load/Load_base.cpp
     src/Elements/Load/Load.cpp
     src/Elements/Load/Load_PQ.cpp
 )

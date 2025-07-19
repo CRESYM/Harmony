@@ -148,21 +148,21 @@ void example_OPF() {
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
     std::vector<std::string> info_br1_dc = { "DCBR1" };
-	br1_dc->setOPFInfo(info_br1_dc);
+	//br1_dc->setOPFInfo(info_br1_dc);
 
     double DCR2 = 0.073;
     Impedance* br2_dc = new Impedance("br2_dc", 1, DCR2);
     net.connectElementToBus(br2_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br2_dc, /*terminal=*/2, bus3_dc);
     std::vector<std::string> info_br2_dc = { "DCBR2" };
-	br2_dc->setOPFInfo(info_br2_dc);
+	//br2_dc->setOPFInfo(info_br2_dc);
 
     double DCR3 = 0.052;
     Impedance* br3_dc = new Impedance("br3_dc", 1, DCR3);
     net.connectElementToBus(br3_dc, /*terminal=*/1, bus2_dc);
     net.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
     std::vector<std::string> info_br3_dc = { "DCBR3" };
-	br3_dc->setOPFInfo(info_br3_dc);
+	//br3_dc->setOPFInfo(info_br3_dc);
 
     /*  ---------- 2.3 Create Converters ---------- */
     MMC* mmc1 = new MMC(

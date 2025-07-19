@@ -23,10 +23,10 @@ public:
     void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
 
 	// Power flow computations for AC and DC networks
-    void computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+    void computePowerFlowAC(std::map<std::string, double>& branchData,
         std::map<std::string, double>& globalParams) const override;
 
-    void computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+    void computePowerFlowDC(std::map<std::string, double>& branchDCData,
         std::map<std::string, double>& globalParams) const override;
 
     // Function to print AC source values

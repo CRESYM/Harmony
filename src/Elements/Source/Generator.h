@@ -13,10 +13,10 @@ public:
     ~Generator() {}
 
     // Power flow computations for AC and DC networks
-    void computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+    void computePowerFlowAC(std::map<std::string, double>& branchData,
         std::map<std::string, double>& globalParams) const override;
 
-    void computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+    void computePowerFlowDC(std::map<std::string, double>& branchDCData,
         std::map<std::string, double>& globalParams) const override;
 
 private:

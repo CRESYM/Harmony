@@ -41,34 +41,32 @@ Generator::Generator(const std::string& symbol, int pins, const std::vector<doub
 }
 
 // Power flow computation for AC networks
-void Generator::computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
+void Generator::computePowerFlowAC(std::map<std::string, double>& branchData,
     std::map<std::string, double>& globalParams) const {
-    int key = branchData.size();  // Unique branch identifier
-    branchData[std::to_string(key)]["generator"] = 1;
+    branchData["generator"] = 1;
 
     // Compute generator impedance at operational frequency
     std::complex<double> s = globalParams["omega"] * std::complex<double>(0, 1);
     std::complex<double> Z_eq(R_f, X_d);  // Generator impedance
 
-    branchData[std::to_string(key)]["br_r"] = std::real(Z_eq);
-    branchData[std::to_string(key)]["br_x"] = std::imag(Z_eq);
-    branchData[std::to_string(key)]["g_fr"] = 0;
-    branchData[std::to_string(key)]["b_fr"] = 0;
-    branchData[std::to_string(key)]["g_to"] = 0;
-    branchData[std::to_string(key)]["b_to"] = 0;
+    branchData["br_r"] = std::real(Z_eq);
+    branchData["br_x"] = std::imag(Z_eq);
+    branchData["g_fr"] = 0;
+    branchData["b_fr"] = 0;
+    branchData["g_to"] = 0;
+    branchData["b_to"] = 0;
 }
 
 // Power flow computation for DC networks
-void Generator::computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
+void Generator::computePowerFlowDC(std::map<std::string, double>& branchDCData,
     std::map<std::string, double>& globalParams) const {
-    int key = branchDCData.size();  // Unique DC branch identifier
-    branchDCData[std::to_string(key)]["l"] = 0.0;
-    branchDCData[std::to_string(key)]["c"] = 0.0;
+    branchDCData["l"] = 0.0;
+    branchDCData["c"] = 0.0;
 
     // Compute generator impedance at DC (zero frequency)
     std::complex<double> Z_eq(R_f, 0.0);  // DC resistance
 
-    branchDCData[std::to_string(key)]["r"] = std::real(Z_eq);
+    branchDCData["r"] = std::real(Z_eq);
 }
 
 

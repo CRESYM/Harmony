@@ -1,7 +1,7 @@
 #ifndef _LOAD_H_
 #define _LOAD_H_
 
-#include "../Element.h"
+#include "Load_base.h"
 
 /*
 Creates load with resistive, inductive and capacitive components in series. Its constructor 
@@ -10,7 +10,7 @@ as single value per each component R, L, C, and thus, input 3 values as vector. 
 a separate value per each component R, L, C per pin/phase and thus, it gets 3 * pins input 
 values.
 */
-class Load : public Element {
+class Load : public Load_base {
 public:
     /*
     * Constructor: Load
@@ -51,13 +51,6 @@ public:
         }
         throw std::out_of_range("Invalid phase index");
     }
-
-    // Power flow calculations (AC and DC)
-    void computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
-        std::map<std::string, double>& globalParams) const override;
-
-    void computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
-        std::map<std::string, double>& globalParams) const override;
 
 private:
     // Values for resistance, inductance and capacitance

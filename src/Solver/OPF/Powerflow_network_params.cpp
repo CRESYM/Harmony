@@ -207,57 +207,40 @@ void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
 void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& global_params,
     const std::vector<std::string>& br_info, bool print_info /* = false */)
 {
+    std::string row = std::to_string(data["branchAC"].size());
+    data["branchDC"][row] = {}; // Ensure there's at least one row
+    std::vector<std::string> keys = {
+        "fbus","tbus","r","x","b","rateA","rateB","rateC",
+            "ratio","angle","status","angmin","angmax","grid"
+    };
+
+    for (const auto& key : keys) {
+        data["branchDC"][row][key] = 0; // Empty structure for each
+    }
+
+    element->computePowerFlowDC(data["branchAC"][row], global_params);
+
     std::vector<Bus*> ends = element->getBuses();
 
     if (ends.size() != 2)
-        throw std::runtime_error("[make_BranchAC] Error: AC Branch should just be connected with two AC Buses");
+        throw std::runtime_error("[make_BrancADC] Error: DC Branch should just connected with two DC Buses");
 
-    element->computePowerFlowAC(data["branch"], global_params);
-    if (data["branch"].empty()) {
-        std::cerr << "[make_BranchAC] Error: [branch] table is empty.\n";
-        return;
-    }
-
+    std::string branch_name = element->getElementSymbol();
     const std::string& fBus_name = ends[0]->getBusName();
     const std::string& tBus_name = ends[1]->getBusName();
 
-    std::string row = std::to_string(data["branch"].size() - 1);
-    double br_r_pu = data["branch"][row]["br_r"];
-    double br_x_pu = data["branch"][row]["br_x"];
+    int fId = element->getBusIndex(ends[0]);
+    int tId = element->getBusIndex(ends[1]);
 
-    if (br_info.size() != 3) {
-        std::cerr << "[make_BranchAC] Error: Expected 3 fields:\n"
-            << " [0] branch_name \n "
-            << " [1] grid_area \n "
-            << " [2] shunt [p.u.]\n"
-            << " but received " << br_info.size() << ".\n";
-
-        std::cerr << "  Received: { ";
-        for (const auto& s : br_info) std::cerr << '"' << s << "\" ";
-        std::cerr << "}\n";
-    }
-
-    std::string branch_name = br_info[0];
-    std::string area_id = br_info[1];
-    std::string br_b_pu = br_info[2];
-
-    auto fIt = busName2Id_.find(fBus_name);
-    auto tIt = busName2Id_.find(tBus_name);
-    if (fIt == busName2Id_.end() || tIt == busName2Id_.end())
-        throw std::runtime_error("[make_BranchAC] Error: One of the bus names is unknown.");
-
-    int fId = fIt->second;
-    int tId = tIt->second;
+    cout << "BranchAC: " << row << std::endl;
 
     /* ------- Write data["branchAC"] ------- */
-    std::string rowKey = std::to_string(data["branchAC"].size());
-    auto& brRow = data["branchAC"][rowKey];
+    auto& brRow = data["branchAC"][row];
+
+	std::string area_id = "1"; // Default area ID, can be changed based on your logic
 
     brRow["fbus"] = fId;
     brRow["tbus"] = tId;
-    brRow["r"] = br_r_pu;
-    brRow["x"] = br_x_pu;
-    brRow["b"] = std::stod(br_b_pu);
     brRow["rateA"] = 100.0;
     brRow["rateB"] = 100.0;
     brRow["rateC"] = 100.0;
@@ -289,59 +272,41 @@ void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& g
 
 
 void PowerFlow::make_BranchDC(Element* element, std::map<std::string, double>& global_params,
-    const std::vector<std::string>& br_info, bool print_info /* = false */)
+    bool print_info /* = false */)
 
 {
+    std::string row = std::to_string(data["branchDC"].size());
+	data["branchDC"][row] = {}; // Ensure there's at least one row
+    std::vector<std::string> keys = {
+        "fbus", "tbus", "r", "x", "b", "rateA", "rateB",
+            "rateC", "ratio", "angle", "status", "angmin", "angmax"
+    };
+
+    for (const auto& key : keys) {
+        data["branchDC"][row][key] = 0; // Empty structure for each
+    }
+    
+    element->computePowerFlowDC(data["branchDC"][row], global_params);
+
     std::vector<Bus*> ends = element->getBuses();
 
     if (ends.size() != 2)
         throw std::runtime_error("[make_BranchDC] Error: DC Branch should just connected with two DC Buses");
 
-
-    element->computePowerFlowDC(data["branchdc"], global_params);
-    if (data["branchdc"].empty()) {
-        std::cerr << "[make_BranchDC] Error: [branchdc] table is empty.\n";
-        return;
-    }
-
-
+    std::string branch_name = element->getElementSymbol();
     const std::string& fBus_name = ends[0]->getBusName();
-    const std::string& tBus_name = ends[1]->getBusName();
+    const std::string& tBus_name = ends[1]->getBusName(); 
 
-    std::string row = std::to_string(data["branchdc"].size() - 1);
-    double br_r_pu = data["branchdc"][row]["br_r"];
-    double br_x_pu = data["branchdc"][row]["br_x"];
+    int fId = element->getBusIndex(ends[0]);
+    int tId = element->getBusIndex(ends[1]);
 
-
-    if (br_info.size() != 1) {
-        std::cerr << "[make_BranchDC] Error: Expected 1 fields:\n"
-            << " [0] branch_name \n "
-            << " but received " << br_info.size() << ".\n";
-
-        std::cerr << "  Received: { ";
-        for (const auto& s : br_info) std::cerr << '"' << s << "\" ";
-        std::cerr << "}\n";
-    }
-
-    std::string branch_name = br_info[0];
-
-    auto fIt = busName2Id_.find(fBus_name);
-    auto tIt = busName2Id_.find(tBus_name);
-    if (fIt == busName2Id_.end() || tIt == busName2Id_.end())
-        throw std::runtime_error("[make_BranchAC] Error: One of the bus name unknown");
-
-    int fId = fIt->second;
-    int tId = tIt->second;
+    cout << "BranchDC: " << row  << std::endl;
 
     /* ------- Write data["branchDC"] ------- */
-    std::string rowKey = std::to_string(data["branchDC"].size());
-    auto& brRow = data["branchDC"][rowKey];
+    auto& brRow = data["branchDC"][row];
 
     brRow["fbus"] = fId;
     brRow["tbus"] = tId;
-    brRow["r"] = 0.052; // will revise later
-    brRow["x"] = 0.0;
-    brRow["b"] = 0.0;
     brRow["rateA"] = 100.0;
     brRow["rateB"] = 100.0;
     brRow["rateC"] = 100.0;
@@ -505,8 +470,8 @@ void PowerFlow::make_Generator(Element* element, const std::vector<std::string>&
         throw std::invalid_argument("[make_Generator] Error: Q_min > Q_max for generator " + gen_name);
     }
 
-    std::map<std::string, double> dummy;
-    element->computePowerFlowAC(data["gen"], dummy);
+    //std::map<std::string, double> dummy;
+    //element->computePowerFlowAC(data["gen"], dummy);
 
     vector<Bus*> buses = element->getBuses();
 	Bus* bus = nullptr;
@@ -697,11 +662,41 @@ void PowerFlow::make_OPF(Network* net, bool vscControl,
     bool writeTxt, bool plotResult)
 {
     //const auto& data = net.getNetData();
-    std::map<std::string, double> globals = {
-     {"omega", 2 * M_PI * 50},
-     {"Z_base", 1.0}
+    std::map<std::string, double> global_dict;
+    double omega = 2 * M_PI * 50;
+    global_dict["omega"] = omega;
+    global_dict["baseMVA"] = 100;
+	global_dict["baseKV"] = 345.0; // Base voltage in kV, can be adjusted as needed
+	global_dict["Z_base"] = 1.0; // Base impedance, can be adjusted as needed
+
+    // Define data structures
+    std::vector<std::vector<std::string>> dict_ac;
+    std::vector<std::vector<std::string>> dict_dc;
+
+    // Define and initialize data map
+    std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
+
+    // Initialize specific elements of the data map
+    data["source_type"]["matpower"]["0"] = 0;
+    data["name"]["network"]["0"] = 0;
+    data["source_version"]["0.0.0"]["0"] = 0;
+    data["per_unit"]["true"]["0"] = 1;
+    data["dcpol"]["2"]["0"] = 1;
+    data["baseMVA"]["100"]["0"] = 100;
+
+    
+
+    // Initialize empty elements of the data map
+    std::vector<std::string> keys = {
+        "bus", "busdc", "shunt", "dcline", "storage", "switch",
+        "load", "branch", "branchDC", "gen", "convdc"
     };
 
+    for (const auto& key : keys) {
+        data[key] = {}; // Empty structure for each
+    }
+
+    // Define and initialize data map
 
     cout << "\n[make_OPF] Start making OPF data...\n";
         
@@ -717,10 +712,10 @@ void PowerFlow::make_OPF(Network* net, bool vscControl,
         }
         else if (dynamic_cast<Impedance*>(element)) {
             if (element->getInputPins() == 3) {
-                make_BranchAC(element, globals, element->getOPFInfo(), writeTxt);
+                make_BranchAC(element, global_dict, element->getOPFInfo(), writeTxt);
             }
             else if (element->getInputPins() == 1) {
-                make_BranchDC(element, globals, element->getOPFInfo(), writeTxt);
+                make_BranchDC(element, global_dict, writeTxt);
             }
             else {
                 throw std::runtime_error("[make_OPF] Error: Unsupported impedance pin number.");
@@ -728,7 +723,7 @@ void PowerFlow::make_OPF(Network* net, bool vscControl,
 
         }
         else if (dynamic_cast<MMC*>(element)) {
-            make_Converter(element, globals, element->getOPFInfo(), writeTxt);
+            make_Converter(element, global_dict, element->getOPFInfo(), writeTxt);
         }
         else {
             throw std::runtime_error("Unsupported element type.");
@@ -737,8 +732,6 @@ void PowerFlow::make_OPF(Network* net, bool vscControl,
 
 	cout << "[make_OPF] Finished processing elements.\n";
 
-    std::vector<std::vector<std::string>> dict_dc;
-    std::vector<std::vector<std::string>> dict_ac;
     for (const auto& [bus_name, bus] : net->getBuses())
     {
         if (bus->getPinNumber() == 3) {
@@ -752,9 +745,10 @@ void PowerFlow::make_OPF(Network* net, bool vscControl,
         }
     }
 
-	//data["busDC"] = dict_dc;
+	//data["busDC"].push_back(dict_dc);
 
     /* 2. Transform to Eigen::MatrixXd */
+        // Initialize specific elements of the data map
     MatrixXd busDC = map2dense(data.at("busDC"),
         { "bus_i","type","Pd","Qd","Gs","Bs","area",
           "Vm","Va","baseKV","zone","Vmax","Vmin" });

@@ -1,7 +1,7 @@
 #ifndef _IMPEDANCE_H_
 #define _IMPEDANCE_H_
 
-#include "../Element.h"
+#include "Impedance_base.h"
 
 /*
 Creates impedance with specified number of input/output pins which represent phases.
@@ -13,7 +13,7 @@ we differ two cases. Namely, we create only series impedance for each phase with
 */
 
 
-class Impedance : public Element {
+class Impedance : public Impedance_base {
 public:
     /*
      * Constructor: Impedance
@@ -40,12 +40,7 @@ public:
     ~Impedance();
 
 
-    // Power flow calculations (AC and DC)
-    void computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
-        std::map<std::string, double>& globalParams) const override;
 
-    void computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
-        std::map<std::string, double>& globalParams) const override;
 
 private:
 };

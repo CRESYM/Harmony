@@ -1,7 +1,7 @@
 ﻿#ifndef _ADMITTANCE_H_
 #define _ADMITTANCE_H_
 
-#include "../Element.h"
+#include "Impedance_base.h"
 
 /*
 Creates admittance with specified number of input/output pins which represent phases. 
@@ -15,7 +15,7 @@ diagonal admittance entries.
 -In case of `pins x pins` elements, they are representing all matrix of admittance.
 */
 
-class Admittance : public Element {
+class Admittance : public Impedance_base {
 public:
     /*
      * Constructor: Admittance
@@ -36,12 +36,6 @@ public:
     // Destructor to handle clean-up tasks
     ~Admittance() override;
 
-    // Power flow computations for AC and DC networks
-    void computePowerFlowAC(std::map<std::string, std::map<std::string, double>>& branchData,
-        std::map<std::string, double>& globalParams) const override;
-
-    void computePowerFlowDC(std::map<std::string, std::map<std::string, double>>& branchDCData,
-        std::map<std::string, double>& globalParams) const override;
 
 private:
     // No additional private members; behavior is inherited from Element

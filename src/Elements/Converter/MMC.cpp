@@ -226,9 +226,33 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
             }
         }    
     }
-    if (t_delay > 0) {
-		number_of_states += 2*5; // Add states for delay system
+
+	// Check validity of controller parameters
+    if (controls.count("dc_voltage") && controls.count("active_power"))
+		throw std::invalid_argument("DC voltage and active power controllers cannot be used together in MMC.");
+	if (controls.count("ac_voltage") && controls.count("reactive_power"))
+		throw std::invalid_argument("AC voltage and reactive power controllers cannot be used together in MMC.");
+
+
+    if (t_delay != 0) {
+		number_of_states += 5*pade_order; // Add states for delay system
+		Adelay = Eigen::MatrixXd::Zero(5 * pade_order, 5 * pade_order);
+        Bdelay = Eigen::MatrixXd::Zero(5 * pade_order, 1); // Assuming one input for delay system
+        Cdelay = Eigen::MatrixXd::Zero(1, 5 * pade_order); // Assuming one output for delay system
+		Ddelay = Eigen::MatrixXd::Zero(1, 1); // Assuming one output for delay system
+		cout << "Adding " << 5 * pade_order << " states for delay system with order " << pade_order << endl;
+        if (pade_order == 2) {
+            padeDelaySystemMulti2(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
+        }
+        else if (pade_order == 3) {
+            padeDelaySystemMulti3(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
+		}
+        else {
+            throw std::invalid_argument("Unsupported Padé order for delay system. Only 2nd and 3rd orders are supported.");
+		}
 	}
+
+	cout << "MMC initialized with " << number_of_states << " states." << endl;
 }
 
 /**
@@ -577,13 +601,12 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     double mSigma_z = m_input(6);
 
     if (t_delay) {
-        auto [AB, CD] = padeDelaySystemMulti2(t_delay, 5);
-        auto [Adelay, Bdelay] = AB;
-        auto [Cdelay, Ddelay] = CD;
-        Eigen::VectorXd xdelay = x.segment(i, 2*5);
-        F.segment(i, 2*5).noalias() = Adelay * xdelay + Bdelay * m_input;
-        Eigen::VectorXd mdelay = Cdelay * xdelay + Ddelay * m_input;
-        i += 2*5;
+		Eigen::VectorXd m(5);
+		m << mDelta_d, mDelta_q, mSigma_d, mSigma_q, mSigma_z;
+        Eigen::VectorXd xdelay = x.segment(i, 5*pade_order);
+        F.segment(i, 5*pade_order) = Adelay * xdelay + Bdelay * m;
+        Eigen::VectorXd mdelay = Cdelay * xdelay + Ddelay * m;
+        i += 5*pade_order;
         mDelta_d = mdelay(0);
         mDelta_q = mdelay(1);
         mSigma_d = mdelay(2);
