@@ -68,31 +68,6 @@ MMC::MMC(const std::string& symbol,
     B_matrix = Eigen::MatrixXd::Zero(6, 8);
     C_matrix = Eigen::MatrixXd::Identity(6, 6);
     D_matrix = Eigen::MatrixXd::Zero(6, 8);
-
-    // Predifined value for OPF
-    //element_OPF_info = {
-    // "MMC1",          // 0  generator_name
-    // "1",             // 1  grid_area
-    // "1",             // 2  type_dc 
-    // "1",             // 3  type_ac
-    // "0.0015",        // 4  rftc
-    // "0.1121",        // 5  xtfc
-    // "0.0887",        // 6  bf
-    // "0.0001",        // 7  rc
-    // "0.16428",       // 8  xc
-    // "345",           // 9  basekVac
-    // "1.1",           // 10 Vmmax
-    // "0.9",           // 11 Vmmin
-    // "1.2",           // 12 Imax
-    // "1.103",         // 13 LossAC
-    // "0.887",         // 14 LossB
-    // "2.885",         // 15 LossCrec
-    // "4.371",         // 16 LossCinv
-    // "0",             // 17 droop
-    // "0",             // 18 Pdcset
-    // "0",             // 19 Vdcset
-    // "0",             // 20 Dvdsetc
-    //};
 }
 
 /**
@@ -123,31 +98,6 @@ MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params)
     B_matrix = Eigen::MatrixXd::Zero(6, 8);
     C_matrix = Eigen::MatrixXd::Identity(6, 6);
     D_matrix = Eigen::MatrixXd::Zero(6, 8);
-
-    // Predifined value for OPF
-    //element_OPF_info = {
-    // "MMC1",          // 0  generator_name
-    // "1",             // 1  grid_area
-    // "1",             // 2  type_dc 
-    // "1",             // 3  type_ac
-    // "0.0015",        // 4  rftc
-    // "0.1121",        // 5  xtfc
-    // "0.0887",        // 6  bf
-    // "0.0001",        // 7  rc
-    // "0.16428",       // 8  xc
-    // "345",           // 9  basekVac
-    // "1.1",           // 10 Vmmax
-    // "0.9",           // 11 Vmmin
-    // "1.2",           // 12 Imax
-    // "1.103",         // 13 LossAC
-    // "0.887",         // 14 LossB
-    // "2.885",         // 15 LossCrec
-    // "4.371",         // 16 LossCinv
-    // "0",             // 17 droop
-    // "0",             // 18 Pdcset
-    // "0",             // 19 Vdcset
-    // "0",             // 20 Dvdsetc
-    //};
 };
 
 /**

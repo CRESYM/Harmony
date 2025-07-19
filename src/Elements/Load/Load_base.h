@@ -9,8 +9,6 @@ public:
 
 	~Load_base() {}
 	// Power flow calculations (AC and DC)
-	void computePowerFlowAC(std::map<std::string, double>& branchData,
-		std::map<std::string, double>& globalParams) const override;
 	void computePowerFlowDC(std::map<std::string, double>& branchDCData,
 		std::map<std::string, double>& globalParams) const override;
 };

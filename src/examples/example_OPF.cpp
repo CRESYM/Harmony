@@ -128,88 +128,78 @@ void example_OPF() {
     net.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
 
     /*  ---------- 2.3 Create Converters ---------- */
-    //MMC* mmc1 = new MMC(
-    //    "MMC1",         // Symbol
-    //    1000.0,         // Omega (Nominal Frequency in rad/s)
-    //    100.0,          // Active Power (P) in MW
-    //    50.0,           // Reactive Power (Q) in MVA
-    //    0.0,            // Theta (Voltage Angle in rad)
-    //    330.0,          // AC Voltage (V_m) in kV
-    //    640.0,          // DC Voltage (V_dc) in kV
-    //    0.05,           // Arm Inductance (L_arm) in H
-    //    1.07,           // Arm Resistance (R_arm) in Ω
-    //    0.01,           // Capacitance per Submodule (C_arm) in F
-    //    400,            // Number of Submodules (N)
-    //    0.06,           // Reactor Inductance (L_reactor) in H
-    //    0.535,          // Reactor Resistance (R_reactor) in Ω
-    //    0.00015         // Time Delay (t_delay) in seconds
-    //);
-    //net.connectElementToBus(mmc1, 1, bus2_ac);
-    //net.connectElementToBus(mmc1, 2, bus1_dc);
+    MMC* mmc1 = new MMC(
+        "MMC1",         // Symbol
+        1000.0,         // Omega (Nominal Frequency in rad/s)
+        100.0,          // Active Power (P) in MW
+        50.0,           // Reactive Power (Q) in MVA
+        0.0,            // Theta (Voltage Angle in rad)
+        330.0,          // AC Voltage (V_m) in kV
+        640.0,          // DC Voltage (V_dc) in kV
+        0.05,           // Arm Inductance (L_arm) in H
+        1.07,           // Arm Resistance (R_arm) in Ω
+        0.01,           // Capacitance per Submodule (C_arm) in F
+        400,            // Number of Submodules (N)
+        0.06,           // Reactor Inductance (L_reactor) in H
+        0.535,          // Reactor Resistance (R_reactor) in Ω
+        0.00015         // Time Delay (t_delay) in seconds
+    );
+    net.connectElementToBus(mmc1, 1, bus2_ac);
+    net.connectElementToBus(mmc1, 2, bus1_dc);
+    map<string, double> mmc1_info = {
+        {"type_dc", 1},            // 2
+        {"type_ac", 1},            // 3
+	};
+    mmc1->setOPFInfo(mmc1_info);
 
+    MMC* mmc2 = new MMC(
+        "MMC2",         // Symbol
+        1000.0,         // Omega (Nominal Frequency in rad/s)
+        100.0,          // Active Power (P) in MW
+        50.0,           // Reactive Power (Q) in MVA
+        0.0,            // Theta (Voltage Angle in rad)
+        330.0,          // AC Voltage (V_m) in kV
+        640.0,          // DC Voltage (V_dc) in kV
+        0.05,           // Arm Inductance (L_arm) in H
+        1.07,           // Arm Resistance (R_arm) in Ω
+        0.01,           // Capacitance per Submodule (C_arm) in F
+        400,            // Number of Submodules (N)
+        0.06,           // Reactor Inductance (L_reactor) in H
+        0.535,          // Reactor Resistance (R_reactor) in Ω
+        0.00015         // Time Delay (t_delay) in seconds
+    );
+    net.connectElementToBus(mmc2, 1, bus3_ac);
+    net.connectElementToBus(mmc2, 2, bus2_dc);
+    map<string, double> mmc2_info = {
+        {"type_dc", 2},            // 2
+        {"type_ac", 2},            // 3
+    };
+	mmc2->setOPFInfo(mmc2_info);
 
- //   MMC* mmc2 = new MMC(
- //       "MMC2",         // Symbol
- //       1000.0,         // Omega (Nominal Frequency in rad/s)
- //       100.0,          // Active Power (P) in MW
- //       50.0,           // Reactive Power (Q) in MVA
- //       0.0,            // Theta (Voltage Angle in rad)
- //       330.0,          // AC Voltage (V_m) in kV
- //       640.0,          // DC Voltage (V_dc) in kV
- //       0.05,           // Arm Inductance (L_arm) in H
- //       1.07,           // Arm Resistance (R_arm) in Ω
- //       0.01,           // Capacitance per Submodule (C_arm) in F
- //       400,            // Number of Submodules (N)
- //       0.06,           // Reactor Inductance (L_reactor) in H
- //       0.535,          // Reactor Resistance (R_reactor) in Ω
- //       0.00015         // Time Delay (t_delay) in seconds
- //   );
- //   net.connectElementToBus(mmc2, 1, bus3_ac);
- //   net.connectElementToBus(mmc2, 2, bus2_dc);
+    MMC* mmc3 = new MMC(
+        "MMC3",         // Symbol
+        1000.0,         // Omega (Nominal Frequency in rad/s)
+        100.0,          // Active Power (P) in MW
+        50.0,           // Reactive Power (Q) in MVA
+        0.0,            // Theta (Voltage Angle in rad)
+        330.0,          // AC Voltage (V_m) in kV
+        640.0,          // DC Voltage (V_dc) in kV
+        0.05,           // Arm Inductance (L_arm) in H
+        1.07,           // Arm Resistance (R_arm) in Ω
+        0.01,           // Capacitance per Submodule (C_arm) in F
+        400,            // Number of Submodules (N)
+        0.06,           // Reactor Inductance (L_reactor) in H
+        0.535,          // Reactor Resistance (R_reactor) in Ω
+        0.00015         // Time Delay (t_delay) in seconds
+    );
+    net.connectElementToBus(mmc3, 1, bus5_ac);
+    net.connectElementToBus(mmc3, 2, bus3_dc);
+    map<string, double> mmc3_info = {
+    {"type_dc", 1},            // 2
+    {"type_ac", 1},            // 3
+    };
+    mmc3->setOPFInfo(mmc3_info);
 
- //   std::vector<std::string> info_conv2 = {
- //    "MMC2",          // 0  generator_name
- //    "1",             // 1  grid_area
- //    "2",             // 2  type_dc 
- //    "2",             // 3  type_ac
- //    "0.0015",        // 4  rftc
- //    "0.1121",        // 5  xtfc
- //    "0.0887",        // 6  bf
- //    "0.0001",        // 7  rc
- //    "0.16428",       // 8  xc
- //    "345",           // 9  basekVac
- //    "1.1",           // 10 Vmmax
- //    "0.9",           // 11 Vmmin
- //    "1.2",           // 12 Imax
- //    "1.103",         // 13 LossAC
- //    "0.887",         // 14 LossB
- //    "2.885",         // 15 LossCrec
- //    "4.371",         // 16 LossCinv
- //    "0",             // 17 droop
- //    "0",             // 18 Pdcset
- //    "0",             // 19 Vdcset
- //    "0",             // 20 Dvdsetc
- //   };
-	//mmc2->setOPFInfo(info_conv2);
-
- //   MMC* mmc3 = new MMC(
- //       "MMC3",         // Symbol
- //       1000.0,         // Omega (Nominal Frequency in rad/s)
- //       100.0,          // Active Power (P) in MW
- //       50.0,           // Reactive Power (Q) in MVA
- //       0.0,            // Theta (Voltage Angle in rad)
- //       330.0,          // AC Voltage (V_m) in kV
- //       640.0,          // DC Voltage (V_dc) in kV
- //       0.05,           // Arm Inductance (L_arm) in H
- //       1.07,           // Arm Resistance (R_arm) in Ω
- //       0.01,           // Capacitance per Submodule (C_arm) in F
- //       400,            // Number of Submodules (N)
- //       0.06,           // Reactor Inductance (L_reactor) in H
- //       0.535,          // Reactor Resistance (R_reactor) in Ω
- //       0.00015         // Time Delay (t_delay) in seconds
- //   );
- //   net.connectElementToBus(mmc3, 1, bus5_ac);
- //   net.connectElementToBus(mmc3, 2, bus3_dc);
 
     /*----- 3 OPF Implementatiopn ----- */
 	PowerFlow pf;

@@ -11,7 +11,7 @@ public:
     ~LoadPQ() {}  
 
 	// Power flow computation for AC networks
-    void LoadPQ::computePowerFlowAC(std::map<std::string, double>& busAC,
+    void computePowerFlowAC(std::map<std::string, double>& busAC,
         std::map<std::string, double>& global_params) const override;
   
 private:  

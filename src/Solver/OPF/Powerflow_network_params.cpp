@@ -321,6 +321,51 @@ void PowerFlow::make_BranchDC(Element* element, std::map<std::string, double>& g
 void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& global_params,
     bool print_info /*=false*/)
 {
+    std::string rowKey = std::to_string(data["conv"].size());
+    auto& convRow = data["conv"][rowKey];
+
+	// Initialize the converter row with default values
+    constexpr const char* keys[20] = {
+     "gridac","type_dc","type_ac",
+     "rtf","xtf","bf","rc","xc",
+     "basekVac","Vmmax","Vmmin","Imax",
+     "LossA","LossB","LossCrec","LossCinv",
+     "droop","Pdcset","Vdcset","dvdcset"
+    };
+    for (const auto& key : keys) {
+        convRow[key] = 0.0; // Initialize all keys to 0.0
+	}
+
+	convRow["gridac"] = 1; // Default grid area for AC
+	convRow["type_dc"] = 1; // Default type for DC
+	convRow["type_ac"] = 1; // Default type for AC
+	convRow["rtf"] = 0.0015; // Default rftc
+	convRow["xtf"] = 0.1121; // Default xtfc
+	convRow["bf"] = 0.0887; // Default bf
+	convRow["rc"] = 0.0001; // Default rc
+	convRow["xc"] = 0.16428; // Default xc
+	convRow["basekVac"] = global_params["ACbasekV"]; // Base voltage for AC
+	convRow["Vmmax"] = 1.1; // Default maximum voltage
+	convRow["Vmmin"] = 0.9; // Default minimum voltage
+	convRow["Imax"] = 1.2; // Default maximum current
+	convRow["LossA"] = 1.103; // Default LossAC
+	convRow["LossB"] = 0.887; // Default LossB
+	convRow["LossCrec"] = 2.885; // Default LossCrec
+	convRow["LossCinv"] = 4.371; // Default LossCinv
+	convRow["droop"] = 0.0; // Default droop
+	convRow["Pdcset"] = 0.0; // Default Pdcset
+	convRow["Vdcset"] = 0.0; // Default Vdcset
+	convRow["dvdcset"] = 0.0; // Default Dvdsetc
+	convRow["busdc_i"] = 0; // Placeholder for DC bus index
+	convRow["busac_i"] = 0; // Placeholder for AC bus index
+	convRow["P_g"] = 0.0; // Default active power generation
+	convRow["Q_g"] = 0.0; // Default reactive power generation
+	convRow["Vtar"] = 1.0; // Default target voltage
+	convRow["status"] = 1.0; // Default status (1 = active, 0 = inactive)
+	// Note: The keys in convRow should match the expected keys in the OPF data structure
+
+	element->computePowerFlowAC(convRow, global_params);
+
     std::vector<Bus*> ends = element->getBuses();
 
     if (ends.size() != 2)
@@ -348,28 +393,8 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
     int busac_i = acIt->second;
     int busdc_i = dcIt->second;
 
-
-
-    constexpr const char* keys[20] = {
-         "gridac","type_dc","type_ac",
-         "rtf","xtf","bf","rc","xc",
-         "basekVac","Vmmax","Vmmin","Imax",
-         "LossA","LossB","LossCrec","LossCinv",
-         "droop","Pdcset","Vdcset","dvdcset"
-    };
-
-    std::string rowKey = std::to_string(data["conv"].size());
-    auto& convRow = data["conv"][rowKey];
-
-    //for (size_t i = 0; i < 20; ++i)
-    //    convRow[keys[i]] = std::stod(conv_info[i + 1]);
-
     convRow["busdc_i"] = busdc_i;
     convRow["busac_i"] = busac_i;
-    convRow["P_g"] = 0.0;
-    convRow["Q_g"] = 0.0;
-    convRow["Vtar"] = 1.0;
-    convRow["status"] = 1.0;
 
     constexpr const char* cols[] = {
         "busdc_i","busac_i","gridac","type_dc","type_ac",
@@ -536,8 +561,15 @@ void PowerFlow::make_Load(Element* element, std::map<std::string, double>& globa
 
     auto& busRow = data["busAC"][row];
 	busRow["bus_i"] = busName2Id_[bus_name];
-	busRow["area"] = 1; // Load type
+	busRow["type"] = 1; // Load type
 	busRow["Vm"] = global_params["basekV"]; // Voltage magnitude in kV
+	busRow["Va"] = 0.0; // Voltage angle in degrees
+	busRow["baseKV"] = global_params["ACbasekV"]; // Base voltage in kV
+	busRow["zone"] = 1.0; // Default zone, can be changed based on your logic
+	busRow["Vmax"] = 1.1; // Maximum voltage in pu
+	busRow["Vmin"] = 0.9; // Minimum voltage in pu
+
+	element->computePowerFlowAC(busRow, global_params);
 
     if (print_info)
     {
