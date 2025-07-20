@@ -18,7 +18,11 @@ void example_OPF() {
 
     /*  ---------- 1.2 Add AC Loads  ---------- */
     
-    LoadPQ* load1 = new LoadPQ("LOAD01", 3, {0.0, 0.0});
+    //LoadPQ* load1 = new LoadPQ("LOAD01", 3, {0.0, 0.0});
+    //net.connectElementToBus(load1, 1, bus1_ac);
+
+    std::vector<double> load_params1 = { 0, 0, 0 };
+    Load* load1 = new Load("LOAD01", 3, load_params1);
     net.connectElementToBus(load1, 1, bus1_ac);
 
     std::vector<double> load_params2 = { 5950, 37.9, 0 };
@@ -34,7 +38,7 @@ void example_OPF() {
     net.connectElementToBus(load4, 1, bus4_ac);
 
     std::vector<double> load_params5 = { 1984, 37.9, 0 };
-    Load* load5 = new Load("LOAD05", 3, load_params4);
+    Load* load5 = new Load("LOAD05", 3, load_params5);
     net.connectElementToBus(load5, 1, bus5_ac);
 
 
@@ -64,30 +68,32 @@ void example_OPF() {
 
     ///*  ---------- 1.4 Add Branches  ---------- */
     double ACR1 = 0.02; double ACX1 = 0.06;
-    Impedance* br1_ac = new Impedance("br1_ac", 3, ACR1);
+    std::complex<double> ACZ1(ACR1,ACX1);
+    Impedance* br1_ac = new Impedance("br1_ac", 3, ACZ1);
     net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
 
-    double ACR2 = 0.08;
-    double ACX2 = 0.24;
+    double ACR2 = 0.08; double ACX2 = 0.24;
+    std::complex<double> ACZ2(ACR2, ACX2);
     Impedance* br2_ac = new Impedance("br2_ac", 3, ACR2);
     net.connectElementToBus(br2_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br2_ac, /*terminal=*/2, bus3_ac);
 
-    double ACR3 = 0.06;
-    double ACX3 = 0.18;
+    double ACR3 = 0.06; double ACX3 = 0.18;
+    std::complex<double> ACZ3(ACR3, ACX3);
     Impedance* br3_ac = new Impedance("br3_ac", 3, ACR3);
     net.connectElementToBus(br3_ac, /*terminal=*/1, bus2_ac);
     net.connectElementToBus(br3_ac, /*terminal=*/2, bus3_ac);
 
-    double ACR4 = 0.06;
-    double ACX4 = 0.18;
+    double ACR4 = 0.06; double ACX4 = 0.18;
+    std::complex<double> ACZ4(ACR4, ACX4);
     Impedance* br4_ac = new Impedance("br4_ac", 3, ACR4);
     net.connectElementToBus(br4_ac, /*terminal=*/1, bus2_ac);
     net.connectElementToBus(br4_ac, /*terminal=*/2, bus4_ac);
 
     double ACR5 = 0.04;
     double ACX5 = 0.12;
+    std::complex<double> ACZ5(ACR5, ACX5);
     Impedance* br5_ac = new Impedance("br5_ac", 3, ACR5);
     net.connectElementToBus(br5_ac, /*terminal=*/1, bus2_ac);
     net.connectElementToBus(br5_ac, /*terminal=*/2, bus5_ac);
@@ -131,17 +137,17 @@ void example_OPF() {
     MMC* mmc1 = new MMC(
         "MMC1",         // Symbol
         1000.0,         // Omega (Nominal Frequency in rad/s)
-        100.0,          // Active Power (P) in MW
-        50.0,           // Reactive Power (Q) in MVA
+        -60.0,          // Active Power (P) in MW
+        -40.0,           // Reactive Power (Q) in MVA
         0.0,            // Theta (Voltage Angle in rad)
-        330.0,          // AC Voltage (V_m) in kV
-        640.0,          // DC Voltage (V_dc) in kV
+        345.0,          // AC Voltage (V_m) in kV
+        500.0,          // DC Voltage (V_dc) in kV
         0.05,           // Arm Inductance (L_arm) in H
         1.07,           // Arm Resistance (R_arm) in Ω
         0.01,           // Capacitance per Submodule (C_arm) in F
         400,            // Number of Submodules (N)
-        0.06,           // Reactor Inductance (L_reactor) in H
-        0.535,          // Reactor Resistance (R_reactor) in Ω
+        0.0005,         // Reactor Inductance (L_reactor) in H
+        0.0001,         // Reactor Resistance (R_reactor) in Ω
         0.00015         // Time Delay (t_delay) in seconds
     );
     net.connectElementToBus(mmc1, 1, bus2_ac);
@@ -158,14 +164,14 @@ void example_OPF() {
         100.0,          // Active Power (P) in MW
         50.0,           // Reactive Power (Q) in MVA
         0.0,            // Theta (Voltage Angle in rad)
-        330.0,          // AC Voltage (V_m) in kV
-        640.0,          // DC Voltage (V_dc) in kV
+        345.0,          // AC Voltage (V_m) in kV
+        500.0,          // DC Voltage (V_dc) in kV
         0.05,           // Arm Inductance (L_arm) in H
         1.07,           // Arm Resistance (R_arm) in Ω
         0.01,           // Capacitance per Submodule (C_arm) in F
         400,            // Number of Submodules (N)
-        0.06,           // Reactor Inductance (L_reactor) in H
-        0.535,          // Reactor Resistance (R_reactor) in Ω
+        0.0005,         // Reactor Inductance (L_reactor) in H
+        0.0001,         // Reactor Resistance (R_reactor) in Ω
         0.00015         // Time Delay (t_delay) in seconds
     );
     net.connectElementToBus(mmc2, 1, bus3_ac);
@@ -179,17 +185,17 @@ void example_OPF() {
     MMC* mmc3 = new MMC(
         "MMC3",         // Symbol
         1000.0,         // Omega (Nominal Frequency in rad/s)
-        100.0,          // Active Power (P) in MW
-        50.0,           // Reactive Power (Q) in MVA
+        35.0,          // Active Power (P) in MW
+        5.0,           // Reactive Power (Q) in MVA
         0.0,            // Theta (Voltage Angle in rad)
-        330.0,          // AC Voltage (V_m) in kV
-        640.0,          // DC Voltage (V_dc) in kV
+        345.0,          // AC Voltage (V_m) in kV
+        500.0,          // DC Voltage (V_dc) in kV
         0.05,           // Arm Inductance (L_arm) in H
         1.07,           // Arm Resistance (R_arm) in Ω
         0.01,           // Capacitance per Submodule (C_arm) in F
         400,            // Number of Submodules (N)
-        0.06,           // Reactor Inductance (L_reactor) in H
-        0.535,          // Reactor Resistance (R_reactor) in Ω
+        0.0005,         // Reactor Inductance (L_reactor) in H
+        0.0001,         // Reactor Resistance (R_reactor) in Ω
         0.00015         // Time Delay (t_delay) in seconds
     );
     net.connectElementToBus(mmc3, 1, bus5_ac);
@@ -213,5 +219,5 @@ void example_OPF() {
     global_dict["DCbaseKV"] = 500.0; // Base voltage for DC, can be adjusted as needed
     global_dict["Z_base"] = 1.0; // Base impedance, can be adjusted as needed
 
-    pf.make_OPF(&net, global_dict, false, true, false);
+    pf.make_OPF(&net, global_dict, true, false, false);
 }

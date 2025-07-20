@@ -228,7 +228,7 @@ void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& g
     brRow["angmax"] = 360.0;
     brRow["grid"] = std::stod(area_id);
 
-    element->computePowerFlowDC(data["branchAC"][row], global_params);
+    element->computePowerFlowAC(data["branchAC"][row], global_params);
 
     if (print_info)
     {
@@ -344,7 +344,7 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
 	convRow["bf"] = 0.0887; // Default bf
 	convRow["rc"] = 0.0001; // Default rc
 	convRow["xc"] = 0.16428; // Default xc
-	convRow["basekVac"] = global_params["ACbasekV"]; // Base voltage for AC
+	convRow["basekVac"] = global_params["ACbaseKV"]; // Base voltage for AC
 	convRow["Vmmax"] = 1.1; // Default maximum voltage
 	convRow["Vmmin"] = 0.9; // Default minimum voltage
 	convRow["Imax"] = 1.2; // Default maximum current
@@ -374,24 +374,30 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
     Bus* acBus = nullptr;
     Bus* dcBus = nullptr;
 
-    for (Bus* b : ends) {
-        if (b->getPinNumber() == 3)
-            acBus = b;
-        else
-            dcBus = b;
-    }
+    //for (Bus* b : ends) {
+    //    if (b->getPinNumber() == 3)
+    //        acBus = b;
+    //    else
+    //        dcBus = b;
+    //}
+
+    for (Bus* b : element->getBuses())
+        (b->getPinNumber() == 3 ? acBus : dcBus) = b;
 
     if (!acBus || !dcBus)
         throw std::runtime_error("[make_Converter] Error: Need one AC-bus and one DC-bus");
 
-    auto acIt = busName2Id_.find(acBus->getBusName());
-    auto dcIt = busName2Id_.find(dcBus->getBusName());
+    //auto acIt = busName2Id_.find(acBus->getBusName());
+    //auto dcIt = busName2Id_.find(dcBus->getBusName());
 
-    if (acIt == busName2Id_.end() || dcIt == busName2Id_.end())
-        throw std::runtime_error("[make_Converter] Error: Unknown bus name(s)");
+    //if (acIt == busName2Id_.end() || dcIt == busName2Id_.end())
+    //    throw std::runtime_error("[make_Converter] Error: Unknown bus name(s)");
 
-    int busac_i = acIt->second;
-    int busdc_i = dcIt->second;
+    //int busac_i = acIt->second;
+    //int busdc_i = dcIt->second;
+
+    int busac_i = busName2Id_.at(acBus->getBusName());
+    int busdc_i = busName2Id_.at(dcBus->getBusName());
 
     convRow["busdc_i"] = busdc_i;
     convRow["busac_i"] = busac_i;
@@ -532,23 +538,23 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
 void PowerFlow::make_Load(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
-    std::string row = std::to_string(data["busAC"].size());
-    data["busAC"][row] = {}; // Ensure there's at least one row
-    std::vector<std::string> keys = {
-        "bus_i","type","Pd","Qd","Gs","Bs","area","Vm","Va",
-            "baseKV","zone","Vmax","Vmin","grid"
-    };
+ //   std::string row = std::to_string(data["busAC"].size());
+ //   data["busAC"][row] = {}; // Ensure there's at least one row
+ //   std::vector<std::string> keys = {
+ //       "bus_i","type","Pd","Qd","Gs","Bs","area","Vm","Va",
+ //           "baseKV","zone","Vmax","Vmin","grid"
+ //   };
 
-    for (const auto& key : keys) {
-        data["busAC"][row][key] = 0; // Empty structure for each
-    }
+ //   for (const auto& key : keys) {
+ //       data["busAC"][row][key] = 0; // Empty structure for each
+ //   }
 
-    std::string load_name = element->getElementSymbol();
-    
-	vector<Bus*> buses = element->getBuses(); // Get the buses connected to the load element
+ //   std::string load_name = element->getElementSymbol();
+ //   
+	//vector<Bus*> buses = element->getBuses(); // Get the buses connected to the load element
     Bus* attachedBus = nullptr;
 
-    for (Bus* b : buses) {
+    for (Bus* b : element->getBuses()) {
         if (b->getBusName() != "gnd")
             attachedBus = b;
     }
@@ -557,17 +563,24 @@ void PowerFlow::make_Load(Element* element, std::map<std::string, double>& globa
         throw std::runtime_error(
             "[make_Load] Error: load element is not connected to any bus");
 
-    const std::string& bus_name = attachedBus->getBusName();    
+    const std::string& bus_name = attachedBus->getBusName();  
+    int bus_id = busName2Id_.at(bus_name);        
+    std::string row = std::to_string(bus_id - 1);   
+
+    //auto& busRow = data["busAC"][row];
+	//busRow["bus_i"] = busName2Id_[bus_name];
+	//busRow["type"] = 1; // Load type
+	//busRow["Vm"] = global_params["basekV"]; // Voltage magnitude in kV
+	//busRow["Va"] = 0.0; // Voltage angle in degrees
+	//busRow["baseKV"] = global_params["ACbasekV"]; // Base voltage in kV
+	//busRow["zone"] = 1.0; // Default zone, can be changed based on your logic
+	//busRow["Vmax"] = 1.1; // Maximum voltage in pu
+	//busRow["Vmin"] = 0.9; // Minimum voltage in pu
+
+    if (!data["busAC"].count(row))
+        throw std::runtime_error("[make_Load] AC bus not found)");
 
     auto& busRow = data["busAC"][row];
-	busRow["bus_i"] = busName2Id_[bus_name];
-	busRow["type"] = 1; // Load type
-	busRow["Vm"] = global_params["basekV"]; // Voltage magnitude in kV
-	busRow["Va"] = 0.0; // Voltage angle in degrees
-	busRow["baseKV"] = global_params["ACbasekV"]; // Base voltage in kV
-	busRow["zone"] = 1.0; // Default zone, can be changed based on your logic
-	busRow["Vmax"] = 1.1; // Maximum voltage in pu
-	busRow["Vmin"] = 0.9; // Minimum voltage in pu
 
 	element->computePowerFlowAC(busRow, global_params);
 
@@ -623,21 +636,41 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
 
 	// Process buses
     // Define data structures
+  //  std::vector<std::vector<std::string>> dict_ac;
+  //  std::vector<std::vector<std::string>> dict_dc;
+  //  for (const auto& [bus_name, bus] : net->getBuses())
+  //  {
+		//cout << "[make_OPF] Processing bus: " << bus_name << endl;
+  //      if (bus->getPinNumber() == 3) {
+  //          addBusAC(dict_ac, bus, global_dict, writeTxt);
+  //      }
+  //      else if (bus->getPinNumber() == 1) {
+  //          addBusDC(dict_dc, bus, global_dict, writeTxt);
+  //      }
+  //      else {
+  //          throw std::runtime_error("[make_OPF] Error: Unsupported bus type.");
+  //      }
+  //  }
+
     std::vector<std::vector<std::string>> dict_ac;
     std::vector<std::vector<std::string>> dict_dc;
-    for (const auto& [bus_name, bus] : net->getBuses())
-    {
-		cout << "[make_OPF] Processing bus: " << bus_name << endl;
-        if (bus->getPinNumber() == 3) {
-            addBusAC(dict_ac, bus, global_dict, writeTxt);
-        }
-        else if (bus->getPinNumber() == 1) {
-            addBusDC(dict_dc, bus, global_dict, writeTxt);
-        }
-        else {
-            throw std::runtime_error("[make_OPF] Error: Unsupported bus type.");
-        }
+
+    std::vector<Bus*> acBuses, dcBuses;
+    for (auto& kv : net->getBuses()) {
+        Bus* b = kv.second;
+        (b->getPinNumber() == 3 ? acBuses : dcBuses).push_back(b);
     }
+
+    auto byName = [](Bus* a, Bus* b) { return a->getBusName() < b->getBusName(); };
+    std::sort(acBuses.begin(), acBuses.end(), byName);
+    std::sort(dcBuses.begin(), dcBuses.end(), byName);
+
+    for (Bus* b : acBuses)
+        addBusAC(dict_ac, b, global_dict, writeTxt);
+
+    for (Bus* b : dcBuses)
+        addBusDC(dict_dc, b, global_dict, writeTxt);
+
 	// Process elements: loads, generators, which contribute to the buses data    
     auto& elements = net->getElements();
     for (const auto& [element_name, element] : elements)

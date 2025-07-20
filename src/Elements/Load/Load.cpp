@@ -95,8 +95,8 @@ void Load::computePowerFlowAC(std::map<std::string, double>& busAC,
     double B_C = (C[0] == 0.0) ? 0.0 : omega * C[0];
     double B = B_L + B_C;
 
-    double Pd = 3.0 * V_phase * V_phase * G / (1.0 * global_params["baseMVA"]);
-    double Qd = -3.0 * V_phase * V_phase * B / global_params["baseMVA"];
+    double Pd = 3.0 * V_phase * V_phase * G ;
+    double Qd = -3.0 * V_phase * V_phase * B ;
 
     busAC["Pd"] += Pd;
     busAC["Qd"] += Qd;

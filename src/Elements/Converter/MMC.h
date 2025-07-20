@@ -67,11 +67,14 @@ public:
     {
         for (auto& [key, value] : element_OPF_info)
 			data[key] = value; // Copy OPF info to branch data
-		data["bf"] = 0.0; // conductance of the filter
-		data["rf"] = 0.0; // Resistance of the filter
-		data["xf"] = 0.0; // Reactance of the filter
+		//data["bf"] = 0.0; // conductance of the filter
+		//data["rf"] = 0.0; // Resistance of the filter
+		//data["xf"] = 0.0; // Reactance of the filter
 		data["xc"] = globalParams["omega"] * L_reactor / globalParams["Z_base"]; // Base voltage for AC
 		data["rc"] = R_reactor / globalParams["Z_base"]; // Resistance of the phase reactor
+        data["P_g"] = P_dc; // Setting of DC p-control value
+        data["Q_g"] = Q; // Setting of AC q-control value
+        data["Vtar"] = V_dc / globalParams["DCbaseKV"]; // Seting of DC v-control value
     }
 
 private:
