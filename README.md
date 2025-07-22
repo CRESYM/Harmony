@@ -87,12 +87,14 @@ ctest
 
 
 ## Contributors
-- **Aleksandra Lekić**, development of the mathematical framework, development of individual components, and their spectral representation and formulation, and design of the toolbox, different functionality interconnections, harmonic stability solver, supervision, and acquisition of the funding
+- **Aleksandra Lekić**, development of the mathematical framework, development of individual components, and their spectral representation and formulation, design of the toolbox, different functionality interconnections, harmonic stability solver, supervision, and acquisition of the funding
+- **Robert Dimitrovski**, dynamic phasor formulation, development of a core of DQNsym, funding acquisition and supervision
 - **Haixiao Li**, design of the power flow strategy, and formulation of the power flow solution
 - **Saif Alsarayreh**, dynamic phasor formulation, model design, and implementation
+- **Azadeh Kermansaravi**, programming of the part of the toolbox
 - **Yasel Quintero**, documentation, installation setup, cross-platform compatibility, testing, issuing, release
-- **Azadeh Kermansaravi**, development of the core of the toolbox
-- **Robert Dimitrovski**, dynamic phasor formulation, and supervision
+
+
 
 
  The development of the Harmony was supported by the [Digital Competence Centre](https://www.tudelft.nl/index.php?id=67120&L=1/), Delft University of Technology.
