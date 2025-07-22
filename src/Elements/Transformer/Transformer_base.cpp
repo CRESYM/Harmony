@@ -20,20 +20,20 @@ void Transformer_base::computePowerFlowAC(std::map<std::string, double>& branchD
     cd Y22 = substitute_symbol(Y_matrix.get(m_pins, m_pins), omega, globalParams.at("omega"));
 
     double tap = std::sqrt(std::real(Y22 / Y11));      
-    cd ys = -Y12 * tap;                              
-    cd yc = Y22 - ys;                                   
+    cd Ys = -Y12 * tap;                              
+    cd Yc = Y22 - Ys;                                   
 
-    cd zs = cd(1.0) / ys / globalParams.at("Z_base");  
+    cd Zs = cd(1.0) / Ys / globalParams.at("Z_base");  
 
     branchData["transformer"] = 1;
     branchData["tap"] = tap;
     branchData["shift"] =  0;
 
-    branchData["r"] = std::real(zs);
-    branchData["x"] = std::imag(zs);
+    branchData["r"] = std::real(Zs);
+    branchData["x"] = std::imag(Zs);
 
-    branchData["g_fr"] = branchData["g_to"] = std::real(yc);  
-    branchData["b_fr"] = branchData["b_to"] = std::imag(yc);
+    branchData["g_fr"] = branchData["g_to"] = std::real(Yc);  
+    branchData["b_fr"] = branchData["b_to"] = std::imag(Yc);
 
     branchData["c_rating_a"] =  1.0;
 
@@ -49,10 +49,6 @@ void Transformer_base::computePowerFlowDC(std::map<std::string, double>& branchD
     cd Y12 = substitute_symbol(Y_matrix.get(0, m_pins), omega, 0.0);
 
     cd zs = -cd(1.0) / Y12 / globalParams.at("Z_base");   
-
-    branchDCData["transformer"] = 1;
-    branchDCData["tap"] = 1.0;                 
-    branchDCData["shift"] = 0.0;
 
     branchDCData["r"] = std::real(zs);
     branchDCData["x"] = 0.0;

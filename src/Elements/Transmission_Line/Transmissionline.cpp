@@ -47,6 +47,55 @@ TransmissionLine::TransmissionLine(const std::string& symbol, int pins, const st
     
 }
 
+void TransmissionLine::computePowerFlowAC(std::map<std::string, double>& branchData,
+    const std::map<std::string, double>& globalParams) const
+{
+    using cd = std::complex<double>;
+    const double omega_num = globalParams.at("omega");
+    const double Zbase = globalParams.at("Z_base");
+
+    cd Y11 = substitute_symbol(Y_matrix.get(0, 0), omega, globalParams.at("omega"));
+    cd Y12 = substitute_symbol(Y_matrix.get(0, m_pins), omega, globalParams.at("omega"));
+
+    cd Zs = -cd(1.0) / Y12 / globalParams.at("Z_base");    
+    cd Yend = (Y11 + Y12);             
+
+    branchData["transformer"] = 0;
+    branchData["tap"] = 1.0;
+    branchData["shift"] = 0.0;
+    branchData["c_rating_a"] = 1.0;
+
+    branchData["r"] = std::real(Zs);
+    branchData["x"] = std::imag(Zs);
+
+    branchData["g_fr"] = std::real(Yend);
+    branchData["b_fr"] = std::imag(Yend);
+
+    branchData["g_to"] = std::real(Yend);
+    branchData["b_to"] = std::imag(Yend);
+
+    for (auto& [key, value] : element_OPF_info) 
+        branchData[key] = value;
+}
+
+void TransmissionLine::computePowerFlowDC(std::map<std::string, double>& branchDCData,
+    const std::map<std::string, double>& globalParams) const
+{
+    using cd = std::complex<double>;
+
+    cd Y12 = substitute_symbol(Y_matrix.get(0, m_pins), omega, 0.0);
+
+    cd Zs = -cd(1.0) / Y12 / globalParams.at("Z_base");
+
+    branchDCData["r"] = std::real(Zs);
+    branchDCData["x"] = 0.0;
+    branchDCData["b"] = 0.0;
+
+    for (auto& [key, value] : element_OPF_info)
+        branchDCData[key] = value;
+}
+
+
 
 
    
