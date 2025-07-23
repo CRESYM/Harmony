@@ -48,17 +48,17 @@
  */
 MMC::MMC(const std::string& symbol,
     double omega, double activePower, double reactivePower,
-    double angle, double acVoltage, double dcVoltage,
+    double angle, double acVoltage, double Pdc, double dcVoltage,
     double armInductance, double armResistance, double armCapacitance,
     int numSubmodules, double reactorInductance, double reactorResistance,
     double timeDelay)
     : Element(symbol, 3, 1), // AC side - input pins; DC side - output pins
     omega_0(omega), P(activePower), Q(reactivePower), theta(angle), V_m(acVoltage), V_dc(dcVoltage),
     L_arm(armInductance), R_arm(armResistance), C_arm(armCapacitance),
-    N(numSubmodules), L_reactor(reactorInductance), R_reactor(reactorResistance), t_delay(timeDelay)
+    N(numSubmodules), L_reactor(reactorInductance), R_reactor(reactorResistance), t_delay(timeDelay),
+    P_dc(Pdc)
 {
     // Initialize active and reactive power limits for power flow calculations
-    P_dc = P;
     P_min = 0.5 * P;
     P_max = 1.5 * P;
     Q_min = -P;
@@ -78,13 +78,12 @@ MMC::MMC(const std::string& symbol,
 MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params)
     : Element(symbol, 3, 1), // AC side - input pins; DC side - output pins
     omega_0(converter_params[0]), P(converter_params[1]), Q(converter_params[2]),
-    theta(converter_params[3]), V_m(converter_params[4]), V_dc(converter_params[5]),
-    L_arm(converter_params[6]), R_arm(converter_params[7]), C_arm(converter_params[8]),
-    N(static_cast<int>(converter_params[9])), L_reactor(converter_params[10]),
-    R_reactor(converter_params[11]), t_delay(converter_params[12]) {
+    theta(converter_params[3]), V_m(converter_params[4]), P_dc(converter_params[5]), V_dc(converter_params[6]),
+    L_arm(converter_params[7]), R_arm(converter_params[8]), C_arm(converter_params[9]),
+    N(static_cast<int>(converter_params[10])), L_reactor(converter_params[11]),
+    R_reactor(converter_params[12]), t_delay(converter_params[13]) {
 
     // Initialize active and reactive power limits for power flow calculations
-    P_dc = P;
     P_min = 0.5 * P;
     P_max = 1.5 * P;
     Q_min = -P;
@@ -157,17 +156,16 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
                 
                 if (controller_name == "dc_voltage") {
 					vdc_index = number_of_states - 12; // Update vdc_index 
-					control_blocks["dc_voltage"] = new Integrator(); // DC voltage controller 
+					//control_blocks["dc_voltage"] = new Integrator(); // DC voltage controller 
 
 					cout << vdc_index << endl;
-					number_of_states += 2; // Add states for DC voltage controller
+					//number_of_states += 2; // Add states for DC voltage controller
 				}
 				else if (controller_name == "pll") {
 					control_blocks["pll"] = new Integrator(); // PLL controller with 2 states and 1 output
 					number_of_states += 2; // Add states for PLL controller
                 }
-                else
-                    number_of_states += number_of_values; // Update the number of states based on the number of values
+                number_of_states += number_of_values; // Update the number of states based on the number of values
                 
                 i += 4 + number_of_values;
             }
@@ -451,11 +449,13 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         if (has_occ) controls["occ"]->setReference(iDelta_d_ref, 0);
     } else if (has_dc_voltage_ctrl) {
         double Idc = u(0);
-        F(i) = control_blocks["dc_voltage"]->define_differential_equations((Idc - 3 * iSigma_z) / Ce);
-
-        state_variables = controls["dc_voltage"]->define_differential_equations(x(i+1), Vdc, 0);
-        F(i + 1) = state_variables(0);
-        double iDelta_d_ref = -state_variables(1);
+		x1 << 0, x(i+1);
+        u1 << (-Idc + 3.0 * iSigma_z) / (1.0 * Ce), x(i);
+		c1 << 0, 0; // No additional control inputs for dc_voltage
+        state_variables = controls["dc_voltage"]->define_differential_equations(x1, u1, c1);
+		F(i) = state_variables(0);
+        F(i + 1) = state_variables(1);
+        double iDelta_d_ref = -state_variables(3);
         if (has_occ) controls["occ"]->setReference(iDelta_d_ref, 0);
         i += 2;
     }
@@ -480,7 +480,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     if (controls.count("energy")) {
         double wSigmaz = 3 * (C_arm * (pow(vCDelta_d, 2) + pow(vCDelta_q, 2) + pow(vCDelta_Zd, 2)
             + pow(vCDelta_Zq, 2) + pow(vCSigma_d, 2) + pow(vCSigma_q, 2) + 2 * pow(vCSigma_z, 2))) / (2.0 * N);
-        controls["energy"]->setReference(3.0 * C_arm * Vdc * Vdc / N, 0);
+        controls["energy"]->setReference(3.0 * C_arm * V_dc * V_dc / N, 0);
         state_variables = controls["energy"]->define_differential_equations(x(i), wSigmaz, Pac);
         F(i) = state_variables(0);
         double iSigma_z_ref = state_variables(1) / 3.0 / Vdc;

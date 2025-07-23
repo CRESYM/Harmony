@@ -7,8 +7,8 @@
 
 int main() {
 
-	example_MMC();
-	// example_OPF();
+	// example_MMC();
+	example_OPF();
 
 	// example_visuals();
 

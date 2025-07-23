@@ -16,7 +16,7 @@ public:
     // Constructor 
     MMC(const std::string& symbol,
         double omega, double activePower, double reactivePower,
-        double angle, double acVoltage, double dcVoltage,
+        double angle, double acVoltage, double Pdc, double dcVoltage,
         double armInductance, double armResistance, double armCapacitance,
         int numSubmodules, double reactorInductance, double reactorResistance,
         double timeDelay);
@@ -72,23 +72,23 @@ public:
 		//data["xf"] = 0.0; // Reactance of the filter
 		data["xc"] = globalParams["omega"] * L_reactor / globalParams["Z_base"]; // Base voltage for AC
 		data["rc"] = R_reactor / globalParams["Z_base"]; // Resistance of the phase reactor
-        data["P_g"] = P_dc; // Setting of DC p-control value
-        data["Q_g"] = Q; // Setting of AC q-control value
-        data["Vtar"] = V_dc / globalParams["DCbaseKV"]; // Seting of DC v-control value
+        data["P_g"] = P / 1e6; // Setting of DC p-control value
+        data["Q_g"] = Q / 1e6; // Setting of AC q-control value
+        data["Vtar"] = V_dc / 1e3 / globalParams["DCbaseKV"]; // Seting of DC v-control value
     }
 
 private:
     double omega_0;  // Nominal frequency
-    double P;        // Active power [MW]
-    double Q;        // Reactive power [MVA]
-    double P_dc;     // DC power [kW]
-    double P_min;    // Min active power output [MW]
-    double P_max;    // Max active power output [MW]
-    double Q_min;    // Min reactive power output [MVA]
-    double Q_max;    // Max reactive power output [MVA]
+    double P;        // Active power [W]
+    double Q;        // Reactive power [VA]
+    double P_dc;     // DC power [W]
+    double P_min;    // Min active power output [W]
+    double P_max;    // Max active power output [W]
+    double Q_min;    // Min reactive power output [VA]
+    double Q_max;    // Max reactive power output [VA]
     double theta;    // AC voltage angle [rad]
-    double V_m;      // AC voltage amplitude [kV]
-    double V_dc;     // DC-bus voltage [kV]
+    double V_m;      // AC voltage amplitude [V]
+    double V_dc;     // DC-bus voltage [V]
     double L_arm;    // Arm inductance [H]
     double R_arm;    // Arm resistance
     double C_arm;    // Capacitance per submodule [F]
