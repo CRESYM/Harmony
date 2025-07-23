@@ -1,8 +1,6 @@
 ﻿#include "MMC.h"
 
-#include "../../Control/Controller.h"
-#include "../../Control/Filter.h"
-#include "../../Control/Integrator.h" // Add this include to ensure Integrator is recognized
+#include "../../Include_control_blocks.h"
 
 // -----------------------------------------------------------------------------
 // State Vector Ordering

@@ -92,6 +92,7 @@ set(Header_Files
     src/Bus.h
     src/Constants.h
     src/Include_components.h
+    src/Include_control_blocks.h
     src/network.h
 )
 set(Examples_Header_files

@@ -2,14 +2,10 @@
 #define MMC_H
 
 #include "../Element.h"
-//#include "Filter.h"
-//#include "Controller.h"
 
 // Forward declarations
 class Controller;
 class Filter;
-class ControlBlock;
-class Integrator;
 
 class MMC : public Element {
 public:
@@ -112,7 +108,6 @@ private:
 
 	std::map<std::string, Controller*> controls; // Map of existing controllers
 	std::map<std::string, Filter*> filters;      // Map of existing filters   
-	std::map<std::string, Integrator*> control_blocks; // Map of control blocks
 
 	// List of controller and filter names, it can be changed only by developers
     const std::vector<std::string> controller_list = {
