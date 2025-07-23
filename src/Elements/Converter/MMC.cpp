@@ -448,7 +448,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         i += 1;
         if (has_occ) controls["occ"]->setReference(iDelta_d_ref, 0);
     } else if (has_dc_voltage_ctrl) {
-        double Idc = u(0);
+        double Idc = P_dc / Vdc; // u(0);
 		x1 << 0, x(i+1);
         u1 << (-Idc + 3.0 * iSigma_z) / (1.0 * Ce), x(i);
 		c1 << 0, 0; // No additional control inputs for dc_voltage
