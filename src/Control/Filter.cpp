@@ -21,12 +21,16 @@ VectorXd Filter::define_differential_equations(const Eigen::VectorXd& x, const E
         return state_derivative;
     } 
     else if (filter_order == 2) {
+        if (filter_order != x.size()) {
+            throw std::invalid_argument("Filter size must match the size of the state vector minus one for 2nd order filters.");
+		}
         // Second-order filter differential equation
         VectorXd dx_dt(2 * filter_size), output(filter_size);
-        for (int i = 0; i < filter_size; ++i) {
-			dx_dt(i) = -bandwidth * x(i+1) - 2 * zeta * bandwidth * x(i) + u(i); // Example: dx/dt = -ω_n * x - ζ * u
+        for (int i = 0; i < filter_size; ) {
+			dx_dt(i) = -pow(bandwidth,2) * x(i+1) - 2 * zeta * bandwidth * x(i) + u(i); // Example: dx/dt = -ω_n * x - ζ * u
             dx_dt(i + 1) = x(i);
             output(i) = pow(bandwidth,2) * x(i+1); // Example: output = damping * dx/dt + state
+            i += 2;
         }
         // Merge the output into the state vector
         VectorXd state_derivative = Eigen::VectorXd::Zero(dx_dt.size() + output.size());
@@ -49,7 +53,7 @@ VectorXd Filter::define_differential_equations(const VectorXd& x, const double u
     }
     // Second-order filter differential equation
     VectorXd dx_dt(2), output(1);
-    dx_dt(0) = -bandwidth * x(1) - 2 * zeta * bandwidth * x(0) + u; // Example: dx/dt = -ω_n * x - ζ * u
+    dx_dt(0) = -pow(bandwidth,2) * x(1) - 2 * zeta * bandwidth * x(0) + u; // Example: dx/dt = -ω_n * x - ζ * u
     dx_dt(1) = x(0);
     output(0) = pow(bandwidth, 2) * x(1); // Example: output = damping * dx/dt + state
     

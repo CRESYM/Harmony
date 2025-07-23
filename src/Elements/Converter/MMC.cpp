@@ -207,7 +207,13 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
 
 /**
  * @brief Initialize the filter(s) in MMC using provided parameters.
- * @param filter_params Vector of filter parameters.
+ * @param filter_params Vector of filter parameters, conaining filter names and their parameters.
+ * @param filter_list List of filter name to initialize.
+ * @param filter_size Size of the filter (default is 1). Only used for AC voltage dq filter.
+ * @param filter_order Order of the filter (default is 2). Only used for AC voltage dq filter.
+ * @details filter_params should contain the following structure: 0 if the filer is not used,
+ * 1 if the filter is used, followed by the filter parameters (3 double values for each filter, 
+ * representing Kp, Ki, and T). For the first order fiter, only T is used, and Kp and Ki are set to 0 in the main.cpp.
  */
 void MMC::init_Filter(const std::vector<double>& filter_params) {
     for (int i = 0; i < filter_params.size(); ) {
