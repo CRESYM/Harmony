@@ -137,7 +137,7 @@ MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params)
         }
     }
 
-    cout << "MMC initialized with " << number_of_states << " states." << endl;
+    //cout << "MMC initialized with " << number_of_states << " states." << endl;
 };
 
 /**
@@ -676,8 +676,8 @@ void MMC::computeABCD() {
     const int n = A.rows();
 
     // Store in class variables
-    A_matrix = A.block(n - 12, n - 12, 3, 3);
-    B_matrix = B.block(n - 12, 0, 3, 3);
+    A_matrix = A.block(n - 12, n - 12, 12, 12);
+    B_matrix = B.block(n - 12, 0, 12, 3);
 
     int num_states = A_matrix.cols();
     C_matrix = Eigen::MatrixXd::Zero(3,num_states);
