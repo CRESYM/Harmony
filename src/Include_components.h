@@ -46,7 +46,7 @@
 
 //#include "solve_opf.h"
 
-#include "./Solver/StateSpaceModel/State_Space_Model.h"
+#include "./Solver/State_Space_Model/State_Space_Model.h"
 
 // CONTROL BLOCKS
 #include "./Control/Control_block.h"
