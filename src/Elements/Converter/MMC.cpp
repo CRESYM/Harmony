@@ -62,10 +62,28 @@ MMC::MMC(const std::string& symbol,
     Q_min = -P;
     Q_max = P;
 
-    A_matrix = Eigen::MatrixXd::Zero(6, 6);
-    B_matrix = Eigen::MatrixXd::Zero(6, 8);
-    C_matrix = Eigen::MatrixXd::Identity(6, 6);
-    D_matrix = Eigen::MatrixXd::Zero(6, 8);
+    A_matrix = Eigen::MatrixXd::Zero(3, 3);
+    B_matrix = Eigen::MatrixXd::Zero(3, 3);
+    C_matrix = Eigen::MatrixXd::Identity(3, 3);
+    D_matrix = Eigen::MatrixXd::Zero(3, 3);
+
+    if (t_delay != 0) {
+        number_of_states += 5 * pade_order; // Add states for delay system
+        Adelay = Eigen::MatrixXd::Zero(5 * pade_order, 5 * pade_order);
+        Bdelay = Eigen::MatrixXd::Zero(5 * pade_order, 1); // Assuming one input for delay system
+        Cdelay = Eigen::MatrixXd::Zero(5, 5 * pade_order); // Assuming one output for delay system
+        Ddelay = Eigen::MatrixXd::Zero(5, 5); // Assuming one output for delay system
+        cout << "Adding " << 5 * pade_order << " states for delay system with order " << pade_order << endl;
+        if (pade_order == 2) {
+            padeDelaySystemMulti2(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
+        }
+        else if (pade_order == 3) {
+            padeDelaySystemMulti3(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
+        }
+        else {
+            throw std::invalid_argument("Unsupported Padé order for delay system. Only 2nd and 3rd orders are supported.");
+        }
+    }
 }
 
 /**
@@ -91,10 +109,35 @@ MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params)
     equilibrium_state = Eigen::VectorXd::Zero(6); // 6 dynamic states
 
     // Initialize system matrices to zero        
-    A_matrix = Eigen::MatrixXd::Zero(6, 6);
-    B_matrix = Eigen::MatrixXd::Zero(6, 8);
-    C_matrix = Eigen::MatrixXd::Identity(6, 6);
-    D_matrix = Eigen::MatrixXd::Zero(6, 8);
+    A_matrix = Eigen::MatrixXd::Zero(3, 3);
+    B_matrix = Eigen::MatrixXd::Zero(3, 3);
+    C_matrix = Eigen::MatrixXd::Identity(3, 3);
+    D_matrix = Eigen::MatrixXd::Zero(3, 3);
+
+    if (t_delay != 0) {
+        number_of_states += 5 * pade_order; // Add states for delay system
+        Adelay = Eigen::MatrixXd::Zero(5 * pade_order, 5 * pade_order);
+        Bdelay = Eigen::MatrixXd::Zero(5 * pade_order, 1); // Assuming one input for delay system
+        Cdelay = Eigen::MatrixXd::Zero(5, 5 * pade_order); // Assuming one output for delay system
+        Ddelay = Eigen::MatrixXd::Zero(5, 5); // Assuming one output for delay system
+        cout << "Adding " << 5 * pade_order << " states for delay system with order " << pade_order << endl;
+        if (pade_order == 2) {
+            padeDelaySystemMulti2(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
+			cout << "Using 2nd order Padé approximation for delay system." << endl;
+			cout << Adelay << endl;
+			cout << Bdelay << endl;
+			cout << Cdelay << endl;
+			cout << Ddelay << endl;
+        }
+        else if (pade_order == 3) {
+            padeDelaySystemMulti3(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
+        }
+        else {
+            throw std::invalid_argument("Unsupported Padé order for delay system. Only 2nd and 3rd orders are supported.");
+        }
+    }
+
+    cout << "MMC initialized with " << number_of_states << " states." << endl;
 };
 
 /**
@@ -153,7 +196,12 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
                 controls[controller_name] = new Controller(controller_name, controller_type, values, number_of_values, refs);
                 
                 if (controller_name == "dc_voltage") {
-					vdc_index = number_of_states - 12; // Update vdc_index 
+                    if (t_delay != 0) {
+                        vdc_index = number_of_states - 12 - 5 * pade_order; // Update vdc_index 
+                    }
+                    else {
+                        vdc_index = number_of_states - 12; // Update vdc_index 
+					}
                     number_of_states += number_of_values;
 				}
 				else if (controller_name == "pll") {
@@ -176,27 +224,6 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
 		throw std::invalid_argument("DC voltage and active power controllers cannot be used together in MMC.");
 	if (controls.count("ac_voltage") && controls.count("reactive_power"))
 		throw std::invalid_argument("AC voltage and reactive power controllers cannot be used together in MMC.");
-
-
-    if (t_delay != 0) {
-		number_of_states += 5*pade_order; // Add states for delay system
-		Adelay = Eigen::MatrixXd::Zero(5 * pade_order, 5 * pade_order);
-        Bdelay = Eigen::MatrixXd::Zero(5 * pade_order, 1); // Assuming one input for delay system
-        Cdelay = Eigen::MatrixXd::Zero(1, 5 * pade_order); // Assuming one output for delay system
-		Ddelay = Eigen::MatrixXd::Zero(1, 1); // Assuming one output for delay system
-		cout << "Adding " << 5 * pade_order << " states for delay system with order " << pade_order << endl;
-        if (pade_order == 2) {
-            padeDelaySystemMulti2(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
-        }
-        else if (pade_order == 3) {
-            padeDelaySystemMulti3(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
-		}
-        else {
-            throw std::invalid_argument("Unsupported Padé order for delay system. Only 2nd and 3rd orders are supported.");
-		}
-	}
-
-	cout << "MMC initialized with " << number_of_states << " states." << endl;
 }
 
 /**

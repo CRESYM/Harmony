@@ -20,7 +20,7 @@ public:
     virtual void printValues() override {
         std::cout << "Filter Parameters:"
             << "  Time Constant (T): " << timeConstant << "\n"
-            << "  Damping Ratio (ζ): " << zeta << "\n"
+            << "  Damping Ratio (zeta): " << zeta << "\n"
             << "  Bandwidth: " << bandwidth << " Hz\n";
     }
 
