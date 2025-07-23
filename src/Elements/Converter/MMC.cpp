@@ -156,16 +156,14 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
                 
                 if (controller_name == "dc_voltage") {
 					vdc_index = number_of_states - 12; // Update vdc_index 
-					//control_blocks["dc_voltage"] = new Integrator(); // DC voltage controller 
-
-					cout << vdc_index << endl;
-					//number_of_states += 2; // Add states for DC voltage controller
+                    number_of_states += number_of_values;
 				}
 				else if (controller_name == "pll") {
-					control_blocks["pll"] = new Integrator(); // PLL controller with 2 states and 1 output
-					number_of_states += 2; // Add states for PLL controller
+					//control_blocks["pll"] = new Integrator(); // PLL controller with 2 states and 1 output
+					number_of_states += 2; // PLL has 2 states (frequency and phase)
                 }
-                number_of_states += number_of_values; // Update the number of states based on the number of values
+                else 
+                    number_of_states += number_of_values; // Update the number of states based on the number of values
                 
                 i += 4 + number_of_values;
             }
@@ -374,7 +372,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         F(i) = state_variables(0);
         double delta_omega = state_variables(1);
         w = omega_0 + delta_omega;
-        F(i + 1) = control_blocks["pll"]->define_differential_equations(delta_omega);
+        F(i + 1) = delta_omega; //control_blocks["pll"]->define_differential_equations(delta_omega);
         i += 2;
     }
 
