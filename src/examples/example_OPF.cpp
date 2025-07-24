@@ -7,16 +7,16 @@
 
 
 void example_OPF() {
-    /* ---------- 0 Set Network Object ---------- */
+    ///* ---------- 0 Set Network Object ---------- */
     Network net;
-    /* ---------- 1.1 Create AC Buses ---------- */
+    ///* ---------- 1.1 Create AC Buses ---------- */
     Bus* bus1_ac = new Bus("ACBUS01", 3);
     Bus* bus2_ac = new Bus("ACBUS02", 3);
     Bus* bus3_ac = new Bus("ACBUS03", 3);
     Bus* bus4_ac = new Bus("ACBUS04", 3);
     Bus* bus5_ac = new Bus("ACBUS05", 3);
 
-    /*  ---------- 1.2 Add AC Loads  ---------- */
+    ///*  ---------- 1.2 Add AC Loads  ---------- */
     
     //LoadPQ* load1 = new LoadPQ("LOAD01", 3, {0.0, 0.0});
     //net.connectElementToBus(load1, 1, bus1_ac);
@@ -42,7 +42,7 @@ void example_OPF() {
     net.connectElementToBus(load5, 1, bus5_ac);
 
 
-	/*  ---------- 1.3 Add AC Generators  ---------- */
+	///*  ---------- 1.3 Add AC Generators  ---------- */
     // Generator 1
     std::vector<double> gen1_params = { 0.02, 0.3, 0.05, 7.0 };
     Generator* gen1 = new Generator("GEN01", 3, gen1_params);
@@ -110,7 +110,7 @@ void example_OPF() {
     net.connectElementToBus(br7_ac, /*terminal=*/1, bus4_ac);
     net.connectElementToBus(br7_ac, /*terminal=*/2, bus5_ac); 
 
-    /*  ---------- 2.1 Create DC Buses  ---------- */
+    ///*  ---------- 2.1 Create DC Buses  ---------- */
     Bus* bus1_dc = new Bus("DCBUS01", 1);
     Bus* bus2_dc = new Bus("DCBUS02", 1);
     Bus* bus3_dc = new Bus("DCBUS03", 1);
@@ -133,7 +133,7 @@ void example_OPF() {
     net.connectElementToBus(br3_dc, /*terminal=*/1, bus2_dc);
     net.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
 
-    /*  ---------- 2.3 Create Converters ---------- */
+    ///*  ---------- 2.3 Create Converters ---------- */
     MMC* mmc1 = new MMC(
         "MMC1",             // Symbol
         1000.0,             // Omega (Nominal Frequency in rad/s)
@@ -210,7 +210,7 @@ void example_OPF() {
     mmc3->setOPFInfo(mmc3_info);
 
 
-    /*----- 3 OPF Implementatiopn ----- */
+    ///*----- 3 OPF Implementatiopn ----- */
 	PowerFlow pf;
 
     //const auto& data = net.getNetData();
