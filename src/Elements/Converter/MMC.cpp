@@ -671,8 +671,8 @@ void MMC::computeABCD() {
     std::pair<Eigen::MatrixXd, Eigen::MatrixXd> jacobians = computeJacobians(x0, u0, f);
 
     // Store in class variables
-    A_matrix = jacobians.first; // .block(n - 12, n - 12, 12, 12);
-    B_matrix = jacobians.second; // .block(n - 12, 0, 12, 3);
+    A_matrix = jacobians.first; 
+    B_matrix = jacobians.second;
 
     int n = A_matrix.cols();
     C_matrix = Eigen::MatrixXd::Zero(3,n);
