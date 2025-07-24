@@ -44,16 +44,7 @@
 #include "./Elements/Converter/MMC.h"
 
 
-//#include "solve_opf.h"
-
 #include "./Solver/State_Space_Model/State_Space_Model.h"
-
-// CONTROL BLOCKS
-#include "./Control/Control_block.h"
-#include "./Control/Integrator.h"
-#include "./Control/Controller.h"
-#include "./Control/Filter.h"
-
 
 
 #endif // !INCLUDE_COMPONENTS_H

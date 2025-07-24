@@ -669,27 +669,22 @@ void MMC::computeABCD() {
 
     // Compute both A = ∂f/∂x and B = ∂f/∂u
     std::pair<Eigen::MatrixXd, Eigen::MatrixXd> jacobians = computeJacobians(x0, u0, f);
-    Eigen::MatrixXd A = jacobians.first;
-    Eigen::MatrixXd B = jacobians.second;
-
-    // make Y matrix
-    const int n = A.rows();
 
     // Store in class variables
-    A_matrix = A.block(n - 12, n - 12, 12, 12);
-    B_matrix = B.block(n - 12, 0, 12, 3);
+    A_matrix = jacobians.first; // .block(n - 12, n - 12, 12, 12);
+    B_matrix = jacobians.second; // .block(n - 12, 0, 12, 3);
 
-    int num_states = A_matrix.cols();
-    C_matrix = Eigen::MatrixXd::Zero(3,num_states);
+    int n = A_matrix.cols();
+    C_matrix = Eigen::MatrixXd::Zero(3,n);
 
-    C_matrix(1, 0) = 1; 
-    C_matrix(2, 1) = 1;  
+	C_matrix(1, n - 12) = 1; // location of iDelta_d
+	C_matrix(2, n - 11) = 1; // location of iDelta_q
 
     if (!controls.count("dc")) {
-        C_matrix(0, 4) = 3;
+		C_matrix(0, n - 10) = 3; // location of iSigma_z
     }
 	else { // to repair the C matrix
-        C_matrix(0, vdc_index - 1) = 1; 
+		C_matrix(0, vdc_index) = 1; // location of Vdc
     }
 
     D_matrix = Eigen::MatrixXd::Zero(3, 3);
