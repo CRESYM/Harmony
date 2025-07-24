@@ -9,9 +9,9 @@ void example_MMC() {
 	double f = 50;
 	double omega = 2 * M_PI * f; // Nominal frequency in rad/s
 	double Vdc = 200e3; // DC voltage in Volts
-	std::vector<double> converter_params = { omega, 100.0e6, 0, 0.0, 100.0e3, 100e6, Vdc, 50e-3, 1.07, 0.01, 50, 0.06, 0.535, 0 };
-	std::vector<double> controller_params = { //0,
-		1, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
+	std::vector<double> converter_params = { omega, 100.0e6, 0, 0.0, 100.0e3, 100e6, Vdc, 50e-3, 1.07, 0.01, 50, 0.06, 0.535, 0.0 };
+	std::vector<double> controller_params = { 0,
+		//1, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
 		0,
 		//1, 8.0, 272.0, 2, 0, Vdc, // DC voltage controller parameters
 		1, 6.6667e-07, 3.3333e-04, 1, 100e6, // active power
@@ -45,10 +45,10 @@ void example_MMC() {
 	std::cout << "\nB:\n" << mmc1->getB() << "\n";
 
 	 //Admittance matrix
-	Eigen::MatrixXcd Y = mmc1->compute_y_parameters_num(omega);
+	Eigen::MatrixXcd Y = mmc1->compute_y_parameters_num(3*omega);
 
 	// Print the admittance matrix
-	std::cout << "Admittance Matrix: " << omega << "):\n" << Y << std::endl;
+	std::cout << "Admittance Matrix: " << 3*omega << "):\n" << Y << std::endl;
 
 
 

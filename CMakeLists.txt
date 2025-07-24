@@ -70,11 +70,14 @@ set(Element_Transmission_Line_Header_Files
     src/Elements/Transmission_Line/Transmissionline.h
 )
 set(Solver_State_Space_Model_Header_Files
-    src/Solver/StateSpaceModel/State_Space_Model.h
+    src/Solver/State_Space_Model/State_Space_Model.h
 )
 set(Solver_OPF_Header_Files
     src/Solver/OPF/viz_opf.h
     src/Solver/OPF/Powerflow.h
+)
+set(Solver_Stability_Estimate_Header_Files
+    src/Solver/Stability_Estimate/Stability_estimate.h
 )
 set(Solver_Helper_Functions_Header_Files
     src/Solver/Helper_Functions/Helper_Functions.h
@@ -142,7 +145,10 @@ set(Element_Transmission_Line_Source_Files
     src/Elements/Transmission_Line/Transmissionline.cpp
 )
 set(Solver_State_Space_Model_Source_Files
-    src/Solver/StateSpaceModel/State_Space_Model.cpp
+    src/Solver/State_Space_Model/State_Space_Model.cpp
+)
+set(Solver_Stability_Estimate_Source_Files
+    src/Solver/Stability_Estimate/Stability_estimate.cpp
 )
 set(Solver_OPF_Source_Files
     src/Solver/OPF/viz_opf.cpp
@@ -192,6 +198,7 @@ if(WIN32) # workds for x64 as well
     source_group("Header Files\\Control" FILES ${Control_Header_Files})
     source_group("Header Files\\Solver" FILES)
     source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Header_Files})
+    source_group("Header Files\\Solver\\Stability Estimate" FILES ${Solver_Stability_Estimate_Header_Files})
     source_group("Header Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Header_Files})
     source_group("Header Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Header_Files})
     source_group("Header Files\\Examples" FILES ${Examples_Header_files})
@@ -210,6 +217,7 @@ if(WIN32) # workds for x64 as well
     source_group("Source Files\\Control" FILES ${Control_Source_Files})
     source_group("Source Files\\Solver" FILES)
     source_group("Source Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
+    source_group("Source Files\\Solver\\Stability Estimate" FILES ${Solver_Stability_Estimate_Source_Files})
     source_group("Source Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Source_Files})
     source_group("Source Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Source_Files})
     source_group("Source Files\\Examples" FILES ${Examples_Source_files})
@@ -230,6 +238,7 @@ add_executable(
     ${Element_Transmission_Line_Header_Files}
     ${Control_Header_Files}
     ${Solver_OPF_Header_Files}
+    ${Solver_Stability_Estimate_Header_Files}
     ${Solver_Helper_Functions_Header_Files}
     ${Solver_State_Space_Model_Header_Files}
     ${Examples_Header_files}
@@ -245,6 +254,7 @@ add_executable(
     ${Element_Transmission_Line_Source_Files}
     ${Control_Source_Files}
     ${Solver_OPF_Source_Files}
+    ${Solver_Stability_Estimate_Source_Files}
     ${Solver_Helper_Functions_Source_Files}
     ${Solver_State_Space_Model_Source_Files}
     ${Examples_Source_files}
