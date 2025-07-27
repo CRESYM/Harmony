@@ -35,5 +35,5 @@ void example_WT_type_3() {
 
 	wt->writeFile(1, 1000, 1000);
 
-	
+	wt->plotYParameters(1, 1000, 1000);
 }

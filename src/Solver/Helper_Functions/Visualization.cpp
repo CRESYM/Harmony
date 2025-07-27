@@ -13,7 +13,7 @@ void bode_plot(const std::vector<double>& freq,
 	std::streambuf* old_cerr = std::cerr.rdbuf(null_stream.rdbuf());
 		
     auto f = matplot::figure(true); // Use matplot namespace
-    f->size(1200, 800);
+    f->size(1600, 1000);
 
     matplot::tiledlayout(2, 1); // Use matplot namespace
 

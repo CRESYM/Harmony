@@ -49,7 +49,7 @@ public:
     void computeABCD();
 
 	// Y-parameter computation
-    Eigen::MatrixXcd compute_y_parameters_num(double omega) override;
+    std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency) override;
 
     // System analysis
     void checkStability() const;

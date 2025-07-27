@@ -84,6 +84,8 @@ MMC::MMC(const std::string& symbol,
             throw std::invalid_argument("Unsupported Padé order for delay system. Only 2nd and 3rd orders are supported.");
         }
     }
+
+	Y_matrix.resize(3, 3);
 }
 
 /**
@@ -137,6 +139,7 @@ MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params)
         }
     }
 
+    Y_matrix.resize(3, 3);
     //cout << "MMC initialized with " << number_of_states << " states." << endl;
 };
 
@@ -772,7 +775,7 @@ void MMC::solveEquilibrium() {
  * @param omega Angular frequency (rad/s).
  * @return Eigen::MatrixXcd Admittance matrix.
  */
-Eigen::MatrixXcd MMC::compute_y_parameters_num(double omega) {
+std::vector<std::vector<complex<double>>> MMC::compute_y_parameters(double omega) {
     // s: Laplace variable (jω)
 	std::complex<double> s_num = std::complex<double>(0, omega);
     const int n = A_matrix.rows();
@@ -792,7 +795,15 @@ Eigen::MatrixXcd MMC::compute_y_parameters_num(double omega) {
         Y(0, 0) = 2.0 * (Y(0, 0) - s_num *  C_arm * (6.0/N)); // Correct the sign for the first row, first column
     }
 
-    return Y;
+    std::vector<std::vector<complex<double>>> Y_val_exact(Y_matrix.nrows());
+    for (int i = 0; i < Y_matrix.nrows(); ++i) {
+        Y_val_exact[i].resize(Y_matrix.ncols());
+        for (int j = 0; j < Y_matrix.ncols(); ++j) {
+            Y_val_exact[i][j] = std::complex<double>(Y(i, j).real(), Y(i, j).imag());
+        }
+	}
+
+    return Y_val_exact;
 }
 
 /**

@@ -44,15 +44,7 @@ void example_MMC() {
 	std::cout << "\nA:\n" << mmc1->getA() << "\n";
 	std::cout << "\nB:\n" << mmc1->getB() << "\n";
 
-	 //Admittance matrix
-	Eigen::MatrixXcd Y = mmc1->compute_y_parameters_num(3*omega);
-
-	// Print the admittance matrix
-	std::cout << "Admittance Matrix: " << 3*omega << "):\n" << Y << std::endl;
-
-
-
 	mmc1->printElementValues();  // Print MMC parameters
 
-	//mmc.printEigenvalues();  // Display eigenvalues
+	mmc1->plotYParameters(1, 1000, 1000);
 }
