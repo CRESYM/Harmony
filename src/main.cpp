@@ -7,8 +7,6 @@
 
 int main() {
 
-<<<<<<< Updated upstream
-
 	example_WT_type_3();
 	//example_MMC();
 	//example_OPF();
