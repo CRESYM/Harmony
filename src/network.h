@@ -64,13 +64,6 @@ public:
     const std::unordered_map<std::string, Element*>& getElements() const { return elements; }
     const std::unordered_map<Bus*, std::vector<Element*>>& getConnections() const { return connections; }
 
-    // Function to compute the equivalent impedance between buses, excluding certain elements  //network_stability.cpp
-    void compute_equivalent_impedance(std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements);
-    void compute_equivalent_impedance_nums(std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double omega_num);
-
-    // System analysis
-    void checkStability(const Eigen::MatrixXd& A_matrix);
-
 };
 
 #endif // NETWORK_H

@@ -10,7 +10,7 @@ const double gamma_num = 0.5772156649;
 
 RCP<const Basic> j = I;  // Imaginary unit
 RCP<const Basic> omega = symbol("w");
-RCP<const Basic> s = symbol("s"); // mul(j, omega);
+RCP<const Basic> s = mul(j, omega);
 
 
 // Static helper function to create a zero matrix

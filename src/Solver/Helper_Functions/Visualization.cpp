@@ -27,7 +27,7 @@ void bode_plot(const std::vector<double>& freq,
         matplot::semilogx(freq, mag)->display_name(labels[j]); // Use matplot namespace
     }
     matplot::ylabel("20 log_{10}|H(jw)|"); // Use matplot namespace
-    matplot::xlabel("Angular frequency (rad/s)"); // Use matplot namespace
+    matplot::xlabel("Frequency (Hz)"); // Use matplot namespace
     matplot::legend(); // Use matplot namespace
     matplot::grid(matplot::on); // Use matplot namespace
 
@@ -40,8 +40,8 @@ void bode_plot(const std::vector<double>& freq,
         }
         matplot::semilogx(freq, phase)->display_name(labels[j]); // Use matplot namespace
     }
-    matplot::xlabel("Angular frequency (rad/s)"); // Use matplot namespace
-    matplot::ylabel("angle H(jw) "); // Use matplot namespace
+    matplot::xlabel("Frequency (Hz)"); // Use matplot namespace
+    matplot::ylabel("Angle H(jw) "); // Use matplot namespace
     matplot::legend(); // Use matplot namespace
     matplot::grid(matplot::on); // Use matplot namespace
 

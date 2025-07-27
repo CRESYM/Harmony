@@ -36,13 +36,13 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
     double angular_frequency = 2 * frequency * M_PI;
     map_basic_basic m;
     m[omega] = real_double(angular_frequency);
-    std::vector<std::vector<complex<double>>> Y_val_exact(2 * input_pins);
-    for (int i = 0; i < 2 * input_pins; i++)
-        Y_val_exact[i].resize(2 * output_pins);
-    for (int i = 0; i < 2 * input_pins; ++i) {
-        for (int j = 0; j < 2 * output_pins; ++j) {
+    std::vector<std::vector<complex<double>>> Y_val_exact(Y_matrix.nrows());
+    for (int i = 0; i < Y_matrix.nrows(); i++)
+        Y_val_exact[i].resize(Y_matrix.ncols());
+    for (int i = 0; i < Y_matrix.nrows(); ++i) {
+        for (int j = 0; j < Y_matrix.ncols(); ++j) {
             RCP<const Basic> r = subs(Y_matrix.get(i, j), m);
-            Y_val_exact[i][j] = eval_complex_double(*r); // eval_double(Y_matrix.get(i, j));
+            Y_val_exact[i][j] = eval_complex_double(*r); 
         }
     }
     return Y_val_exact;
@@ -72,8 +72,8 @@ void Element::writeFile(double start_frequency, int end_frequency, int number_of
         
         // write in file
         myfile << frequency << ",";
-        for (int i = 0; i < 2 * input_pins; ++i) {
-            for (int j = 0; j < 2 * output_pins; ++j) {
+        for (int i = 0; i < Y_matrix.nrows(); ++i) {
+            for (int j = 0; j < Y_matrix.ncols(); ++j) {
                 myfile << Y[i][j].real() << "+1i*(" << Y[i][j].imag() << "),";
             }
         }
@@ -87,34 +87,34 @@ void Element::writeFile(double start_frequency, int end_frequency, int number_of
 
 // Function to plot the Y-parameter matrix in logarithmic scale and in dB and angles
 void Element::plotYParameters(double start_frequency, int end_frequency, int number_of_points) {
-    std::vector<double> angular_frequencies;
+    std::vector<double> frequencies;
     std::vector<std::vector<double>> magnitudes(number_of_points, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));
     std::vector<std::vector<double>> phases(number_of_points, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));
     std::vector<std::string> labels;
     double gap = (end_frequency - start_frequency) / (number_of_points - 1);
     double frequency = start_frequency;
     for (int p = 0; p < number_of_points; p++) {
-        angular_frequencies.push_back(frequency);
+        frequencies.push_back(frequency);
         std::vector<std::vector<complex<double>>> Y = compute_y_parameters(frequency);
         
-        for (int i = 0; i < 2 * input_pins; ++i) {
-            for (int j = 0; j < 2 * output_pins; ++j) {
+        for (int i = 0; i < Y_matrix.nrows(); ++i) {
+            for (int j = 0; j < Y_matrix.ncols(); ++j) {
                 double magnitude = 20 * log10(std::abs(Y[i][j]));
                 double phase = std::arg(Y[i][j]) * 180.0 / M_PI; // Convert to degrees
                 
-                magnitudes[p][i+j] = magnitude;
-                phases[p][i+j] = phase;
+                magnitudes[p][Y_matrix.ncols() * i + j] = magnitude;
+                phases[p][Y_matrix.ncols() * i + j] = phase;
             }
         }
         frequency += gap; // increase frequency
     }
 
     // Making labels
-    for (int i = 0; i < 2 * input_pins; ++i) {
-        for (int j = 0; j < 2 * output_pins; ++j) {
+    for (int i = 0; i < Y_matrix.nrows(); ++i) {
+        for (int j = 0; j < Y_matrix.ncols(); ++j) {
             labels.push_back("Y_{" + to_string(i+1) + to_string(j+1) + "}");
         }
     }
 
-    bode_plot(angular_frequencies, magnitudes, phases, labels, "Y-Parameters of " + element_symbol);
+    bode_plot(frequencies, magnitudes, phases, labels, "Y-Parameters of " + element_symbol);
 }

@@ -69,6 +69,10 @@ set(Element_Transmission_Line_Header_Files
     src/Elements/Transmission_Line/overhead_line.h
     src/Elements/Transmission_Line/Transmissionline.h
 )
+set(Element_RES_Header_Files
+    src/Elements/RES/RES_base.h
+    src/Elements/RES/WT_type_3.h
+)
 set(Solver_State_Space_Model_Header_Files
     src/Solver/State_Space_Model/State_Space_Model.h
 )
@@ -144,6 +148,10 @@ set(Element_Transmission_Line_Source_Files
     src/Elements/Transmission_Line/overhead_line.cpp
     src/Elements/Transmission_Line/Transmissionline.cpp
 )
+set(Element_RES_Source_Files
+    src/Elements/RES/RES_base.cpp
+    src/Elements/RES/WT_type_3.cpp
+)
 set(Solver_State_Space_Model_Source_Files
     src/Solver/State_Space_Model/State_Space_Model.cpp
 )
@@ -172,11 +180,11 @@ set(Source_Files
     src/Constants.cpp
     src/main.cpp
     src/network.cpp
-    src/network_stability.cpp
 )
 set(Examples_Source_files
     src/examples/example_OPF.cpp
     src/examples/example_MMC.cpp
+    src/examples/example_WT_type_3.cpp
     src/examples/example_constructors.cpp
     src/examples/example_visuals.cpp
 )
@@ -194,6 +202,7 @@ if(WIN32) # workds for x64 as well
     source_group("Header Files\\Elements\\Transformer" FILES ${Element_Transformer_Header_Files})
     source_group("Header Files\\Elements\\Transmission Line" FILES ${Element_Transmission_Line_Header_Files})
     source_group("Header Files\\Elements\\Switch" FILES ${Element_Switch_Header_Files})
+    source_group("Header Files\\Elements\\RES" FILES ${Element_RES_Header_Files})
     source_group("Header Files\\Control" FILES ${Control_Header_Files})
     source_group("Header Files\\Solver" FILES)
     source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Header_Files})
@@ -213,6 +222,7 @@ if(WIN32) # workds for x64 as well
     source_group("Source Files\\Elements\\Transformer" FILES ${Element_Transformer_Source_Files})
     source_group("Source Files\\Elements\\Transmission_Line" FILES ${Element_Transmission_Line_Source_Files})
     source_group("Source Files\\Elements\\Switch" FILES ${Element_Switch_Source_Files})
+    source_group("Source Files\\Elements\\RES" FILES ${Element_RES_Source_Files})
     source_group("Source Files\\Control" FILES ${Control_Source_Files})
     source_group("Source Files\\Solver" FILES)
     source_group("Source Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
@@ -235,6 +245,8 @@ add_executable(
     ${Element_Source_Header_Files}
     ${Element_Transformer_Header_Files}
     ${Element_Transmission_Line_Header_Files}
+    ${Element_Switch_Header_Files}
+    ${Element_RES_Header_Files}
     ${Control_Header_Files}
     ${Solver_OPF_Header_Files}
     ${Solver_Stability_Estimate_Header_Files}
@@ -251,6 +263,8 @@ add_executable(
     ${Element_Source_Source_Files}
     ${Element_Transformer_Source_Files}
     ${Element_Transmission_Line_Source_Files}
+    ${Element_Switch_Source_Files}
+    ${Element_RES_Source_Files}
     ${Control_Source_Files}
     ${Solver_OPF_Source_Files}
     ${Solver_Stability_Estimate_Source_Files}

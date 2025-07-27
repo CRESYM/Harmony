@@ -3,6 +3,7 @@
 
 extern void example_OPF();
 extern void example_MMC();
+extern void example_WT_type_3();
 
 extern void example_constructors();
 extern void example_visuals();

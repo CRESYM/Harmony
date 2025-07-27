@@ -43,6 +43,10 @@
 // Power Electronics
 #include "./Elements/Converter/MMC.h"
 
+// RES
+#include "./Elements/RES/RES_base.h"
+#include "./Elements/RES/WT_type_3.h"
+
 
 #include "./Solver/State_Space_Model/State_Space_Model.h"
 

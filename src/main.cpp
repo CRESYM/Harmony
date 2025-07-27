@@ -7,7 +7,9 @@
 
 int main() {
 
-	example_MMC();
+	example_WT_type_3();
+
+	// example_MMC();
 	// example_OPF();
 
 	// example_visuals();

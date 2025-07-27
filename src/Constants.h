@@ -26,8 +26,7 @@
 #include <symengine/polys/basic_conversions.h>
 #include <symengine/printers.h>  // Correct header for printing
 
-#include<matplot/matplot.h>
-using namespace matplot;
+
 
 
 // Eigen library for linear algebra
@@ -59,7 +58,8 @@ using namespace matplot;
 #include <chrono>
 #include <set>
 
-#include <matplot/matplot.h>
+#include<matplot/matplot.h>
+using namespace matplot;
 #include "gurobi_c++.h"
 
 using SymEngine::RCP;
@@ -69,6 +69,7 @@ using SymEngine::integer;
 using SymEngine::mul;
 using SymEngine::symbol;
 using SymEngine::one;
+using SymEngine::ComplexDouble;
 using namespace std;
 using namespace std::complex_literals;
 using namespace SymEngine; // Use the SymEngine namespace
