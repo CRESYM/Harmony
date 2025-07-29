@@ -4,8 +4,8 @@
 WTtype3::WTtype3(const string& symbol, const vector<double>& parameters)
 	: RES_base(symbol) {
 	// Check if the number of parameters is correct
-	if (parameters.size() != 23) {
-		throw std::invalid_argument("WT_type_3 requires exactly 23 parameters, but got " + std::to_string(parameters.size()));
+	if (parameters.size() != 24) {
+		throw std::invalid_argument("WT type-3 requires exactly 24 parameters, but got " + std::to_string(parameters.size()));
 	}
 	// Assigning parameters to member variables
 	nm_rpm = parameters[0];				// Mechanical speed in rpm
@@ -35,14 +35,13 @@ WTtype3::WTtype3(const string& symbol, const vector<double>& parameters)
 	// Filter Parameters
 	Rf = parameters[21];				// Filter resistance (Ohms)
 	Lf = parameters[22];				// Filter inductace (H)
+	f1 = parameters[23];				// Grid frequency (Hz)
 
 
 	// Rotor and Stator Electrical Parameters
-	double omega1 = 2.0 * M_PI * 50.0; // Nominal angular frequency (rad/s)
+	double omega1 = 2.0 * M_PI * f1; // Nominal angular frequency (rad/s)
 	double omega_m = 2.0 * M_PI * nm_rpm / 60.0; // Mechanical angular speed (rad / s)
 	complex<double> j(0, 1); // Imaginary unit
-
-	cout << omega_m << endl;
 	
 	// Rotor Parameters Referred to the Stator Side
 	double Ls_r = Ls + Lr * pow(Nsr, 2); // Equivalent rotor inductance

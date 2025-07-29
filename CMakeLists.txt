@@ -72,6 +72,7 @@ set(Element_Transmission_Line_Header_Files
 set(Element_RES_Header_Files
     src/Elements/RES/RES_base.h
     src/Elements/RES/WT_type_3.h
+    src/Elements/RES/WT_type_4.h
 )
 set(Solver_State_Space_Model_Header_Files
     src/Solver/State_Space_Model/State_Space_Model.h
@@ -151,6 +152,7 @@ set(Element_Transmission_Line_Source_Files
 set(Element_RES_Source_Files
     src/Elements/RES/RES_base.cpp
     src/Elements/RES/WT_type_3.cpp
+    src/Elements/RES/WT_type_4.cpp
 )
 set(Solver_State_Space_Model_Source_Files
     src/Solver/State_Space_Model/State_Space_Model.cpp
@@ -186,6 +188,7 @@ set(Examples_Source_files
     src/examples/example_OPF_csv.cpp  
     src/examples/example_MMC.cpp
     src/examples/example_WT_type_3.cpp
+    src/examples/example_WT_type_4.cpp
     src/examples/example_constructors.cpp
     src/examples/example_visuals.cpp
 )

@@ -42,6 +42,9 @@ private:
 	// Filter Parameters - 2 values
 	double Rf = 0.0;					// Filter resistance (Ohms)
 	double Lf = 0.001;					// Filter inductance (H)
+
+	// Grid frequency
+	double f1 = 50.0;					// Grid frequency (Hz)
 };
 
 
