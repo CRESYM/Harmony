@@ -19,17 +19,23 @@ void bode_plot(const std::vector<double>& freq,
 
     matplot::nexttile(); // Use matplot namespace
     matplot::hold(matplot::on); // Use matplot namespace
+
     for (size_t j = 0; j < labels.size(); ++j) {
         std::vector<double> mag;
         for (size_t i = 0; i < freq.size(); ++i) {
             mag.push_back(mag_dB[i][j]);
         }
-        matplot::semilogx(freq, mag)->display_name(labels[j]); // Use matplot namespace
+        auto plt = matplot::semilogx(freq, mag);
+        plt->display_name(labels[j]); // Use matplot namespace
+		plt->line_width(2.0); // Set line width for better visibility
     }
-    matplot::ylabel("20 log_{10}|H(jw)|"); // Use matplot namespace
+    matplot::ylabel(u8"20 log_{10}|H(jω)|"); // Use matplot namespace
     matplot::xlabel("Frequency (Hz)"); // Use matplot namespace
-    matplot::legend(); // Use matplot namespace
+    auto lgd = ::matplot::legend();
+    lgd->location(legend::general_alignment::bottomleft);
+    lgd->box(false);
     matplot::grid(matplot::on); // Use matplot namespace
+    gca()->minor_grid(true);
 
     matplot::nexttile(); // Use matplot namespace
     matplot::hold(matplot::on); // Use matplot namespace
@@ -38,18 +44,25 @@ void bode_plot(const std::vector<double>& freq,
         for (size_t i = 0; i < freq.size(); ++i) {
             phase.push_back(phase_deg[i][j]);
         }
-        matplot::semilogx(freq, phase)->display_name(labels[j]); // Use matplot namespace
+        auto plt = matplot::semilogx(freq, phase);
+        plt->display_name(labels[j]);; // Use matplot namespace
+		plt->line_width(2.0); // Set line width for better visibility
     }
     matplot::xlabel("Frequency (Hz)"); // Use matplot namespace
-    matplot::ylabel("Angle H(jw) "); // Use matplot namespace
-    matplot::legend(); // Use matplot namespace
+    matplot::ylabel(u8"Angle H(jω)"); // Use matplot namespace
+    auto lgd2 = ::matplot::legend();
+    lgd2->location(legend::general_alignment::bottomleft);
+    lgd2->box(false);
     matplot::grid(matplot::on); // Use matplot namespace
+    gca()->minor_grid(true);
 
     matplot::show(); // Use matplot namespace
 
     // After plotting
     std::cerr.rdbuf(old_cerr);
     null_stream.close();
+
+    //std::this_thread::sleep_for(std::chrono::seconds(60)); // Simulate condition
 }
 
 void nyquist_plot(const std::vector<double>& real_part,
@@ -60,8 +73,8 @@ void nyquist_plot(const std::vector<double>& real_part,
     f->size(800, 600);
 
     plot(real_part, imag_part);
-    xlabel("Re{H(jw)}");
-    ylabel("Im{H(jw)}");
+    xlabel(u8"Re{H(jω)}");
+    ylabel(u8"Im{H(jω)}");
     //title(title);
     grid(on);
 

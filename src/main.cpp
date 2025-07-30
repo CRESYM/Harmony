@@ -8,8 +8,8 @@
 int main() {
 
 	// example_WT_type_3();
-	example_WT_type_4();
-	// example_MMC();
+	// example_WT_type_4();
+	example_MMC();
 	// example_OPF();
 	// example_OPF_csv();
 	// example_visuals();
