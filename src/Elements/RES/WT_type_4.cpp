@@ -110,16 +110,14 @@ WTtype4::WTtype4(const string& symbol, const vector<double>& parameters)
 
 	DenseMatrix I = createZeroMatrix(2,2);
 	I.set(0, 0, one); I.set(1, 1, one); // Identity matrix I
-
-	DenseMatrix Zdq = createZeroMatrix(2, 2); // Impedance matrix in dq frame
-
 	DenseMatrix dummy = createZeroMatrix(2, 2); // Dummy matrix for calculations
 	mul_dense_dense(Gid, Gdel, dummy); // Gid * Gdel
-	mul_dense_dense(dummy, Gcc, dummy); 
-	mul_dense_dense(dummy, Gmf, dummy); 
+	mul_dense_dense(dummy, Gcc, dummy); // Gid * Gdel * Gcc
+	mul_dense_dense(dummy, Gmf, dummy); // (Gid * Gdel * Gcc) * Gmf
 	mul_dense_scalar(dummy, neg(one), dummy); // -((Gid*Gdel) * Gcc) * Gmf
 	add_dense_dense(I, dummy, dummy); // I - ((Gid*Gdel) * Gcc) * Gmf
-
+	inverse_LU(dummy, dummy); // (I - ((Gid*Gdel) * Gcc) * Gmf)^(-1)
+	
 	DenseMatrix dummy2 = createZeroMatrix(2, 2); // Another dummy matrix for calculations
 	mul_dense_dense(Hi_PLL, Gcc, dummy2); // Hi_PLL * Gcc
 	add_dense_dense(Hd_PLL, dummy2, dummy2); // Hd_PLL + Hi_PLL * Gcc
@@ -128,10 +126,7 @@ WTtype4::WTtype4(const string& symbol, const vector<double>& parameters)
 	mul_dense_dense(dummy2, Gmf, dummy2); // (Gid * (Gdel * (Hd_PLL + Hi_PLL * Gcc))) * Gmf
 	add_dense_dense(Yout, dummy2, dummy2); // Yout + (Gid * (Gdel * (Hd_PLL + Hi_PLL * Gcc))) * Gmf
 	
-	inverse_LU(dummy2, dummy2);
-	mul_dense_dense(dummy, dummy2, Zdq);
-
+	
 	Y_matrix.resize(2, 2); // Resize the admittance matrix
-	inverse_gauss_jordan(Zdq, Y_matrix);
-	//Zdq.inv(Y_matrix);
+	mul_dense_dense(dummy2, dummy, Y_matrix);
 }
