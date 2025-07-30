@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Lekić"
+  given-names: "Aleksandra"
+  orcid: "https://orcid.org/0000-0003-2727-0767"
+- family-names: "Li"
+  given-names: "Haixiao"
+  orcid: "https://orcid.org/0000-0001-5659-503X"
+- family-names: "Dimitrovski"
+  given-names: "Robert"
+  orcid: "https://orcid.org/0000-0002-9775-3265"
+- family-names: "Quintero"
+  given-names: "Yasel"
+  orcid: "https://orcid.org/0009-0005-9240-7370"
+- family-names: "Kermansaravi"
+  given-names: "Azadeh"
+  orcid: "https://orcid.org/0009-0002-0708-7543"
+- family-names: "Alsarayreh"
+  given-names: "Saif"
+  orcid: "https://orcid.org/0000-0002-8037-8665"
+title: "Harmony - HARMONic stabilitY assessment of PE-penetrated power systems"
+version: 1.0.0
+doi: no doi yet
+date-released: 2025-07-30
+url: "https://github.com/CRESYM/Harmony"
