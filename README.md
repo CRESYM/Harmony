@@ -65,6 +65,7 @@ cd Release
 ```
 
 ### Run the tests
+To run the tests, you should follow a similar procedure as for the building and running the code.
 ```bash
 # Open the tests directory
 cd tests
