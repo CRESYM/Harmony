@@ -343,14 +343,22 @@ Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<d
 				Y.set(i, j, add(Y.get(i, j), real_double(conductors->gc)));
 			}
 		}
+
+	// Resize Z and Y matrices in Element class
+	int n = cond_noElim.size();  // Size of the reduced matrices
+	Z.resize(n, n);
+	P.resize(n, n);
+	Y.resize(n, n);
+
+	// Resize Y_matrix in Element class
+	Y_matrix.resize(2 * n, 2 * n);
 }
 
 Eigen::MatrixXcd Overhead_Line::compute_y_parameters_num(double omega_num)
 {
 	// Step 1: Compute Z and Y matrices based on frequency
-	complex<double> s_num = 1i * complex<double>(2 * M_PI * omega_num);
-	Eigen::MatrixXcd Z_num = substitute_symbol(Z, s, s_num);
-	Eigen::MatrixXcd Y_num = substitute_symbol(Y, s, s_num);
+	Eigen::MatrixXcd Z_num = substitute_symbol(Z, omega, omega_num);
+	Eigen::MatrixXcd Y_num = substitute_symbol(Y, omega, omega_num);
 
 	// Step 2: Compute Gamma = sqrt(Z * Y) using Eigen's matrix square root
 	Eigen::MatrixXcd ZY = Z_num * Y_num;  // Product of Z and Y
@@ -381,6 +389,54 @@ Eigen::MatrixXcd Overhead_Line::compute_y_parameters_num(double omega_num)
 	return Y_params;
 }
 
+
+std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_parameters(double frequency)
+{
+	// Step 1: Compute Z and Y matrices based on frequency
+	double angular_frequency = 2 * frequency * M_PI;
+	map_basic_basic m;
+	m[omega] = real_double(angular_frequency);
+	int n = Z.nrows();  // Size of the original matrices
+	std::vector<std::vector<complex<double>>> Y_val_exact(2 * n);
+	for (int i = 0; i < 2 * n; i++)
+		Y_val_exact[i].resize(2 * n);
+
+	//complex<double> s_num = complex<double>(0, angular_frequency);
+
+	Eigen::MatrixXcd Z_num = substitute_symbol(Z, omega, angular_frequency);
+	Eigen::MatrixXcd Y_num = substitute_symbol(Y, omega, angular_frequency);
+
+	// Step 2: Compute Gamma = sqrt(Z * Y) using Eigen's matrix square root
+	Eigen::MatrixXcd ZY = Z_num * Y_num;  // Product of Z and Y
+	Eigen::MatrixXcd Gamma = ZY.sqrt(); 
+
+	// Step 3: Compute Yc = Z.inverse() * Gamma
+	Eigen::MatrixXcd Z_inv = Z_num.inverse();  // Inverse of Z
+	Eigen::MatrixXcd Yc = Z_inv * Gamma;  // Compute Yc
+
+	// Step 4: Compute Gamma_l = Gamma * length (element-wise multiplication)
+	Eigen::MatrixXcd Gamma_l = Gamma * length;
+
+	// Step 5: Calculate coth(Gamma_l) and csc(Gamma_l)
+	Eigen::MatrixXcd coth_Gamma_l = Gamma_l.cosh() * (Gamma_l.sinh()).inverse();  // coth(Γl)
+	Eigen::MatrixXcd csc_Gamma_l = (Gamma_l.sinh()).inverse();    // csc(Γl)
+
+	// Step 6: Initialize the matrix blocks
+	Eigen::MatrixXcd Y11 = Yc * coth_Gamma_l;         // Yc * coth(Γl)
+	Eigen::MatrixXcd Y12 = -Yc * csc_Gamma_l;        // -Yc * csc(Γl)
+
+	// Step 7: Fill in the Y parameters matrix
+	for (int i = 0; i < Y11.rows(); ++i) {
+		for (int j = 0; j < Y11.cols(); ++j) {
+			Y_val_exact[i][j] = Y11(i, j);
+			Y_val_exact[i][j + Y11.cols()] = Y12(i, j);
+			Y_val_exact[i + Y11.rows()][j] = Y12(i, j);
+			Y_val_exact[i + Y11.rows()][j + Y11.cols()] = Y11(i, j);
+		}
+	}
+
+	return Y_val_exact;
+}
 
 	
 

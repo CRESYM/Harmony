@@ -70,14 +70,14 @@ private:
 	// Variables to store organization x and y values
 	std::vector<double> organization_x_values;
 	std::vector<double> organization_y_values;
-
-	// Function to compute Y parameters
-	virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num);	
-
 public:
 	Overhead_Line(const std::string& symbol, double length, std::tuple<double, double, double> earth,
 		std::tuple<std::string, std::vector<int>, std::vector<double>, double, double, double, double> conductor,
 		std::tuple<int, std::vector<double>, double> groundwire);
+
+	// Function to compute Y parameters
+	virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num) override;
+	virtual vector<vector<complex<double>>> compute_y_parameters(double omega_num) override;
 };
 
 #endif // OVERHEAD_LINE_H
