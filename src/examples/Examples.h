@@ -3,6 +3,9 @@
 
 extern void example_OPF();
 extern void example_OPF_csv();
+
+extern void example_DQsym_math_operations();
+
 extern void example_MMC();
 extern void example_WT_type_3();
 extern void example_WT_type_4();

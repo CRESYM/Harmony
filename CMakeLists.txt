@@ -81,6 +81,9 @@ set(Solver_OPF_Header_Files
     src/Solver/OPF/viz_opf.h
     src/Solver/OPF/Powerflow.h
 )
+set(Solver_DQsym_Header_Files
+    src/Solver/DQsym/DQsym.h
+)
 set(Solver_Stability_Estimate_Header_Files
     src/Solver/Stability_Estimate/Stability_estimate.h
 )
@@ -166,6 +169,9 @@ set(Solver_OPF_Source_Files
     src/Solver/OPF/Powerflow_network_params.cpp
     src/Solver/OPF/Powerflow_solver.cpp
 )
+set(Solver_DQsym_Source_Files
+    src/Solver/DQsym/DQsym.cpp
+)
 set(Solver_Helper_Functions_Source_Files
     src/Solver/Helper_Functions/Differential_equations.cpp
     src/Solver/Helper_Functions/Symbolic_functions.cpp
@@ -185,7 +191,8 @@ set(Source_Files
 )
 set(Examples_Source_files
     src/examples/example_OPF.cpp
-    src/examples/example_OPF_csv.cpp  
+    src/examples/example_OPF_csv.cpp
+    src/examples/example_DQsym_math_operations.cpp
     src/examples/example_MMC.cpp
     src/examples/example_WT_type_3.cpp
     src/examples/example_WT_type_4.cpp
@@ -211,6 +218,7 @@ if(WIN32) # workds for x64 as well
     source_group("Header Files\\Control" FILES ${Control_Header_Files})
     source_group("Header Files\\Solver" FILES)
     source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Header_Files})
+    source_group("Header Files\\Solver\\DQsym" FILES ${Solver_DQsym_Header_Files})
     source_group("Header Files\\Solver\\Stability Estimate" FILES ${Solver_Stability_Estimate_Header_Files})
     source_group("Header Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Header_Files})
     source_group("Header Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Header_Files})
@@ -231,6 +239,7 @@ if(WIN32) # workds for x64 as well
     source_group("Source Files\\Control" FILES ${Control_Source_Files})
     source_group("Source Files\\Solver" FILES)
     source_group("Source Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
+    source_group("Source Files\\Solver\\DQsym" FILES ${Solver_DQsym_Source_Files})
     source_group("Source Files\\Solver\\Stability Estimate" FILES ${Solver_Stability_Estimate_Source_Files})
     source_group("Source Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Source_Files})
     source_group("Source Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Source_Files})
@@ -254,6 +263,7 @@ add_executable(
     ${Element_RES_Header_Files}
     ${Control_Header_Files}
     ${Solver_OPF_Header_Files}
+    ${Solver_DQsym_Header_Files}
     ${Solver_Stability_Estimate_Header_Files}
     ${Solver_Helper_Functions_Header_Files}
     ${Solver_State_Space_Model_Header_Files}
@@ -272,6 +282,7 @@ add_executable(
     ${Element_RES_Source_Files}
     ${Control_Source_Files}
     ${Solver_OPF_Source_Files}
+    ${Solver_DQsym_Source_Files}
     ${Solver_Stability_Estimate_Source_Files}
     ${Solver_Helper_Functions_Source_Files}
     ${Solver_State_Space_Model_Source_Files}
