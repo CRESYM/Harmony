@@ -22,7 +22,7 @@ WTtype4::WTtype4(const string& symbol, const vector<double>& parameters)
 	// Delay
 	Tdelay = parameters[8];				// Delay in seconds
 	// Second-order filter parameters
-	wn = parameters[9];				// Natural frequency (rad/s)
+	wn = parameters[9];					// Natural frequency (rad/s)
 	zeta = parameters[10];				// Damping ratio
 	// Filter Parameters
 	Rf = parameters[11];				// Filter resistance (Ohms)
@@ -39,12 +39,14 @@ WTtype4::WTtype4(const string& symbol, const vector<double>& parameters)
 		Q = 3 / 2 * (Vq * Id - Vd * Iq);
 	*/
 
-	double Vd = Vm;
-	double Vq = 0;
-	double Md0 = 1.0 / Vdc * Vd;
-	double Mq0 = 2 / Vdc * Vq;
-
 	double wg = 2 * M_PI * f1; // Angular frequency of the grid
+
+	double Vd = Vm * sqrt(2.0/3.0);
+	double Vq = 0;
+	double Md0 = (Vd - Rf * Id_ref - wg * Lf * Iq_ref) / Vdc;
+	double Mq0 = (Vq - Rf * Iq_ref + wg * Lf * Id_ref) / Vdc;
+
+	
 
 	// Conversion to symbolic representation
 	RCP<const Basic> Rf_b = real_double(Rf);
@@ -84,8 +86,10 @@ WTtype4::WTtype4(const string& symbol, const vector<double>& parameters)
 	RCP<const Basic> H_PLL = div(Gc_PLL, add(s, mul(Vd_b, Gc_PLL)));
 	DenseMatrix Hi_PLL = createZeroMatrix(2, 2);
 	Hi_PLL.set(0, 1, mul(Iq_ref_b, H_PLL)); Hi_PLL.set(1, 1, neg(mul(Id_ref_b, H_PLL)));
+	// Hi_PLL = [0 Iq_ref*H_PLL; 0 -Id_ref*H_PLL]
 	DenseMatrix Hd_PLL = createZeroMatrix(2, 2);
-	Hd_PLL.set(0, 0, mul((Mq0_b), H_PLL)); Hd_PLL.set(1, 0, mul(neg(Md0_b), H_PLL));
+	Hd_PLL.set(0, 1, mul(neg(Mq0_b), H_PLL)); Hd_PLL.set(1, 1, mul((Md0_b), H_PLL));
+	// Hd_PLL = [0 -Mq0*H_PLL; 0 Md0*H_PLL]
 
 	// Second - order filter
 	RCP<const Basic> TF = div(mul(wn_b, wn_b), add(add(mul(s, s), mul(wn_b, wn_b)), mul(real_double(2), mul(zeta_b, mul(wn_b, s))))); // Transfer function of the second-order filter
@@ -100,23 +104,22 @@ WTtype4::WTtype4(const string& symbol, const vector<double>& parameters)
 
 	// PI current controller
 	DenseMatrix Gcc = createZeroMatrix(2, 2);
-	RCP<const Basic> coeff = (div(add(Kpi_b, div(Kii_b, s)), Vdc_b));
-	RCP<const Basic> coeff2 = div(Lf_wg, Vdc_b);
+	RCP<const Basic> coeff = neg(add(Kpi_b, div(Kii_b, s))); // coeff = -(Kpi + Kii/s)
+	RCP<const Basic> coeff2 = div(Lf_wg, mul(Vdc_b, Vdc_b)); // coeff2 = wg*Lf/(Vdc^2)
 	Gcc.set(0, 0, coeff); 
 	Gcc.set(1, 1, coeff); 
 	Gcc.set(0, 1, neg(coeff2)); 
-	Gcc.set(1, 0, coeff2); // Gpi = [(Kp + Ki/s) -Lf*wg; Lf*wg (Kp + Ki/s)]/Vdc
+	Gcc.set(1, 0, coeff2); // Gcc = [coeff -coeff2; coeff2 coeff]
 
 
 	DenseMatrix I = createZeroMatrix(2,2);
 	I.set(0, 0, one); I.set(1, 1, one); // Identity matrix I
 	DenseMatrix dummy = createZeroMatrix(2, 2); // Dummy matrix for calculations
-	mul_dense_dense(Gid, Gdel, dummy); // Gid * Gdel
-	mul_dense_dense(dummy, Gcc, dummy); // Gid * Gdel * Gcc
-	mul_dense_dense(dummy, Gmf, dummy); // (Gid * Gdel * Gcc) * Gmf
-	mul_dense_scalar(dummy, neg(one), dummy); // -((Gid*Gdel) * Gcc) * Gmf
-	add_dense_dense(I, dummy, dummy); // I - ((Gid*Gdel) * Gcc) * Gmf
-	inverse_LU(dummy, dummy); // (I - ((Gid*Gdel) * Gcc) * Gmf)^(-1)
+	mul_dense_dense(Gdel, Gid, dummy); // Gdel * Gid
+	mul_dense_dense(dummy, Gcc, dummy); // Gdel * Gid * Gcc
+	mul_dense_dense(dummy, Gmf, dummy); // (Gdel * Gid * Gcc) * Gmf
+	add_dense_dense(I, dummy, dummy); // I + ((Gid*Gdel) * Gcc) * Gmf
+	inverse_LU(dummy, dummy); // (I + (Gdel * Gid * Gcc * Gmf)^(-1)
 	
 	DenseMatrix dummy2 = createZeroMatrix(2, 2); // Another dummy matrix for calculations
 	mul_dense_dense(Hi_PLL, Gcc, dummy2); // Hi_PLL * Gcc
@@ -126,7 +129,6 @@ WTtype4::WTtype4(const string& symbol, const vector<double>& parameters)
 	mul_dense_dense(dummy2, Gmf, dummy2); // (Gid * (Gdel * (Hd_PLL + Hi_PLL * Gcc))) * Gmf
 	add_dense_dense(Yout, dummy2, dummy2); // Yout + (Gid * (Gdel * (Hd_PLL + Hi_PLL * Gcc))) * Gmf
 	
-	
 	Y_matrix.resize(2, 2); // Resize the admittance matrix
-	mul_dense_dense(dummy2, dummy, Y_matrix);
+	mul_dense_dense(dummy, dummy2, Y_matrix);
 }

@@ -73,6 +73,8 @@ set(Element_RES_Header_Files
     src/Elements/RES/RES_base.h
     src/Elements/RES/WT_type_3.h
     src/Elements/RES/WT_type_4.h
+    src/Elements/RES/WP_plant.h
+    src/Elements/RES/PV_plant.h
 )
 set(Solver_State_Space_Model_Header_Files
     src/Solver/State_Space_Model/State_Space_Model.h
@@ -156,6 +158,8 @@ set(Element_RES_Source_Files
     src/Elements/RES/RES_base.cpp
     src/Elements/RES/WT_type_3.cpp
     src/Elements/RES/WT_type_4.cpp
+    src/Elements/RES/WP_plant.cpp
+    src/Elements/RES/PV_plant.cpp
 )
 set(Solver_State_Space_Model_Source_Files
     src/Solver/State_Space_Model/State_Space_Model.cpp

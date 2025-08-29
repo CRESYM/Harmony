@@ -71,7 +71,7 @@ void StabilityEstimate::compute_equivalent_impedance(Network* net, std::vector<B
             // Skip elements that are in the skip_elements list
             if (std::find(skip_elements.begin(), skip_elements.end(), element) == skip_elements.end()) {
                 // Get the Y-parameter matrix of the element
-                DenseMatrix element_Y_matrix = element->compute_y_parameters();
+                DenseMatrix element_Y_matrix = element->get_y_parameters();
 
                 // add element_Y_matrix
                 std::map<Bus*, int> bus_map = element->getConnections();
