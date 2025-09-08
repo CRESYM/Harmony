@@ -17,14 +17,13 @@ void example_PV_plant() {
 		900.0,		// V_dc: DC link voltage in volts
 		16e-6,      // L_boost: Inductance of the boost converter in henries
 		70e-3,      // C_dc: Capacitance of the DC link in farads
-		-0.01,		// kp_boost: Proportional gain for the boost converter voltage control loop
-		-0.1,		// ki_boost: Integral gain for the boost converter voltage control loop
+		4.9809e-06,	// kp_boost: Proportional gain for the boost converter voltage control loop
+		4.9809e-06,	// ki_boost: Integral gain for the boost converter voltage control loop
 		103e-6,		// L_1: Inductance of the filter in henries
 		0.0,		// R_1: Resistance of the filter in ohms
 		120e-6,		// C_f: Capacitance of the filter in farads
 		0.02,		// R_c: Resistance of the filter in ohms
 		55e-6,		// L_2: Grid-side inductance in henries
-		0.0,		// R_2: Grid-side resistance in ohms
 		380.0,		// V_g: Grid voltage in volts
 		50.0,	    // f_g: Grid frequency in hertz
 		10,			// K_p_dc: Proportional gain of the DC voltage controller
@@ -39,7 +38,7 @@ void example_PV_plant() {
 	cout << "PV plant model initialized successfully." << endl;
 	// Further operations with the pv_plant object can be performed here	
 
-	pv->writeFile(1, 1000, 1000);
+	//pv->writeFile(1, 1000, 1000);
 
 	pv->plotYParameters(1, 10000, 10000);
 }

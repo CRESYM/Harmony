@@ -2,8 +2,8 @@
 
 PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_base(symbol) {
 	// Default parameters for a PV plant can be set here if needed
-	if (parameters.size() != 27) {
-		cerr << "Error: PV plant requires exactly 27 parameters." << endl;
+	if (parameters.size() != 26) {
+		cerr << "Error: PV plant requires exactly 26 parameters." << endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -31,20 +31,19 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	C_f = parameters[15]; // Capacitance of the filter in farads
 	R_c = parameters[16]; // Resistance of the filter in ohms
 	L_2 = parameters[17]; // Grid-side inductance in henries
-	R_2 = parameters[18]; // Grid-side resistance in ohms
 	// Grid parameters
-	V_g = parameters[19]; // Grid voltage in volts, assumed to have the optimal operation of PLL
-	f_g = parameters[20]; // Grid frequency in hertz
+	V_g = parameters[18]; // Grid voltage in volts, assumed to have the optimal operation of PLL
+	f_g = parameters[19]; // Grid frequency in hertz
 	// Control parameters
 	// Parameters for the DC voltage control loop
-	K_p_dc = parameters[21]; // Proportional gain of the DC voltage controller
-	K_i_dc = parameters[22]; // Integral gain of the DC voltage controller
+	K_p_dc = parameters[20]; // Proportional gain of the DC voltage controller
+	K_i_dc = parameters[21]; // Integral gain of the DC voltage controller
 	// Parameters for the current control loop
-	K_p_i = parameters[23]; // Proportional gain of the current controller
-	K_i_i = parameters[24]; // Integral gain of the current controller
+	K_p_i = parameters[22]; // Proportional gain of the current controller
+	K_i_i = parameters[23]; // Integral gain of the current controller
 	// Parameters for the PLL
-	K_p_pll = parameters[25]; // Proportional gain of the PLL
-	K_i_pll = parameters[26]; // Integral gain of the PLL
+	K_p_pll = parameters[24]; // Proportional gain of the PLL
+	K_i_pll = parameters[25]; // Integral gain of the PLL
 
 	// Calculation of the operation point
 	// Assuming operation at maximum power point (MPP), calculate V_pv and I_pv
@@ -60,30 +59,34 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	// Further initialization and state variable setup can be done here
 	double V_pccd = V_g * sqrt(2.0/3.0); // Peak grid voltage
 	double V_pccq = 0.0; // Assuming operation at unity power factor
-	double I_2d = 3.0/2.0 * P_pv / V_pccd; // d-axis current injection
+	double I_2d = 2.0/3.0 * P_pv / V_pccd; // d-axis current injection
 	double I_2q = 0.0; // q-axis current injection for unity power factor
+	//cout << V_pccd << " " << V_pccq << " " << I_2d << " " << I_2q << endl;
 
 	// Initialize state variables, control states, etc.
 	double omega_g = 2 * M_PI * f_g; // Angular frequency of the grid
 	double Vcfd = (V_pccd - omega_g * L_2 * I_2q + pow(omega_g,2)*R_c*C_f*L_2*I_2d
 		+ omega_g*R_c*C_f*V_pccq) / (1 + pow(omega_g * C_f * R_c,2)); // Filter capacitor voltage d-axis
-	double Vcfq = (V_pccq + omega_g * L_2 * I_2d - pow(omega_g, 2) * R_c * C_f * L_2 * I_2q
+	double Vcfq = (V_pccq + omega_g * L_2 * I_2d + pow(omega_g, 2) * R_c * C_f * L_2 * I_2q
 		- omega_g * R_c * C_f * V_pccd) / (1 + pow(omega_g * C_f * R_c, 2)); // Filter capacitor voltage q-axis
 	
 	double I_1d = I_2d - Vcfq * omega_g * C_f; // d-axis current through the filter inductor
 	double I_1q = I_2q + Vcfd * omega_g * C_f; // q-axis current through the filter inductor
+	//cout << Vcfd << " " << Vcfq << " " << I_1d << " " << I_1q << endl;
 
-	double V_sd = V_pccd - omega_g * L_1 * I_1q - R_1 * I_1d - omega_g * L_2 * I_2q - R_2 * I_2d;
-	double V_sq = V_pccq + omega_g * L_1 * I_1d - R_1 * I_1q + omega_g * L_2 * I_2d - R_2 * I_2q;
+	double V_sd = V_pccd - omega_g * L_1 * I_1q - R_1 * I_1d - omega_g * L_2 * I_2q;
+	double V_sq = V_pccq + omega_g * L_1 * I_1d - R_1 * I_1q + omega_g * L_2 * I_2d;
 
-	double Md0 = 2 * V_sd / V_dc;
-	double Mq0 = 2 * V_sq / V_dc;
+	double Md0 = 2.0 * V_sd / V_dc;
+	double Mq0 = 2.0 * V_sq / V_dc;
+	//cout << V_sd << " " << V_sq << " " << Md0 << " " << Mq0 << endl;
 
 	// Setting up the controllers
 	// PI controller for the DC voltage control loop
 	RCP<const Basic> gdc = add(real_double(K_p_dc), div(real_double(K_i_dc), s));
 	DenseMatrix Gdc = createZeroMatrix(2, 2);
 	Gdc.set(0, 0, gdc);
+	//cout << Gdc.__str__() << endl;
 
 	// PI controller for the current control loop
 	RCP<const Basic> gi = add(real_double(K_p_i), div(real_double(K_i_i), s));
@@ -94,6 +97,8 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	RCP<const Basic> kv = mul(gi, real_double(1.0 / V_dc));
 	Gv.set(0, 0, kv); // d-axis
 	Gv.set(1, 1, kv); // q-axis
+	//cout << Gi.__str__() << endl;
+	//cout << Gv.__str__() << endl;
 
 	// PI controller for the PLL
 	RCP<const Basic> Hpll = add(real_double(K_p_pll), div(real_double(K_i_pll), s));
@@ -104,6 +109,8 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	DenseMatrix Gplli = createZeroMatrix(2, 2);
 	Gplli.set(0, 1, mul(Gpll, real_double(I_2q))); // PLL acts on the q-axis only
 	Gplli.set(1, 1, mul(Gpll, real_double(-I_2d))); // PLL acts on the q-axis only
+	/*cout << Gpllm.__str__() << endl;
+	cout << Gplli.__str__() << endl;*/
 
 	// PV panel model, dynamical model of the PV array
 	// Boost controller
@@ -113,24 +120,30 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	double k = 1.380625e-23; // Boltzmann's constant
 	double q = 1.60217e-23; // unit electric charge
 	double k_pv = -q * (N_p * I0 + N_p * I_sc - I_pv) / (N_s * n * k * Tn);
+	double k_mp = pow(N_s * n * k * Tn / q, 2) / (N_p * I0 * V_pv * exp(q * V_pv / (N_s * n * k * Tn)) + I_pv / V_pv * pow(N_s * n * k * Tn / q, 2));
+	double lambda = k_pv * k_mp;
+	// cout << k_pv << " " << k_mp << " " << lambda << endl;
 
 	RCP<const Basic> L_b = real_double(L_boost);
 	RCP<const Basic> C_b = real_double(C_pv);
 	RCP<const Basic> Vdc0 = real_double(V_dc);
 	RCP<const Basic> Il0 = real_double(I_l);
 	RCP<const Basic> kpv_b = real_double(k_pv);
-	RCP<const Basic> lambda = zero; // Assuming constant irradiance for small-signal model
+	RCP<const Basic> lambda_b = real_double(lambda);
 
 	RCP<const Basic> h1 = mul(mul(s, L_b), sub(kpv_b, mul(s, C_b)));
 	RCP<const Basic> h2 = sub(kpv_b, mul(s, C_b));
 	RCP<const Basic> D_minus_1 = sub(real_double(D), one);
-	RCP<const Basic> gb1 = mul(gb, sub(one, lambda));
+	RCP<const Basic> gb1 = mul(gb, sub(one, lambda_b));
 
-	RCP<const Basic> Zdc = add(add(neg(h1), one), mul(Vdc0, gb1));
+	RCP<const Basic> zdc = add(add(neg(h1), one), mul(Vdc0, gb1));
 	RCP<const Basic> denom = add(sub(mul(s, mul(C_b, h1)), mul(s, C_b)),
 		add(mul(Vdc0, mul(gb1, mul(s, C_b))), add(mul(mul(D_minus_1, D_minus_1), h2),
 		mul(Il0, mul(gb1, D_minus_1)))));
-	Zdc = div(Zdc, denom);
+	zdc = div(zdc, denom);
+
+	DenseMatrix Zdc = createZeroMatrix(2, 2);
+	Zdc.set(0, 0, zdc); // DC voltage response to perturbation in the duty cycle
 
 
 	// Calculation of the impedances
@@ -177,10 +190,9 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	DenseMatrix M1 = createZeroMatrix(2, 2);
 	mul_dense_dense(Zrl1, Yc, M1);
 	mul_dense_dense(M1, M_inv, M1); // M1 = Zrl1*Yc*(I + Z_rc*Yc)^-1
-	DenseMatrix M2 = createZeroMatrix(2, 2);
-	add_dense_dense(M1, identity, M2); // M2 = I + Zrl1*Yc*(I + Z_rc*Yc)^-1
-	DenseMatrix M2_inv = createZeroMatrix(2, 2);	
-	inverse_LU(M2, M2_inv); // M2_inv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1
+	add_dense_dense(M1, identity, M1); // M1 = I + Zrl1*Yc*(I + Z_rc*Yc)^-1
+	DenseMatrix M1_inv = createZeroMatrix(2, 2);	
+	inverse_LU(M1, M1_inv); // M1_inv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1
 
 	DenseMatrix M3 = createZeroMatrix(2, 2);
 	mul_dense_dense(Zrl1, Yc, M3);
@@ -191,16 +203,15 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	mul_dense_dense(Nm, M3, M3); // M3 = Nm*Yc*(I + Zrl1*Yc)^-1
 
 	// Matrices for calculation of the transfer function from m_dq, i_2dq, v_dc to v_pccdq
-	DenseMatrix Gmv = createZeroMatrix(2, 2);
-	mul_dense_dense(M2_inv, Hv, Gmv); // Gmv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1 * Hv
-	DenseMatrix Giv = createZeroMatrix(2, 2);
-	mul_dense_dense(M1, Zl2, M1); // M1 = Zrl1*Yc*(I + Z_rc*Yc)^-1*Zrl2
-	add_dense_dense(M1, Zrl1, M1); // M1 = Zrl1 + Zrl1*Yc*(I + Z_rc*Yc)^-1*Zrl2
-	add_dense_dense(M1, Zl2, M1); // M1 = Zrl1 + Zl2 + Zrl1*Yc*(I + Z_rc*Yc)^-1*Zrl2
-	mul_dense_scalar(M1, real_double(-1.0), M1); // M1 = -(Zrl1 + Zl2 + Zrl1*Yc*(I + Z_rc*Yc)^-1*Zrl2)
-	mul_dense_dense(M2_inv, M1, Giv); // Giv = M2_inv * M1
 	DenseMatrix Gvv = createZeroMatrix(2, 2);
-	mul_dense_dense(M2_inv, Hm, Gvv); // Gvv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1 * Hm
+	mul_dense_dense(M1_inv, Hv, Gvv); // Gmv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1 * Hv
+	DenseMatrix Giv = createZeroMatrix(2, 2);
+	mul_dense_dense(M1, Zl2, M1); // M1 = (Zrl1*Yc*(I + Z_rc*Yc)^-1 + I)*Zl2
+	add_dense_dense(M1, Zrl1, M1); // M1 = Zrl1 + Zl2 + Zrl1*Yc*(I + Z_rc*Yc)^-1*Zrl2
+	mul_dense_scalar(M1, real_double(-1.0), M1); // M1 = -(Zrl1 + Zl2 + Zrl1*Yc*(I + Z_rc*Yc)^-1*Zrl2)
+	mul_dense_dense(M1_inv, M1, Giv); // Giv = M1_inv * M1
+	DenseMatrix Gmv = createZeroMatrix(2, 2);
+	mul_dense_dense(M1_inv, Hm, Gmv); // Gvv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1 * Hm
 
 	// Matrices for calculation of the transfer function from m_dq, i_2dq, v_dc to i_dc
 	DenseMatrix Gmi = Ni;
@@ -216,8 +227,8 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	mul_dense_dense(Gv, Ja, Ja); // Ja = Gv*Gi*Gdc
 	mul_dense_dense(Gmi, Ja, Fa); // Fa = Gmi*Gv*Gi*Gdc
 	mul_dense_dense(Gmv, Ja, Ja); // Ja = Gmv*Gv*Gi*Gdc
-	add_dense_dense(Gvv, Ja, Ja); // Ja = Gvv + Gmv*Gv*Gi*Gdc
-	mul_dense_scalar(Fa, Zdc, Fa); // Fa = Zdc*Gmi*Gv*Gi*Gdc
+	add_dense_dense(Gvv, Ja, Ja); // Ja = Gvv + Gmv*Gv*Gi*Gc
+	mul_dense_dense(Zdc, Fa, Fa); // Fa = Zdc*Gmi*Gv*Gi*Gdc
 	mul_dense_scalar(Fa, minus_one, Fa); // Fa = -Zdc*Gmi*Gv*Gi*Gdc
 	add_dense_dense(identity, Fa, Fa); // Fa = I - Zdc*Gmi*Gv*Gi*Gdc
 
@@ -228,10 +239,10 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	mul_dense_dense(Gmv, Jb, Jb); // Jb = Gmv*Gv*Gi
 	mul_dense_scalar(Jb, minus_one, Jb); // Jb = -Gmv*Gv*Gi
 	add_dense_dense(Giv, Jb, Jb); // Jb = Giv - Gmv*Gv*Gi
-	mul_dense_scalar(Fb, Zdc, Fb); // Fb = Zdc*Gmi*Gv*Gi
+	mul_dense_dense(Zdc, Fb, Fb); // Fb = Zdc*Gmi*Gv*Gi
 	mul_dense_scalar(Fb, minus_one, Fb); // Fb = -Zdc*Gmi*Gv*Gi
 	DenseMatrix H1 = createZeroMatrix(2, 2);
-	mul_dense_scalar(Gii, Zdc, H1); // H1 = Zdc*Gii
+	mul_dense_dense(Zdc, Gii, H1); // H1 = Zdc*Gii
 	add_dense_dense(H1, Fb, Fb); // Fb = Zdc*Gii - Zdc*Gmi*Gv*Gi
 
 	DenseMatrix Jc = createZeroMatrix(2, 2);
@@ -240,10 +251,10 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	mul_dense_dense(Jc, Gplli, Jc); // Jc = Gv*Gi*Gplli
 	add_dense_dense(Gpllm, Jc, Jc); // Jc = Gpllm + Gv*Gi*Gplli
 	mul_dense_dense(Gmi, Jc, Fc); // Fc = Gmi*(Gpllm + Gv*Gi*Gplli)
-	mul_dense_scalar(Fc, Zdc, Fc); // Fc = Zdc*Gmi*(Gpllm + Gv*Gi*Gplli)
+	mul_dense_dense(Zdc, Fc, Fc); // Fc = Zdc*Gmi*(Gpllm + Gv*Gi*Gplli)
 	mul_dense_scalar(Fc, minus_one, Fc); // Fc = -Zdc*Gmi*(Gpllm + Gv*Gi*Gplli)
 	DenseMatrix H2 = createZeroMatrix(2, 2);
-	mul_dense_scalar(Gvi, Zdc, H2); // H2 = Zdc*Gvi
+	mul_dense_dense(Zdc, Gvi, H2); // H2 = Zdc*Gvi
 	add_dense_dense(H2, Fc, Fc); // Fc = Zdc*Gvi - Zdc*Gmi*(Gpllm + Gv*Gi*Gplli)
 	mul_dense_dense(Gmv, Jc, Jc);
 	add_dense_dense(Jc, identity, Jc); // Jc = I + Gmv*(Gpllm + Gv*Gi*Gplli)
@@ -254,18 +265,16 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	mul_dense_dense(Ja, H4, H4); // H4 = Ja*Fa^-1
 	mul_dense_dense(H4, Fb, H4); // H4 = Ja*Fa^-1*Fb
 	add_dense_dense(H4, Jb, H4); // H4 = Ja*Fa^-1*Fb + Jb
+	inverse_LU(H4, H4); // H4 = (Ja*Fa^-1*Fb + Jb)^-1
 	DenseMatrix H5 = createZeroMatrix(2, 2);
 	inverse_LU(Fa, H5);
-	mul_dense_dense(Ja, H5, H5); // H5 = Ja*Fc^-1
-	mul_dense_dense(H5, Fc, H5); // H5 = Ja*Fc^-1*Fc
-	mul_dense_scalar(H5, minus_one, H5); // H5 = -Ja*Fc^-1*Fc
-	add_dense_dense(H5, Jc, H5); // H5 = Jc - Ja*Fc^-1*Fc
-	inverse_LU(H5, H5); // H5 = (Jc - Ja*Fc^-1*Fc)^-1
+	mul_dense_dense(Ja, H5, H5); // H5 = Ja*Fa^-1
+	mul_dense_dense(H5, Fc, H5); // H5 = Ja*Fa^-1*Fc
+	mul_dense_scalar(H5, minus_one, H5); // H5 = -Ja*Fa^-1*Fc
+	add_dense_dense(H5, Jc, H5); // H5 = Jc - Ja*Fa^-1*Fc
 
-	DenseMatrix Zdq = createZeroMatrix(2, 2);
-	mul_dense_scalar(H4, minus_one, Zdq); // Zdq = -(Ja*Fa^-1*Fb + Jb)
-	mul_dense_dense(H4, H5, Zdq); // Zdq = -(Ja*Fa^-1*Fb + Jb)*(Jc - Ja*Fc^-1*Fc)^-1
-
+	//DenseMatrix Zdq = createZeroMatrix(2, 2);
 	Y_matrix.resize(2, 2);
-	inverse_LU(Zdq, Y_matrix); // Y_matrix = Zdq^-1
+	mul_dense_scalar(H4, minus_one, Y_matrix); // Y_matrix = -(Ja*Fa^-1*Fb + Jb)^-1
+	mul_dense_dense(Y_matrix, H5, Y_matrix); // Y_matrix = -(Ja*Fa^-1*Fb + Jb)^-1 * (Jc - Ja*Fa^-1*Fc
 }

@@ -38,7 +38,6 @@ private:
 	double C_f; // Capacitance of the filter in farads
 	double R_c; // Resistance of the filter in ohms
 	double L_2; // Grid-side inductance in henries
-	double R_2; // Grid-side resistance in ohms
 
 	// Grid parameters
 	double V_g; // Grid voltage in volts, assumed to have the optimal operation of PLL
