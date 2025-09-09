@@ -102,7 +102,7 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 
 	// PI controller for the PLL
 	RCP<const Basic> Hpll = add(real_double(K_p_pll), div(real_double(K_i_pll), s));
-	RCP<const Basic> Gpll = div(Hpll, add(real_double(1), mul(real_double(V_pccd), Hpll)));
+	RCP<const Basic> Gpll = div(Hpll, add(s, mul(real_double(V_pccd), Hpll)));
 	DenseMatrix Gpllm = createZeroMatrix(2, 2);
 	Gpllm.set(0, 1, mul(Gpll, real_double(Mq0))); // PLL acts on the q-axis only
 	Gpllm.set(1, 1, mul(Gpll, real_double(-Md0))); // PLL acts on the q-axis only
@@ -126,21 +126,22 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 
 	RCP<const Basic> L_b = real_double(L_boost);
 	RCP<const Basic> C_b = real_double(C_pv);
+	RCP<const Basic> C_dc_b = real_double(C_dc);
 	RCP<const Basic> Vdc0 = real_double(V_dc);
 	RCP<const Basic> Il0 = real_double(I_l);
 	RCP<const Basic> kpv_b = real_double(k_pv);
 	RCP<const Basic> lambda_b = real_double(lambda);
 
-	RCP<const Basic> h1 = mul(mul(s, L_b), sub(kpv_b, mul(s, C_b)));
-	RCP<const Basic> h2 = sub(kpv_b, mul(s, C_b));
+	RCP<const Basic> h1 = mul(mul(s, L_b), sub(kpv_b, mul(s, C_b))); // h1 = s*L_b*(k_pv - s*C_b)
+	RCP<const Basic> h2 = sub(kpv_b, mul(s, C_b)); // h2 = k_pv - s*C_b
 	RCP<const Basic> D_minus_1 = sub(real_double(D), one);
-	RCP<const Basic> gb1 = mul(gb, sub(one, lambda_b));
+	RCP<const Basic> gb1 = mul(gb, sub(one, lambda_b)); // gb1 = gb*(1 - lambda)
 
-	RCP<const Basic> zdc = add(add(neg(h1), one), mul(Vdc0, gb1));
-	RCP<const Basic> denom = add(sub(mul(s, mul(C_b, h1)), mul(s, C_b)),
-		add(mul(Vdc0, mul(gb1, mul(s, C_b))), add(mul(mul(D_minus_1, D_minus_1), h2),
-		mul(Il0, mul(gb1, D_minus_1)))));
-	zdc = div(zdc, denom);
+	RCP<const Basic> zdc = add(add(neg(h1), one), mul(Vdc0, gb1)); // zdc = -h1 + 1 + V_dc*gb*(1 - lambda)
+	RCP<const Basic> denom = add(sub(mul(s, mul(C_dc_b, h1)), mul(s, C_dc_b)),
+		add(mul(mul(Vdc0, minus_one), mul(gb1, mul(s, C_dc_b))), add(mul(mul(D_minus_1, D_minus_1), h2),
+			mul(Il0, mul(gb1, D_minus_1))))); // denom = s*C_dc*h1 - s*C_dc + V_dc*(-1)*gb*(1 - lambda)*s*C_dc + (D - 1)^2*h2 + I_l*gb*(1 - lambda)*(D - 1)
+	zdc = div(zdc, denom); // zdc = zdc / denom
 
 	DenseMatrix Zdc = createZeroMatrix(2, 2);
 	Zdc.set(0, 0, zdc); // DC voltage response to perturbation in the duty cycle
@@ -162,7 +163,8 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	Zrl1.set(0, 1, real_double(-omega_g * L_1));
 	Zrl1.set(1, 0, real_double(omega_g * L_1));
 	Zrl1.set(1, 1, add(real_double(R_1), mul(real_double(L_1), s)));
-	// Impedance from R2 and L2
+	//cout << Zrl1.__str__() << endl;
+	// Impedance from L2
 	DenseMatrix Zl2 = createZeroMatrix(2, 2);
 	Zl2.set(0, 0, mul(real_double(L_2), s));
 	Zl2.set(0, 1, real_double(-omega_g * L_2));
@@ -183,7 +185,7 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	identity.set(0, 0, one); identity.set(1, 1, one);
 	DenseMatrix M = createZeroMatrix(2, 2);
 	mul_dense_dense(Zrc, Yc, M);
-	add_dense_dense(identity, M, M); // M = I + Z_rc*Yc
+	add_dense_dense(identity, M, M); // M = I + Z_rc*Yc 
 	DenseMatrix M_inv = createZeroMatrix(2, 2);
 	inverse_LU(M, M_inv); // M_inv = (I + Z_rc*Yc)^-1
 
@@ -204,14 +206,14 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 
 	// Matrices for calculation of the transfer function from m_dq, i_2dq, v_dc to v_pccdq
 	DenseMatrix Gvv = createZeroMatrix(2, 2);
-	mul_dense_dense(M1_inv, Hv, Gvv); // Gmv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1 * Hv
+	mul_dense_dense(M1_inv, Hm, Gvv); // Gmv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1 * Hv
 	DenseMatrix Giv = createZeroMatrix(2, 2);
 	mul_dense_dense(M1, Zl2, M1); // M1 = (Zrl1*Yc*(I + Z_rc*Yc)^-1 + I)*Zl2
 	add_dense_dense(M1, Zrl1, M1); // M1 = Zrl1 + Zl2 + Zrl1*Yc*(I + Z_rc*Yc)^-1*Zrl2
 	mul_dense_scalar(M1, real_double(-1.0), M1); // M1 = -(Zrl1 + Zl2 + Zrl1*Yc*(I + Z_rc*Yc)^-1*Zrl2)
 	mul_dense_dense(M1_inv, M1, Giv); // Giv = M1_inv * M1
 	DenseMatrix Gmv = createZeroMatrix(2, 2);
-	mul_dense_dense(M1_inv, Hm, Gmv); // Gvv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1 * Hm
+	mul_dense_dense(M1_inv, Hv, Gmv); // Gvv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1 * Hm
 
 	// Matrices for calculation of the transfer function from m_dq, i_2dq, v_dc to i_dc
 	DenseMatrix Gmi = Ni;
@@ -219,6 +221,7 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	mul_dense_dense(M3, Zl2, Gii); // Gii = Nm*Yc*(I + Zrl1*Yc)^-1*Zl2
 	add_dense_dense(Gii, Nm, Gii); // Gii = Nm + Nm*Yc*(I + Zrl1*Yc)^-1*Zl2
 	DenseMatrix Gvi = M3;
+	//cout << Gmi.__str__() << endl;
 
 	// Overall admittance matrix of the PV plant
 	DenseMatrix Ja = createZeroMatrix(2, 2);
@@ -273,8 +276,7 @@ PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_b
 	mul_dense_scalar(H5, minus_one, H5); // H5 = -Ja*Fa^-1*Fc
 	add_dense_dense(H5, Jc, H5); // H5 = Jc - Ja*Fa^-1*Fc
 
-	//DenseMatrix Zdq = createZeroMatrix(2, 2);
 	Y_matrix.resize(2, 2);
 	mul_dense_scalar(H4, minus_one, Y_matrix); // Y_matrix = -(Ja*Fa^-1*Fb + Jb)^-1
-	mul_dense_dense(Y_matrix, H5, Y_matrix); // Y_matrix = -(Ja*Fa^-1*Fb + Jb)^-1 * (Jc - Ja*Fa^-1*Fc
+	mul_dense_dense(H5, Y_matrix, Y_matrix); // Y_matrix = -(Jc - Ja*Fa^-1*Fc)*(Ja*Fa^-1*Fb + Jb)^-1
 }
