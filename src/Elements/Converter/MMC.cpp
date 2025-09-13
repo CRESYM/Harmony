@@ -180,24 +180,56 @@ MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params,
 void MMC::init_Controller(const std::vector<double>& controller_params) {
     for (int i = 0; i < controller_params.size(); ) {
         for (auto& controller_name : controller_list) {
-            if (static_cast<bool>(controller_params[i])) {
+			if (static_cast<bool>(controller_params[i])) { // If the controller is active
                 if ((i + 3) >= controller_params.size()) {
                     throw std::invalid_argument("Insufficient parameters for controller initialization.");
                 }
-                std::string controller_type = "PI"; // Default controller type
-                std::vector<double> values = {controller_params[i+1], controller_params[i+2]};
-                int number_of_values = static_cast<int>(controller_params[i+3]); // Default number of values for PI controller
-                std::vector<double> refs;
-                if ((i + 3 + number_of_values) < controller_params.size()) {
-                    refs = std::vector<double>(controller_params.begin() + i + 4, controller_params.begin() + i + 4 + number_of_values);
+                // First read the controller type
+				int controller_type = static_cast<int>(controller_params[++i]); // Default controller type is PI (value 0), P (value 1)
+				int number_of_values; // Dimension of the controller output
+               
+                if (controller_type == 0) { // PI controller
+					// Check if there are enough parameters for PI controller; at least 4 are expected for Kp, Ki, number_of_values, and references
+                    if ((i + 3) >= controller_params.size()) {
+                        throw std::invalid_argument("Insufficient parameters for PI controller initialization.");
+                    }
+                    std::vector<double> values = { controller_params[++i], controller_params[++i] };
+					number_of_values = static_cast<int>(controller_params[++i]);
+                    //cout << number_of_values << i << endl;
+                    std::vector<double> refs;
+                    if ((i + number_of_values) < controller_params.size()) {
+                        refs = std::vector<double>(controller_params.begin() + i + 1, controller_params.begin() + i + 1 + number_of_values);
+                        i++;
+                    }
+                    else {
+                        refs.resize(number_of_values, 0.0); // Initialize references to zero if not provided
+                    }
+                    controls[controller_name] = new ProportionalIntegralController(controller_name, values, number_of_values, refs);
+                }
+                else if (controller_type == 1) { // P controller
+					// Check if there are enough parameters for P controller; at least 3 are expected for Kp, number_of_values, and references
+                    if ((i + 2) >= controller_params.size()) {
+                        throw std::invalid_argument("Insufficient parameters for P controller initialization.");
+                    }
+					std::vector<double> values = { controller_params[++i] };
+					number_of_values = static_cast<int>(controller_params[++i]);
+                    cout << number_of_values << " " << i << endl;
+                    std::vector<double> refs;
+                    if ((i + number_of_values) < controller_params.size()) {
+                        refs = std::vector<double>(controller_params.begin() + i + 1, controller_params.begin() + i + 1 + number_of_values);
+                        i++;
+                    }
+                    else {
+                        refs.resize(number_of_values, 0.0); // Initialize references to zero if not provided
+                    }
+                    controls[controller_name] = new ProportionalController(controller_name, values, number_of_values, refs);
+
                 }
                 else {
-                    refs.resize(number_of_values, 0.0); // Initialize references to zero if not provided
-                }
-                
-                // Create a new controller and add it to the controls map
-                controls[controller_name] = new Controller(controller_name, controller_type, values, number_of_values, refs);
-                
+                    throw std::invalid_argument("Unsupported controller type. Only P (1) and PI (0) controllers are supported.");
+				}
+               
+				// Update the number of states based on the controller type and number of values
                 if (controller_name == "dc_voltage") {
                     if (t_delay != 0) {
                         vdc_index = number_of_states - 12 - 5 * pade_order; // Update vdc_index 
@@ -208,13 +240,19 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
                     number_of_states += number_of_values;
 				}
 				else if (controller_name == "pll") {
-					//control_blocks["pll"] = new Integrator(); // PLL controller with 2 states and 1 output
 					number_of_states += 2; // PLL has 2 states (frequency and phase)
+                }
+                else if (controller_name == "droop") {
+					number_of_states += 0; // Droop controller does not add states
+
+					// Add reverse droop value for K
+                    double Kdroop = (controls["droop"]->getParameters())[0];
+                    controls["droop"]->setParameters({ 1.0 / Kdroop });
                 }
                 else 
                     number_of_states += number_of_values; // Update the number of states based on the number of values
                 
-                i += 4 + number_of_values;
+                i += number_of_values;
             }
             else {
                 i += 1; // Skip to the next controller
@@ -225,6 +263,8 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
 	// Check validity of controller parameters
     if (controls.count("dc_voltage") && controls.count("active_power"))
 		throw std::invalid_argument("DC voltage and active power controllers cannot be used together in MMC.");
+	else if (controls.count("droop") && (controls.count("active_power") || controls.count("dc_voltage")))
+        throw std::invalid_argument("Droop controller, and DC voltage and/or active power controllers cannot be used together in MMC.");
 	if (controls.count("ac_voltage") && controls.count("reactive_power"))
 		throw std::invalid_argument("AC voltage and reactive power controllers cannot be used together in MMC.");
 }
@@ -396,7 +436,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         Vgd = Vg(0);
         Vgq = Vg(1);
 
-        state_variables = controls["pll"]->define_differential_equations(x(i), Vgq, 0);
+        state_variables = controls["pll"]->define_equations(x(i), Vgq, 0);
         F(i) = state_variables(0);
         double delta_omega = state_variables(1);
         w = omega_0 + delta_omega;
@@ -413,13 +453,13 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     iSigma_q = i_sigma_vec(1);
 
     // Filter and controller blocks (cache existence)
-    bool has_ac_voltage_dq = filters.count("ac_voltage_dq");
-    bool has_active_power = filters.count("active_power");
-    bool has_reactive_power = filters.count("reactive_power");
-    bool has_dc_voltage = filters.count("dc_voltage");
-    bool has_ac_voltage = filters.count("ac_voltage");
+    bool has_ac_voltage_dq_filter = filters.count("ac_voltage_dq");
+    bool has_active_power_filter = filters.count("active_power");
+    bool has_reactive_power_filter = filters.count("reactive_power");
+    bool has_dc_voltage_filter = filters.count("dc_voltage");
+    bool has_ac_voltage_filter = filters.count("ac_voltage");
 
-    if (has_ac_voltage_dq) {
+    if (has_ac_voltage_dq_filter) {
         x1 << x(i), x(i + 1);
         u1 << Vgd, Vgq;
         state_variables = filters["ac_voltage_dq"]->define_differential_equations(x1, u1);
@@ -429,7 +469,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         Vgq = state_variables(3);
         i += 2;
     }
-    if (has_active_power) {
+    if (has_active_power_filter) {
         x1 << x(i), x(i + 1);
         state_variables = filters["active_power"]->define_differential_equations(x1, Pac);
         F(i) = state_variables(0);
@@ -437,7 +477,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         Pac = state_variables(2);
         i += 2;
     }
-    if (has_reactive_power) {
+    if (has_reactive_power_filter) {
         x1 << x(i), x(i + 1);
         state_variables = filters["reactive_power"]->define_differential_equations(x1, Qac);
         F(i) = state_variables(0);
@@ -445,7 +485,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         Qac = state_variables(2);
         i += 2;
     }
-    if (has_dc_voltage) {
+    if (has_dc_voltage_filter) {
         x1 << x(i), x(i + 1);
         state_variables = filters["dc_voltage"]->define_differential_equations(x1, Vdc);
         F(i) = state_variables(0);
@@ -453,7 +493,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         Vdc = state_variables(2);
         i += 2;
     }
-    if (has_ac_voltage) {
+    if (has_ac_voltage_filter) {
         x1 << x(i), x(i + 1);
         state_variables = filters["ac_voltage"]->define_differential_equations(x1, Vac_mag);
         F(i) = state_variables(0);
@@ -465,10 +505,11 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     // Outer control loops (cache existence)
     bool has_active_power_ctrl = controls.count("active_power");
     bool has_dc_voltage_ctrl = controls.count("dc_voltage");
+	bool has_droop_ctrl = controls.count("droop");
     bool has_occ = controls.count("occ");
-
+    
     if (has_active_power_ctrl) {
-        state_variables = controls["active_power"]->define_differential_equations(x(i), Pac, 0);
+        state_variables = controls["active_power"]->define_equations(x(i), Pac, 0);
         F(i) = state_variables(0);
         double iDelta_d_ref = state_variables(1);
         i += 1;
@@ -478,25 +519,31 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
 		x1 << 0, x(i+1);
         u1 << (-Idc + 3.0 * iSigma_z) / (1.0 * Ce), x(i);
 		c1 << 0, 0; // No additional control inputs for dc_voltage
-        state_variables = controls["dc_voltage"]->define_differential_equations(x1, u1, c1);
+        state_variables = controls["dc_voltage"]->define_equations(x1, u1, c1);
 		F(i) = state_variables(0);
         F(i + 1) = state_variables(1);
         double iDelta_d_ref = -state_variables(3);
         if (has_occ) controls["occ"]->setReference(iDelta_d_ref, 0);
         i += 2;
     }
+    else if (has_droop_ctrl) {
+        x1 << Vdc, 0;
+		c1 << 0, 0; // No additional control inputs for droop
+        VectorXd output = controls["droop"]->define_equations(c1, x1, c1);
+		double iDelta_d_ref = (output(0) + output(1) / (controls["droop"]->getParameters())[0]) / Vgd;
+    }
 
     bool has_reactive_power_ctrl = controls.count("reactive_power");
     bool has_ac_voltage_ctrl = controls.count("ac_voltage");
 
     if (has_reactive_power_ctrl) {
-        state_variables = controls["reactive_power"]->define_differential_equations(x(i), Qac, 0);
+        state_variables = controls["reactive_power"]->define_equations(x(i), Qac, 0);
         F(i) = state_variables(0);
         double iDelta_q_ref = -state_variables(1);
         i += 1;
         if (has_occ) controls["occ"]->setReference(iDelta_q_ref, 1);
     } else if (has_ac_voltage_ctrl) {
-        state_variables = controls["ac_voltage"]->define_differential_equations(x(i), Vgd, 0);
+        state_variables = controls["ac_voltage"]->define_equations(x(i), Vgd, 0);
         F(i) = state_variables(0);
         double iDelta_q_ref = state_variables(1);
         i += 1;
@@ -507,7 +554,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         double wSigmaz = 3 * (C_arm * (pow(vCDelta_d, 2) + pow(vCDelta_q, 2) + pow(vCDelta_Zd, 2)
             + pow(vCDelta_Zq, 2) + pow(vCSigma_d, 2) + pow(vCSigma_q, 2) + 2 * pow(vCSigma_z, 2))) / (2.0 * N);
         controls["energy"]->setReference(3.0 * C_arm * V_dc * V_dc / N, 0);
-        state_variables = controls["energy"]->define_differential_equations(x(i), wSigmaz, Pac);
+        state_variables = controls["energy"]->define_equations(x(i), wSigmaz, Pac);
         F(i) = state_variables(0);
         double iSigma_z_ref = state_variables(1) / 3.0 / Vdc;
         i += 1;
@@ -515,7 +562,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     }
 
     if (controls.count("zcc")) {
-        state_variables = controls["zcc"]->define_differential_equations(x(i), iSigma_z, (-Vdc / 2));
+        state_variables = controls["zcc"]->define_equations(x(i), iSigma_z, (-Vdc / 2));
         F(i) = state_variables(0);
         vMSigma_z_ref = -state_variables(1);
         i += 1;
@@ -532,7 +579,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         x1 << x(i), x(i + 1);
         u1 << iDelta_d, iDelta_q;
         c1 << w * Leqac * iDelta_q + Vgd, -w * Leqac * iDelta_d + Vgq;
-        state_variables = controls["occ"]->define_differential_equations(x1, u1, c1);
+        state_variables = controls["occ"]->define_equations(x1, u1, c1);
         F(i) = state_variables(0);
         F(i + 1) = state_variables(1);
         vMDelta_d_ref = state_variables(2);
@@ -556,7 +603,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         x1 << x(i), x(i + 1);
         u1 << iSigma_d, iSigma_q;
         c1 << -2 * w * L_arm * iSigma_q, 2 * w * L_arm * iSigma_d;
-        state_variables = controls["ccc"]->define_differential_equations(x1, u1, c1);
+        state_variables = controls["ccc"]->define_equations(x1, u1, c1);
         F(i) = state_variables(0);
         F(i + 1) = state_variables(1);
         vMSigma_d_ref = -state_variables(2);
@@ -861,6 +908,7 @@ void MMC::printElementValues() {
     for (const auto& pair : controls) {
         const std::string& controllerName = pair.first;
         Controller* controller = pair.second;
+        cout << endl;
         std::cout << "  Controller: " << controllerName << "\n";
         controller->printValues(); // Print controller values
     }

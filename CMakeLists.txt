@@ -98,8 +98,12 @@ set(Solver_Helper_Functions_Header_Files
 set(Control_Header_Files
     src/Control/Control_block.h
     src/Control/Filter.h
-    src/Control/Controller.h
     src/Control/Integrator.h
+)
+set(Controller_Header_Files
+    src/Control/Controller/Controller.h
+    src/Control/Controller/ProportionalIntegral_controller.h
+    src/Control/Controller/Proportional_controller.h
 )
 set(Header_Files
     src/Bus.h
@@ -184,8 +188,12 @@ set(Solver_Helper_Functions_Source_Files
 set(Control_Source_Files
     src/Control/Control_block.cpp
     src/Control/Filter.cpp
-    src/Control/Controller.cpp
     src/Control/Integrator.cpp
+)
+set(Controller_Source_Files
+    src/Control/Controller/Controller.cpp
+    src/Control/Controller/ProportionalIntegral_controller.cpp
+    src/Control/Controller/Proportional_controller.cpp
 )
 set(Source_Files
     src/Bus.cpp
@@ -221,6 +229,7 @@ if(WIN32) # workds for x64 as well
     source_group("Header Files\\Elements\\Switch" FILES ${Element_Switch_Header_Files})
     source_group("Header Files\\Elements\\RES" FILES ${Element_RES_Header_Files})
     source_group("Header Files\\Control" FILES ${Control_Header_Files})
+    source_group("Header Files\\Control\\Controller" FILES ${Controller_Header_Files})
     source_group("Header Files\\Solver" FILES)
     source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Header_Files})
     source_group("Header Files\\Solver\\DQsym" FILES ${Solver_DQsym_Header_Files})
@@ -242,6 +251,7 @@ if(WIN32) # workds for x64 as well
     source_group("Source Files\\Elements\\Switch" FILES ${Element_Switch_Source_Files})
     source_group("Source Files\\Elements\\RES" FILES ${Element_RES_Source_Files})
     source_group("Source Files\\Control" FILES ${Control_Source_Files})
+    source_group("Source Files\\Control\\Controller" FILES ${Controller_Source_Files})
     source_group("Source Files\\Solver" FILES)
     source_group("Source Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
     source_group("Source Files\\Solver\\DQsym" FILES ${Solver_DQsym_Source_Files})
@@ -267,6 +277,7 @@ add_executable(
     ${Element_Switch_Header_Files}
     ${Element_RES_Header_Files}
     ${Control_Header_Files}
+    ${Controller_Header_Files}
     ${Solver_OPF_Header_Files}
     ${Solver_DQsym_Header_Files}
     ${Solver_Stability_Estimate_Header_Files}
@@ -286,6 +297,7 @@ add_executable(
     ${Element_Switch_Source_Files}
     ${Element_RES_Source_Files}
     ${Control_Source_Files}
+    ${Controller_Source_Files}
     ${Solver_OPF_Source_Files}
     ${Solver_DQsym_Source_Files}
     ${Solver_Stability_Estimate_Source_Files}
