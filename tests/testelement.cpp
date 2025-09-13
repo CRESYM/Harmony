@@ -12,11 +12,11 @@ TEST_F(TestElement, TestInputPins) {
     testing::internal::CaptureStderr();
 
     // Case 1
-    Load l1("l1", 1, { 1, 1, 7 });
+    Load l1("l1", "AC1", 1, { 1, 1, 7 });
     EXPECT_EQ(l1.getInputPins(), 1);
 
     // Case 2
-    Load l2("l2", 3, { 7, 8, 9 });
+    Load l2("l2", "AC1", 3, { 7, 8, 9 });
     EXPECT_EQ(l2.getInputPins(), 3);
 
     // Stop GTest capturing Harmony's output to std::cerr
@@ -30,11 +30,11 @@ TEST_F(TestElement, TestOutputPins) {
     testing::internal::CaptureStderr();
 
     // Case 1
-    Load l1("l1", 1, { 1, 1, 7 });
+    Load l1("l1", "AC1", 1, { 1, 1, 7 });
     EXPECT_EQ(l1.getOutputPins(), 1);
 
     // Case 2
-    Load l2("l2", 3, { 7, 8, 9 });
+    Load l2("l2", "AC1", 3, { 7, 8, 9 });
     EXPECT_EQ(l2.getOutputPins(), 3);
 
     // Stop GTest capturing Harmony's output to std::cerr
@@ -48,11 +48,11 @@ TEST_F(TestElement, TestElementSymbol) {
     testing::internal::CaptureStderr();
 
     // Case 1
-    Load l1("l1", 1, { 1, 1, 7 });
+    Load l1("l1", "AC1", 1, { 1, 1, 7 });
     EXPECT_EQ(l1.getElementSymbol(), "l1");
 
     // Case 2
-    Load l2("l2", 3, { 7, 8, 9 });
+    Load l2("l2", "AC1", 3, { 7, 8, 9 });
     EXPECT_EQ(l2.getElementSymbol(), "l2");
 
     // Stop GTest capturing Harmony's output to std::cerr
@@ -68,12 +68,12 @@ TEST_F(TestElement, TestPrintElementInfo) {
     testing::internal::CaptureStdout();
 
     // Case 1
-    Load l1("l1", 1, { 1, 1, 7 });
+    Load l1("l1", "AC1", 1, { 1, 1, 7 });
     l1.printElementInfo();
     std::string expected1 = "Element Symbol: l1, Input Pins: 1, Output Pins: 1";
     
     // Case 2
-    Load l2("l2", 3, { 7, 8, 9 });
+    Load l2("l2", "AC1", 3, { 7, 8, 9 });
     l2.printElementInfo();
     std::string expected2 = "Element Symbol: l2, Input Pins: 3, Output Pins: 3";
    
@@ -97,7 +97,7 @@ TEST_F(TestElement, TestPrintElementValues) {
     testing::internal::CaptureStdout();
 
     // Case 1
-    Load l1("l1", 1, { 1, 1, 1 });
+    Load l1("l1", "AC1", 1, { 1, 1, 1 });
     l1.printElementValues();
     std::string expected = "Element : l1\n";
     expected += "Y matrix symbolic entries: \n";
@@ -121,7 +121,7 @@ TEST_F(TestElement, TestWriteFile) {
     testing::internal::CaptureStderr();
 
     // Case 1
-    Load l1("l1", 1, { 1, 1, 1 });
+    Load l1("l1", "AC1", 1, { 1, 1, 1 });
     l1.writeFile(1000, 2000, 100);
 
     // Read data
@@ -154,7 +154,7 @@ TEST_F(TestElement, TestComputeYParameters) {
     testing::internal::CaptureStderr();
 
     // Case 1
-    Load l1("l1", 1, { 1, 1, 1 });
+    Load l1("l1", "AC1", 1, { 1, 1, 1 });
     std::vector<std::vector<complex<double>>> actual = l1.compute_y_parameters(1000);
 
     // Expected value
@@ -183,10 +183,10 @@ TEST_F(TestElement, TestBusConnections) {
     testing::internal::CaptureStdout();
 
     // Create Bus objects
-    Bus* bus1 = new Bus("bus1", 1);
-    Bus* bus2 = new Bus("bus2", 7);
+    Bus* bus1 = new Bus("bus1", "AC1", 1);
+    Bus* bus2 = new Bus("bus2", "AC1", 7);
     
-    Load l1("l1", 1, { 1, 1, 1 });
+    Load l1("l1", "AC1", 1, { 1, 1, 1 });
     l1.attachBus(bus1, 1);
     l1.attachBus(bus2, 7);
    
@@ -220,10 +220,10 @@ TEST_F(TestElement, TestGetBuses) {
     testing::internal::CaptureStdout();
 
     // Create Bus objects
-    Bus* bus1 = new Bus("bus1", 1);
-    Bus* bus2 = new Bus("bus2", 7);
+    Bus* bus1 = new Bus("bus1", "AC1", 1);
+    Bus* bus2 = new Bus("bus2", "AC1", 7);
 
-    Load l1("l1", 1, { 1, 1, 1 });
+    Load l1("l1", "AC1", 1, { 1, 1, 1 });
     l1.attachBus(bus1, 1);
     l1.attachBus(bus2, 7);
     std::vector<Bus*> actual = l1.getBuses();
@@ -259,10 +259,10 @@ TEST_F(TestElement, TestGetOtherBuses) {
     testing::internal::CaptureStdout();
 
     // Create Bus objects
-    Bus* bus1 = new Bus("bus1", 1);
-    Bus* bus2 = new Bus("bus2", 7);
+    Bus* bus1 = new Bus("bus1", "AC1", 1);
+    Bus* bus2 = new Bus("bus2", "AC1", 7);
 
-    Load l1("l1", 1, { 1, 1, 1 });
+    Load l1("l1", "AC1", 1, { 1, 1, 1 });
     l1.attachBus(bus1, 1);
     l1.attachBus(bus2, 7);
 

@@ -11,9 +11,9 @@ TEST_F(TestABCDmatrices, TestSimpleSinglePhase) {
 
 	Network* myNetwork = new Network();
 
-	Bus* bus0 = new Bus("gnd", 1);
-	Bus* bus1 = new Bus("1", 1);
-	Bus* bus2 = new Bus("2", 1); // Bus for capacitor
+	Bus* bus0 = new Bus("gnd", "AC1", 1);
+	Bus* bus1 = new Bus("1", "AC1", 1);
+	Bus* bus2 = new Bus("2", "AC1", 1); // Bus for capacitor
 
 	// Add buses to network
 	myNetwork->addBus(bus0->getBusName(), bus0);
@@ -21,18 +21,18 @@ TEST_F(TestABCDmatrices, TestSimpleSinglePhase) {
 	myNetwork->addBus(bus2->getBusName(), bus2); // Add bus2 for capacitor
 
 	// Create and add elements
-	AC_source* ac = new AC_source("AC1", 1, { 0.0 });
+	AC_source* ac = new AC_source("AC1", "AC1", 1, { 0.0 });
 	myNetwork->addElement(ac);
 	myNetwork->connectElementToBus(ac, 1, bus1); // Connect AC source to bus1
 	myNetwork->connectElementToBus(ac, 2, bus0); // Connect AC source to ground bus 
 
-	Resistor* r1 = new Resistor("R1", 1, { 2.0 });
+	Resistor* r1 = new Resistor("R1", "AC1", 1, { 2.0 });
 	myNetwork->addElement(r1);
 	myNetwork->connectElementToBus(r1, 1, bus1); // Connect resistor to bus1
 	myNetwork->connectElementToBus(r1, 2, bus2); // Connect resistor to ground bus
 
 	// Add capacitor as you showed
-	Capacitor* c1 = new Capacitor("C1", 1, { 1e-6 }); // Name, pins, capacitance
+	Capacitor* c1 = new Capacitor("C1", "AC1", 1, { 1e-6 }); // Name, pins, capacitance
 	myNetwork->addElement(c1);
 	myNetwork->connectElementToBus(c1, 2, bus0); // Connect capacitor to ground bus
 	myNetwork->connectElementToBus(c1, 1, bus2); // Connect capacitor to bus2
@@ -64,9 +64,9 @@ TEST_F(TestABCDmatrices, TestSimpleThreePhase) {
 	Network* myNetwork = new Network();
 
 
-	Bus* bus0 = new Bus("gnd", 3);
-	Bus* bus1 = new Bus("1", 3);
-	Bus* bus2 = new Bus("2", 3); // Bus for capacitor
+	Bus* bus0 = new Bus("gnd", "AC1", 3);
+	Bus* bus1 = new Bus("1", "AC1", 3);
+	Bus* bus2 = new Bus("2", "AC1", 3); // Bus for capacitor
 
 	// Add buses to network
 	myNetwork->addBus(bus0->getBusName(), bus0);
@@ -74,18 +74,18 @@ TEST_F(TestABCDmatrices, TestSimpleThreePhase) {
 	myNetwork->addBus(bus2->getBusName(), bus2); // Add bus2 for capacitor
 
 	// Create and add elements
-	AC_source* ac = new AC_source("AC1", 3, { 0.0 });
+	AC_source* ac = new AC_source("AC1", "AC1", 3, { 0.0 });
 	myNetwork->addElement(ac);
 	myNetwork->connectElementToBus(ac, 1, bus1); // Connect AC source to bus1
 	myNetwork->connectElementToBus(ac, 2, bus0); // Connect AC source to ground bus 
 
-	Resistor* r1 = new Resistor("R1", 3, { 2.0 });
+	Resistor* r1 = new Resistor("R1", "AC1", 3, { 2.0 });
 	myNetwork->addElement(r1);
 	myNetwork->connectElementToBus(r1, 1, bus1); // Connect resistor to bus1
 	myNetwork->connectElementToBus(r1, 2, bus2); // Connect resistor to ground bus
 
 	// Add capacitor as you showed
-	Capacitor* c1 = new Capacitor("C1", 3, { 1e-6 }); // Name, pins, capacitance
+	Capacitor* c1 = new Capacitor("C1", "AC1", 3, { 1e-6 }); // Name, pins, capacitance
 	myNetwork->addElement(c1);
 	myNetwork->connectElementToBus(c1, 2, bus0); // Connect capacitor to ground bus
 	myNetwork->connectElementToBus(c1, 1, bus2); // Connect capacitor to bus2
@@ -115,9 +115,9 @@ TEST_F(TestABCDmatrices, TestSimpleThreePhase) {
 TEST_F(TestABCDmatrices, TestThreePhaseInductor) {
 	Network* myNetwork = new Network();
 
-	Bus* bus0 = new Bus("gnd", 3);
-	Bus* bus1 = new Bus("1", 3);
-	Bus* bus2 = new Bus("2", 3); // Bus for capacitor
+	Bus* bus0 = new Bus("gnd", "AC1", 3);
+	Bus* bus1 = new Bus("1", "AC1", 3);
+	Bus* bus2 = new Bus("2", "AC1", 3); // Bus for capacitor
 
 	// Add buses to network
 	myNetwork->addBus(bus0->getBusName(), bus0);
@@ -125,18 +125,18 @@ TEST_F(TestABCDmatrices, TestThreePhaseInductor) {
 	myNetwork->addBus(bus2->getBusName(), bus2); // Add bus2 for capacitor
 
 	// Create and add elements
-	AC_source* ac = new AC_source("AC1", 3, { 0.0 });
+	AC_source* ac = new AC_source("AC1", "AC1", 3, { 0.0 });
 	myNetwork->addElement(ac);
 	myNetwork->connectElementToBus(ac, 1, bus1); // Connect AC source to bus1
 	myNetwork->connectElementToBus(ac, 2, bus0); // Connect AC source to ground bus 
 
-	Resistor* r1 = new Resistor("R1", 3, { 2.0 });
+	Resistor* r1 = new Resistor("R1", "AC1", 3, { 2.0 });
 	myNetwork->addElement(r1);
 	myNetwork->connectElementToBus(r1, 1, bus1); // Connect resistor to bus1
 	myNetwork->connectElementToBus(r1, 2, bus2); // Connect resistor to ground bus
 
 	// Add capacitor as you showed
-	Inductor* l1 = new Inductor("L1", 3, { 1e-3 }); // Name, pins, capacitance
+	Inductor* l1 = new Inductor("L1", "AC1", 3, { 1e-3 }); // Name, pins, capacitance
 	myNetwork->addElement(l1);
 	myNetwork->connectElementToBus(l1, 2, bus0); // Connect capacitor to ground bus
 	myNetwork->connectElementToBus(l1, 1, bus2); // Connect capacitor to bus2
@@ -168,10 +168,10 @@ TEST_F(TestABCDmatrices, TestThreePhaseSwitch) {
 	Network* myNetwork = new Network();
 
 
-	Bus* bus0 = new Bus("gnd", 3);
-	Bus* bus1 = new Bus("1", 3);
-	Bus* bus2 = new Bus("2", 3);
-	Bus* bus3 = new Bus("3", 3); // Additional bus for testing
+	Bus* bus0 = new Bus("gnd", "AC1", 3);
+	Bus* bus1 = new Bus("1", "AC1", 3);
+	Bus* bus2 = new Bus("2", "AC1", 3);
+	Bus* bus3 = new Bus("3", "AC1", 3); // Additional bus for testing
 
 	// Add buses to network
 	myNetwork->addBus(bus0->getBusName(), bus0);
@@ -180,23 +180,23 @@ TEST_F(TestABCDmatrices, TestThreePhaseSwitch) {
 	myNetwork->addBus(bus3->getBusName(), bus3); // Add bus3 for additional testing
 
 	// Create and add elements
-	AC_source* ac = new AC_source("AC1", 3, { 0.0 });
+	AC_source* ac = new AC_source("AC1", "AC1", 3, { 0.0 });
 	myNetwork->addElement(ac);
 	myNetwork->connectElementToBus(ac, 1, bus1); // Connect AC source to bus1
 	myNetwork->connectElementToBus(ac, 2, bus0); // Connect AC source to ground bus 
 
-	Resistor* r1 = new Resistor("R1", 3, { 2.0 });
+	Resistor* r1 = new Resistor("R1", "AC1", 3, { 2.0 });
 	myNetwork->addElement(r1);
 	myNetwork->connectElementToBus(r1, 1, bus1); // Connect resistor to bus1
 	myNetwork->connectElementToBus(r1, 2, bus2); // Connect resistor to ground bus
 
-	Switch* switch1 = new Switch("SW1", 3, { true });
+	Switch* switch1 = new Switch("SW1", "AC1", 3, { true });
 	myNetwork->addElement(switch1);
 	myNetwork->connectElementToBus(switch1, 1, bus2); // Connect switch to bus2
 	myNetwork->connectElementToBus(switch1, 2, bus3); // Connect switch to bus3
 
 	// Add capacitor as you showed
-	Capacitor* c1 = new Capacitor("C1", 3, { 1e-3 }); // Name, pins, capacitance
+	Capacitor* c1 = new Capacitor("C1", "AC1", 3, { 1e-3 }); // Name, pins, capacitance
 	myNetwork->addElement(c1);
 	myNetwork->connectElementToBus(c1, 2, bus0); // Connect capacitor to ground bus
 	myNetwork->connectElementToBus(c1, 1, bus3); // Connect capacitor to bus2

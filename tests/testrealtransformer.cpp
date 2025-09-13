@@ -10,7 +10,7 @@ class TestTransformerReal : public testing::Test {};
 TEST_F(TestTransformerReal, TestConstructor) {
 	// Create Transformer object with 1 pin
 	std::vector<double> transformer_values = { 4.3218, 0.45856, 0.7938, 0.084225, 1.0804e+06, 2e-3, 2.0, 0.0 }; // R_primary, L_primary, R_secondary, L_secondary, Turns Ratio
-	Transformer_real* transformer = new Transformer_real("T1", 1, transformer_values);
+	Transformer_real* transformer = new Transformer_real("T1", "AC1", 1, transformer_values);
 	
 	EXPECT_EQ(transformer->getTurnsRatio(), 2.0);
 	EXPECT_EQ(transformer->getPhaseLag(), 0.0);
@@ -26,7 +26,7 @@ TEST_F(TestTransformerReal, TestConstructor) {
 //TransformerYY_real* transformerYY = new TransformerYY_real("T3", 3, transformer_values);
 TEST_F(TestTransformerReal, TestTransformerYYConstructor) {
 	std::vector<double> transformer_values = { 4.3218, 0.0, 0.7938, 0.084225, 2.0, 0.0 };
-	TransformerYY_real* transformerYY = new TransformerYY_real("T3", 3, transformer_values);
+	TransformerYY_real* transformerYY = new TransformerYY_real("T3", "AC1", 3, transformer_values);
 	
 	EXPECT_EQ(transformerYY->getTurnsRatio(), 2.0);
 	EXPECT_EQ(transformerYY->getPhaseLag(), 0.0);

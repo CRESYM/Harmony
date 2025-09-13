@@ -27,8 +27,8 @@ class TestResistor : public ::testing::Test {};
 */
 
 TEST_F(TestResistor, ConstructorSinglePhase) {
-    Resistor R1("R1", 1, { 10.0 });
-    const auto& Y = R1.compute_y_parameters();
+    Resistor R1("R1", "AC1", 1, { 10.0 });
+    const auto& Y = R1.get_y_parameters();
     ASSERT_EQ(Y.nrows(), 2);         // 2x2 matrix
     ASSERT_EQ(Y.ncols(), 2);
 
@@ -37,8 +37,8 @@ TEST_F(TestResistor, ConstructorSinglePhase) {
 }
 
 TEST_F(TestResistor, ConstructorThreePhaseSameR) {
-    Resistor R2("R2", 3, { 5.0 });
-    const auto& Y = R2.compute_y_parameters();
+    Resistor R2("R2", "AC1", 3, { 5.0 });
+    const auto& Y = R2.get_y_parameters();
     ASSERT_EQ(Y.nrows(), 6);         // 3 phases → 6x6
     ASSERT_EQ(Y.ncols(), 6);
 
@@ -50,8 +50,8 @@ TEST_F(TestResistor, ConstructorThreePhaseSameR) {
 
 TEST_F(TestResistor, ConstructorThreePhaseDifferentR) {
     std::vector<double> Rs = { 1.0, 2.0, 4.0 };
-    Resistor R3("R3", 3, Rs);
-    const auto& Y = R3.compute_y_parameters();
+    Resistor R3("R3", "AC1", 3, Rs);
+    const auto& Y = R3.get_y_parameters();
     ASSERT_EQ(Y.nrows(), 6);
     ASSERT_EQ(Y.ncols(), 6);
 

@@ -5,7 +5,7 @@ class TestAdmittance : public testing::Test {};
 
 // Test constructor 
 TEST_F(TestAdmittance, TestConstructor) {
-	Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega) }));
+	Admittance* y = new Admittance("y1", "AC1", 1, DenseMatrix(1, 1, { mul(j, omega) }));
 
     EXPECT_EQ(y->getInputPins(), 1);
     EXPECT_EQ(y->getOutputPins(), 1);
@@ -19,7 +19,7 @@ TEST_F(TestAdmittance, TestYMatrix) {
     testing::internal::CaptureStderr();
 
     // Case 1
-    Admittance y("y1", 1, DenseMatrix(1, 1, { mul(j, omega) }));
+    Admittance y("y1", "AC1", 1, DenseMatrix(1, 1, { mul(j, omega) }));
     MatrixXcd y1 = y.compute_y_parameters_num(1000);
     MatrixXcd y1expected(2, 2);
     y1expected(0, 0) = std::complex<double>(0, 1000);

@@ -17,11 +17,11 @@ TEST_F(TestImpedance, TestConstructor) {
     // Test exception for invalid number of values
     // values.ncols() = 1, or values.ncols() = num pins
     // case: pins = 1 & values.ncols = 2
-    EXPECT_THROW(Impedance("z", 1, DenseMatrix(1, 2, { div(integer(1), mul(j, omega)), mul(j, omega) })), std::invalid_argument);
+    EXPECT_THROW(Impedance("z", "AC1", 1, DenseMatrix(1, 2, { div(integer(1), mul(j, omega)), mul(j, omega) })), std::invalid_argument);
     // case: pins = 3 & values.ncols = 2
-    EXPECT_THROW(Impedance("z", 3, DenseMatrix(1, 2, { div(integer(1), mul(j, omega)), mul(j, omega) })), std::invalid_argument);
+    EXPECT_THROW(Impedance("z", "AC1", 3, DenseMatrix(1, 2, { div(integer(1), mul(j, omega)), mul(j, omega) })), std::invalid_argument);
     // case: pins = 2 & values.ncols = 2
-    EXPECT_NO_THROW(Impedance("z", 2, DenseMatrix(1, 2, { div(integer(1), mul(j, omega)), mul(j, omega) })), std::invalid_argument);
+    EXPECT_NO_THROW(Impedance("z", "AC1", 2, DenseMatrix(1, 2, { div(integer(1), mul(j, omega)), mul(j, omega) })), std::invalid_argument);
 
     // Stop GTest capturing Harmony's output to std::cerr
     testing::internal::GetCapturedStderr();
@@ -34,7 +34,7 @@ TEST_F(TestImpedance, TestYMatrix) {
     testing::internal::CaptureStderr();
 
     // Case 1
-    Impedance z1("z1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) })); // 1/wi
+    Impedance z1("z1", "AC1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) })); // 1/wi
     MatrixXcd y1 = z1.compute_y_parameters_num(10000);
     MatrixXcd y1expected(2, 2);
     y1expected(0, 0) = std::complex<double>(0, 10000);
@@ -44,7 +44,7 @@ TEST_F(TestImpedance, TestYMatrix) {
     EXPECT_TRUE(y1.isApprox(y1expected, 1e-9));
 
     // Case 2
-    Impedance z2("z2", 2, DenseMatrix(1, 2, { div(integer(1), mul(j, omega)), mul(integer(2), mul(j, omega))})); // 1/wi, 2*(wi)
+    Impedance z2("z2", "AC1", 2, DenseMatrix(1, 2, { div(integer(1), mul(j, omega)), mul(integer(2), mul(j, omega))})); // 1/wi, 2*(wi)
     MatrixXcd y2 = z2.compute_y_parameters_num(1500);    
     MatrixXcd y2expected(4, 4);
     std::complex<double> i1500(0, 1500);

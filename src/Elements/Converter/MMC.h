@@ -2,6 +2,7 @@
 #define MMC_H
 
 #include "../Element.h"
+#include "../../Include_control_blocks.h"
 
 // Forward declarations
 class Controller;

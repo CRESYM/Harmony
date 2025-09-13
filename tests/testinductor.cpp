@@ -9,10 +9,10 @@ class TestInductor : public testing::Test {};
 
 TEST_F(TestInductor, ConstructorSinglePhase)
 {
-    Bus* n1 = new Bus("n1", 1);
-    Bus* n2 = new Bus("n2", 1);
+    Bus* n1 = new Bus("n1", "AC1", 1);
+    Bus* n2 = new Bus("n2", "AC1", 1);
 
-    Inductor L1("L1", 1, { 10e-3 });      // 10 mH
+    Inductor L1("L1", "AC1", 1, { 10e-3 });      // 10 mH
 	L1.attachBus(n1, 1);               // attach to n1
 	L1.attachBus(n2, 2);               // attach to n2
 
@@ -26,9 +26,9 @@ TEST_F(TestInductor, ConstructorSinglePhase)
 TEST_F(TestInductor, ConstructorThreePhase)
 {
     // three line‑to‑line pairs
-    Bus* a1 = new Bus("a1", 3), * a2 = new Bus("a2", 3);
+    Bus* a1 = new Bus("a1", "AC1", 3), * a2 = new Bus("a2", "AC1", 3);
 
-    Inductor L3("L3", 3, { 5e-3 });         // 5 mH / phase
+    Inductor L3("L3", "AC1", 3, { 5e-3 });         // 5 mH / phase
 	L3.attachBus(a1, 1);               // attach to a1
 	L3.attachBus(a2, 2);               // attach to a2
 
