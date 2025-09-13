@@ -5,7 +5,7 @@ const RCP<const Basic> PI = real_double(3.141592653589793); // SymEngine π
 
 // Constants
 const double mu_0 = 4 * M_PI * 1e-7; // Standard mu_0
-const double epsilon_0 = 8.85e-12; // Standard epsilon_0
+const double epsilon_0 = 8.854e-12; // Standard epsilon_0
 const double gamma_num = 0.5772156649;
 
 RCP<const Basic> j = I;  // Imaginary unit
@@ -172,13 +172,12 @@ double eval_basic(const RCP<const Basic>& expr) {
 }
 
 MatrixXd kron_reduction(MatrixXd matrix, vector<int> no_eliminate) {
-	vector<int> eliminate;
-	for (int i = 0; i < matrix.rows(); i++) {
-		if (std::find(no_eliminate.begin(), no_eliminate.end(), i) == no_eliminate.end())
-			eliminate.push_back(i);
-	}
-	MatrixXd M = matrix(no_eliminate, no_eliminate) - matrix(no_eliminate, eliminate) * matrix(eliminate, eliminate).inverse() * matrix(eliminate, no_eliminate);
-
+	vector<int> eliminate; 
+	for (int i = 0; i < matrix.rows(); i++) { 
+		if (std::find(no_eliminate.begin(), no_eliminate.end(), i) == no_eliminate.end()) eliminate.push_back(i); 
+	} 
+	MatrixXd M = matrix(no_eliminate, no_eliminate) - matrix(no_eliminate, eliminate) * matrix(eliminate, eliminate).inverse() * matrix(eliminate, no_eliminate); 
+	
 	return M;
 }
 
@@ -231,6 +230,7 @@ DenseMatrix kron_reduction(DenseMatrix matrix, vector<int> no_eliminate) {
 	inverse_LU(M3, M3);
 	mul_dense_dense(M2, M3, C1);
 	mul_dense_dense(C1, M4, C2);
+	mul_dense_scalar(C2, minus_one, C2);
 	add_dense_dense(M1, C2, C2);
 
 	return C2;

@@ -25,7 +25,7 @@ Overhead_Line::Conductors::Conductors(std::string organization, std::vector<int>
 	}
 	else if (values_distances.size() == 4) {
 		deltaXbc = values_distances[0]; ybc = values_distances[1];
-		deltaYbc = values_distances[2]; deltaTildeXbc = values_distances[2];
+		deltaYbc = values_distances[2]; deltaTildeXbc = values_distances[3];
 	}
 	else {
 		throw std::invalid_argument("Illegal number of distance parameters.");
@@ -181,7 +181,7 @@ std::tuple<std::vector<double>, std::vector<double>> Overhead_Line::Conductors::
 		return std::make_tuple(std::vector<double>{0}, std::vector<double>{0});
 	}
 	else {
-		const double phi = 2 * M_PI / number_bundles;
+		const double phi = 2.0 * M_PI / number_bundles;
 		const double r = dsb / 2 / sin(phi / 2);
 		double phi_s = M_PI / 2;
 		if (number_bundles % 2 == 0) {
@@ -233,7 +233,7 @@ Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& locat
 	// Calculate earth parameters
 	RCP<const Basic> mu_earth = real_double(std::get<0>(earthParameters) * mu_0);
 	RCP<const Basic> epsilon_earth = real_double(std::get<1>(earthParameters) * epsilon_0);
-	RCP<const Basic> sigma_earth = real_double(1 / std::get<2>(earthParameters));
+	RCP<const Basic> sigma_earth = real_double(1.0 / std::get<2>(earthParameters));
 
 	// Initialize arrays
 	std::vector<double> x_array;
@@ -270,7 +270,8 @@ Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& locat
 	P.resize(Num, Num);
 	Z = createZeroMatrix(Num, Num);
 
-	RCP<const Basic> de = sqrt(div(integer(1), mul(mul(s, mu_earth), add(sigma_earth, mul(s, epsilon_earth))))); // depth of penetration
+	// depth of penetration
+	RCP<const Basic> de = sqrt(div(integer(1), mul(mul(s, mu_earth), add(sigma_earth, mul(s, epsilon_earth))))); // de = sqrt(1/(jωμ(σ+jωε))) 
 	
 	// Loop over each phase and groundwire
 	for (int iPhase = 0; iPhase < Num; ++iPhase) {
@@ -279,30 +280,28 @@ Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& locat
 		double r_i = r_array[iPhase];
 		double rho = rho_array[iPhase] * (M_PI * r_i * r_i);
 		double mu = mu_array[iPhase];
-		RCP<const Basic> m = sqrt(mul(s, real_double(mu / rho))); // symbolic variable
+		RCP<const Basic> m = sqrt(mul(s, real_double(mu / rho))); // m = sqrt(jωμ/ρ) as symbolic values
 		// cout << m->__str__() << endl;
 	
 		for (int jPhase = 0; jPhase < Num; ++jPhase) {
 			double x_j = x_array[jPhase];
 			double y_j = y_array[jPhase];
-			double Di_j = sqrt(pow((x_i - x_j), 2) + pow((y_i + y_j), 2));
-			RCP<const Basic> tildeDi_j = sqrt(add(real_double(pow((x_i - x_j), 2)), pow(add(real_double(y_i + y_j), mul(integer(2), de)), integer(2))));
-			double di_j = sqrt(pow((x_i - x_j), 2) + pow((y_i - y_j), 2));
+			double Di_j = sqrt(pow((x_i - x_j), 2) + pow((y_i + y_j), 2)); // Dij = sqrt((xi - xj)² + (yi + yj)²)
+			RCP<const Basic> tildeDi_j = sqrt(add(real_double(pow((x_i - x_j), 2)), pow(add(real_double(y_i + y_j), mul(integer(2), de)), integer(2)))); // D̃ij = sqrt((xi - xj)² + (yi + yj + 2de)²)
+			double di_j = sqrt(pow((x_i - x_j), 2) + pow((y_i - y_j), 2)); // dij = sqrt((xi - xj)² + (yi - yj)²)
 	
 			if (iPhase != jPhase) {
-				RCP<const Basic> Z0 = mul(mul(s, log(div(tildeDi_j, real_double(di_j)))), real_double(mu_0 / (2 * M_PI)));
-				Z.set(iPhase, jPhase, add(Z.get(iPhase, jPhase), Z0));
-				// P.set(iPhase, jPhase, real_double(1 / (2 * M_PI * epsilon_0) * log(Di_j / di_j)));
-				P(iPhase, jPhase) = 1 / (2 * M_PI * epsilon_0) * log(Di_j / di_j);
+				RCP<const Basic> Z0 = mul(mul(s, log(div(tildeDi_j, real_double(di_j)))), real_double(mu_0 / (2 * M_PI))); // Z0 = jω(μ0/2π)ln(D̃ij/dij)
+				Z.set(iPhase, jPhase, add(Z.get(iPhase, jPhase), Z0)); // Zij = Zij + Z0
+				P(iPhase, jPhase) = 1 / (2 * M_PI * epsilon_0) * log(Di_j / di_j); // Pij = 1/(2πε0)ln(Dij/dij)
 			}
 			else {
-				double exp_help = 0.3179 * rho / (M_PI * r_i * r_i);
-				RCP<const Basic> Zi = div(mul(m, real_double(rho / (2 * M_PI * r_i))), tanh(mul(m, real_double(0.733 * r_i))));
-				Zi = add(Zi, real_double(exp_help));
-				RCP<const Basic> Z0 = mul(mul(s, log(div(tildeDi_j, real_double(r_i)))), real_double(mu_0 / (2 * M_PI)));
-				Z.set(iPhase, jPhase, add(Z.get(iPhase, jPhase), add(Zi, Z0)));
-				// P.set(iPhase, jPhase, real_double(1 / (2 * M_PI * epsilon_0) * log(Di_j / r_i)));
-				P(iPhase, jPhase) = 1 / (2 * M_PI * epsilon_0) * log(Di_j / r_i);
+				double exp_help = 0.3179 * rho / (M_PI * r_i * r_i); // 0.3179ρ/(πri²)
+				RCP<const Basic> Zi = div(mul(m, real_double(rho / (2 * M_PI * r_i))), tanh(mul(m, real_double(0.733 * r_i)))); // Zi = (1/(2πri)) mρ / tanh(0.733*ri*m)
+				Zi = add(Zi, real_double(exp_help)); // Zi = Zi + 0.3179ρ/(πri²)
+				RCP<const Basic> Z0 = mul(mul(s, log(div(tildeDi_j, real_double(r_i)))), real_double(mu_0 / (2 * M_PI))); // Z0 = jω(μ0/2π)ln(D̃ij/ri)
+				Z.set(iPhase, jPhase, add(Z.get(iPhase, jPhase), add(Zi, Z0))); // Zij = Zij + Zi + Z0
+				P(iPhase, jPhase) = 1 / (2 * M_PI * epsilon_0) * log(Di_j / r_i); // Pij = 1/(2πε0)ln(Dij/ri)
 			}
 		}
 	}	
@@ -311,20 +310,23 @@ Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& locat
 	std::vector<int> cond_noElim;
 	if (conductors->number_conductors_bundle != 0) {
 		for (int i = 0; i < conductors->number_bundles; ++i) {
-			cond_noElim.push_back((i * conductors->number_conductors_bundle) + 1);
+			cond_noElim.push_back((i * conductors->number_conductors_bundle));
 		}
 		for (int iPhase = 0; iPhase < conductors->number_bundles; ++iPhase) {
-			int cond_noElim_curr = cond_noElim[iPhase];
-			for (int iCond = (conductors->number_conductors_bundle * (iPhase + 1)) + 1; iCond <= conductors->number_conductors_bundle * (iPhase + 1); ++iCond) {
+			int keep_idx = cond_noElim[iPhase]; // index to keep (0-based)
+			int start = iPhase * conductors->number_conductors_bundle + 1;              // first subconductor to eliminate in this bundle
+			int end = (iPhase + 1) * conductors->number_conductors_bundle - 1;			// last subconductor to eliminate
+
+			for (int ic = start; ic <= end; ++ic) {
 				// Subtract Z/P[:,iCond] from Z/P[:,cond_noElim_curr]
 				for (int i = 0; i < Num; ++i) {
-					Z.set(i, iCond, sub(Z.get(i, iCond), Z.get(i, cond_noElim_curr)));
-					P(i, iCond) -= P(i, cond_noElim_curr);
+					Z.set(i, ic, sub(Z.get(i, ic), Z.get(i, keep_idx)));
+					P(i, ic) -= P(i, keep_idx);
 				}
 				// Subtract Z/P[iCond,:] from Z/P[cond_noElim_curr,:]
 				for (int j = 0; j < Num; ++j) {
-					Z.set(iCond, j, sub(Z.get(iCond, j), Z.get(cond_noElim_curr, j)));
-					P(iCond, j) -= P(cond_noElim_curr, j);
+					Z.set(ic, j, sub(Z.get(ic, j), Z.get(keep_idx, j)));
+					P(ic, j) -= P(keep_idx, j);
 				}
 			}
 		}
@@ -344,14 +346,15 @@ Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& locat
 			}
 		}
 
-	// Resize Z and Y matrices in Element class
+
 	int n = cond_noElim.size();  // Size of the reduced matrices
 	Z.resize(n, n);
 	P.resize(n, n);
 	Y.resize(n, n);
 
-	// Resize Y_matrix in Element class
-	Y_matrix.resize(2 * n, 2 * n);
+	input_pins = n;
+	output_pins = n;
+	Y_matrix.resize(2 * n, 2 * n); // Resize Y_matrix in Element class
 }
 
 Eigen::MatrixXcd Overhead_Line::compute_y_parameters_num(double omega_num)
@@ -401,8 +404,6 @@ std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_parameters(do
 	for (int i = 0; i < 2 * n; i++)
 		Y_val_exact[i].resize(2 * n);
 
-	//complex<double> s_num = complex<double>(0, angular_frequency);
-
 	Eigen::MatrixXcd Z_num = substitute_symbol(Z, omega, angular_frequency);
 	Eigen::MatrixXcd Y_num = substitute_symbol(Y, omega, angular_frequency);
 
@@ -434,6 +435,8 @@ std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_parameters(do
 			Y_val_exact[i + Y11.rows()][j + Y11.cols()] = Y11(i, j);
 		}
 	}
+
+	//cout << Y_val_exact[0][0] << endl;
 
 	return Y_val_exact;
 }

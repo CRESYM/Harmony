@@ -72,6 +72,7 @@ void Element::writeFile(double start_frequency, int end_frequency, int number_of
         
         // write in file
         myfile << frequency << ",";
+		//cout << "Frequency: " << frequency << " Hz" << endl;
         for (int i = 0; i < Y_matrix.nrows(); ++i) {
             for (int j = 0; j < Y_matrix.ncols(); ++j) {
                 myfile << Y[i][j].real() << "+1i*(" << Y[i][j].imag() << "),";
@@ -92,20 +93,22 @@ void Element::plotYParameters(double start_frequency, int end_frequency, int num
     std::vector<std::vector<double>> phases(number_of_points, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));
     std::vector<std::string> labels;
     double gap = (end_frequency - start_frequency) / (number_of_points - 1);
+	cout << gap << endl;
     double frequency = start_frequency;
     for (int p = 0; p < number_of_points; p++) {
         frequencies.push_back(frequency);
         std::vector<std::vector<complex<double>>> Y = compute_y_parameters(frequency);
-        
+
         for (int i = 0; i < Y_matrix.nrows(); ++i) {
             for (int j = 0; j < Y_matrix.ncols(); ++j) {
                 double magnitude = 20 * log10(std::abs(Y[i][j]));
                 double phase = std::arg(Y[i][j]) * 180.0 / M_PI; // Convert to degrees
-                
+
                 magnitudes[p][Y_matrix.ncols() * i + j] = magnitude;
                 phases[p][Y_matrix.ncols() * i + j] = phase;
             }
         }
+        cout << "Frequency: " << frequency << " Hz" << endl;
         frequency += gap; // increase frequency
     }
 

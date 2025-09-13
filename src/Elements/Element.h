@@ -20,6 +20,8 @@ public:
     // Getters for the number of input/output pins, element symbol, and connections
     int getInputPins() const { return input_pins; }
     int getOutputPins() const { return output_pins; }
+    void setInputPins(int pins) { input_pins = pins; }
+    void setOutputPins(int pins) { output_pins = pins; }
     std::string getElementSymbol() const { return element_symbol; }
     std::vector<Bus*> getBuses();
     int getBusIndex(Bus* bus) {
