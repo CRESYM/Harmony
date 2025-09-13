@@ -1,7 +1,7 @@
 ﻿#include "Transformer_base.h"
 
-Transformer_base::Transformer_base(const std::string& symbol, int pins, const std::vector<double>& values)
-	: Element(symbol, pins, pins) {
+Transformer_base::Transformer_base(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)
+	: Element(symbol, location, pins, pins) {
     m_pins = pins;
 }
 
@@ -36,6 +36,7 @@ void Transformer_base::computePowerFlowAC(std::map<std::string, double>& branchD
     branchData["b_fr"] = branchData["b_to"] = std::imag(Yc);
 
     branchData["c_rating_a"] =  1.0;
+	branchData["grid"] = (int)element_location[2] - '0'; // Example of setting grid based on element_location
 
     for (auto& [key, value] : element_OPF_info) 
         branchData[key] = value;
@@ -53,6 +54,7 @@ void Transformer_base::computePowerFlowDC(std::map<std::string, double>& branchD
     branchDCData["r"] = std::real(zs);
     branchDCData["x"] = 0.0;
     branchDCData["b"] = 0.0;
+	branchDCData["grid"] = (int)element_location[2] - '0'; // Example of setting grid based on element_location
 
     for (auto& [key, value] : element_OPF_info) 
         branchDCData[key] = value;

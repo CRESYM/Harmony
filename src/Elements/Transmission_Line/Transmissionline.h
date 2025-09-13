@@ -8,7 +8,7 @@ class Element; // Forward declaration of Element class
 class TransmissionLine : public Element {
 public:
     // Parameterized constructor that calls the base class constructor
-	TransmissionLine(const std::string& symbol, int pins, const std::vector<double>&);
+	TransmissionLine(const std::string& symbol, const std::string& location, int pins, const std::vector<double>&);
 
     ~TransmissionLine() {}
 

@@ -1,7 +1,7 @@
 #include "AC_source.h"
 
-AC_source::AC_source(const std::string& symbol, int pins, DenseMatrix Z)
-	: Source_base(symbol, pins)
+AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, DenseMatrix Z)
+	: Source_base(symbol, location, pins)
 {
     if (Z.ncols() != 0)  // if there are entries
     {
@@ -30,8 +30,8 @@ AC_source::AC_source(const std::string& symbol, int pins, DenseMatrix Z)
         }
 }
 
-AC_source::AC_source(const std::string& symbol, int pins, const std::vector<double>& Z)
-    : Source_base(symbol, pins)
+AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& Z)
+    : Source_base(symbol, location, pins)
 {
     if (Z.size() != 0)  // if there are entries
     {
@@ -60,8 +60,8 @@ AC_source::AC_source(const std::string& symbol, int pins, const std::vector<doub
         }
 }
 
-AC_source::AC_source(const std::string& symbol, int pins, const double Z)
-    : Source_base(symbol, pins)
+AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, const double Z)
+    : Source_base(symbol, location, pins)
 {
     if (pins > 0) { // Check for valid number of pins
         for (int i = 0; i < pins; i++)

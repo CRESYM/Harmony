@@ -223,9 +223,9 @@ Overhead_Line::Groundwires::Groundwires(int ng, std::vector<double>& values, dou
 }
 
 
-Overhead_Line::Overhead_Line(const std::string& symbol, double len, std::tuple<double, double, double> earth,
+Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& location, double len, std::tuple<double, double, double> earth,
 	std::tuple<std::string, std::vector<int>, std::vector<double>, double, double, double, double> conductor,
-	std::tuple<int, std::vector<double>, double> groundwire) : length(len), earthParameters(earth), Element(symbol, 1, 1) {
+	std::tuple<int, std::vector<double>, double> groundwire) : length(len), earthParameters(earth), Element(symbol, location, 1, 1) {
 
 	conductors = new Conductors(std::get<0>(conductor), std::get<1>(conductor), std::get<2>(conductor), std::get<3>(conductor), std::get<4>(conductor), std::get<5>(conductor), std::get<6>(conductor));
 	groundwires = new Groundwires(std::get<0>(groundwire), std::get<1>(groundwire), conductors->ybc, std::get<2>(groundwire));

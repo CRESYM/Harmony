@@ -34,7 +34,7 @@ void example_PV_plant() {
 		1.0			// K_i_pll: Integral gain of the PLL
 	};
 
-	PVplant* pv = new PVplant("PV1", pv_parameters);
+	PVplant* pv = new PVplant("PV1", "AC1", pv_parameters);
 	cout << "PV plant model initialized successfully." << endl;
 	// Further operations with the pv_plant object can be performed here	
 

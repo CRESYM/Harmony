@@ -22,14 +22,14 @@ void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     busRow["Qd"] = 0.0;
     busRow["Gs"] = 0.0;
     busRow["Bs"] = 0.0;
-	busRow["area"] = 1; // Default, but bus can overwrite it
+	// busRow["area"] = 1; // Default, but bus can overwrite it
 	busRow["Vm"] = 1.0; // Default, but bus can overwrite it
     busRow["Va"] = 0.0;
     busRow["baseKV"] = global_params["ACbasekV"];
     busRow["zone"] = 1.0;
     busRow["Vmax"] = 1.1; // Default, but bus can overwrite it    
 	busRow["Vmin"] = 0.9; // Default, but bus can overwrite it
-    busRow["grid"] = 1; // Default, but bus can overwrite it
+    // busRow["grid"] = 1; // Default, but bus can overwrite it
 
 	bus->computePowerFlowAC(busRow, global_params);
 
@@ -109,7 +109,7 @@ void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
     busDCRow["Qd"] = 0.0;
     busDCRow["Gs"] = 0.0;
     busDCRow["Bs"] = 0.0;
-    busDCRow["area"] = 1.0;
+    // busDCRow["area"] = 1.0;
     busDCRow["Vm"] = 1.0;
     busDCRow["Va"] = 0.0;
     busDCRow["baseKV"] = global_params["DCbasekV"];
@@ -226,7 +226,7 @@ void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& g
     brRow["status"] = 1.0;
     brRow["angmin"] = -360.0;
     brRow["angmax"] = 360.0;
-    brRow["grid"] = std::stod(area_id);
+    // brRow["grid"] = std::stod(area_id);
 
     element->computePowerFlowAC(data["branchAC"][row], global_params);
 
@@ -336,7 +336,7 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
         convRow[key] = 0.0; // Initialize all keys to 0.0
 	}
 
-	convRow["gridac"] = 1; // Default grid area for AC
+	// convRow["gridac"] = 1; // Default grid area for AC
 	convRow["type_dc"] = 1; // Default type for DC
 	convRow["type_ac"] = 1; // Default type for AC
 	convRow["rtf"] = 0.0015; // Default rftc
@@ -374,27 +374,11 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
     Bus* acBus = nullptr;
     Bus* dcBus = nullptr;
 
-    //for (Bus* b : ends) {
-    //    if (b->getPinNumber() == 3)
-    //        acBus = b;
-    //    else
-    //        dcBus = b;
-    //}
-
     for (Bus* b : element->getBuses())
         (b->getPinNumber() == 3 ? acBus : dcBus) = b;
 
     if (!acBus || !dcBus)
         throw std::runtime_error("[make_Converter] Error: Need one AC-bus and one DC-bus");
-
-    //auto acIt = busName2Id_.find(acBus->getBusName());
-    //auto dcIt = busName2Id_.find(dcBus->getBusName());
-
-    //if (acIt == busName2Id_.end() || dcIt == busName2Id_.end())
-    //    throw std::runtime_error("[make_Converter] Error: Unknown bus name(s)");
-
-    //int busac_i = acIt->second;
-    //int busdc_i = dcIt->second;
 
     int busac_i = busName2Id_.at(acBus->getBusName());
     int busdc_i = busName2Id_.at(dcBus->getBusName());
@@ -467,17 +451,19 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
         cRow[key] = 0; // Empty structure for each
     }
 
+	element->computePowerFlowAC(gRow, global_params); // Sets grid and area
+
     gRow["bus"] = bus_id;
     gRow["Vg"] = 1.0;
     gRow["mBase"] = 100.0;
     gRow["status"] = 1.0;
-    gRow["grid"] = 1; // Default area ID, can be changed based on your logic
+    // gRow["grid"] = 1; // Default area ID, can be changed based on your logic
 
     cRow["model"] = 2.0;
     cRow["startup"] = 1500.0;
     cRow["shutdown"] = 0.0;
     cRow["n"] = 3.0;   
-	cRow["grid"] = 1; // Default, can be changed based on your logic
+	cRow["grid"] = gRow["grid"]; // Default, can be changed based on your logic
 
 	// Here is easier to get the data from the element
 	map<string, double> gen_info = element->getOPFInfo();
@@ -715,7 +701,6 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
         { "bus_i","type","Pd","Qd","Gs","Bs","area",
           "Vm","Va","baseKV","zone","Vmax","Vmin" });
 
-    cout << "[make_OPF] Finished making OPF data.\n";
 
     MatrixXd branchDC = map2dense(data.at("branchDC"),
         { "fbus","tbus","r","x","b","rateA","rateB",
@@ -746,6 +731,8 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
 
     MatrixXd gencostAC = map2dense(data.at("genCostAC"),
         { "model","startup","shutdown","n","c2","c1","c0","grid" });
+
+    cout << "[make_OPF] Finished making OPF data.\n";
 
     /* 3. Put inside unordered_map<string, MatrixXd> */
     std::unordered_map<std::string, MatrixXd> dataOPF;

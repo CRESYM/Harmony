@@ -7,8 +7,8 @@
  * the number of pins and impedance values provided. Depending on whether one value or multiple
  * values are provided, the constructor creates either identical or phase-specific impedance entries.
  */
-Impedance::Impedance(const std::string& symbol, int pins, DenseMatrix values): 
-    Impedance_base(symbol, pins, pins) {
+Impedance::Impedance(const std::string& symbol, const std::string& location, int pins, DenseMatrix values):
+    Impedance_base(symbol, location, pins, pins) {
     // Check if impedance values are provided
     if (values.ncols() != 0)  // if there are entries
     {
@@ -44,8 +44,8 @@ Impedance::Impedance(const std::string& symbol, int pins, DenseMatrix values):
     }
 }
 
-Impedance::Impedance(const std::string& symbol, int pins, const std::vector<double>& values) 
-	:Impedance_base(symbol, pins, pins) {
+Impedance::Impedance(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)
+	:Impedance_base(symbol, location, pins, pins) {
     // Check if impedance values are provided
     if (values.size() != 0)  // if there are entries
     {
@@ -75,8 +75,8 @@ Impedance::Impedance(const std::string& symbol, int pins, const std::vector<doub
 
 }
 
-Impedance::Impedance(const std::string& symbol, int pins, const double values)
-    :Impedance_base(symbol, pins, pins) {
+Impedance::Impedance(const std::string& symbol, const std::string& location, int pins, const double values)
+    :Impedance_base(symbol, location, pins, pins) {
     // Check if impedance values are provided
     if (pins > 0) { // Check for valid number of pins
         // Multiple values provided for each phase's impedance
@@ -99,8 +99,8 @@ Impedance::Impedance(const std::string& symbol, int pins, const double values)
 
 }
 
-Impedance::Impedance(const std::string& symbol, int pins, const std::vector<complex<double>>& values)
-    :Impedance_base(symbol, pins, pins) {
+Impedance::Impedance(const std::string& symbol, const std::string& location, int pins, const std::vector<complex<double>>& values)
+    :Impedance_base(symbol, location, pins, pins) {
     // Check if impedance values are provided
     if (values.size() != 0)  // if there are entries
     {
@@ -133,8 +133,8 @@ Impedance::Impedance(const std::string& symbol, int pins, const std::vector<comp
 
 }
 
-Impedance::Impedance(const std::string& symbol, int pins, const complex<double> values)
-    :Impedance_base(symbol, pins, pins) {
+Impedance::Impedance(const std::string& symbol, const std::string& location, int pins, const complex<double> values)
+    :Impedance_base(symbol, location, pins, pins) {
     // Check if impedance values are provided
     if (pins > 0) { // Check for valid number of pins
         // Multiple values provided for each phase's impedance

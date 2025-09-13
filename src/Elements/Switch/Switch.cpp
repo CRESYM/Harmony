@@ -1,8 +1,8 @@
 ﻿#include "Switch.h"
 using namespace SymEngine;
 
-Switch::Switch(const std::string& symbol, int pins, const std::vector<bool>& state)
-    : Element(symbol, pins, pins), phaseState(state)
+Switch::Switch(const std::string& symbol, const std::string& location, int pins, const std::vector<bool>& state)
+    : Element(symbol, location, pins, pins), phaseState(state)
 {
     if (state.size() == 1 && pins > 1) { // single-phase
         for (int i = 1; i < pins; ++i) {

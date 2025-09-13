@@ -44,13 +44,13 @@
  * @param reactorResistance Reactor resistance (Ohm).
  * @param timeDelay Modulation time delay (s).
  */
-MMC::MMC(const std::string& symbol,
+MMC::MMC(const std::string& symbol, const std::string& location,
     double omega, double activePower, double reactivePower,
     double angle, double acVoltage, double Pdc, double dcVoltage,
     double armInductance, double armResistance, double armCapacitance,
     int numSubmodules, double reactorInductance, double reactorResistance,
     double timeDelay)
-    : Element(symbol, 3, 1), // AC side - input pins; DC side - output pins
+    : Element(symbol, location, 3, 1), // AC side - input pins; DC side - output pins
     omega_0(omega), P(activePower), Q(reactivePower), theta(angle), V_m(acVoltage), V_dc(dcVoltage),
     L_arm(armInductance), R_arm(armResistance), C_arm(armCapacitance),
     N(numSubmodules), L_reactor(reactorInductance), R_reactor(reactorResistance), t_delay(timeDelay),
@@ -93,8 +93,8 @@ MMC::MMC(const std::string& symbol,
  * @param symbol Element symbol/name.
  * @param converter_params Vector of converter parameters.
  */
-MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params)
-    : Element(symbol, 3, 1), // AC side - input pins; DC side - output pins
+MMC::MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params)
+    : Element(symbol, location, 3, 1), // AC side - input pins; DC side - output pins
     omega_0(converter_params[0]), P(converter_params[1]), Q(converter_params[2]),
     theta(converter_params[3]), V_m(converter_params[4]), P_dc(converter_params[5]), V_dc(converter_params[6]),
     L_arm(converter_params[7]), R_arm(converter_params[8]), C_arm(converter_params[9]),
@@ -149,8 +149,8 @@ MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params)
  * @param converter_params Vector of converter parameters.
  * @param controller_params Vector of controller parameters.
  */
-MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params, const std::vector<double>& controller_params)
-    : MMC(symbol, converter_params) // Call the constructor with converter_params
+MMC::MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params, const std::vector<double>& controller_params)
+    : MMC(symbol, location, converter_params) // Call the constructor with converter_params
 {
     // Initialize controllers and filters based on controller_params
     init_Controller(controller_params);
@@ -163,9 +163,9 @@ MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params,
  * @param controller_params Vector of controller parameters.
  * @param filter_params Vector of filter parameters.
  */
-MMC::MMC(const std::string& symbol, const std::vector<double>& converter_params,
+MMC::MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params,
     const std::vector<double>& controller_params, const std::vector<double>& filter_params)
-    : MMC(symbol, converter_params) // Call the constructor with converter_params
+    : MMC(symbol, location, converter_params) // Call the constructor with converter_params
 {
     // Initialize controllers based on controller_params
     init_Controller(controller_params);

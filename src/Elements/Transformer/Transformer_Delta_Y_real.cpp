@@ -1,8 +1,8 @@
 #include "Transformer_Delta_Y_real.h"
 
 // Constructor
-TransformerDeltaY_real::TransformerDeltaY_real(const std::string& symbol, int pins, const std::vector<double>& values)
-    : Transformer_real(symbol, pins, values) {
+TransformerDeltaY_real::TransformerDeltaY_real(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)
+    : Transformer_real(symbol, location, pins, values) {
 
     if (pins != 3) {
         throw std::invalid_argument("Invalid number of pins. It must be 3!");

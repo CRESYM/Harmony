@@ -5,7 +5,7 @@
 
 class Impedance_base : public Element {
 public:
-    Impedance_base(const string& symbol, int pins1, int pins2) : Element(symbol, pins1, pins2) {}
+    Impedance_base(const string& symbol, const std::string& location, int pins1, int pins2) : Element(symbol, location, pins1, pins2) {}
     ~Impedance_base() {}
 
     // Power flow calculations (AC and DC)

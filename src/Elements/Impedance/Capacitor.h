@@ -8,7 +8,7 @@ class Bus;
 class Capacitor : public Element {
 public:
     // Frequency-domain or more general symbolic constructor //for frequency-domain admittance or impedance
-    Capacitor(const std::string& symbol, int pins, const std::vector<double>& capacitance);
+    Capacitor(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& capacitance);
 
 
     ~Capacitor();

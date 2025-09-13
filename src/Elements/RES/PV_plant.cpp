@@ -1,6 +1,6 @@
 #include "PV_plant.h"
 
-PVplant::PVplant(const string& symbol, const vector<double>& parameters) : RES_base(symbol) {
+PVplant::PVplant(const string& symbol, const std::string& location, const vector<double>& parameters) : RES_base(symbol, location) {
 	// Default parameters for a PV plant can be set here if needed
 	if (parameters.size() != 26) {
 		cerr << "Error: PV plant requires exactly 26 parameters." << endl;

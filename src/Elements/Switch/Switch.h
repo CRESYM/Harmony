@@ -7,7 +7,7 @@ class Switch : public Element {
 public:
 
     // Unified constructor for single-phase and three-phase systems
-    Switch(const std::string& symbol, int pins, const std::vector<bool>& state);
+    Switch(const std::string& symbol, const std::string& location, int pins, const std::vector<bool>& state);
 
     // override generic stamper
     void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;

@@ -10,8 +10,8 @@
  * - Case 3: Full admittance matrix for multi-phase systems
  */
 
-Admittance::Admittance(const std::string& symbol, int pins, DenseMatrix values) :
-Impedance_base(symbol, pins, pins) {
+Admittance::Admittance(const std::string& symbol, const std::string& location, int pins, DenseMatrix values) :
+Impedance_base(symbol, location, pins, pins) {
     // Check if admittance values are provided
     if (values.ncols() != 0)  // if there are entries
     {

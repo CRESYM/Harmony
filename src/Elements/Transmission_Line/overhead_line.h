@@ -71,7 +71,7 @@ private:
 	std::vector<double> organization_x_values;
 	std::vector<double> organization_y_values;
 public:
-	Overhead_Line(const std::string& symbol, double length, std::tuple<double, double, double> earth,
+	Overhead_Line(const std::string& symbol, const std::string& location, double length, std::tuple<double, double, double> earth,
 		std::tuple<std::string, std::vector<int>, std::vector<double>, double, double, double, double> conductor,
 		std::tuple<int, std::vector<double>, double> groundwire);
 

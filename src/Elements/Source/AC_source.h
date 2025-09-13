@@ -13,9 +13,9 @@ voltage magnitude and phase shift, active and reactive powers, and their max and
 class AC_source : public Source_base {
 public:
     // Constructor
-    AC_source(const std::string& symbol, int pins, DenseMatrix Z);
-	AC_source(const std::string& symbol, int pins, const std::vector<double>& Z);
-	AC_source(const std::string& symbol, int pins, const double Z);
+    AC_source(const std::string& symbol, const std::string& location, int pins, DenseMatrix Z);
+	AC_source(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& Z);
+	AC_source(const std::string& symbol, const std::string& location, int pins, const double Z);
 
     // Destructor
     ~AC_source();

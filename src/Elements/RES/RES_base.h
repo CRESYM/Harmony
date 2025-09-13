@@ -5,7 +5,7 @@
 
 class RES_base : public Element {
 public:
-	RES_base(const string& symbol) : Element(symbol, 3, 3) {}
+	RES_base(const string& symbol, const std::string& location) : Element(symbol, location, 3, 3) {}
 
 	~RES_base() = default;
 };

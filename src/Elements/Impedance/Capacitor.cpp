@@ -2,8 +2,8 @@
 
 
 // Frequency-domain constructor Supports both single-phase and multi-phase
-Capacitor::Capacitor(const std::string& symbol, int pins, const std::vector<double>& capacitance)
-    : Element(symbol, pins, pins), C(capacitance)
+Capacitor::Capacitor(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& capacitance)
+    : Element(symbol, location, pins, pins), C(capacitance)
 {
     // Single-phase case: 2x2 admittance matrix
     if (pins == 1) {

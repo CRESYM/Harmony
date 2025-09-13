@@ -1,10 +1,10 @@
 ﻿#include "Cable.h"
 
-Cable::Cable(const string& symbol, int pins, const string& type_constructor,
+Cable::Cable(const string& symbol, const std::string& location, int pins, const string& type_constructor,
 	const string& configuration_constructor, double length_constructor, std::tuple<double, double, double> earth, 
 	std::map<string, Conductor*> conductors_constructor, std::map<string, Insulator*> insulators_constructor,
 	std::vector<std::pair<double, double>> positions_constructor)
-	: Element(symbol, pins, pins), earth_parameters(earth), configuration(configuration_constructor),
+	: Element(symbol, location, pins, pins), earth_parameters(earth), configuration(configuration_constructor),
 	type(type_constructor), conductors(conductors_constructor), insulators(insulators_constructor), 
 	positions(positions_constructor), length(length_constructor)
 {

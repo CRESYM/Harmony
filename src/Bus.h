@@ -9,7 +9,7 @@ class Bus {
 public:
 
     // Constructor to initialize the bus with a name and number of pins/phases
-    Bus(const std::string& name, int number);
+    Bus(const std::string& name, const std::string& location, int number);
 
     // Destructor to clean up resources
     ~Bus();
@@ -41,6 +41,7 @@ public:
 
 private:
     std::string busName; // The name of the bus
+	std::string busLocation; // The location of the bus (e.g., "AC" or "DC")
     int numberPins; // The number of pins (phases) of the bus
     std::vector<Element*> connectedElements;  // Elements connected to this bus
 

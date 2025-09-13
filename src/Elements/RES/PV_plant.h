@@ -10,7 +10,7 @@
 */
 class PVplant : public RES_base {
 public:
-	PVplant(const string& symbol, const vector<double>& parameters);
+	PVplant(const string& symbol, const std::string& location, const vector<double>& parameters);
 	~PVplant() {}
 
 private:

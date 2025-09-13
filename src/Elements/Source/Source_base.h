@@ -5,7 +5,7 @@
 
 class Source_base : public Element {
 public:
-	Source_base(const std::string& symbol, int pins) : Element(symbol, pins, pins) {}
+	Source_base(const std::string& symbol, const std::string& location, int pins) : Element(symbol, location, pins, pins) {}
 	~Source_base() {}
 
     // Power flow computations for AC and DC networks

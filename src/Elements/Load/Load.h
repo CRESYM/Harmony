@@ -24,7 +24,7 @@ public:
     * - pins: Number of input/output pins (phases)
     * - values: Vector of values containing either 3 entries or 3 * pins entries for R, L, and C.
     */
-    Load(const std::string& symbol, int pins, std::vector<double> values);
+    Load(const std::string& symbol, const std::string& location, int pins, std::vector<double> values);
 
 
     // Destructor

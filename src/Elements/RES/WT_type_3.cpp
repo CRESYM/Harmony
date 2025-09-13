@@ -1,8 +1,8 @@
 #include "WT_type_3.h"
 #include "../../Constants.h"
 
-WTtype3::WTtype3(const string& symbol, const vector<double>& parameters)
-	: RES_base(symbol) {
+WTtype3::WTtype3(const string& symbol, const std::string& location, const vector<double>& parameters)
+	: RES_base(symbol, location) {
 	// Check if the number of parameters is correct
 	if (parameters.size() != 24) {
 		throw std::invalid_argument("WT type-3 requires exactly 24 parameters, but got " + std::to_string(parameters.size()));

@@ -26,15 +26,15 @@ public:
      * - pins: Number of input/output pins (phases)
      * - values: DenseMatrix representing the impedance values
      */
-    Impedance(const std::string& symbol, int pins, DenseMatrix values);
+    Impedance(const std::string& symbol, const std::string& location, int pins, DenseMatrix values);
     
-    Impedance(const std::string& symbol, int pins, const std::vector<double>& values);
+    Impedance(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values);
 
-	Impedance(const std::string& symbol, int pins, const double values);
+	Impedance(const std::string& symbol, const std::string& location, int pins, const double values);
 
-    Impedance(const std::string& symbol, int pins, const std::vector<complex<double>>& values);
+    Impedance(const std::string& symbol, const std::string& location, int pins, const std::vector<complex<double>>& values);
 
-    Impedance(const std::string& symbol, int pins, const complex<double> values);
+    Impedance(const std::string& symbol, const std::string& location, int pins, const complex<double> values);
 
     // Destructor to handle any clean-up tasks
     ~Impedance();

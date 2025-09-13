@@ -1,8 +1,8 @@
 #include "Resistor.h"
 
 
-Resistor::Resistor(const std::string& symbol, int pins, const std::vector<double>& R)
-    : Element(symbol, pins, pins)
+Resistor::Resistor(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& R)
+    : Element(symbol, location, pins, pins)
 {
     if (pins <= 0) {
         throw std::invalid_argument("Invalid number of pins. Must be greater than 0.");

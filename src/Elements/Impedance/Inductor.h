@@ -10,7 +10,7 @@ using SymEngine::DenseMatrix;
 class Inductor : public Element {
 public:
     // Frequency-domain constructor (symbolic admittance Y = 1 / (sL))
-    Inductor(const std::string& symbol, int pins, const std::vector<double>& inductance);
+    Inductor(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& inductance);
 
     // MNA matrix writer
     void writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_map<Bus*, int>& bus_indices, int location, std::map<Element*, std::vector<RCP<const Basic>>>&) override;

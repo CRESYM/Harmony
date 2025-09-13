@@ -5,7 +5,7 @@
   
 class LoadPQ : public Load_base {  
 public:  
-    LoadPQ(const std::string& symbol, int pins, vector<double> values);  
+    LoadPQ(const std::string& symbol, const std::string& location, int pins, vector<double> values);
   
     // Destructor  
     ~LoadPQ() {}  

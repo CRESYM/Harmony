@@ -7,7 +7,7 @@
 class Transformer_base : public Element {
 public:
     // Constructor to initialize the Transformer with a given symbol, number of pins, and values
-    Transformer_base(const std::string& symbol, int pins, const std::vector<double>& values);
+    Transformer_base(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values);
 
     ~Transformer_base();
 

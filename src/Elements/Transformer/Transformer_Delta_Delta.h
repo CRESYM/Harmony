@@ -7,7 +7,7 @@ class TransformerDeltaDelta : public Transformer_classic {
 public:
     // Constructor to initialize the Transformer with a given symbol, number of pins, values (with phase lag),
     // mutual inductances, coupling coefficients, and mutual reactance for delta winding.
-    TransformerDeltaDelta(const std::string& symbol, int pins, const std::vector<double>& values);
+    TransformerDeltaDelta(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values);
 
     ~TransformerDeltaDelta() override;
 

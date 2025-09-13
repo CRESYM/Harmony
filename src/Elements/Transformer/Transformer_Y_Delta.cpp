@@ -1,8 +1,8 @@
 #include "Transformer_Y_Delta.h"
 
 // Constructor
-TransformerYDelta::TransformerYDelta(const std::string& symbol, int pins, const std::vector<double>& values)
-    : Transformer_classic(symbol, pins, values) {
+TransformerYDelta::TransformerYDelta(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)
+    : Transformer_classic(symbol, location, pins, values) {
 
     if (pins != 3) {
         throw std::invalid_argument("Invalid number of pins. It must be 3!");

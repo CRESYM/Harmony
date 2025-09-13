@@ -2,7 +2,7 @@
 #include "./Elements/Element.h"
 
 // Constructor for Bus
-Bus::Bus(const std::string& name, int number) : busName(name), numberPins(number) {
+Bus::Bus(const std::string& name, const std::string& location, int number) : busName(name), numberPins(number), busLocation(location) {
     if (number <= 0) {
         throw std::invalid_argument("Number of pins must be greater than zero.");
 	}
@@ -37,10 +37,14 @@ void Bus::computePowerFlowAC(std::map<std::string, double>& busAC,
     std::map<std::string, double>& globalParams) const {
     for (auto& [key, value] : busOPFInfo)
         busAC[key] = value;
+    busAC["area"] = (int)busLocation[2] - '0'; // Example of setting area based on busLocation
+	busAC["grid"] = (int)busLocation[2] - '0'; // Example of setting grid based on busLocation
 }
 void Bus::computePowerFlowDC(std::map<std::string, double>& busDC,
     std::map<std::string, double>& globalParams) const {
     for (auto& [key, value] : busOPFInfo)
         busDC[key] = value;
+    busDC["area"] = (int)busLocation[2] - '0'; // Example of setting area based on busLocation
+	busDC["grid"] = (int)busLocation[2] - '0'; // Example of setting grid based on busLocation
 }
 

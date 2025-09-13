@@ -1,7 +1,7 @@
 #include "Transmissionline.h"
 
-TransmissionLine::TransmissionLine(const std::string& symbol, int pins, const std::vector<double>& values) 
-    : Element(symbol, pins, pins){
+TransmissionLine::TransmissionLine(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)
+    : Element(symbol, location, pins, pins){
     if (values.size() == 5) {
         R_tl = values[0]; // Resistance per unit length (ohms/m)
         L_tl = values[1]; // Inductance per unit length (H/m)
@@ -74,6 +74,8 @@ void TransmissionLine::computePowerFlowAC(std::map<std::string, double>& branchD
     branchData["g_to"] = std::real(Yend);
     branchData["b_to"] = std::imag(Yend);
 
+	branchData["grid"] = (int)element_location[2] - '0'; // Example of setting grid based on element_location
+
     for (auto& [key, value] : element_OPF_info) 
         branchData[key] = value;
 }
@@ -90,6 +92,8 @@ void TransmissionLine::computePowerFlowDC(std::map<std::string, double>& branchD
     branchDCData["r"] = std::real(Zs);
     branchDCData["x"] = 0.0;
     branchDCData["b"] = 0.0;
+
+	branchDCData["grid"] = (int)element_location[2] - '0'; // Example of setting grid based on element_location
 
     for (auto& [key, value] : element_OPF_info)
         branchDCData[key] = value;

@@ -7,7 +7,7 @@ class TransformerYY_real : public Transformer_real {
 public:
     // Constructor to initialize the Transformer with a given symbol, number of pins, values,
     // mutual inductances.
-    TransformerYY_real(const std::string& symbol, int pins, const std::vector<double>& values);
+    TransformerYY_real(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values);
 
     ~TransformerYY_real();
 

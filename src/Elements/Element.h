@@ -9,8 +9,8 @@ class Bus; // Forward declaration of Bus class
 class Element {
 public:
      // Unified constructor for universal number of phases
-    Element(const std::string& symbol, int inputPins, int outputPins)
-        : element_symbol(symbol), input_pins(inputPins), output_pins(outputPins) {
+    Element(const std::string& symbol, const std::string& location, int inputPins, int outputPins)
+        : element_symbol(symbol), element_location(location), input_pins(inputPins), output_pins(outputPins) {
         Y_matrix = createZeroMatrix(2*inputPins, 2*outputPins);
     }
 
@@ -31,6 +31,8 @@ public:
 	}
     Bus* getOtherBus(Bus*);
     std::map<Bus*, int> getConnections() { return connections; }
+
+	string getElementLocation() const { return element_location; }
     
 
     // Attach bus pointer to the proper terminal
@@ -76,6 +78,7 @@ public:
 
 protected:
     std::string element_symbol; // Element symbol (e.g., R, L, C)
+	std::string element_location; // Element location (it can be AC1,2,... or DC1,2,... or PEC1,2,...)
     int input_pins; // Number of input pins/phases
     int output_pins;  // Number of output pins/phases
     std::map<Bus* , int> connections; // Map of bus connections to the element's terminal

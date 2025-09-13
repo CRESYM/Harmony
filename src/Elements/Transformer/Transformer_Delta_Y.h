@@ -7,7 +7,7 @@ class TransformerDeltaY : public Transformer_classic {
 public:
     // Constructor to initialize the Transformer with a given symbol, number of pins, values,
     // mutual inductances, and coupling coefficients.
-    TransformerDeltaY(const std::string& symbol, int pins, const std::vector<double>& values);
+    TransformerDeltaY(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values);
 
     ~TransformerDeltaY() override;
 

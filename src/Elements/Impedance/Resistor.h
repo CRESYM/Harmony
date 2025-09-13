@@ -6,7 +6,7 @@
 class Resistor : public Element {
 public:
     // Unified constructor supports both single-phase and multi-phase
-    Resistor(const std::string& symbol, int pins, const std::vector<double>& R);
+    Resistor(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& R);
 
     ~Resistor();
     

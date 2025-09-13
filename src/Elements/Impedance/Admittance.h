@@ -31,7 +31,7 @@ public:
      */
 
     // Unified constructor for single-phase and three-phase systems
-    Admittance(const std::string& symbol, int pins, DenseMatrix values);
+    Admittance(const std::string& symbol, const std::string& location, int pins, DenseMatrix values);
 
     // Destructor to handle clean-up tasks
     ~Admittance() override;

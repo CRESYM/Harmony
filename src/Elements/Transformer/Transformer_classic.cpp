@@ -1,7 +1,7 @@
 #include "Transformer_classic.h"
 
-Transformer_classic::Transformer_classic(const std::string& symbol, int pins, const std::vector<double>& values)
-	: Transformer_base(symbol, pins, values) {
+Transformer_classic::Transformer_classic(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)
+	: Transformer_base(symbol, location, pins, values) {
     if (values.size() == 5) {
         R = { values[0], values[2] };  // Primary and secondary resistances
         L = { values[1], values[3] };  // Primary and secondary inductances

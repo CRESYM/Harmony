@@ -10,42 +10,42 @@ void example_OPF() {
     ///* ---------- 0 Set Network Object ---------- */
     Network net;
     ///* ---------- 1.1 Create AC Buses ---------- */
-    Bus* bus1_ac = new Bus("ACBUS01", 3);
-    Bus* bus2_ac = new Bus("ACBUS02", 3);
-    Bus* bus3_ac = new Bus("ACBUS03", 3);
-    Bus* bus4_ac = new Bus("ACBUS04", 3);
-    Bus* bus5_ac = new Bus("ACBUS05", 3);
+    Bus* bus1_ac = new Bus("ACBUS01", "AC1", 3);
+    Bus* bus2_ac = new Bus("ACBUS02", "AC1", 3);
+    Bus* bus3_ac = new Bus("ACBUS03", "AC1", 3);
+    Bus* bus4_ac = new Bus("ACBUS04", "AC1", 3);
+    Bus* bus5_ac = new Bus("ACBUS05", "AC1", 3);
 
     ///*  ---------- 1.2 Add AC Loads  ---------- */
     
     //LoadPQ* load1 = new LoadPQ("LOAD01", 3, {0.0, 0.0});
     //net.connectElementToBus(load1, 1, bus1_ac);
 
-    std::vector<double> load_params1 = { 0, 0, 0 };
-    Load* load1 = new Load("LOAD01", 3, load_params1);
+    std::vector<double> load_params1 = { 0, 0 };
+    LoadPQ* load1 = new LoadPQ("LOAD01", "AC1", 3, load_params1);
     net.connectElementToBus(load1, 1, bus1_ac);
 
     std::vector<double> load_params2 = { 5950, 37.9, 0 };
-    Load* load2 = new Load("LOAD02", 3, load_params2);
+    Load* load2 = new Load("LOAD02", "AC1", 3, load_params2);
     net.connectElementToBus(load2, 1, bus2_ac);
 
     std::vector<double> load_params3 = { 2650, 25.2, 0 };
-    Load* load3 = new Load("LOAD03", 3, load_params3);
+    Load* load3 = new Load("LOAD03", "AC1", 3, load_params3);
     net.connectElementToBus(load3, 1, bus3_ac);
 
     std::vector<double> load_params4 = { 2976, 75.7, 0 };
-    Load* load4 = new Load("LOAD04", 3, load_params4);
+    Load* load4 = new Load("LOAD04", "AC1", 3, load_params4);
     net.connectElementToBus(load4, 1, bus4_ac);
 
     std::vector<double> load_params5 = { 1984, 37.9, 0 };
-    Load* load5 = new Load("LOAD05", 3, load_params5);
+    Load* load5 = new Load("LOAD05", "AC1", 3, load_params5);
     net.connectElementToBus(load5, 1, bus5_ac);
 
 
 	///*  ---------- 1.3 Add AC Generators  ---------- */
     // Generator 1
     std::vector<double> gen1_params = { 0.02, 0.3, 0.05, 7.0 };
-    Generator* gen1 = new Generator("GEN01", 3, gen1_params);
+    Generator* gen1 = new Generator("GEN01", "AC1", 3, gen1_params);
     net.connectElementToBus(gen1, 1, bus1_ac);
     map<string, double> gen_info1 = {
         {"Pmax", 200.0}, {"Pmin", 10.0},
@@ -56,7 +56,7 @@ void example_OPF() {
 	gen1->setOPFInfo(gen_info1);
 
     std::vector<double> gen2_params = { 0.02, 0.3, 0.05, 7.0 };
-    Generator* gen2 = new Generator("GEN02", 3, gen2_params);
+    Generator* gen2 = new Generator("GEN02", "AC1", 3, gen2_params);
     net.connectElementToBus(gen2, 1, bus2_ac);
     map<string, double> gen_info2 = {
         {"Pmax", 40.0}, {"Pmin", 40.0},
@@ -69,73 +69,74 @@ void example_OPF() {
     ///*  ---------- 1.4 Add Branches  ---------- */
     double ACR1 = 0.02; double ACX1 = 0.06;
     std::complex<double> ACZ1(ACR1,ACX1);
-    Impedance* br1_ac = new Impedance("br1_ac", 3, ACZ1);
+    Impedance* br1_ac = new Impedance("br1_ac", "AC1", 3, ACZ1);
     net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
 
     double ACR2 = 0.08; double ACX2 = 0.24;
     std::complex<double> ACZ2(ACR2, ACX2);
-    Impedance* br2_ac = new Impedance("br2_ac", 3, ACR2);
+    Impedance* br2_ac = new Impedance("br2_ac", "AC1", 3, ACR2);
     net.connectElementToBus(br2_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br2_ac, /*terminal=*/2, bus3_ac);
 
     double ACR3 = 0.06; double ACX3 = 0.18;
     std::complex<double> ACZ3(ACR3, ACX3);
-    Impedance* br3_ac = new Impedance("br3_ac", 3, ACR3);
+    Impedance* br3_ac = new Impedance("br3_ac", "AC1", 3, ACR3);
     net.connectElementToBus(br3_ac, /*terminal=*/1, bus2_ac);
     net.connectElementToBus(br3_ac, /*terminal=*/2, bus3_ac);
 
     double ACR4 = 0.06; double ACX4 = 0.18;
     std::complex<double> ACZ4(ACR4, ACX4);
-    Impedance* br4_ac = new Impedance("br4_ac", 3, ACR4);
+    Impedance* br4_ac = new Impedance("br4_ac", "AC1", 3, ACR4);
     net.connectElementToBus(br4_ac, /*terminal=*/1, bus2_ac);
     net.connectElementToBus(br4_ac, /*terminal=*/2, bus4_ac);
 
     double ACR5 = 0.04;
     double ACX5 = 0.12;
     std::complex<double> ACZ5(ACR5, ACX5);
-    Impedance* br5_ac = new Impedance("br5_ac", 3, ACR5);
+    Impedance* br5_ac = new Impedance("br5_ac", "AC1", 3, ACR5);
     net.connectElementToBus(br5_ac, /*terminal=*/1, bus2_ac);
     net.connectElementToBus(br5_ac, /*terminal=*/2, bus5_ac);
 
     double ACR6 = 0.01;
     double ACX6 = 0.03;
-    Impedance* br6_ac = new Impedance("br6_ac", 3, ACR6);
+    Impedance* br6_ac = new Impedance("br6_ac", "AC1", 3, ACR6);
     net.connectElementToBus(br6_ac, /*terminal=*/1, bus3_ac);
     net.connectElementToBus(br6_ac, /*terminal=*/2, bus4_ac);
 
     double ACR7 = 0.08;
     double ACX7 = 0.24;
-    Impedance* br7_ac = new Impedance("br7_ac", 3, ACR7);
+    Impedance* br7_ac = new Impedance("br7_ac", "AC1", 3, ACR7);
     net.connectElementToBus(br7_ac, /*terminal=*/1, bus4_ac);
     net.connectElementToBus(br7_ac, /*terminal=*/2, bus5_ac); 
 
     ///*  ---------- 2.1 Create DC Buses  ---------- */
-    Bus* bus1_dc = new Bus("DCBUS01", 1);
-    Bus* bus2_dc = new Bus("DCBUS02", 1);
-    Bus* bus3_dc = new Bus("DCBUS03", 1);
+    Bus* bus1_dc = new Bus("DCBUS01", "DC1", 1);
+    Bus* bus2_dc = new Bus("DCBUS02", "DC1", 1);
+    Bus* bus3_dc = new Bus("DCBUS03", "DC1", 1);
     
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
 
     double DCR1 = 0.052;
-    Impedance* br1_dc = new Impedance("br1_dc", 1, DCR1);
+    Impedance* br1_dc = new Impedance("br1_dc", "DC1", 1, DCR1);
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
 
     double DCR2 = 0.073;
-    Impedance* br2_dc = new Impedance("br2_dc", 1, DCR2);
+    Impedance* br2_dc = new Impedance("br2_dc", "DC1", 1, DCR2);
     net.connectElementToBus(br2_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br2_dc, /*terminal=*/2, bus3_dc);
 
     double DCR3 = 0.052;
-    Impedance* br3_dc = new Impedance("br3_dc", 1, DCR3);
+    Impedance* br3_dc = new Impedance("br3_dc", "DC1", 1, DCR3);
     net.connectElementToBus(br3_dc, /*terminal=*/1, bus2_dc);
     net.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
 
     ///*  ---------- 2.3 Create Converters ---------- */
     MMC* mmc1 = new MMC(
         "MMC1",             // Symbol
+		"AC1",              // Location
         1000.0,             // Omega (Nominal Frequency in rad/s)
         -60.0*1e6,          // Active Power (P) in W
         -40.0 * 1e6,        // Reactive Power (Q) in VA
@@ -161,6 +162,7 @@ void example_OPF() {
 
     MMC* mmc2 = new MMC(
         "MMC2",             // Symbol
+		"AC1", 		        // Location
         1000.0,             // Omega (Nominal Frequency in rad/s)
         100.0 * 1e6,        // Active Power (P) in W
         50.0 * 1e6,         // Reactive Power (Q) in VA
@@ -186,6 +188,7 @@ void example_OPF() {
 
     MMC* mmc3 = new MMC(
         "MMC3",               // Symbol
+		"AC1", 			      // Location
         1000.0,               // Omega (Nominal Frequency in rad/s)
         35.0 * 1e6,           // Active Power (P) in W
         5.0 * 1e6,            // Reactive Power (Q) in VA

@@ -22,7 +22,7 @@ void example_WT_type_4() {
 		 0.0        // Iq_ref (Reference Iq current in A)
 	};
 
-	WTtype4* wt = new WTtype4("PMSG", parameters);
+	WTtype4* wt = new WTtype4("PMSG", "AC1", parameters);
 
 	//wt->printElementValues();
 

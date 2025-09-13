@@ -1,8 +1,8 @@
 ﻿#include "Inductor.h"
 
 // Frequency-domain constructor (symbolic Y = 1 / (sL))
-Inductor::Inductor(const std::string& symbol, int pins, const std::vector<double>& inductance)
-	: Element(symbol, pins, pins), L(inductance)
+Inductor::Inductor(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& inductance)
+	: Element(symbol, location, pins, pins), L(inductance)
 {
     if (pins == 1) {
         RCP<const Basic> sL = mul(s, real_double(L[0]));

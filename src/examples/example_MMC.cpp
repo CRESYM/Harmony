@@ -32,7 +32,7 @@ void example_MMC() {
 		//0 
 	};
 
-	MMC* mmc1 = new MMC("MMC1", converter_params, controller_params); // , filter_params);
+	MMC* mmc1 = new MMC("MMC1", "PEC1", converter_params, controller_params); // , filter_params);
 
 	// Equilibrium Solution
 	std::cout << "\nEquilibrium Solution: \n";

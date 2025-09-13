@@ -10,7 +10,7 @@ class Filter;
 class MMC : public Element {
 public:
     // Constructor 
-    MMC(const std::string& symbol,
+    MMC(const std::string& symbol, const std::string& location,
         double omega, double activePower, double reactivePower,
         double angle, double acVoltage, double Pdc, double dcVoltage,
         double armInductance, double armResistance, double armCapacitance,
@@ -18,11 +18,11 @@ public:
         double timeDelay);
 
     // Constructor to initialize MMC with the converter_params (from init_MMC)
-    MMC(const std::string& symbol, const std::vector<double>& converter_params);
+    MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params);
 
-    MMC(const std::string& symbol, const std::vector<double>& converter_params, const std::vector<double>& controller_params);
+    MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params, const std::vector<double>& controller_params);
 
-    MMC(const std::string& symbol, const std::vector<double>& converter_params,
+    MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params,
         const std::vector<double>& controller_params, const std::vector<double>& filter_params);
 
     // Initialization methods
@@ -71,6 +71,8 @@ public:
         data["P_g"] = P / 1e6; // Setting of DC p-control value
         data["Q_g"] = Q / 1e6; // Setting of AC q-control value
         data["Vtar"] = V_dc / 1e3 / globalParams["DCbaseKV"]; // Seting of DC v-control value
+
+		data["gridac"] = (int)element_location[2] - '0'; // AC grid number
     }
 
 private:

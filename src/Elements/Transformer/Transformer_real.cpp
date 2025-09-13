@@ -1,8 +1,8 @@
 #include "Transformer_real.h"
 
 // Constructor
-Transformer_real::Transformer_real(const std::string& symbol, int pins, const std::vector<double>& values)
-    : Transformer_base(symbol, pins, values) {
+Transformer_real::Transformer_real(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)
+    : Transformer_base(symbol, location, pins, values) {
     RCP<const Basic> Y_m = zero; // magnetization admittance
 
     if (values.size() == 6) {

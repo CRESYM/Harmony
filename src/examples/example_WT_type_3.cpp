@@ -32,7 +32,7 @@ void example_WT_type_3() {
 		50.0			// f1 (Grid frequency in Hz)
 	};
 	
-	WTtype3* wt = new WTtype3("DFIG", parameters);
+	WTtype3* wt = new WTtype3("DFIG", "AC1", parameters);
 
 	wt->writeFile(1, 1000, 1000);
 

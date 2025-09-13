@@ -5,7 +5,7 @@
 
 class WPplant : public RES_base {
 public:
-	WPplant(const string& symbol, int turbine_type, int number_WT, const vector<double>& parameters);
+	WPplant(const string& symbol, const std::string& location, int turbine_type, int number_WT, const vector<double>& parameters);
 	~WPplant() {}
 private:
 	// You can add WPplant-specific attributes here if needed

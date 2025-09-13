@@ -1,8 +1,8 @@
 #include "Transformer_Y_Y.h"
 
 // Constructor
-TransformerYY::TransformerYY(const std::string& symbol, int pins, const std::vector<double>& values)
-    : Transformer_classic(symbol, pins, values) {
+TransformerYY::TransformerYY(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)
+    : Transformer_classic(symbol, location, pins, values) {
 
 }
 

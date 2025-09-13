@@ -8,7 +8,7 @@
  * Depending on the input vector size, the constructor either initializes all phases with uniform values,
  * or with phase-specific values for R, L, and C.
  */
-Load::Load(const std::string& symbol, int pins, std::vector<double> values) : Load_base(symbol, pins, pins) {
+Load::Load(const std::string& symbol, const std::string& location, int pins, std::vector<double> values) : Load_base(symbol, location, pins, pins) {
     if (pins <= 0) {
         throw std::invalid_argument("Invalid number of pins, must be greater than 0!");
     }

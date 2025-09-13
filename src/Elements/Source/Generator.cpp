@@ -1,8 +1,8 @@
 #include "Generator.h"
 
 // Constructor
-Generator::Generator(const std::string& symbol, int pins, const std::vector<double>& values)
-    : Source_base(symbol, pins) {
+Generator::Generator(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)
+    : Source_base(symbol, location, pins) {
 
     if (values.size() == 4) {
         R_f = values[0];

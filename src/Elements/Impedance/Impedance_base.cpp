@@ -8,6 +8,7 @@ void Impedance_base::computePowerFlowAC(std::map<std::string, double>& branchDat
     branchData["tap"] = 1.0;
     branchData["shift"] = 0.0;
     branchData["c_rating_a"] = 1.0;
+	branchData["grid"] = (int)element_location[2] - '0'; // Example of setting grid based on element_location
 
     // Compute Y parameters at operational frequency
     std::complex<double> s = globalParams["omega"] * std::complex<double>(0, 1);
@@ -34,6 +35,7 @@ void Impedance_base::computePowerFlowDC(std::map<std::string, double>& branchDCD
     std::map<std::string, double>& globalParams) const {
     branchDCData["x"] = 0.0;
     branchDCData["b"] = 0.0;
+	branchDCData["grid"] = (int)element_location[2] - '0'; // Example of setting grid based on element_location
 
     // Convert SymEngine expression to double
     complex<double> Y_00 = substitute_symbol(Y_matrix.get(0, 0), omega, 0);

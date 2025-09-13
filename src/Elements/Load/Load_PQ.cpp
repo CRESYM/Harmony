@@ -1,6 +1,6 @@
 #include "Load_PQ.h"
 
-LoadPQ::LoadPQ(const std::string& symbol, int pins, vector<double> values) : Load_base(symbol, pins, pins) {
+LoadPQ::LoadPQ(const std::string& symbol, const std::string& location, int pins, vector<double> values) : Load_base(symbol, location, pins, pins) {
     if (pins <= 0) {
         throw std::invalid_argument("Invalid number of pins, must be greater than 0!");
     }

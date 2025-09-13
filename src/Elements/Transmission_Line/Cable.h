@@ -43,10 +43,10 @@ public:
 	};
 
 	// Constructor simple
-	Cable() : Element("cable", 1, 1), length(0), configuration("coaxial"), type("underground"), eliminate(true) {};
+	Cable() : Element("cable", "DC1", 1, 1), length(0), configuration("coaxial"), type("underground"), eliminate(true) {};
 	
 	// Constructor filled in
-	Cable(const string& symbol, int pins, const string& type_constructor,
+	Cable(const string& symbol, const std::string& location, int pins, const string& type_constructor,
 		const string& configuration_constructor, double length_constructor, std::tuple<double, double, double> earth,
 		std::map<string, Conductor*> conductors_constructor, std::map<string, Insulator*> insulators_constructor,
 		std::vector<std::pair<double, double>> positions_constructor);

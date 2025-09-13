@@ -5,7 +5,7 @@
 
 class WTtype3 : public RES_base {
 public:
-	WTtype3(const string& symbol, const vector<double>& parameters);
+	WTtype3(const string& symbol, const std::string& location, const vector<double>& parameters);
 
 	~WTtype3() {}
 
