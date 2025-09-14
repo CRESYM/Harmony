@@ -238,11 +238,12 @@ MatrixXcd DQsym::multiply(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_
  * @return A (nrSig*3 x N+1) complex matrix representing the new integration result.
  */
 MatrixXcd DQsym::integrate(MatrixXcd& Zpnz_old, MatrixXcd& Xpnz_old, const MatrixXcd& Xpnz,
-    int N, double dt, double w)
+    double dt, double w)
 {
+    int N = Xpnz.cols() - 1;
     int nrSig = Xpnz.rows() / 3;
     if (Xpnz.cols() != N + 1 || Zpnz_old.rows() != nrSig * 3 || Xpnz_old.rows() != nrSig * 3) {
-        throw std::invalid_argument("Dimension mismatch in Int_DQN_Mat");
+        throw std::invalid_argument("Dimension mismatch in integration.");
     }
 
     double dt2 = dt / 2.0;

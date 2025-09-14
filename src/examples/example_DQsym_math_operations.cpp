@@ -36,7 +36,7 @@ void example_DQsym_math_operations()
 	cout << endl;
 
 	cout << "Integration test:" << endl;
-	int N = 2;
+	int N = 1;
 	double dt = 0.01, w = 2 * M_PI * 50;
 	int nrSig = 1;
 
@@ -44,7 +44,7 @@ void example_DQsym_math_operations()
 	MatrixXcd Zpnz_old = MatrixXcd::Zero(nrSig * 3, N + 1);
 	MatrixXcd Xpnz_old = MatrixXcd::Zero(nrSig * 3, N + 1);
 
-	MatrixXcd Zpnz = dqSym.integrate(Xpnz, Zpnz_old, Xpnz_old, N, dt, w);
+	MatrixXcd Zpnz = dqSym.integrate(Xpnz, Zpnz_old, Xpnz_old, dt, w);
 
 	std::cout << "Zpnz = \n" << Zpnz << std::endl;
 }
