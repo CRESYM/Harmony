@@ -91,6 +91,7 @@ set(Solver_Stability_Estimate_Header_Files
 )
 set(Solver_Helper_Functions_Header_Files
     src/Solver/Helper_Functions/Helper_Functions.h
+    src/Solver/Helper_Functions/Standard_functions.h
     src/Solver/Helper_Functions/Differential_equations.h
     src/Solver/Helper_Functions/Symbolic_functions.h
     src/Solver/Helper_Functions/Visualization.h
@@ -181,6 +182,7 @@ set(Solver_DQsym_Source_Files
     src/Solver/DQsym/DQsym.cpp
 )
 set(Solver_Helper_Functions_Source_Files
+    src/Solver/Helper_Functions/Standard_functions.cpp
     src/Solver/Helper_Functions/Differential_equations.cpp
     src/Solver/Helper_Functions/Symbolic_functions.cpp
     src/Solver/Helper_Functions/Visualization.cpp

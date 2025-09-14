@@ -9,10 +9,12 @@ public:
 	DQsym() = default;
 	~DQsym() = default;
 
-	vector<complex<double>> add(vector<complex<double>>, vector<complex<double>>);
-	vector<complex<double>> subtract(vector<complex<double>>, vector<complex<double>>);
-	// vector<complex<double>> multiply(vector<complex<double>>, vector<complex<double>>);
-	// vector<complex<double>> integrate(vector<complex<double>>);
+	MatrixXcd add(const MatrixXcd& a, const MatrixXcd& b);
+	MatrixXcd subtract(const MatrixXcd& a, const MatrixXcd& b);
+	
+	MatrixXcd integrate(MatrixXcd& Zpnz_old, MatrixXcd& Xpnz_old, const MatrixXcd& Xpnz,
+		int N, double dt, double w);
+	MatrixXcd multiply(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_in);
 };
 
 

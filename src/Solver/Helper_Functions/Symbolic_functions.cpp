@@ -2,12 +2,6 @@
 
 // Define the constants declared in the header
 const RCP<const Basic> PI = real_double(3.141592653589793); // SymEngine π
-
-// Constants
-const double mu_0 = 4 * M_PI * 1e-7; // Standard mu_0
-const double epsilon_0 = 8.854e-12; // Standard epsilon_0
-const double gamma_num = 0.5772156649;
-
 RCP<const Basic> j = I;  // Imaginary unit
 RCP<const Basic> omega = symbol("w");
 RCP<const Basic> s = mul(j, omega);
