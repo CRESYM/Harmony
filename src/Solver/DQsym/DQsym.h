@@ -15,6 +15,24 @@ public:
 	MatrixXcd integrate(MatrixXcd& Zpnz_old, MatrixXcd& Xpnz_old, const MatrixXcd& Xpnz,
 		double dt, double w);
 	MatrixXcd multiply(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_in);
+
+	// Discrete state-space solver for dynamic phasors
+	MatrixXcd DQsym::DSSS(const MatrixXcd& Ad, const MatrixXcd& Bd,
+		const MatrixXcd& Cd, const MatrixXcd& Dd, const VectorXd& swOnRes, const VectorXd& swOffRes,
+		const VectorXi& swType, const VectorXi& brkVec, const MatrixXcd& u, const VectorXcd& xo);
+
+	void convertToPhasor(const MatrixXcd& A, const MatrixXcd& B,
+		const MatrixXcd& C, const MatrixXcd& D, MatrixXcd& Adc, MatrixXcd& Bdc,
+		MatrixXcd& Cdc, MatrixXcd& Ddc);
+
+private:
+	// Persistent variables, obtained using state-space matrices solver
+	MatrixXcd Ads, Bds, Cds, Dds;
+	MatrixXcd x_old;
+	VectorXi swVec, swVecOld;
+	int nSwitches, nStates, nOutputs, nInputs;
+	VectorXcd yswitch;
+	bool initialized = false;
 };
 
 

@@ -221,21 +221,39 @@ MatrixXcd DQsym::multiply(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_
 }
 
 /**
- * @brief Performs one integration step for dynamic phasors.
+ * @brief Dynamic-phasor (DQ0) integrator per harmonic order.
  *
- * This function implements a single step of numerical integration for a set of
- * dynamic phasors using the trapezoidal rule, suitable for state-space models
- * in the dynamic phasor domain.
+ * Numerically integrates complex dynamic-phasor signals `Xpnz(k)` over
+ * N harmonics using a trapezoidal (Tustin-like) update written in real/imag
+ * form for stability. The output `Zpnz(:, n)` holds the integrated phasor
+ * at harmonic index `n = 0..N` for each stacked 3-phase signal.
  *
- * @param[in,out] Zpnz_old A (nrSig*3 x N+1) complex matrix holding the persistent
+ * @note Signal Layout:
+ * Signals are stacked in 3-row blocks per physical channel (e.g., a,b,c or dq0).
+ * If there are 'nrSig' channels, `Xpnz` has size (3*nrSig) x (N+1).
+ * Column `n` corresponds to harmonic order `n` (with angular freq `wn = n*w`).
+ *
+ * @note Method:
+ * For each harmonic n (1..N), define:
+ * - `wn = n * w`
+ * - `dt2 = dt / 2`
+ * - `xi = wn * dt2`
+ * - `A = 2 * dt2 / (1 + xi^2)` (input weight)
+ * - `B = (1 - xi^2) / (1 + xi^2)` (previous-state weight)
+ * The update is applied separately to real/imag parts for numerical robustness:
+ * - `Re{Z(n)} = A*(Re{X(n)} + xi*Im{X(n)}) + B*Re{Z_old(n)} + A*wn*Im{Z_old(n)}`
+ * - `Im{Z(n)} = A*(Im{X(n)} - xi*Re{X(n)}) + B*Im{Z_old(n)} - A*wn*Re{Z_old(n)}`
+ * For n=0, this reduces to a standard trapezoidal step.
+ *
+ * @param[in,out] Zpnz_old A (3*nrSig)x(N+1) complex matrix holding the persistent
  *                         integration result from the previous step. It is updated in place.
- * @param[in,out] Xpnz_old A (nrSig*3 x N+1) complex matrix holding the persistent
+ * @param[in,out] Xpnz_old A (3*nrSig)x(N+1) complex matrix holding the persistent
  *                         input from the previous step. It is updated in place.
- * @param[in] Xpnz A (nrSig*3 x N+1) complex matrix representing the current input phasors.
- * @param[in] N The maximum harmonic order to integrate.
- * @param[in] dt The integration timestep.
- * @param[in] w The fundamental angular frequency.
- * @return A (nrSig*3 x N+1) complex matrix representing the new integration result.
+ * @param[in] Xpnz A (3*nrSig)x(N+1) complex matrix of dynamic-phasor inputs.
+ *                 Column 1 is n=0, col N+1 is n=N.
+ * @param[in] dt The integration time step in seconds.
+ * @param[in] w The base electrical angular frequency in rad/s (e.g., 2*pi*50).
+ * @return A (3*nrSig)x(N+1) complex matrix of the integrated dynamic-phasor signal.
  */
 MatrixXcd DQsym::integrate(MatrixXcd& Zpnz_old, MatrixXcd& Xpnz_old, const MatrixXcd& Xpnz,
     double dt, double w)
@@ -281,4 +299,205 @@ MatrixXcd DQsym::integrate(MatrixXcd& Zpnz_old, MatrixXcd& Xpnz_old, const Matri
     }
 
     return Zpnz;
+}
+
+
+/**
+ * @brief Discrete phasor-domain state-space solver with switch-dependent matrix updates.
+ * @note This implementation does not include a half-step predictor/corrector.
+ *
+ * @param Ad Continuous-time state matrix (3-phase stacked).
+ * @param Bd Continuous-time input matrix (3-phase stacked).
+ * @param Cd Continuous-time output matrix (3-phase stacked).
+ * @param Dd Continuous-time feedthrough matrix (3-phase stacked).
+ * @param swOnRes Vector of on-state resistances for each switch (1xNs).
+ * @param swOffRes Vector of off-state resistances for each switch (1xNs).
+ * @param swType Vector indicating switch type (1 for modeled, 0 for no switching).
+ * @param brkVec Vector of current switch positions (0=open, 1=closed).
+ * @param u Matrix of inputs over time (nu x T).
+ * @param xo Vector representing the initial state (nx x 1).
+ * @return Matrix of outputs over time (ny x T).
+ */
+MatrixXcd DQsym::DSSS(const MatrixXcd& Ad, const MatrixXcd& Bd,
+    const MatrixXcd& Cd, const MatrixXcd& Dd,
+    const VectorXd& swOnRes, const VectorXd& swOffRes,
+    const VectorXi& swType, const VectorXi& brkVec,
+    const MatrixXcd& u, const VectorXcd& xo)
+{
+    int T = u.cols();
+
+    // Preallocate
+    MatrixXcd x = MatrixXcd::Zero(Ad.rows(), T);
+    MatrixXcd y = MatrixXcd::Zero(Cd.rows(), T);
+
+    // ---- Convert to phasor (placeholder, you must implement) ----
+    MatrixXcd Adc = Ad, Bdc = Bd, Cdc = Cd, Ddc = Dd;
+    convertToPhasor(Ad, Bd, Cd, Dd, Adc, Bdc, Cdc, Ddc);
+
+    // ---- First-call initialization ----
+    if (!initialized) {
+        nStates = Ad.rows();
+        nInputs = Bd.cols();
+        nOutputs = Cd.rows();
+        nSwitches = (swType.array() == 1).count();
+
+        x_old = MatrixXcd::Zero(nStates, T);
+        x_old.col(0) = xo;
+
+        swVec = brkVec;
+        swVecOld = swVec;
+
+        yswitch = VectorXcd::Zero(nSwitches);
+
+        Ads = Adc;
+        Bds = Bdc;
+        Cds = Cdc;
+        Dds = Ddc;
+
+        initialized = true;
+    }
+
+    // ---- Update switch vector ----
+    if ((swType.array() != 0).any()) {
+        swVec = brkVec;
+    }
+
+    // ---- If switch states changed ----
+    if ((swType.array() != 0).any() && (swVecOld.array() != swVec.array()).any()) {
+        for (int s = 0; s < nSwitches; ++s) {
+            if (swVec(s) == 1) {
+                yswitch(s) = complex<double>(1.0 / swOnRes(s), 0);
+            }
+            else {
+                yswitch(s) = complex<double>(1.0 / swOffRes(s), 0);
+            }
+        }
+
+        VectorXi SwitchChange = (swVecOld.array() != swVec.array()).cast<int>();
+        vector<int> idxSwChng;
+        for (int i = 0; i < SwitchChange.size(); i++) {
+            if (SwitchChange(i) == 1) idxSwChng.push_back(i);
+        }
+
+        int nbSwChng = idxSwChng.size();
+
+        VectorXcd DxCol(nOutputs);
+        VectorXcd BDcol(nStates);
+
+        for (int k = 0; k < nbSwChng; k++) {
+            int nSw = idxSwChng[k];
+
+            complex<double> tmp = Dds(nSw, nSw) * yswitch(nSw);
+            complex<double> temp = 1.0 / (1.0 - tmp);
+            complex<double> t2 = yswitch(nSw) * temp;
+
+            for (int i = 0; i < nOutputs; i++) {
+                DxCol(i) = Dds(i, nSw) * t2;
+            }
+            DxCol(nSw) = temp;
+
+            t2 = yswitch(nSw);
+            for (int i = 0; i < nStates; i++) {
+                BDcol(i) = Bds(i, nSw) * t2;
+            }
+
+            RowVectorXcd rowC = Cds.row(nSw);
+            Cds.row(nSw).setZero();
+
+            RowVectorXcd rowD = Dds.row(nSw);
+            Dds.row(nSw).setZero();
+
+            // Update C and D
+            for (int i = 0; i < nOutputs; i++) {
+                Cds.row(i) += DxCol(i) * rowC;
+                Dds.row(i) += DxCol(i) * rowD;
+            }
+
+            // Update A and B
+            for (int i = 0; i < nStates; i++) {
+                Ads.row(i) += BDcol(i) * Cds.row(nSw);
+                Bds.row(i) += BDcol(i) * Dds.row(nSw);
+            }
+        }
+
+        swVecOld = swVec;
+    }
+
+    // ---- State and output calculation ----
+    x = Ads * x_old + Bds * u;
+
+    // Demodulate / rotate (50 Hz, Ts = 2e-5)
+    VectorXcd diagExp(T);
+    for (int k = 0; k < T; k++) {
+        diagExp(k) = exp(complex<double>(0, -2.0 * M_PI * 50.0 * 2e-5 * k));
+    }
+    MatrixXcd diagMat = diagExp.asDiagonal();
+    MatrixXcd x2 = x * diagMat;
+
+    x_old = x2;
+    y = Cds * x2 + Dds * u;
+
+    return y;
+}
+
+/**
+ * @brief Convert state-space matrices into the phasor/DQ0 domain.
+ *
+ * Equivalent of MATLAB's convertToPhasor() + transformMatrix().
+ * Currently assumes matrices are already discrete (no trapezoidal step).
+ *
+ * @param A Continuous/discrete state matrix
+ * @param B Continuous/discrete input matrix
+ * @param C Continuous/discrete output matrix
+ * @param D Continuous/discrete feedthrough matrix
+ * @param Adc (output) Phasor-domain state matrix
+ * @param Bdc (output) Phasor-domain input matrix
+ * @param Cdc (output) Phasor-domain output matrix
+ * @param Ddc (output) Phasor-domain feedthrough matrix
+ */
+void DQsym::convertToPhasor(const MatrixXcd& A, const MatrixXcd& B,
+    const MatrixXcd& C, const MatrixXcd& D,
+    MatrixXcd& Adc, MatrixXcd& Bdc,
+    MatrixXcd& Cdc, MatrixXcd& Ddc)
+{
+    // Sampling time (fixed for now, can be parameterized)
+    double dt = 2e-5;
+
+    // Using continuous matrices directly
+    MatrixXcd Ad2 = A, Bd2 = B, Cd2 = C, Dd2 = D;
+
+    // Symmetrical components (DQ0) transform
+    complex<double> a(-0.5, 0.866);   // e^(j*120°)
+    complex<double> a2(-0.5, -0.866); // e^(-j*120°)
+
+    Matrix3cd Sas;
+    Sas << 1.0, a, a2,
+        1.0, a2, a,
+        1.0, 1.0, 1.0;
+    Sas /= 3.0;
+
+    // Blockwise transform
+    auto transformMatrix = [&](const MatrixXcd& Md1) {
+        int rows = Md1.rows();
+        int cols = Md1.cols();
+        int nblk_r = rows / 3;
+        int nblk_c = cols / 3;
+        MatrixXcd Mdc = MatrixXcd::Zero(rows, cols);
+
+        for (int i = 0; i < nblk_r; i++) {
+            for (int j = 0; j < nblk_c; j++) {
+                int r0 = i * 3;
+                int c0 = j * 3;
+                Matrix3cd sub = Md1.block(r0, c0, 3, 3);
+                // Equivalent of Sas * sub / Sas in MATLAB
+                Mdc.block(r0, c0, 3, 3) = Sas * sub * Sas.inverse();
+            }
+        }
+        return Mdc;
+        };
+
+    Adc = transformMatrix(Ad2);
+    Bdc = transformMatrix(Bd2);
+    Cdc = transformMatrix(Cd2);
+    Ddc = transformMatrix(Dd2);
 }
