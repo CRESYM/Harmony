@@ -240,10 +240,10 @@ MatrixXcd DQsym::multiply(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_
 MatrixXcd DQsym::integrate(MatrixXcd& Zpnz_old, MatrixXcd& Xpnz_old, const MatrixXcd& Xpnz,
     double dt, double w)
 {
-    int N = Xpnz.cols() - 1;
+	int N = Xpnz.cols() - 1; // max harmonic order
     int nrSig = Xpnz.rows() / 3;
     if (Xpnz.cols() != N + 1 || Zpnz_old.rows() != nrSig * 3 || Xpnz_old.rows() != nrSig * 3) {
-        throw std::invalid_argument("Dimension mismatch in integration.");
+        throw std::invalid_argument("Dimension mismatch in Int_DQN_Mat");
     }
 
     double dt2 = dt / 2.0;
@@ -256,8 +256,8 @@ MatrixXcd DQsym::integrate(MatrixXcd& Zpnz_old, MatrixXcd& Xpnz_old, const Matri
 
     // --- Harmonics (i = 1..N)
     for (int i = 1; i <= N; ++i) {
-        double wn = i * w;
-        double wndt2 = wn * dt2;
+		double wn = i * w; // Angular frequency of harmonic i
+		double wndt2 = wn * dt2; // wn*dt/2
 
         double A = 2.0 * dt2 / (1.0 + wndt2 * wndt2);
         double B = (1.0 - wndt2 * wndt2) / (1.0 + wndt2 * wndt2);

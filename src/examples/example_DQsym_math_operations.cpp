@@ -44,7 +44,7 @@ void example_DQsym_math_operations()
 	MatrixXcd Zpnz_old = MatrixXcd::Zero(nrSig * 3, N + 1);
 	MatrixXcd Xpnz_old = MatrixXcd::Zero(nrSig * 3, N + 1);
 
-	MatrixXcd Zpnz = dqSym.integrate(Xpnz, Zpnz_old, Xpnz_old, dt, w);
+	MatrixXcd Zpnz = dqSym.integrate(Zpnz_old, Xpnz_old, Xpnz, dt, w);
 
 	std::cout << "Zpnz = \n" << Zpnz << std::endl;
 }
