@@ -17,6 +17,7 @@ public:
     // Getters to access the bus name and the number of pins/phases
     std::string getBusName() { return busName; }
     int getPinNumber() { return numberPins; }
+	std::string getBusLocation() { return busLocation; }
 
     //  Operator overload to compare the bus name with a string
     bool operator==(const char* name);

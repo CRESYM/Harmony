@@ -4,6 +4,61 @@
 #include "../../Elements/Element.h"      // For Element* operations (e.g., compute_y_parameters, getConnections)
 #include "../../Bus.h"          // For Bus* methods like getBusName, getPinNumber, etc.
 
+void StabilityEstimate::add_areas(Network* net) {
+    // This function can be implemented to categorize and add AC and DC grids to the system
+    // For now, it is left empty as a placeholder
+
+	// Example implementation could involve iterating through the network's buses and elements
+    for (const auto& bus_pair : net->getBuses()) {
+        Bus* bus = bus_pair.second;
+		std::string area = bus->getBusLocation(); 
+        // Logic to determine if the bus belongs to an AC or DC grid
+        // and add it to the respective list/map
+
+        if ((area[0] == 'A' || area[0] == 'a') && (area[1] == 'c' || area[1] == 'C')) {
+            // Add to AC grid list/map
+            if (std::find(ac_grids.begin(), ac_grids.end(), area) == ac_grids.end()) {
+                ac_grids.push_back(area);
+				ac_buses[area] = std::vector<Bus*>();
+				ac_buses[area].push_back(bus);
+				ac_elements[area] = std::vector<Element*>();
+                
+                for (auto& element : net->getConnections().at(bus)) {
+                    if (std::find(ac_elements[area].begin(), ac_elements[area].end(), element) == ac_elements[area].end())
+                        ac_elements[area].push_back(element);
+                }
+			}
+            else {
+				ac_buses[area].push_back(bus);
+                for (auto& element : net->getConnections().at(bus)) {
+                    if (std::find(ac_elements[area].begin(), ac_elements[area].end(), element) == ac_elements[area].end())
+						ac_elements[area].push_back(element);
+                }
+            }
+        }
+        else if ((area[0] == 'D' || area[0] == 'd') && (area[1] == 'C' || area[1] == 'c')) {
+            // Add to DC grid list/map
+            if (std::find(dc_grids.begin(), dc_grids.end(), area) == dc_grids.end()) {
+                dc_grids.push_back(area);
+                dc_buses[area] = std::vector<Bus*>();
+                dc_buses[area].push_back(bus);
+                dc_elements[area] = std::vector<Element*>();
+
+                for (auto& element : net->getConnections().at(bus)) {
+                    if (std::find(dc_elements[area].begin(), dc_elements[area].end(), element) == dc_elements[area].end())
+                        dc_elements[area].push_back(element);
+                }
+            }
+            else {
+				dc_buses[area].push_back(bus);
+                for (auto& element : net->getConnections().at(bus)) {
+                    if (std::find(dc_elements[area].begin(), dc_elements[area].end(), element) == dc_elements[area].end())
+                        dc_elements[area].push_back(element);
+				}
+            }
+		}
+	}
+}
 
 
 void StabilityEstimate::compute_equivalent_impedance(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements) {
