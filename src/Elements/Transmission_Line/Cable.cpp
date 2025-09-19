@@ -1,10 +1,25 @@
 ﻿#include "Cable.h"
 
+/**
+ * @brief Constructs a new Cable object.
+ * @details This constructor initializes a cable element with its physical and electrical properties. It performs extensive calculations to model the cable's behavior, including impedance and admittance matrix computations using symbolic mathematics. The constructor handles various configurations, such as single-core, multi-layer cables, and multi-cable systems, and accounts for earth return path effects.
+ *
+ * @param symbol The unique identifier for the cable element.
+ * @param location The location of the element within the circuit.
+ * @param pins The number of connection pins for the element.
+ * @param type_constructor The type of the cable (e.g., "underground").
+ * @param configuration_constructor A string describing the cable's physical configuration.
+ * @param length_constructor The length of the cable in meters.
+ * @param earth A tuple containing the ground properties: relative permeability (μᵣ), relative permittivity (εᵣ), and resistivity (ρ) in Ωm.
+ * @param conductors_constructor A map of conductor layers, where the key is a string identifier (e.g., "C1", "SC") and the value is a pointer to a Conductor object.
+ * @param insulators_constructor A map of insulator layers, where the key is a string identifier (e.g., "I1") and the value is a pointer to an Insulator object.
+ * @param positions_constructor A vector of (x, y) coordinate pairs specifying the position of each cable in a multi-cable system.
+ */
 Cable::Cable(const string& symbol, const std::string& location, int pins, const string& type_constructor,
-	const string& configuration_constructor, double length_constructor, std::tuple<double, double, double> earth, 
+	double length_constructor, std::tuple<double, double, double> earth, 
 	std::map<string, Conductor*> conductors_constructor, std::map<string, Insulator*> insulators_constructor,
 	std::vector<std::pair<double, double>> positions_constructor)
-	: Element(symbol, location, pins, pins), earth_parameters(earth), configuration(configuration_constructor),
+	: Element(symbol, location, pins, pins), earth_parameters(earth),
 	type(type_constructor), conductors(conductors_constructor), insulators(insulators_constructor), 
 	positions(positions_constructor), length(length_constructor)
 {
@@ -224,7 +239,7 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
 		}
 	}
 
-	//if (c.getType == "underground") {
+	// Check if the cable type is "underground" or "aerial"
 	std::string expectedType = "underground";
 	std::string cableType = getType();
 
@@ -283,6 +298,8 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
 			Y.set(i, j, mul(s, real_double(P(i, j))));
 
 	// Calculation of Y parameters
+	int size = cond_noElim.size();
+	Y_matrix = createZeroMatrix(2 * size, 2 * size);
 }
 
 // Destructor definition
@@ -291,10 +308,10 @@ Cable::~Cable() {
 }
 
 
-Eigen::MatrixXcd Cable::compute_y_parameters_num(double omega_num)
+Eigen::MatrixXcd Cable::compute_y_parameters_num(double frequency)
 {
     // Step 1: Compute Z and Y matrices based on frequency
-	complex<double> s_num = 1i * complex<double>(2 * M_PI * omega_num);
+	complex<double> s_num = 1i * complex<double>(2 * M_PI * frequency);
 	Eigen::MatrixXcd Z_num = substitute_symbol(Z, s, s_num);
     Eigen::MatrixXcd Y_num = substitute_symbol(Y, s, s_num);
 
@@ -327,3 +344,41 @@ Eigen::MatrixXcd Cable::compute_y_parameters_num(double omega_num)
     return Y_params;
 }
 
+void Cable::printElementValues() {
+	std::cout << "Cable Element Values:" << std::endl;
+	std::cout << "Type: " << type << std::endl;
+	std::cout << "Length: " << length << " meters" << std::endl;
+	std::cout << "Earth Parameters (μᵣ, εᵣ, ρ [Ωm]): (" 
+		<< std::get<0>(earth_parameters) << ", "
+		<< std::get<1>(earth_parameters) << ", "
+		<< std::get<2>(earth_parameters) << ")" << std::endl;
+	std::cout << "Conductors:" << std::endl;
+	for (const auto& pair : conductors) {
+		const std::string& key = pair.first;
+		const auto& conductor = pair.second;
+		std::cout << "  " << key << ": "
+			<< "ri = " << conductor->ri << " m, "
+			<< "ro = " << conductor->ro << " m, "
+			<< "resistivity = " << conductor->resistivity << " Ωm, "
+			<< "permeability = " << conductor->permeability << ", "
+			<< "area = " << conductor->area << " m²" << std::endl;
+	}
+	std::cout << "Insulators:" << std::endl;
+	for (const auto& pair : insulators) {
+		const std::string& key = pair.first;
+		const auto& insulator = pair.second;
+		std::cout << "  " << key << ": "
+			<< "ri = " << insulator->ri << " m, "
+			<< "ro = " << insulator->ro << " m, "
+			<< "permittivity = " << insulator->permittivity << ", "
+			<< "permeability = " << insulator->permeability;
+		if (insulator->a != 0 || insulator->b != 0) {
+			std::cout << ", a = " << insulator->a << " m, b = " << insulator->b << " m";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << "Positions of Cables:" << std::endl;
+	for (size_t i = 0; i < positions.size(); ++i) {
+		std::cout << "  Cable " << i + 1 << ": (x = " << positions[i].first << " m, y = " << positions[i].second << " m)" << std::endl;
+	}
+}

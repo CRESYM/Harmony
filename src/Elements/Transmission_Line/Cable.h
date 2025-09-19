@@ -43,11 +43,11 @@ public:
 	};
 
 	// Constructor simple
-	Cable() : Element("cable", "DC1", 1, 1), length(0), configuration("coaxial"), type("underground"), eliminate(true) {};
+	Cable() : Element("cable", "DC1", 1, 1), length(0), type("underground"), eliminate(true) {};
 	
 	// Constructor filled in
 	Cable(const string& symbol, const std::string& location, int pins, const string& type_constructor,
-		const string& configuration_constructor, double length_constructor, std::tuple<double, double, double> earth,
+		double length_constructor, std::tuple<double, double, double> earth,
 		std::map<string, Conductor*> conductors_constructor, std::map<string, Insulator*> insulators_constructor,
 		std::vector<std::pair<double, double>> positions_constructor);
 
@@ -116,6 +116,8 @@ public:
 	// Function to compute Y parameters
 	virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num);
 
+	virtual void printElementValues() override;
+
 	// Destructor
 	~Cable();
 
@@ -133,8 +135,8 @@ private:
 	//(μᵣ, ϵᵣ, ρ) in units ([], [], [Ωm]) compact way of representing the type for a tuple of length N where all elements are of type Int or Float64.
 	std::tuple<double, double, double> earth_parameters;
 
-	std::string configuration; // Configuration is a datatype symbol with value coaxial Symbol -> Type of data. Symbols can be entered using the quote operator ":"
-	std::string type;
+	std::string configuration = "coaxial"; // Configuration is a datatype symbol with value "coaxial". 
+	std::string type; // Type is a datatype symbol with value "underground" or "aerial". 
 	bool eliminate = true;
 
 	DenseMatrix Z;

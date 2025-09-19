@@ -11,6 +11,7 @@ extern void example_WT_type_3();
 extern void example_WT_type_4();
 extern void example_PV_plant();
 extern void example_OHL();
+extern void example_cable();
 
 extern void example_constructors();
 extern void example_visuals();

@@ -12,6 +12,7 @@ int main() {
 	// example_PV_plant();
 	// example_MMC();
 	// example_OHL();
+	example_cable();
 	
 	// Solver examples
 	// example_OPF();

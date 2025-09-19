@@ -212,6 +212,7 @@ set(Examples_Source_files
     src/examples/example_WT_type_4.cpp
     src/examples/example_PV_plant.cpp
     src/examples/example_OHL.cpp
+    src/examples/example_cable.cpp
     src/examples/example_constructors.cpp
     src/examples/example_visuals.cpp
 )

@@ -34,12 +34,14 @@ private:
 
 	unordered_map<string, vector<Bus*>> ac_buses; // Map of AC grid names to their buses
 	unordered_map<string, vector<Bus*>> dc_buses; // Map of DC grid names to their buses
+	unordered_map<string, vector<Bus*>> ac_outputs; // Connections of AC grid outputs to the converters
+	unordered_map<string, vector<Bus*>> dc_outputs; // Connections of DC grid outputs to the converters
 
 	unordered_map<string, vector<Element*>> ac_elements; // Map of AC grid names to their elements
 	unordered_map<string, vector<Element*>> dc_elements; // Map of DC grid names to their elements
 
 	unordered_map<string, vector<Element*>> converters; // Map of AC grid names to their converter elements
-	// add outputs to areas
+	unordered_map<string, vector<Element*>> converter_connections; // Map of converter names to their connections (buses)
 };
 
 
