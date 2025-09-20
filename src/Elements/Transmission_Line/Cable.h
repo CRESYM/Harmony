@@ -34,12 +34,12 @@ public:
 		// Member variables
 		double ri;  //insulator inner radius
 		double ro;  //insulator outer radius
-		double permittivity; //relative permittivity ϵᵣ
-		double permeability; //relative permeability μᵣ
-		//If a semiconductor is present in an insulator, we have: rᵢ < semiconductor < a + a < insulator < b + b < semiconductor < rₒ
+		double permittivity; //relative permittivity epsilon_r
+		double permeability; //relative permeability mu_r
 
-		double a; //inner semiconductor outer radius -> Inner semiconductor rᵢ < r < a
-		double b; //outer semiconductor inner radius -> Outer semiconductor b < r < rₒ
+		//If a semiconductor is present in an insulator, we have: r_i < semiconductor < a + a < insulator < b + b < semiconductor < r_o
+		double a; //inner semiconductor outer radius -> Inner semiconductor r_i < r < a
+		double b; //outer semiconductor inner radius -> Outer semiconductor b < r < r_o
 	};
 
 	// Constructor simple
@@ -87,6 +87,12 @@ public:
 		return nullptr; // Insulator not found
 	}
 
+	void updateInsulator(const std::string& key, Insulator* insulator) {
+		insulators[key] = insulator;
+	}
+
+	void updateLayers(); // Function to update layers
+
 	// Function to modify a conductor in the conductors map
 	void updateConductor(const std::string& key, Conductor* conductor) {
 		conductors[key] = conductor;
@@ -115,6 +121,7 @@ public:
 
 	// Function to compute Y parameters
 	virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num);
+	virtual std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency) override;
 
 	virtual void printElementValues() override;
 

@@ -25,7 +25,8 @@
 #include <symengine/matrices/immutable_dense_matrix.h>
 #include <symengine/polys/basic_conversions.h>
 #include <symengine/printers.h>  // Correct header for printing
-
+#include <symengine/real_mpfr.h>
+using SymEngine::RealMPFR;
 
 
 
