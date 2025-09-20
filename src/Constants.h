@@ -28,8 +28,6 @@
 #include <symengine/real_mpfr.h>
 using SymEngine::RealMPFR;
 
-
-
 // Eigen library for linear algebra
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
