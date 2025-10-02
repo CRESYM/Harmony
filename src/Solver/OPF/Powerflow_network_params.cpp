@@ -447,7 +447,7 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
     std::vector<std::string> cost_keys = {
         "model","startup","shutdown","n","c2","c1","c0","grid"
 	};
-    for (const auto& key : keys) {
+    for (const auto& key : cost_keys) {
         cRow[key] = 0; // Empty structure for each
     }
 
@@ -468,14 +468,23 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
 	// Here is easier to get the data from the element
 	map<string, double> gen_info = element->getOPFInfo();
 
+    //   for (const auto& [key, value] : gen_info) {
+    //       if (gRow.find(key) == gRow.end()) {
+	//		cRow[key] = value; // Fill in the cost data
+    //       }
+    //       else
+	//	    gRow[key] = value; // Fill in the generator data
+	//   }
+	//  cRow["grid"] = gRow["grid"]; // Ensure grid is consistent
+
     for (const auto& [key, value] : gen_info) {
-        if (gRow.find(key) == gRow.end()) {
-			cRow[key] = value; // Fill in the cost data
+        if (key == "c0" || key == "c1" || key == "c2") {
+            cRow[key] = value;  
         }
-        else
-		    gRow[key] = value; // Fill in the generator data
-	}
-	cRow["grid"] = gRow["grid"]; // Ensure grid is consistent
+        else {
+            gRow[key] = value;   
+        }
+    }
 
 	const std::string& gen_name = element->getElementSymbol();
     const std::string& area_id = to_string(gRow["area"]);
@@ -538,6 +547,7 @@ void PowerFlow::make_Load(Element* element, std::map<std::string, double>& globa
  //   std::string load_name = element->getElementSymbol();
  //   
 	//vector<Bus*> buses = element->getBuses(); // Get the buses connected to the load element
+
     Bus* attachedBus = nullptr;
 
     for (Bus* b : element->getBuses()) {
@@ -867,6 +877,7 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
         pd_ac[ng] = bus_ac[ng].col(2) / baseMVA_ac;
         qd_ac[ng] = bus_ac[ng].col(3) / baseMVA_ac;
     }
+
 }
 
 void PowerFlow::load_params_dc(const std::string& dcgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF) {
