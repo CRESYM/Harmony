@@ -225,5 +225,5 @@ void example_OPF() {
     global_dict["DCbaseKV"] = 500.0; // Base voltage for DC, can be adjusted as needed
     global_dict["Z_base"] = 1.0; // Base impedance, can be adjusted as needed
 
-    pf.make_OPF(&net, global_dict, true, false, false);
+    pf.make_OPF(&net, global_dict, true, false, false, false);
 }

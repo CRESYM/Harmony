@@ -41,14 +41,14 @@ public:
         bool print_info = false);
 
     void make_OPF(Network* net, std::map<std::string, double>& global_params, bool vscControl = true, bool writeTxt = false,
-        bool plotResult = false);
+        bool plotResult = false, bool print_info = false);
 
     void load_params_ac(const std::string& acgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
     void load_params_dc(const std::string& dcgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF);
 
     void solve_opf(const std::string& dc_name,
         const std::string& ac_name, std::unordered_map<std::string, Eigen::MatrixXd>* dataOPF,
-        bool vscControl, bool writeTxt, bool plotResult);
+        bool vscControl, bool writeTxt, bool plotResult, bool print_info);
 
     const auto& getNetData() const { return data; }
     auto& getNetData() { return data; }

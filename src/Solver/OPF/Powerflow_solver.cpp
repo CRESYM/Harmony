@@ -54,7 +54,8 @@ void PowerFlow::solve_opf(
     std::unordered_map<std::string, Eigen::MatrixXd>* dataOPF,
     bool vscControl,
     bool writeTxt,
-    bool plotResult) {
+    bool plotResult,
+    bool plot_info) {
 
     auto start = std::chrono::high_resolution_clock::now();
     try {

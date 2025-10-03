@@ -603,7 +603,7 @@ void PowerFlow::make_Load(Element* element, std::map<std::string, double>& globa
 
 
 void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dict, bool vscControl,
-    bool writeTxt, bool plotResult)
+    bool writeTxt, bool plotResult, bool print_info)
 {
     //// Define and initialize data map
     //std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
@@ -662,10 +662,10 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     std::sort(dcBuses.begin(), dcBuses.end(), byName);
 
     for (Bus* b : acBuses)
-        addBusAC(dict_ac, b, global_dict, writeTxt);
+        addBusAC(dict_ac, b, global_dict, print_info);
 
     for (Bus* b : dcBuses)
-        addBusDC(dict_dc, b, global_dict, writeTxt);
+        addBusDC(dict_dc, b, global_dict, print_info);
 
 	// Process elements: loads, generators, which contribute to the buses data    
     auto& elements = net->getElements();
@@ -673,11 +673,11 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     {
         if (dynamic_cast<Load*>(element) || dynamic_cast<LoadPQ*>(element)) {
             cout << "[make_OPF] Processing element: " << element_name << endl;
-            make_Load(element, global_dict, writeTxt);
+            make_Load(element, global_dict, print_info);
         }
         else if (dynamic_cast<Source_base*>(element)) {
             cout << "[make_OPF] Processing element: " << element_name << endl;
-            make_Generator(element, global_dict, writeTxt);
+            make_Generator(element, global_dict, print_info);
         }
     }
 
@@ -686,10 +686,10 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     {
         if (dynamic_cast<Impedance*>(element)) {
             if (element->getInputPins() == 3) {
-                make_BranchAC(element, global_dict, writeTxt);
+                make_BranchAC(element, global_dict, print_info);
             }
             else if (element->getInputPins() == 1) {
-                make_BranchDC(element, global_dict, writeTxt);
+                make_BranchDC(element, global_dict, print_info);
             }
             else {
                 throw std::runtime_error("[make_OPF] Error: Unsupported impedance pin number.");
@@ -697,7 +697,7 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
 
         }
         else if (dynamic_cast<MMC*>(element)) {
-            make_Converter(element, global_dict, writeTxt);
+            make_Converter(element, global_dict, print_info);
         }
         else {
         }
@@ -758,7 +758,7 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
 	cout << "[make_OPF] Finished transforming data to Eigen::MatrixXd.\n";
 
     //solveHmo_opf(dataOPF, vscControl, writeTxt, plotResult);
-    solve_opf("", "", &dataOPF, vscControl, writeTxt, plotResult);
+    solve_opf("", "", &dataOPF, vscControl, writeTxt, plotResult, print_info);
 }
 
 
