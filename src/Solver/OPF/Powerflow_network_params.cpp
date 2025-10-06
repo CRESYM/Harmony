@@ -228,7 +228,7 @@ void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& g
     brRow["angmax"] = 360.0;
     // brRow["grid"] = std::stod(area_id);
 
-    element->computePowerFlowAC(data["branchAC"][row], global_params);
+    element->computePowerFlow(data["branchAC"][row], global_params);
 
     if (print_info)
     {
@@ -294,7 +294,7 @@ void PowerFlow::make_BranchDC(Element* element, std::map<std::string, double>& g
     brRow["angmin"] = -0.0;
     brRow["angmax"] = 0.0;
 
-    element->computePowerFlowDC(data["branchDC"][row], global_params);
+    element->computePowerFlow(data["branchDC"][row], global_params);
 
     if (print_info)
     {
@@ -364,7 +364,7 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
 	convRow["status"] = 1.0; // Default status (1 = active, 0 = inactive)
 	// Note: The keys in convRow should match the expected keys in the OPF data structure
 
-	element->computePowerFlowAC(convRow, global_params);
+	element->computePowerFlow(convRow, global_params);
 
     std::vector<Bus*> ends = element->getBuses();
 
@@ -451,7 +451,7 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
         cRow[key] = 0; // Empty structure for each
     }
 
-	element->computePowerFlowAC(gRow, global_params); // Sets grid and area
+	element->computePowerFlow(gRow, global_params); // Sets grid and area
 
     gRow["bus"] = bus_id;
     gRow["Vg"] = 1.0;
@@ -533,21 +533,6 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
 void PowerFlow::make_Load(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
- //   std::string row = std::to_string(data["busAC"].size());
- //   data["busAC"][row] = {}; // Ensure there's at least one row
- //   std::vector<std::string> keys = {
- //       "bus_i","type","Pd","Qd","Gs","Bs","area","Vm","Va",
- //           "baseKV","zone","Vmax","Vmin","grid"
- //   };
-
- //   for (const auto& key : keys) {
- //       data["busAC"][row][key] = 0; // Empty structure for each
- //   }
-
- //   std::string load_name = element->getElementSymbol();
- //   
-	//vector<Bus*> buses = element->getBuses(); // Get the buses connected to the load element
-
     Bus* attachedBus = nullptr;
 
     for (Bus* b : element->getBuses()) {
@@ -578,7 +563,7 @@ void PowerFlow::make_Load(Element* element, std::map<std::string, double>& globa
 
     auto& busRow = data["busAC"][row];
 
-	element->computePowerFlowAC(busRow, global_params);
+	element->computePowerFlow(busRow, global_params);
 
     if (print_info)
     {

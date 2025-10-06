@@ -13,15 +13,19 @@ LoadPQ::LoadPQ(const std::string& symbol, const std::string& location, int pins,
     Q = values[1];
 }
 
-
-// Power flow computation for AC networks
-void LoadPQ::computePowerFlowAC(std::map<std::string, double>& busAC,
+void LoadPQ::computePowerFlow(std::map<std::string, double>& busAC,
     std::map<std::string, double>& global_params) const {
-
-    double Pd = P / global_params["baseMVA"];
-    double Qd = Q / global_params["baseMVA"];
-
-    busAC["Pd"] += Pd;
-    busAC["Qd"] += Qd;
+    string area = element_location.substr(0, 2); // Extract area code from element_location
+    if ((area[0] == 'D' || area[0] == 'd') && (area[1] == 'C' || area[1] == 'c')) { // DC network
+        throw std::runtime_error("LoadPQ is not applicable for DC networks.");
+    }
+    else if ((area[0] == 'A' || area[0] == 'a') && (area[1] == 'c' || area[1] == 'C')) { // AC network
+        double Pd = P / global_params["baseMVA"];
+        double Qd = Q / global_params["baseMVA"];
+        busAC["Pd"] += Pd;
+        busAC["Qd"] += Qd;
+    }
+    else {
+        throw std::runtime_error("Invalid network type specified in global parameters.");
+    }
 }
-

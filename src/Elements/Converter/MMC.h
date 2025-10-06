@@ -59,7 +59,7 @@ public:
     // Override to print MMC-specific parameters
     virtual void printElementValues() override;
 
-    void computePowerFlowAC(std::map<std::string, double>& data,
+    void computePowerFlow(std::map<std::string, double>& data,
         std::map<std::string, double>& globalParams) const override
     {
         for (auto& [key, value] : element_OPF_info)

@@ -9,7 +9,7 @@ public:
 	~Source_base() {}
 
     // Power flow computations for AC and DC networks
-    void computePowerFlowAC(std::map<std::string, double>& branchData,
+    void computePowerFlow(std::map<std::string, double>& branchData,
         std::map<std::string, double>& globalParams) const override;
 protected:
     DenseMatrix Z; // Source series impedance [Omega]

@@ -28,5 +28,6 @@ void example_cable() {
 
 	cable->writeFile(1, 1e5, 10000);
 	cout << "Y-parameters printed in file." << endl;
-	// cable->plotYParameters(0.1, 1e6, 1e4);
+	
+	cable->plotYParameters(0.1, 1e6, 1e4);
 }

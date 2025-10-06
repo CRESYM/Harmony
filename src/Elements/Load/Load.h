@@ -53,8 +53,8 @@ public:
     }
 
     // Power flow calculations (AC and DC)
-    void computePowerFlowAC(std::map<std::string, double>& busAC,
-        std::map<std::string, double>& globalParams) const override;
+    void computePowerFlow(std::map<std::string, double>& busAC,
+		std::map<std::string, double>& globalParams) const override;
 
 private:
     // Values for resistance, inductance and capacitance

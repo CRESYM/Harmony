@@ -66,11 +66,15 @@ public:
     
 
     // Virtual power flow computation methods (override in subclasses)
-    virtual void computePowerFlowAC(std::map<std::string, double>& branchData,
-        std::map<std::string, double>& globalParams) const {}
+    virtual void computePowerFlow(std::map<std::string, double>& branchData,
+		std::map<std::string, double>& globalParams) const {
+	}
 
-    virtual void computePowerFlowDC(std::map<std::string, double>& branchDCData,
-        std::map<std::string, double>& globalParams) const {}
+    //virtual void computePowerFlowAC(std::map<std::string, double>& branchData,
+    //    std::map<std::string, double>& globalParams) const {}
+
+    //virtual void computePowerFlowDC(std::map<std::string, double>& branchDCData,
+    //    std::map<std::string, double>& globalParams) const {}
 
     std::map<std::string, double> getOPFInfo() const {
         return element_OPF_info;

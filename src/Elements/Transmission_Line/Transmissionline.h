@@ -12,10 +12,7 @@ public:
 
     ~TransmissionLine() {}
 
-	void computePowerFlowAC(std::map<std::string, double>& branchData,
-		const std::map<std::string, double>& global) const;
-
-	void computePowerFlowDC(std::map<std::string, double>& branchDCData,
+	void computePowerFlow(std::map<std::string, double>& branchData,
 		const std::map<std::string, double>& global) const;
 
    // void compute_y_parameters(double R, double L, double G, double C, double length);
