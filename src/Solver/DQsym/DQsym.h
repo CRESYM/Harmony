@@ -19,7 +19,14 @@ public:
 	// Discrete state-space solver for dynamic phasors
 	MatrixXcd DQsym::DSSS(const MatrixXcd& Ad, const MatrixXcd& Bd,
 		const MatrixXcd& Cd, const MatrixXcd& Dd, const VectorXd& swOnRes, const VectorXd& swOffRes,
-		const VectorXi& swType, const VectorXi& brkVec, const MatrixXcd& u, const VectorXcd& xo);
+		const VectorXi& swType, const VectorXi& brkVec, const MatrixXcd& u, const VectorXcd& xo,
+		double dt, double f0);
+
+	// Build state-space matrices for current switch state
+	void buildMatricesForState(const MatrixXcd& A0, const MatrixXcd& B0,
+		const MatrixXcd& C0, const MatrixXcd& D0, const VectorXi& swVec, const VectorXi& swType,
+		const VectorXd& swOnRes, const VectorXd& swOffRes, MatrixXcd& Ao, MatrixXcd& Bo,
+		MatrixXcd& Co, MatrixXcd& Do);
 
 	void convertToPhasor(const MatrixXcd& A, const MatrixXcd& B,
 		const MatrixXcd& C, const MatrixXcd& D, MatrixXcd& Adc, MatrixXcd& Bdc,
