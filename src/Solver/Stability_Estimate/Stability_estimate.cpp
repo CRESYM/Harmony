@@ -1,6 +1,7 @@
 #include "Stability_estimate.h"
 
 #include "../../network.h"      // For access to the Network class and its members
+#include "../../Include_components.h"
 #include "../../Elements/Element.h"      // For Element* operations (e.g., compute_y_parameters, getConnections)
 #include "../../Bus.h"          // For Bus* methods like getBusName, getPinNumber, etc.
 
@@ -8,58 +9,79 @@ void StabilityEstimate::add_areas(Network* net) {
     // This function can be implemented to categorize and add AC and DC grids to the system
     // For now, it is left empty as a placeholder
 
-	// Example implementation could involve iterating through the network's buses and elements
+    if (!net) {
+        std::cerr << "Error: Null Network pointer passed to StabilityEstimate::add_areas().\n";
+        return;
+    }
+
+    // Iterate over all buses in the network
     for (const auto& bus_pair : net->getBuses()) {
         Bus* bus = bus_pair.second;
-		std::string area = bus->getBusLocation(); 
-        // Logic to determine if the bus belongs to an AC or DC grid
-        // and add it to the respective list/map
+        if (!bus) continue;
 
-        if ((area[0] == 'A' || area[0] == 'a') && (area[1] == 'c' || area[1] == 'C')) {
-            // Add to AC grid list/map
-            if (std::find(ac_grids.begin(), ac_grids.end(), area) == ac_grids.end()) {
-                ac_grids.push_back(area);
-				ac_buses[area] = std::vector<Bus*>();
-				ac_buses[area].push_back(bus);
-				ac_elements[area] = std::vector<Element*>();
-                
-                for (auto& element : net->getConnections().at(bus)) {
-                    if (std::find(ac_elements[area].begin(), ac_elements[area].end(), element) == ac_elements[area].end())
-                        ac_elements[area].push_back(element);
+        std::string area = bus->getBusLocation(); // Assume Bus has getBusLocation()
+
+        // Skip if location string is invalid
+        if (area.empty()) continue;
+
+        bool is_ac = (area[0] == 'A' || area[0] == 'a') && (area[1] == 'C' || area[1] == 'c');
+        bool is_dc = (area[0] == 'D' || area[0] == 'd') && (area[1] == 'C' || area[1] == 'c');
+
+        // Pointer to selected map
+        auto& grid_map = is_ac ? ac_grids : dc_grids;
+        auto& grid_names = is_ac ? ac_grid_names : dc_grid_names;
+
+        if (!is_ac && !is_dc)
+            continue; // Ignore buses not belonging to AC/DC areas
+
+        // Create subnetwork if not already existing
+        if (grid_map.find(area) == grid_map.end()) {
+            grid_map[area] = std::make_unique<SubNetwork>(area);
+            grid_names.push_back(area);
+        }
+
+        // Retrieve the SubNetwork
+        SubNetwork* sub = grid_map[area].get();
+
+        // Add bus to the SubNetwork
+        sub->addBus(bus);
+
+        // Add connected elements
+        auto conn_it = net->getConnections().find(bus);
+        if (conn_it != net->getConnections().end()) {
+            for (auto& elem : conn_it->second) {
+                if (!elem) continue;
+
+                // --- Check if element is an MMC dynamically ---
+                MMC* mmc = dynamic_cast<MMC*>(elem);
+                if (mmc) {
+                    std::string conv_name = elem->getElementSymbol();
+                    if (converters.find(conv_name) == converters.end()) {
+                        converters[conv_name] = elem; // std::make_unique<Element>(elem);
+                        std::cout << "Detected MMC converter: " << conv_name << "\n";
+                    }
                 }
-			}
-            else {
-				ac_buses[area].push_back(bus);
-                for (auto& element : net->getConnections().at(bus)) {
-                    if (std::find(ac_elements[area].begin(), ac_elements[area].end(), element) == ac_elements[area].end())
-						ac_elements[area].push_back(element);
+                else {
+                    sub->addElement(elem);
                 }
             }
         }
-        else if ((area[0] == 'D' || area[0] == 'd') && (area[1] == 'C' || area[1] == 'c')) {
-            // Add to DC grid list/map
-            if (std::find(dc_grids.begin(), dc_grids.end(), area) == dc_grids.end()) {
-                dc_grids.push_back(area);
-                dc_buses[area] = std::vector<Bus*>();
-                dc_buses[area].push_back(bus);
-                dc_elements[area] = std::vector<Element*>();
+    }
 
-                for (auto& element : net->getConnections().at(bus)) {
-                    if (std::find(dc_elements[area].begin(), dc_elements[area].end(), element) == dc_elements[area].end())
-                        dc_elements[area].push_back(element);
-                }
-            }
-            else {
-				dc_buses[area].push_back(bus);
-                for (auto& element : net->getConnections().at(bus)) {
-                    if (std::find(dc_elements[area].begin(), dc_elements[area].end(), element) == dc_elements[area].end())
-                        dc_elements[area].push_back(element);
-				}
-            }
-		}
-	}
+    // Optional summary output
+    std::cout << "\n=== StabilityEstimate: Area Summary ===\n";
+    std::cout << "AC Grids Detected: " << ac_grids.size() << "\n";
+    for (const auto& [name, sub] : ac_grids) {
+        std::cout << "  - " << name << " (" << sub->getBuses().size() << " buses, "
+            << sub->getElements().size() << " elements)\n";
+    }
+
+    std::cout << "DC Grids Detected: " << dc_grids.size() << "\n";
+    for (const auto& [name, sub] : dc_grids) {
+        std::cout << "  - " << name << " (" << sub->getBuses().size() << " buses, "
+            << sub->getElements().size() << " elements)\n";
+    }
 }
-
 
 void StabilityEstimate::compute_equivalent_impedance(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements) {
     if (start_buses.empty())
@@ -352,4 +374,58 @@ void StabilityEstimate::compute_equivalent_impedance_num(Network* net, std::vect
         std::cout << equivalent_impedance(i, 0) << " ";
     }
     std::cout << std::endl;
+}
+
+
+void StabilityEstimate::print_summary() const {
+    std::cout << "\n================= STABILITY ESTIMATE SUMMARY =================\n";
+
+    // --- AC Grids ---
+    std::cout << "\n--- AC Grids (" << ac_grids.size() << ") ---\n";
+    if (ac_grids.empty()) {
+        std::cout << "No AC subnetworks found.\n";
+    }
+    else {
+        for (const auto& [name, sub] : ac_grids) {
+            std::cout << "AC Grid: " << name << "\n";
+            std::cout << "  Buses (" << sub->getBuses().size() << "): ";
+            for (const auto& [busName, busPtr] : sub->getBuses())
+                std::cout << busName << " ";
+            std::cout << "\n  Elements (" << sub->getElements().size() << "): ";
+            for (const auto& [elName, elPtr] : sub->getElements())
+                std::cout << elName << " ";
+            std::cout << "\n\n";
+        }
+    }
+
+    // --- DC Grids ---
+    std::cout << "\n--- DC Grids (" << dc_grids.size() << ") ---\n";
+    if (dc_grids.empty()) {
+        std::cout << "No DC subnetworks found.\n";
+    }
+    else {
+        for (const auto& [name, sub] : dc_grids) {
+            std::cout << "DC Grid: " << name << "\n";
+            std::cout << "  Buses (" << sub->getBuses().size() << "): ";
+            for (const auto& [busName, busPtr] : sub->getBuses())
+                std::cout << busName << " ";
+            std::cout << "\n  Elements (" << sub->getElements().size() << "): ";
+            for (const auto& [elName, elPtr] : sub->getElements())
+                std::cout << elName << " ";
+            std::cout << "\n\n";
+        }
+    }
+
+    // --- Converters ---
+    std::cout << "\n--- Converters (" << converters.size() << ") ---\n";
+    if (converters.empty()) {
+        std::cout << "No MMC converters detected.\n";
+    }
+    else {
+        for (const auto& [name, elem] : converters) {
+            std::cout << "Converter: " << name << "\n";
+        }
+    }
+
+    std::cout << "\n===============================================================\n";
 }

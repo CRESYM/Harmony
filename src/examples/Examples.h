@@ -15,5 +15,6 @@ extern void example_cable();
 
 extern void example_constructors();
 extern void example_visuals();
+extern void example_stability_check();
 
 #endif

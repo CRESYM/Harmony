@@ -112,6 +112,7 @@ set(Header_Files
     src/Include_components.h
     src/Include_control_blocks.h
     src/network.h
+    src/SubNetwork.h
 )
 set(Examples_Header_files
     src/examples/Examples.h
@@ -202,6 +203,7 @@ set(Source_Files
     src/Constants.cpp
     src/main.cpp
     src/network.cpp
+    src/SubNetwork.cpp
 )
 set(Examples_Source_files
     src/examples/example_OPF.cpp
@@ -215,6 +217,7 @@ set(Examples_Source_files
     src/examples/example_cable.cpp
     src/examples/example_constructors.cpp
     src/examples/example_visuals.cpp
+    src/examples/example_stability_check.cpp
 )
 
 # Add source_groups to create file filters (groups) in Visual Studio project

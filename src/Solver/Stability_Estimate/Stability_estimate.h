@@ -3,11 +3,13 @@
 
 #include "../../Constants.h"
 #include "../Helper_Functions/Symbolic_functions.h"
+#include "../../SubNetwork.h"   // Include your SubNetwork class
 
 // Declarations
 class Bus;
 class Element;
 class Network;
+class SubNetwork;
 
 class StabilityEstimate {
 public:
@@ -18,30 +20,30 @@ public:
 	// Add AC and DC grids to the system
 	void add_areas(Network* net);
 
-	vector<string> get_ac_grids() { return ac_grids; };
-	vector<string> get_dc_grids() { return dc_grids; };
-	vector<Bus*> get_ac_buses(string area) { return ac_buses[area]; };
-	vector<Bus*> get_dc_buses(string area) { return dc_buses[area]; };
-	vector<Element*> get_ac_elements(string area) { return ac_elements[area]; };
-	vector<Element*> get_dc_elements(string area) { return dc_elements[area]; };
+	vector<string> get_ac_grid_names() { return ac_grid_names; };
+	vector<string> get_dc_grid_names() { return dc_grid_names; };
+	std::unordered_map<std::string, std::unique_ptr<SubNetwork>>& get_ac_grids() { return ac_grids; }
+	std::unordered_map<std::string, std::unique_ptr<SubNetwork>>& get_dc_grids() { return dc_grids; }
+	std::unordered_map<std::string, Element*>& get_converters() { return converters; }
 
 	// Determine impedance of the part of the system
 	void compute_equivalent_impedance(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements);
 	void compute_equivalent_impedance_num(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double omega_num);
+
+	// Print summary of areas
+	void print_summary() const;
 private:
-	vector<string> ac_grids; // List of AC grids in the system
-	vector<string> dc_grids; // List of DC grids in the system
+	// Names for identification
+	std::vector<std::string> ac_grid_names;
+	std::vector<std::string> dc_grid_names;
 
-	unordered_map<string, vector<Bus*>> ac_buses; // Map of AC grid names to their buses
-	unordered_map<string, vector<Bus*>> dc_buses; // Map of DC grid names to their buses
-	unordered_map<string, vector<Bus*>> ac_outputs; // Connections of AC grid outputs to the converters
-	unordered_map<string, vector<Bus*>> dc_outputs; // Connections of DC grid outputs to the converters
+	// Core hierarchical system representation
+	std::unordered_map<std::string, std::unique_ptr<SubNetwork>> ac_grids;  // AC grids as subnetworks
+	std::unordered_map<std::string, std::unique_ptr<SubNetwork>> dc_grids;  // DC grids as subnetworks
+	std::unordered_map<std::string, Element*> converters; // Converter subnetworks
 
-	unordered_map<string, vector<Element*>> ac_elements; // Map of AC grid names to their elements
-	unordered_map<string, vector<Element*>> dc_elements; // Map of DC grid names to their elements
-
-	unordered_map<string, vector<Element*>> converters; // Map of AC grid names to their converter elements
-	unordered_map<string, vector<Element*>> converter_connections; // Map of converter names to their connections (buses)
+	// Optional: internal mapping of converter interconnections between subnetworks
+	std::unordered_map<std::string, std::pair<SubNetwork*, SubNetwork*>> converter_connections;
 };
 
 

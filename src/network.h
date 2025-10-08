@@ -10,7 +10,7 @@ class Element;
 using Net = std::unordered_map<Bus*, std::vector<Element*>>;
 
 class Network {
-private:
+protected:
     //StateSpaceModel state_space_model; 
     std::unordered_map<std::string, Bus*> buses; // Map of bus names to buses
     std::unordered_map<std::string, Element*> elements;  // Map of designators to elements
