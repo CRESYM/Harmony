@@ -1,4 +1,4 @@
-#include "Stability_estimate.h"
+﻿#include "Stability_estimate.h"
 
 #include "../../network.h"      // For access to the Network class and its members
 #include "../../Include_components.h"
@@ -60,10 +60,63 @@ void StabilityEstimate::add_areas(Network* net) {
                         converters[conv_name] = elem; // std::make_unique<Element>(elem);
                         std::cout << "Detected MMC converter: " << conv_name << "\n";
                     }
+
+                    std::string loc = mmc->getElementLocation();
+                    if (loc.empty()) continue;
+
+                    // Normalize and parse format "ACi_DCj" (case-insensitive)
+                    std::string loc_upper = loc;
+                    std::transform(loc_upper.begin(), loc_upper.end(), loc_upper.begin(), ::toupper);
+
+                    std::regex pattern(R"(AC(\d+)_DC(\d+))", std::regex::icase);
+                    std::smatch match;
+                    if (std::regex_search(loc_upper, match, pattern) && match.size() == 3) {
+                        std::string ac_area = "AC" + match[1].str();
+                        std::string dc_area = "DC" + match[2].str();
+
+                        // Ensure both grids exist
+                        if (ac_grids.find(ac_area) == ac_grids.end()) {
+                            ac_grids[ac_area] = std::make_unique<SubNetwork>(ac_area);
+                        }
+                        if (dc_grids.find(dc_area) == dc_grids.end()) {
+                            dc_grids[dc_area] = std::make_unique<SubNetwork>(dc_area);
+                        }
+
+                        // Identify converter terminal buses (AC and DC)
+                        auto conns = mmc->getConnections();
+                        Bus* ac_bus = nullptr;
+                        Bus* dc_bus = nullptr;
+
+                        for (const auto& [bus, terminal] : conns) {
+                            if (!bus) continue;
+                            std::string bname = bus->getBusLocation();
+                            std::string bname_lower = bname;
+                            std::transform(bname_lower.begin(), bname_lower.end(), bname_lower.begin(), ::tolower);
+
+                            if (bname_lower.rfind("ac", 0) == 0)
+                                ac_bus = bus;
+                            else if (bname_lower.rfind("dc", 0) == 0)
+                                dc_bus = bus;
+                        }
+
+                         // Add buses as outputs for their corresponding grids
+                        if (ac_bus) {
+                            ac_grids[ac_area]->addOutput(ac_bus->getBusName(), ac_bus);
+                        }
+                        if (dc_bus) {
+                            dc_grids[dc_area]->addOutput(dc_bus->getBusName(), dc_bus);
+                        }
+                    }
+                    else {
+                        std::cerr << "[WARN] Converter " << mmc->getElementSymbol()
+                            << " has invalid location format: " << loc << "\n";
+                    }
                 }
                 else {
                     sub->addElement(elem);
+					// sub->connectElementToBus(elem, elem->getBusIndex(bus), bus);
                 }
+         
             }
         }
     }
@@ -73,13 +126,13 @@ void StabilityEstimate::add_areas(Network* net) {
     std::cout << "AC Grids Detected: " << ac_grids.size() << "\n";
     for (const auto& [name, sub] : ac_grids) {
         std::cout << "  - " << name << " (" << sub->getBuses().size() << " buses, "
-            << sub->getElements().size() << " elements)\n";
+            << sub->getElements().size() << " elements, " << sub->getOutputs().size() << " outputs)\n";
     }
 
     std::cout << "DC Grids Detected: " << dc_grids.size() << "\n";
     for (const auto& [name, sub] : dc_grids) {
         std::cout << "  - " << name << " (" << sub->getBuses().size() << " buses, "
-            << sub->getElements().size() << " elements)\n";
+            << sub->getElements().size() << " elements, " << sub->getOutputs().size() << " outputs)\n";
     }
 }
 
@@ -196,6 +249,7 @@ void StabilityEstimate::compute_equivalent_impedance(Network* net, std::vector<B
         pos++;
     }
 
+	cout << Y.__str__() << endl;
 
     // reduced_row_echelon_form
     vec_uint pivot_cols;
@@ -376,6 +430,171 @@ void StabilityEstimate::compute_equivalent_impedance_num(Network* net, std::vect
     std::cout << std::endl;
 }
 
+void StabilityEstimate::compute_equivalent_impedance_num(SubNetwork* subnet,
+    std::vector<Bus*> start_buses,
+    std::vector<Bus*> end_buses,
+    double omega_num)
+{
+    if (!subnet)
+        throw std::invalid_argument("Null SubNetwork pointer passed to compute_equivalent_impedance_num().");
+
+    if (start_buses.empty())
+        throw std::invalid_argument("No start buses provided.");
+
+    // --- Clean duplicates and 'gnd' ---
+    auto clean_buses = [](std::vector<Bus*>& buses) {
+        std::sort(buses.begin(), buses.end());
+        buses.erase(std::unique(buses.begin(), buses.end()), buses.end());
+        buses.erase(std::remove_if(buses.begin(), buses.end(),
+            [](Bus* b) { return b->getBusName() == "gnd"; }),
+            buses.end());
+        };
+
+    clean_buses(start_buses);
+    clean_buses(end_buses);
+
+    // --- Check validity ---
+    if (start_buses.empty())
+        throw std::invalid_argument("After cleanup, there are no valid start buses.");
+
+    // --- Assign matrix positions ---
+    int pos = 0;
+    std::unordered_map<Bus*, int> bus_positions;
+    std::vector<int> current_positions;
+
+    for (auto* bus : start_buses) {
+        bus_positions[bus] = pos;
+        pos += bus->getPinNumber();
+        current_positions.push_back(pos);
+        pos += bus->getPinNumber();
+    }
+
+    int equivalent_impedance_size = pos / 2;
+
+    for (auto* bus : end_buses) {
+        bus_positions[bus] = pos;
+        pos += bus->getPinNumber();
+        current_positions.push_back(pos);
+        pos += bus->getPinNumber();
+    }
+
+    // Add remaining buses from subnet
+    for (const auto& [busName, bus] : subnet->getBuses()) {
+        if (bus->getBusName() == "gnd") continue;
+        if (bus_positions.find(bus) == bus_positions.end()) {
+            bus_positions[bus] = pos;
+            pos += bus->getPinNumber();
+        }
+    }
+
+    // --- Initialize admittance matrix ---
+    Eigen::MatrixXcd Y = Eigen::MatrixXcd::Zero(pos, pos);
+	DenseMatrix z = createZeroMatrix(pos, 1);
+
+    const auto& buses = subnet->getBuses();
+
+	cout << "\n[INFO] Starting Y-matrix assembly for subnet: " << subnet->getSubNetworkName() << "\n";
+
+    // --- Build Y-matrix ---
+    for (const auto& [bus_name, bus] : buses) {
+		auto& elements = bus->getConnectedElements();
+		cout << "Processing bus: " << bus->getBusName() << " with " << elements.size() << " elements.\n";
+        for (Element* element : elements) {
+			cout << "  - Considering element: " << element->getElementSymbol() << "\n";
+            if (!element) continue;
+
+            MMC* mmc = dynamic_cast<MMC*>(element);
+			if (mmc) continue; // Skip MMCs 
+
+            // Compute numerical Y-parameters
+            Eigen::MatrixXcd Ye = element->compute_y_parameters_num(omega_num);
+            const auto& elem_conns = element->getConnections();
+
+            if (elem_conns.find(bus) == elem_conns.end())
+                continue;
+
+            Bus* other_bus = element->getOtherBus(bus);
+            if (!other_bus || bus->getBusName() == "gnd")
+                continue;
+
+            int bus_pos = bus_positions[bus];
+            int other_pos = bus_positions[other_bus];
+            int pins = bus->getPinNumber();
+            int other_pins = other_bus->getPinNumber();
+
+            int terminal = elem_conns.at(bus) - 1;
+            int terminal_other = elem_conns.at(other_bus) - 1;
+
+            // Fill admittance terms
+            for (int i = 0; i < pins; ++i) {
+                for (int j = 0; j < pins; ++j)
+                    Y(bus_pos + i, bus_pos + j) += Ye(terminal * pins + i, terminal * pins + j);
+
+                for (int j = 0; j < other_pins; ++j)
+                    Y(bus_pos + i, other_pos + j) += Ye(terminal * pins + i, terminal_other * other_pins + j);
+            }
+        }
+    }
+
+    // --- Apply current sources for start and end buses ---
+    int idx = 0;
+    for (auto* bus : start_buses) {
+        int bus_pos = bus_positions[bus];
+        int curr_pos = current_positions[idx];
+        int pins = bus->getPinNumber();
+
+        for (int i = 0; i < pins; ++i) {
+            Y(bus_pos + i, curr_pos + i) = -1;
+            Y(curr_pos + i, bus_pos + i) = 1;
+            //Y(curr_pos + i, Y.cols() - 1) = std::complex<double>(1.0, 0.0);
+            z.set(bus_pos + i, 0, symbol("V" + std::to_string(pos + i)));
+        }
+        idx++;
+    }
+
+    for (auto* bus : end_buses) {
+        int bus_pos = bus_positions[bus];
+        int curr_pos = current_positions[idx];
+        int pins = bus->getPinNumber();
+
+        for (int i = 0; i < pins; ++i) {
+            Y(bus_pos + i, curr_pos + i) = 1;
+            Y(curr_pos + i, bus_pos + i) = 1;
+            z.set(bus_pos + i, 0, symbol("V" + std::to_string(pos + i)));
+        }
+        idx++;
+    }
+
+	cout << "[INFO] Y-matrix assembly complete. Size: " << Y.rows() << "x" << Y.cols() << "\n";
+	cout << Y << endl;
+	
+
+    // --- Solve the system ---
+	DenseMatrix Ysym = eigenToSymEngineDenseMatrix(Y);
+    Ysym.col_insert(z, pos);
+
+    // reduced_row_echelon_form
+    vec_uint pivot_cols;
+    reduced_row_echelon_form(Ysym, Ysym, pivot_cols);
+	
+    //Compute the equivalent impedance
+    DenseMatrix equivalent_impedance = createZeroMatrix(equivalent_impedance_size, 1);
+    pos = 0;
+    for (auto& bus : start_buses) {
+        int pos_voltage = bus_positions[bus]; int position_current = current_positions[pos];
+        int pins = bus->getPinNumber();
+        for (int i = 0; i < pins; i++) {
+            equivalent_impedance.set(pos_voltage + i, 0, div(Ysym.get(pos_voltage + i, Ysym.ncols() - 1), Ysym.get(position_current + i, Ysym.ncols() - 1)));
+        }
+        pos++;
+    }
+    // Print the equivalent impedance
+    std::cout << "Equivalent impedance symbolic is: " << std::endl;
+    for (int i = 0; i < equivalent_impedance.nrows(); i++) {
+        std::cout << equivalent_impedance.get(i, 0)->__str__() << " ";
+        std::cout << endl;
+    }
+}
 
 void StabilityEstimate::print_summary() const {
     std::cout << "\n================= STABILITY ESTIMATE SUMMARY =================\n";
@@ -394,6 +613,9 @@ void StabilityEstimate::print_summary() const {
             std::cout << "\n  Elements (" << sub->getElements().size() << "): ";
             for (const auto& [elName, elPtr] : sub->getElements())
                 std::cout << elName << " ";
+			std::cout << "\n  Outputs (" << sub->getOutputs().size() << "): ";
+			for (auto& [outName, outBus] : sub->getOutputs())
+				std::cout << outName << " ";
             std::cout << "\n\n";
         }
     }
@@ -412,6 +634,9 @@ void StabilityEstimate::print_summary() const {
             std::cout << "\n  Elements (" << sub->getElements().size() << "): ";
             for (const auto& [elName, elPtr] : sub->getElements())
                 std::cout << elName << " ";
+			std::cout << "\n  Outputs (" << sub->getOutputs().size() << "): ";
+            for (auto& [outName, outBus] : sub->getOutputs())
+				std::cout << outName << " ";
             std::cout << "\n\n";
         }
     }
@@ -428,4 +653,73 @@ void StabilityEstimate::print_summary() const {
     }
 
     std::cout << "\n===============================================================\n";
+}
+
+void StabilityEstimate::compute_transfer_function(string converter_name, string location, double omega_num) {
+    // Check if converter exists
+    if (converters.find(converter_name) == converters.end()) {
+        std::cerr << "Error: Converter " << converter_name << " not found.\n";
+        return;
+    }
+    Element* converter = converters[converter_name];
+    MMC* mmc = dynamic_cast<MMC*>(converter);
+    if (!mmc) {
+        std::cerr << "Error: Element " << converter_name << " is not an MMC.\n";
+        return;
+    }
+    // Parse location string
+    std::string loc_upper = location;
+    std::transform(loc_upper.begin(), loc_upper.end(), loc_upper.begin(), ::toupper);
+    std::regex pattern(R"(AC(\d+)_DC(\d+))", std::regex::icase);
+    std::smatch match;
+    if (!std::regex_search(loc_upper, match, pattern) || match.size() != 3) {
+        std::cerr << "Error: Invalid location format for converter " << converter_name << ": " << location << "\n";
+        return;
+    }
+    std::string ac_area = "AC" + match[1].str();
+    std::string dc_area = "DC" + match[2].str();
+    // Check if AC and DC grids exist
+    if (ac_grids.find(ac_area) == ac_grids.end()) {
+        std::cerr << "Error: AC grid " << ac_area << " not found for converter " << converter_name << ".\n";
+        return;
+    }
+    if (dc_grids.find(dc_area) == dc_grids.end()) {
+        std::cerr << "Error: DC grid " << dc_area << " not found for converter " << converter_name << ".\n";
+        return;
+    }
+    SubNetwork* ac_grid = ac_grids[ac_area].get();
+    SubNetwork* dc_grid = dc_grids[dc_area].get();
+    // Identify converter terminal buses (AC and DC)
+    auto conns = mmc->getConnections();
+    Bus* ac_bus = nullptr;
+    Bus* dc_bus = nullptr;
+    for (const auto& [bus, terminal] : conns) {
+        if (!bus) continue;
+        std::string bname = bus->getBusLocation();
+        std::string bname_lower = bname;
+		std::transform(bname_lower.begin(), bname_lower.end(), bname_lower.begin(), ::tolower);
+        if (bname_lower.rfind("ac", 0) == 0)
+            ac_bus = bus;
+        else if (bname_lower.rfind("dc", 0) == 0)
+            dc_bus = bus;
+    }
+    if (!ac_bus || !dc_bus) {
+        std::cerr << "Error: Could not identify AC/DC buses for converter " << converter_name << ".\n";
+        return;
+    }
+    // Compute equivalent impedances first for AC grids and DC grids
+	// TO DO: Implement symbolic version if needed
+    std::vector<Bus*> ac_start = { ac_bus };
+    std::vector<Bus*> ac_end; // empty
+    std::vector<Element*> ac_skip = { converter };
+    std::vector<Bus*> dc_start = { dc_bus };
+    std::vector<Bus*> dc_end; // empty
+    std::vector<Element*> dc_skip = { converter };
+    std::cout << "\n--- Computing AC Equivalent Impedance for " << ac_area << " ---\n";
+    compute_equivalent_impedance_num(ac_grid, ac_start, ac_end, ac_skip, omega_num);
+    std::cout << "\n--- Computing DC Equivalent Impedance for " << dc_area << " ---\n";
+	compute_equivalent_impedance_num(dc_grid, dc_start, dc_end, dc_skip, omega_num);
+    // Note: The actual transfer function computation would require more details about the converter model
+    // and how it interacts with the AC and DC grids. This is a placeholder for further implementation.
+	std::cout << "\n[INFO] Transfer function computation for converter " << converter_name << " is not fully implemented.\n";
 }

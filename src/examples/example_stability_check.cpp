@@ -135,7 +135,7 @@ void example_stability_check() {
     ///*  ---------- 2.3 Create Converters ---------- */
     MMC* mmc1 = new MMC(
         "MMC1",             // Symbol
-        "AC1",              // Location
+        "AC1_DC1",              // Location
         1000.0,             // Omega (Nominal Frequency in rad/s)
         -60.0 * 1e6,          // Active Power (P) in W
         -40.0 * 1e6,        // Reactive Power (Q) in VA
@@ -161,7 +161,7 @@ void example_stability_check() {
 
     MMC* mmc2 = new MMC(
         "MMC2",             // Symbol
-        "AC1", 		        // Location
+        "AC1_DC1", 		        // Location
         1000.0,             // Omega (Nominal Frequency in rad/s)
         100.0 * 1e6,        // Active Power (P) in W
         50.0 * 1e6,         // Reactive Power (Q) in VA
@@ -187,7 +187,7 @@ void example_stability_check() {
 
     MMC* mmc3 = new MMC(
         "MMC3",               // Symbol
-        "AC1", 			      // Location
+        "AC1_DC1", 			      // Location
         1000.0,               // Omega (Nominal Frequency in rad/s)
         35.0 * 1e6,           // Active Power (P) in W
         5.0 * 1e6,            // Reactive Power (Q) in VA
@@ -215,4 +215,15 @@ void example_stability_check() {
     StabilityEstimate* stability = new StabilityEstimate();
 	stability->add_areas(&net);
 	stability->print_summary();
+
+
+	// Compute equivalent impedance between two AC buses, skipping the MMCs
+	auto& dc_grids = stability->get_dc_grids();
+	dc_grids["DC1"]->printConnections();
+	vector<Bus*> start_buses = { bus1_dc, bus2_dc };
+	vector<Bus*> end_buses = { bus3_dc };
+	double omega_num = 2 * M_PI * 50.0; // Frequency in rad/s
+	//stability->compute_equivalent_impedance_num(dc_grids["DC1"].get(), start_buses, end_buses, omega_num);
+
+	stability->compute_equivalent_impedance(&net, start_buses, end_buses, { mmc1, mmc2, mmc3 });
 }

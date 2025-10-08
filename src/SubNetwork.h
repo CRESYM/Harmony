@@ -24,6 +24,15 @@ public:
     std::string getSubNetworkName() const { return subnetworkName; }
     void setSubNetworkName(const std::string& name) { subnetworkName = name; }
 
+    void addOutput(const std::string& busName, Bus* bus) {
+        if (bus) {
+            outputBuses[busName] = bus;
+        }
+	}
+
+	// Get output buses
+	const std::unordered_map<std::string, Bus*>& getOutputs() const { return outputBuses; }
+
     // Optional: print info specific to SubNetwork
     void printInfo() const;
 };

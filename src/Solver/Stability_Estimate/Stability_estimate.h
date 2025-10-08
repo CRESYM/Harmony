@@ -29,6 +29,9 @@ public:
 	// Determine impedance of the part of the system
 	void compute_equivalent_impedance(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements);
 	void compute_equivalent_impedance_num(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double omega_num);
+	void compute_equivalent_impedance_num(SubNetwork* subnet, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, double omega_num);
+
+	void compute_transfer_function(string converter_name, string location, double omega_num);
 
 	// Print summary of areas
 	void print_summary() const;

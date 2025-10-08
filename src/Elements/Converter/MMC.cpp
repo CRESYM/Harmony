@@ -71,7 +71,7 @@ MMC::MMC(const std::string& symbol, const std::string& location,
         Bdelay = Eigen::MatrixXd::Zero(5 * pade_order, 1); // Assuming one input for delay system
         Cdelay = Eigen::MatrixXd::Zero(5, 5 * pade_order); // Assuming one output for delay system
         Ddelay = Eigen::MatrixXd::Zero(5, 5); // Assuming one output for delay system
-        cout << "Adding " << 5 * pade_order << " states for delay system with order " << pade_order << endl;
+        // cout << "Adding " << 5 * pade_order << " states for delay system with order " << pade_order << endl;
         if (pade_order == 2) {
             padeDelaySystemMulti2(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
         }
@@ -120,10 +120,10 @@ MMC::MMC(const std::string& symbol, const std::string& location, const std::vect
         Bdelay = Eigen::MatrixXd::Zero(5 * pade_order, 1); // Assuming one input for delay system
         Cdelay = Eigen::MatrixXd::Zero(5, 5 * pade_order); // Assuming one output for delay system
         Ddelay = Eigen::MatrixXd::Zero(5, 5); // Assuming one output for delay system
-        cout << "Adding " << 5 * pade_order << " states for delay system with order " << pade_order << endl;
+        // cout << "Adding " << 5 * pade_order << " states for delay system with order " << pade_order << endl;
         if (pade_order == 2) {
             padeDelaySystemMulti2(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
-			cout << "Using 2nd order Padé approximation for delay system." << endl;
+			// cout << "Using 2nd order Padé approximation for delay system." << endl;
 			cout << Adelay << endl;
 			cout << Bdelay << endl;
 			cout << Cdelay << endl;
