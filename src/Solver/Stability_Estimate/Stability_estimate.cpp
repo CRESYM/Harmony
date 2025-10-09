@@ -466,8 +466,6 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
 
     const auto& buses = subnet->getBuses();
 
-	//cout << "\n[INFO] Starting Y-matrix assembly for subnet: " << subnet->getSubNetworkName() << "\n";
-
     // --- Build Y-matrix ---
     for (const auto& [bus_name, bus] : buses) {
 		auto& elements = bus->getConnectedElements();
