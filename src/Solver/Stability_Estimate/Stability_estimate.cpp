@@ -283,7 +283,7 @@ void StabilityEstimate::compute_equivalent_impedance(Network* net, std::vector<B
     //cout << equivalent_impedance_size << endl;
 }
 
-void StabilityEstimate::compute_equivalent_impedance_num(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double omega_num)
+MatrixXcd StabilityEstimate::compute_equivalent_impedance_num(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double frequency)
 {
     if (start_buses.empty())
     {
@@ -352,7 +352,7 @@ void StabilityEstimate::compute_equivalent_impedance_num(Network* net, std::vect
             // Skip elements that are in the skip_elements list
             if (std::find(skip_elements.begin(), skip_elements.end(), element) == skip_elements.end()) {
                 // Get the Y-parameter matrix of the element
-                Eigen::MatrixXcd element_Y_matrix = element->compute_y_parameters_num(omega_num);  // Use numerical Y
+                std::vector<std::vector<complex<double>>> element_Y_matrix = element->compute_y_parameters(frequency);  // Use numerical Y
 
                 // Add element_Y_matrix
                 std::map<Bus*, int> bus_map = element->getConnections();
@@ -368,11 +368,11 @@ void StabilityEstimate::compute_equivalent_impedance_num(Network* net, std::vect
                 // Update the admittance matrix with element's Y parameters
                 for (int i = 0; i < pins; i++) {
                     for (int j = 0; j < pins; j++) {
-                        Y(position + i, position + j) += element_Y_matrix(terminal * pins + i, terminal * pins + j);
+                        Y(position + i, position + j) += element_Y_matrix[terminal * pins + i][terminal* pins + j];
                     }
                     for (int j = 0; j < pins_other; j++) {
                         if (other_bus->getBusName() != "gnd") {
-                            Y(position + i, position_other + j) += element_Y_matrix(terminal * pins + i, terminal_other * pins_other + j);
+                            Y(position + i, position_other + j) += element_Y_matrix[terminal * pins + i][terminal_other * pins_other + j];
                         }
                     }
                 }
@@ -428,9 +428,11 @@ void StabilityEstimate::compute_equivalent_impedance_num(Network* net, std::vect
         std::cout << equivalent_impedance(i, 0) << " ";
     }
     std::cout << std::endl;
+
+	return equivalent_impedance;
 }
 
-MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double omega_num)
+MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double frequency)
 {
     if (!subnet)
         throw std::invalid_argument("Null SubNetwork pointer passed to compute_equivalent_impedance_num().");
@@ -483,7 +485,7 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
                 continue;
 
             // Compute numerical Y-parameters
-            Eigen::MatrixXcd Ye = element->compute_y_parameters_num(omega_num);
+            std::vector<std::vector<complex<double>>> Ye = element->compute_y_parameters(frequency);
 
             int bus_pos = bus_positions[bus];
             int other_pos = bus_positions[other_bus];
@@ -496,10 +498,10 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
             // Fill admittance terms
             for (int i = 0; i < pins; ++i) {
                 for (int j = 0; j < pins; ++j)
-                    Y(bus_pos + i, bus_pos + j) += Ye(terminal * pins + i, terminal * pins + j);
+                    Y(bus_pos + i, bus_pos + j) += Ye[terminal * pins + i][terminal * pins + j];
 
                 for (int j = 0; j < other_pins; ++j)
-                    Y(bus_pos + i, other_pos + j) += Ye(terminal * pins + i, terminal_other * other_pins + j);
+                    Y(bus_pos + i, other_pos + j) += Ye[terminal * pins + i][terminal_other * other_pins + j];
             }
         }
     }
@@ -613,7 +615,7 @@ void StabilityEstimate::print_summary() const {
     std::cout << "\n===============================================================\n";
 }
 
-void StabilityEstimate::compute_transfer_function(string converter_name, string location, double omega_num) {
+void StabilityEstimate::compute_transfer_function(string converter_name, string location, double frequency) {
     // Check if converter exists
     if (converters.find(converter_name) == converters.end()) {
         std::cerr << "Error: Converter " << converter_name << " not found.\n";
@@ -665,19 +667,33 @@ void StabilityEstimate::compute_transfer_function(string converter_name, string 
         std::cerr << "Error: Could not identify AC/DC buses for converter " << converter_name << ".\n";
         return;
     }
-    // Compute equivalent impedances first for AC grids and DC grids
-	// TO DO: Implement symbolic version if needed
-    std::vector<Bus*> ac_start = { ac_bus };
-    std::vector<Bus*> ac_end; // empty
-    std::vector<Element*> ac_skip = { converter };
-    std::vector<Bus*> dc_start = { dc_bus };
-    std::vector<Bus*> dc_end; // empty
-    std::vector<Element*> dc_skip = { converter };
-    std::cout << "\n--- Computing AC Equivalent Impedance for " << ac_area << " ---\n";
-    compute_equivalent_impedance_num(ac_grid, ac_start, ac_end, ac_skip, omega_num);
-    std::cout << "\n--- Computing DC Equivalent Impedance for " << dc_area << " ---\n";
-	compute_equivalent_impedance_num(dc_grid, dc_start, dc_end, dc_skip, omega_num);
-    // Note: The actual transfer function computation would require more details about the converter model
-    // and how it interacts with the AC and DC grids. This is a placeholder for further implementation.
-	std::cout << "\n[INFO] Transfer function computation for converter " << converter_name << " is not fully implemented.\n";
+
+    // Compute equivalent Y parameters first for AC grids and then for DC grids
+	// AC grids to do - check paper of Marta Molinas
+    // T = 0.5 * [1 -1im;-1im -1]
+    /*CK = (2 / 3) * [1 - 1 / 2 - 1 / 2; 0 sqrt(3) / 2 - sqrt(3) / 2]
+        CKinv = [1 0; -1 / 2 sqrt(3) / 2; -1 / 2 - sqrt(3) / 2]
+
+        a_dq = T * CK * a₂ * CKinv * conj(T) + conj(T) * CK * a₁ * CKinv * T
+        b_dq = T * CK * b₂ * CKinv * conj(T) + conj(T) * CK * b₁ * CKinv * T
+        c_dq = T * CK * c₂ * CKinv * conj(T) + conj(T) * CK * c₁ * CKinv * T
+        d_dq = T * CK * d₂ * CKinv * conj(T) + conj(T) * CK * d₁ * CKinv * T*/
+    // DC grids
+    for (auto& [name, sub] : dc_grids) {
+        std::cout << "Computing equivalent admittance for DC grid: " << name << "\n";
+        MatrixXcd Y_dc = compute_equivalent_admittance_parameters_num(sub.get(), frequency);
+        std::cout << "Equivalent admittance matrix for DC grid " << name << ":\n" << Y_dc << "\n";
+	}
+    // AC grids
+	for (auto& [name, sub] : ac_grids) {
+        std::cout << "Computing equivalent admittance for AC grid: " << name << "\n";
+        MatrixXcd Y_ac = compute_equivalent_admittance_parameters_num(sub.get(), frequency);
+		std::cout << "Equivalent admittance matrix for AC grid " << name << ":\n" << Y_ac << "\n";
+	}
+
+    // Cross coupling for each converter
+	// Depending on the side of the converter, the admittance matrix will be different
+	// Looking at the converter from AC side, the transformation is needed to DC side as
+    // TO DO...
+
 }

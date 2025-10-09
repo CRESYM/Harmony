@@ -28,12 +28,12 @@ public:
 
 	// Determine closing impedance of the part of the system
 	void compute_equivalent_impedance(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements);
-	void compute_equivalent_impedance_num(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double omega_num);
+	MatrixXcd compute_equivalent_impedance_num(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double frequency);
 
 	// Determine admittance of the part of the system
-	MatrixXcd compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double omega_num);
+	MatrixXcd compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double frequency);
 
-	void compute_transfer_function(string converter_name, string location, double omega_num);
+	void compute_transfer_function(string converter_name, string location, double frequency);
 
 	// Print summary of areas
 	void print_summary() const;

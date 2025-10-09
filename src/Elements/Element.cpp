@@ -45,6 +45,19 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
             Y_val_exact[i][j] = eval_complex_double(*r); 
         }
     }
+
+    if (transformation) {
+        bool is_ac = (element_location[0] == 'A' || element_location[0] == 'a') && (element_location[1] == 'C' || element_location[1] == 'c');
+        bool is_dc = (element_location[0] == 'D' || element_location[0] == 'd') && (element_location[1] == 'C' || element_location[1] == 'c');
+        if (is_ac) {
+			complex<double> ang = std::exp(complex<double>(0, 2.0 * M_PI / 3.0)); // a = exp(j120)
+			complex<double> imag_unit(0, 1);
+			MatrixXcd a = MatrixXcd::Zero(2, 3);
+			a << 1, ang, ang* ang, imag_unit, imag_unit* ang, imag_unit* ang* ang;
+            // To finish...
+        }    
+    }
+
     return Y_val_exact;
 }
 
