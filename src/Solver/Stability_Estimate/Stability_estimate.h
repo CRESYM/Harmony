@@ -26,10 +26,12 @@ public:
 	std::unordered_map<std::string, std::unique_ptr<SubNetwork>>& get_dc_grids() { return dc_grids; }
 	std::unordered_map<std::string, Element*>& get_converters() { return converters; }
 
-	// Determine impedance of the part of the system
+	// Determine closing impedance of the part of the system
 	void compute_equivalent_impedance(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements);
 	void compute_equivalent_impedance_num(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double omega_num);
-	void compute_equivalent_impedance_num(SubNetwork* subnet, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, double omega_num);
+
+	// Determine admittance of the part of the system
+	MatrixXcd compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double omega_num);
 
 	void compute_transfer_function(string converter_name, string location, double omega_num);
 

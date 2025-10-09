@@ -223,7 +223,8 @@ void example_stability_check() {
 	vector<Bus*> start_buses = { bus1_dc, bus2_dc };
 	vector<Bus*> end_buses = { bus3_dc };
 	double omega_num = 2 * M_PI * 50.0; // Frequency in rad/s
-	//stability->compute_equivalent_impedance_num(dc_grids["DC1"].get(), start_buses, end_buses, omega_num);
+	MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"].get(), omega_num);
 
-	stability->compute_equivalent_impedance(&net, start_buses, end_buses, { mmc1, mmc2, mmc3 });
+	cout << "Equivalent Admittance Matrix at " << omega_num << " rad/s:" << endl;
+	cout << Y_params << endl;
 }

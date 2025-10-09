@@ -430,53 +430,26 @@ void StabilityEstimate::compute_equivalent_impedance_num(Network* net, std::vect
     std::cout << std::endl;
 }
 
-void StabilityEstimate::compute_equivalent_impedance_num(SubNetwork* subnet,
-    std::vector<Bus*> start_buses,
-    std::vector<Bus*> end_buses,
-    double omega_num)
+MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double omega_num)
 {
     if (!subnet)
         throw std::invalid_argument("Null SubNetwork pointer passed to compute_equivalent_impedance_num().");
 
-    if (start_buses.empty())
-        throw std::invalid_argument("No start buses provided.");
-
-    // --- Clean duplicates and 'gnd' ---
-    auto clean_buses = [](std::vector<Bus*>& buses) {
-        std::sort(buses.begin(), buses.end());
-        buses.erase(std::unique(buses.begin(), buses.end()), buses.end());
-        buses.erase(std::remove_if(buses.begin(), buses.end(),
-            [](Bus* b) { return b->getBusName() == "gnd"; }),
-            buses.end());
-        };
-
-    clean_buses(start_buses);
-    clean_buses(end_buses);
-
-    // --- Check validity ---
-    if (start_buses.empty())
-        throw std::invalid_argument("After cleanup, there are no valid start buses.");
+    std::unordered_map<std::string, Bus*> start_buses = subnet->getOutputs();
 
     // --- Assign matrix positions ---
     int pos = 0;
     std::unordered_map<Bus*, int> bus_positions;
     std::vector<int> current_positions;
-
-    for (auto* bus : start_buses) {
+    for (auto& [name_bus, bus] : start_buses) {
         bus_positions[bus] = pos;
         pos += bus->getPinNumber();
         current_positions.push_back(pos);
-        pos += bus->getPinNumber();
     }
-
-    int equivalent_impedance_size = pos / 2;
-
-    for (auto* bus : end_buses) {
-        bus_positions[bus] = pos;
-        pos += bus->getPinNumber();
-        current_positions.push_back(pos);
-        pos += bus->getPinNumber();
-    }
+    for (int i = 0; i < pos; i++) {
+        current_positions[i] += pos - 1;
+	}
+    int equivalent_impedance_size = pos;
 
     // Add remaining buses from subnet
     for (const auto& [busName, bus] : subnet->getBuses()) {
@@ -488,34 +461,31 @@ void StabilityEstimate::compute_equivalent_impedance_num(SubNetwork* subnet,
     }
 
     // --- Initialize admittance matrix ---
-    Eigen::MatrixXcd Y = Eigen::MatrixXcd::Zero(pos, pos);
-	DenseMatrix z = createZeroMatrix(pos, 1);
+    Eigen::MatrixXcd Y = Eigen::MatrixXcd::Zero(2*pos, 2*pos);
+	VectorXcd z = VectorXcd::Zero(2*pos,1);
 
     const auto& buses = subnet->getBuses();
 
-	cout << "\n[INFO] Starting Y-matrix assembly for subnet: " << subnet->getSubNetworkName() << "\n";
+	//cout << "\n[INFO] Starting Y-matrix assembly for subnet: " << subnet->getSubNetworkName() << "\n";
 
     // --- Build Y-matrix ---
     for (const auto& [bus_name, bus] : buses) {
 		auto& elements = bus->getConnectedElements();
-		cout << "Processing bus: " << bus->getBusName() << " with " << elements.size() << " elements.\n";
+		//cout << "Processing bus: " << bus->getBusName() << " with " << elements.size() << " elements.\n";
         for (Element* element : elements) {
-			cout << "  - Considering element: " << element->getElementSymbol() << "\n";
+			// Skip if elemenet if is null, MMC, or not connected to the bus
             if (!element) continue;
-
             MMC* mmc = dynamic_cast<MMC*>(element);
-			if (mmc) continue; // Skip MMCs 
-
-            // Compute numerical Y-parameters
-            Eigen::MatrixXcd Ye = element->compute_y_parameters_num(omega_num);
+			if (mmc) continue; // Skip MMCs             
             const auto& elem_conns = element->getConnections();
-
             if (elem_conns.find(bus) == elem_conns.end())
                 continue;
-
             Bus* other_bus = element->getOtherBus(bus);
             if (!other_bus || bus->getBusName() == "gnd")
                 continue;
+
+            // Compute numerical Y-parameters
+            Eigen::MatrixXcd Ye = element->compute_y_parameters_num(omega_num);
 
             int bus_pos = bus_positions[bus];
             int other_pos = bus_positions[other_bus];
@@ -538,7 +508,8 @@ void StabilityEstimate::compute_equivalent_impedance_num(SubNetwork* subnet,
 
     // --- Apply current sources for start and end buses ---
     int idx = 0;
-    for (auto* bus : start_buses) {
+	int num_start_buses = start_buses.size();
+    for (auto& [name_bus, bus] : start_buses) {
         int bus_pos = bus_positions[bus];
         int curr_pos = current_positions[idx];
         int pins = bus->getPinNumber();
@@ -546,54 +517,43 @@ void StabilityEstimate::compute_equivalent_impedance_num(SubNetwork* subnet,
         for (int i = 0; i < pins; ++i) {
             Y(bus_pos + i, curr_pos + i) = -1;
             Y(curr_pos + i, bus_pos + i) = 1;
-            //Y(curr_pos + i, Y.cols() - 1) = std::complex<double>(1.0, 0.0);
-            z.set(bus_pos + i, 0, symbol("V" + std::to_string(pos + i)));
         }
         idx++;
     }
 
-    for (auto* bus : end_buses) {
+	/*cout << "Assembled Y-matrix:\n" << Y << "\n";*/
+
+    MatrixXcd Y_params = MatrixXcd::Zero(num_start_buses, num_start_buses);
+
+    // Iterate through the combinations of start buses to get admittance parameters
+    // e.g. start for bus 1 = 1V, bus2-n = 0V, then bus1 = 0V, bus2 = 1V, etc.
+    // and estimate Y11, Y12-n, etc.
+	int bus_vector_pos = 0;
+    for (auto& [name_bus, bus] : start_buses) {
         int bus_pos = bus_positions[bus];
-        int curr_pos = current_positions[idx];
         int pins = bus->getPinNumber();
-
+        // Set voltage source for this bus
         for (int i = 0; i < pins; ++i) {
-            Y(bus_pos + i, curr_pos + i) = 1;
-            Y(curr_pos + i, bus_pos + i) = 1;
-            z.set(bus_pos + i, 0, symbol("V" + std::to_string(pos + i)));
+            z(current_positions[bus_vector_pos] + i, 0) = std::complex<double>(1, 0); // 1V source
         }
-        idx++;
-    }
+        // Solve Y * x = z
+        Eigen::VectorXcd solution = Y.partialPivLu().solve(z);
 
-	cout << "[INFO] Y-matrix assembly complete. Size: " << Y.rows() << "x" << Y.cols() << "\n";
-	cout << Y << endl;
-	
-
-    // --- Solve the system ---
-	DenseMatrix Ysym = eigenToSymEngineDenseMatrix(Y);
-    Ysym.col_insert(z, pos);
-
-    // reduced_row_echelon_form
-    vec_uint pivot_cols;
-    reduced_row_echelon_form(Ysym, Ysym, pivot_cols);
-	
-    //Compute the equivalent impedance
-    DenseMatrix equivalent_impedance = createZeroMatrix(equivalent_impedance_size, 1);
-    pos = 0;
-    for (auto& bus : start_buses) {
-        int pos_voltage = bus_positions[bus]; int position_current = current_positions[pos];
-        int pins = bus->getPinNumber();
-        for (int i = 0; i < pins; i++) {
-            equivalent_impedance.set(pos_voltage + i, 0, div(Ysym.get(pos_voltage + i, Ysym.ncols() - 1), Ysym.get(position_current + i, Ysym.ncols() - 1)));
+		// Store results in Y_params
+		idx = 0;
+        for (idx = 0; idx < num_start_buses; idx++) {
+            for (int j = 0; j < pins; j++) {
+				Y_params(idx + j, bus_vector_pos + j) = solution(current_positions[idx] + j, 0);
+			}	
         }
-        pos++;
-    }
-    // Print the equivalent impedance
-    std::cout << "Equivalent impedance symbolic is: " << std::endl;
-    for (int i = 0; i < equivalent_impedance.nrows(); i++) {
-        std::cout << equivalent_impedance.get(i, 0)->__str__() << " ";
-        std::cout << endl;
-    }
+        
+        // Reset voltage source for this bus to 0V for next iteration
+		z.setZero();
+		// Move to next bus
+		bus_vector_pos++;
+	}
+ 
+   	return Y_params;
 }
 
 void StabilityEstimate::print_summary() const {
