@@ -13,6 +13,6 @@ extern const double gamma_num;
 
 // Helper sign function
 extern int sgn(int v);
-
+extern MatrixXcd vectorToMatrix(const vector<vector<complex<double>>>& vec);
 
 #endif // _STANDARD_FUNCTIONS_H_

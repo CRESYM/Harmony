@@ -627,73 +627,68 @@ void StabilityEstimate::compute_transfer_function(string converter_name, string 
         std::cerr << "Error: Element " << converter_name << " is not an MMC.\n";
         return;
     }
-    // Parse location string
-    std::string loc_upper = location;
-    std::transform(loc_upper.begin(), loc_upper.end(), loc_upper.begin(), ::toupper);
-    std::regex pattern(R"(AC(\d+)_DC(\d+))", std::regex::icase);
-    std::smatch match;
-    if (!std::regex_search(loc_upper, match, pattern) || match.size() != 3) {
-        std::cerr << "Error: Invalid location format for converter " << converter_name << ": " << location << "\n";
-        return;
-    }
-    std::string ac_area = "AC" + match[1].str();
-    std::string dc_area = "DC" + match[2].str();
-    // Check if AC and DC grids exist
-    if (ac_grids.find(ac_area) == ac_grids.end()) {
-        std::cerr << "Error: AC grid " << ac_area << " not found for converter " << converter_name << ".\n";
-        return;
-    }
-    if (dc_grids.find(dc_area) == dc_grids.end()) {
-        std::cerr << "Error: DC grid " << dc_area << " not found for converter " << converter_name << ".\n";
-        return;
-    }
-    SubNetwork* ac_grid = ac_grids[ac_area].get();
-    SubNetwork* dc_grid = dc_grids[dc_area].get();
-    // Identify converter terminal buses (AC and DC)
-    auto conns = mmc->getConnections();
-    Bus* ac_bus = nullptr;
-    Bus* dc_bus = nullptr;
-    for (const auto& [bus, terminal] : conns) {
-        if (!bus) continue;
-        std::string bname = bus->getBusLocation();
-        std::string bname_lower = bname;
-		std::transform(bname_lower.begin(), bname_lower.end(), bname_lower.begin(), ::tolower);
-        if (bname_lower.rfind("ac", 0) == 0)
-            ac_bus = bus;
-        else if (bname_lower.rfind("dc", 0) == 0)
-            dc_bus = bus;
-    }
-    if (!ac_bus || !dc_bus) {
-        std::cerr << "Error: Could not identify AC/DC buses for converter " << converter_name << ".\n";
-        return;
-    }
 
+    std::string ac_area = mmc->getACarea();
+	std::string dc_area = mmc->getDCarea();
+     
     // Compute equivalent Y parameters first for AC grids and then for DC grids
-	// AC grids to do - check paper of Marta Molinas
-    // T = 0.5 * [1 -1im;-1im -1]
-    /*CK = (2 / 3) * [1 - 1 / 2 - 1 / 2; 0 sqrt(3) / 2 - sqrt(3) / 2]
-        CKinv = [1 0; -1 / 2 sqrt(3) / 2; -1 / 2 - sqrt(3) / 2]
-
-        a_dq = T * CK * a₂ * CKinv * conj(T) + conj(T) * CK * a₁ * CKinv * T
-        b_dq = T * CK * b₂ * CKinv * conj(T) + conj(T) * CK * b₁ * CKinv * T
-        c_dq = T * CK * c₂ * CKinv * conj(T) + conj(T) * CK * c₁ * CKinv * T
-        d_dq = T * CK * d₂ * CKinv * conj(T) + conj(T) * CK * d₁ * CKinv * T*/
     // DC grids
+	unordered_map<string, MatrixXcd> Y_dc_matrices;
     for (auto& [name, sub] : dc_grids) {
         std::cout << "Computing equivalent admittance for DC grid: " << name << "\n";
         MatrixXcd Y_dc = compute_equivalent_admittance_parameters_num(sub.get(), frequency);
+		Y_dc_matrices[name] = Y_dc;
         std::cout << "Equivalent admittance matrix for DC grid " << name << ":\n" << Y_dc << "\n";
 	}
     // AC grids
+	unordered_map<string, MatrixXcd> Y_ac_matrices;
 	for (auto& [name, sub] : ac_grids) {
         std::cout << "Computing equivalent admittance for AC grid: " << name << "\n";
         MatrixXcd Y_ac = compute_equivalent_admittance_parameters_num(sub.get(), frequency);
+		Y_ac_matrices[name] = Y_ac;
 		std::cout << "Equivalent admittance matrix for AC grid " << name << ":\n" << Y_ac << "\n";
 	}
 
     // Cross coupling for each converter
 	// Depending on the side of the converter, the admittance matrix will be different
-	// Looking at the converter from AC side, the transformation is needed to DC side as
-    // TO DO...
+    // If it is not main converter, then the converter is always considered from DC side.
+	// If it is main converter, then if the location is on DC side, then the same applies.
+	unordered_map<string, MatrixXcd> Y_conv_matrices;
+    for (auto& [name, elem] : converters) {
+        MMC* mmc_elem = dynamic_cast<MMC*>(elem);
+        if (!mmc_elem) continue;
+        // Identify converter terminal buses (AC and DC)
+        auto conns_elem = mmc_elem->getConnections();
+        Bus* ac_bus = nullptr;
+        Bus* dc_bus = nullptr;
+        for (const auto& [bus, terminal] : conns_elem) {
+            if (!bus) continue;
+            std::string bname = bus->getBusLocation();
+            std::string bname_lower = bname;
+            std::transform(bname_lower.begin(), bname_lower.end(), bname_lower.begin(), ::tolower);
+            if (bname_lower.rfind("ac", 0) == 0)
+                ac_bus = bus;
+            else if (bname_lower.rfind("dc", 0) == 0)
+                dc_bus = bus;
+        }
+        if (!ac_bus || !dc_bus) continue;
+        // Get admittance matrices for the grids
+
+        if ((converter_name != name) || (location == dc_area)) {
+            MatrixXcd Y_ac = Y_ac_matrices[ac_area];
+            MatrixXcd Ymmc = vectorToMatrix(mmc_elem->compute_y_parameters(frequency));
+            // The overall transfer function considering the converter's own admittance and the grid admittances.
+            MatrixXcd Ydc(1, 1);
+            Ydc(0, 0) = Ymmc(0, 0);
+            MatrixXcd b = Ymmc.block(0, 1, 0, 3);
+            MatrixXcd a = Ymmc.block(1, 0, 3, 0);
+            MatrixXcd Ydq = Ymmc.block(1, 1, 3, 3);
+            Y_conv_matrices[name] = b * (Ydq - Y_ac).inverse() * a + Ydc;
+        }
+
+        // TO WRITE CONTINUATION FOR AC SIDE
+    }
+
+	// CROSS-COUPLING OF THE DC SIDE OF THE CONVERTER
 
 }
