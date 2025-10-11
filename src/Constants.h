@@ -50,6 +50,7 @@ using SymEngine::RealMPFR;
 #include <any>
 #include <map>
 #include <cctype> // Include the header for std::tolower
+#include <regex>
 #include <memory>  
 #include <unordered_map>
 #include <cmath>

@@ -22,6 +22,9 @@ public:
     int getOutputPins() const { return output_pins; }
     void setInputPins(int pins) { input_pins = pins; }
     void setOutputPins(int pins) { output_pins = pins; }
+	void setTransformation(bool flag) { transformation = flag; }
+
+	// Getters for element symbol and connections
     std::string getElementSymbol() const { return element_symbol; }
     std::vector<Bus*> getBuses();
     int getBusIndex(Bus* bus) {
@@ -33,7 +36,6 @@ public:
 	}
     Bus* getOtherBus(Bus*);
     std::map<Bus*, int> getConnections() { return connections; }
-
 	string getElementLocation() const { return element_location; }
     
 
@@ -58,8 +60,8 @@ public:
 
     // Virtual function to compute Y-parameters (to be implemented by derived classes)
     virtual std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency);
-    virtual DenseMatrix get_y_parameters() { return Y_matrix; };
-    virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num) { return substitute_symbol(Y_matrix, omega, omega_num); };
+    virtual DenseMatrix get_y_parameters() { return Y_matrix; }; 
+    // virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num) { return substitute_symbol(Y_matrix, omega, omega_num); }; 
         
     // Generic MNA stamping 
     virtual void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) {};
@@ -70,12 +72,6 @@ public:
 		std::map<std::string, double>& globalParams) const {
 	}
 
-    //virtual void computePowerFlowAC(std::map<std::string, double>& branchData,
-    //    std::map<std::string, double>& globalParams) const {}
-
-    //virtual void computePowerFlowDC(std::map<std::string, double>& branchDCData,
-    //    std::map<std::string, double>& globalParams) const {}
-
     std::map<std::string, double> getOPFInfo() const {
         return element_OPF_info;
     }
@@ -83,6 +79,8 @@ public:
     void setOPFInfo(std::map<std::string, double>& info) { element_OPF_info = info; }
 
 protected:
+	bool transformation = false; // Flag to indicate if a transformation is applied (e.g. three-phase to dq-frame)
+
     std::string element_symbol; // Element symbol (e.g., R, L, C)
 	std::string element_location; // Element location (it can be AC1,2,... or DC1,2,... or PEC1,2,...)
     int input_pins; // Number of input pins/phases

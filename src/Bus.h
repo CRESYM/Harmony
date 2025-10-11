@@ -18,6 +18,7 @@ public:
     std::string getBusName() { return busName; }
     int getPinNumber() { return numberPins; }
 	std::string getBusLocation() { return busLocation; }
+	vector<Element*> getConnectedElements() { return connectedElements; }
 
     //  Operator overload to compare the bus name with a string
     bool operator==(const char* name);

@@ -120,7 +120,6 @@ public:
 
 
 	// Function to compute Y parameters
-	virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num);
 	virtual std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency) override;
 
 	virtual void printElementValues() override;

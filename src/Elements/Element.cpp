@@ -45,6 +45,28 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
             Y_val_exact[i][j] = eval_complex_double(*r); 
         }
     }
+
+    if (transformation) {
+        bool is_ac = (element_location[0] == 'A' || element_location[0] == 'a') && (element_location[1] == 'C' || element_location[1] == 'c');
+        bool is_dc = (element_location[0] == 'D' || element_location[0] == 'd') && (element_location[1] == 'C' || element_location[1] == 'c');
+        if (is_ac) {
+			complex<double> ang = std::exp(complex<double>(0, 2.0 * M_PI / 3.0)); // a = exp(j120)
+			complex<double> imag_unit(0, 1);
+			MatrixXcd a = MatrixXcd::Zero(2, 3);
+			a << 1, ang, ang* ang, imag_unit, imag_unit* ang, imag_unit* ang* ang;
+            // To finish...
+                // AC grids to do - check paper of Marta Molinas
+    // T = 0.5 * [1 -1im;-1im -1]
+    /*CK = (2 / 3) * [1 - 1 / 2 - 1 / 2; 0 sqrt(3) / 2 - sqrt(3) / 2]
+        CKinv = [1 0; -1 / 2 sqrt(3) / 2; -1 / 2 - sqrt(3) / 2]
+
+        a_dq = T * CK * a₂ * CKinv * conj(T) + conj(T) * CK * a₁ * CKinv * T
+        b_dq = T * CK * b₂ * CKinv * conj(T) + conj(T) * CK * b₁ * CKinv * T
+        c_dq = T * CK * c₂ * CKinv * conj(T) + conj(T) * CK * c₁ * CKinv * T
+        d_dq = T * CK * d₂ * CKinv * conj(T) + conj(T) * CK * d₁ * CKinv * T*/
+        }    
+    }
+
     return Y_val_exact;
 }
 

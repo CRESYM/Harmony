@@ -76,7 +76,6 @@ public:
 		std::tuple<int, std::vector<double>, double> groundwire);
 
 	// Function to compute Y parameters
-	virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num) override;
 	virtual vector<vector<complex<double>>> compute_y_parameters(double omega_num) override;
 };
 

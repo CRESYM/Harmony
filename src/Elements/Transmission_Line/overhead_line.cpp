@@ -357,42 +357,6 @@ Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& locat
 	Y_matrix.resize(2 * n, 2 * n); // Resize Y_matrix in Element class
 }
 
-Eigen::MatrixXcd Overhead_Line::compute_y_parameters_num(double omega_num)
-{
-	// Step 1: Compute Z and Y matrices based on frequency
-	Eigen::MatrixXcd Z_num = substitute_symbol(Z, omega, omega_num);
-	Eigen::MatrixXcd Y_num = substitute_symbol(Y, omega, omega_num);
-
-	// Step 2: Compute Gamma = sqrt(Z * Y) using Eigen's matrix square root
-	Eigen::MatrixXcd ZY = Z_num * Y_num;  // Product of Z and Y
-	Eigen::MatrixXcd Gamma = ZY.sqrt(); // Eigenvalues' square root as Gamma
-
-	// Step 3: Compute Yc = Z.inverse() * Gamma
-	Eigen::MatrixXcd Z_inv = Z_num.inverse();  // Inverse of Z
-	Eigen::MatrixXcd Yc = Z_inv * Gamma;  // Compute Yc
-
-	// Step 4: Initialize the Y parameter matrix
-	int n = Z.nrows();  // Size of the original matrices
-	Eigen::MatrixXcd Y_params(2 * n, 2 * n);
-	Y_params.setZero();  // Initialize with zeros
-
-	// Step 5: Compute Gamma_l = Gamma * length (element-wise multiplication)
-	Eigen::MatrixXcd Gamma_l = Gamma * length;
-
-	// Step 6: Calculate coth(Gamma_l) and csc(Gamma_l)
-	Eigen::MatrixXcd coth_Gamma_l = Gamma_l.cosh() * (Gamma_l.sinh()).inverse();  // coth(Γl)
-	Eigen::MatrixXcd csc_Gamma_l = (Gamma_l.sinh()).inverse();    // csc(Γl)
-
-	// Step 7: Fill in the Y parameters matrix
-	Y_params.block(0, 0, n, n) = Yc * coth_Gamma_l;         // Yc * coth(Γl)
-	Y_params.block(0, n, n, n) = -Yc * csc_Gamma_l;        // -Yc * csc(Γl)
-	Y_params.block(n, 0, n, n) = -Yc * csc_Gamma_l;        // -Yc * csc(Γl)
-	Y_params.block(n, n, n, n) = Yc * coth_Gamma_l;        // Yc * coth(Γl)
-
-	return Y_params;
-}
-
-
 std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_parameters(double frequency)
 {
 	// Step 1: Compute Z and Y matrices based on frequency

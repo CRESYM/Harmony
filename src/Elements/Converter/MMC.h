@@ -41,7 +41,8 @@ public:
     Eigen::MatrixXd getC() const { return C_matrix; }
     Eigen::MatrixXd getD() const { return D_matrix; }
     Eigen::VectorXd getEquilibriumState() const { return equilibrium_state; }
-
+	string getACarea() const { return element_location.substr(0, 3); } // Get AC area from location string
+	string getDCarea() const { return element_location.substr(4, 2); } // Get DC area from location string
     
     
     // Equilibrium point calculation
