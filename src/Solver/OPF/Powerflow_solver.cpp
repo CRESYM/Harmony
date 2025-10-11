@@ -130,6 +130,7 @@ void PowerFlow::solve_opf(
         auto& IDtoCountmap = sys_ac.IDtoCountmap;
         auto& refbuscount_ac = sys_ac.refbuscount_ac;
 
+ 
         GRBEnv env = GRBEnv(true);
         env.start();
         GRBModel model = GRBModel(env);
@@ -503,6 +504,22 @@ void PowerFlow::solve_opf(
                 model.addConstr(vn2_ac[k](j) == v2s_dc(i));
             }
 
+            //if (!recRef[ng].empty()) {
+            //    int ref_index = recRef[ng][0];  
+            //    model.addConstr(vn2_ac[ng](ref_index) == 1.04);
+            //}
+        }
+       
+
+        std::cout << "\n[Debug] Printing voltage limits for each bus:\n";
+        for (int ng = 0; ng < ngrids; ++ng) {
+            std::cout << "=== AC Grid " << ng + 1 << " ===\n";
+            for (int i = 0; i < nbuses_ac[ng]; ++i) {
+                std::cout << "Bus " << std::setw(3) << i + 1
+                    << "  Vmax(col11)=" << std::setw(8) << bus_ac[ng](i, 11)
+                    << "  Vmin(col12)=" << std::setw(8) << bus_ac[ng](i, 12)
+                    << std::endl;
+            }
         }
 
         /**************************************************
@@ -561,28 +578,28 @@ void PowerFlow::solve_opf(
                 pio = &fout;
             }
 
-#define OUT (*pio)
+        #define OPF_OUT (*pio)
 
             //  " ac bus print " 
-            OUT << "\n================================================================================";
-            OUT << "\n|   AC  Bus Data                                                               |";
-            OUT << "\n================================================================================";
-            OUT << "\n Area     Bus      Voltage          Generation               Load        ";
-            OUT << "\n #        #    Mag [pu] Ang [deg]   Pg [MW]  Qg [MVAr]   P [MW]  Q [MVAr]";
-            OUT << "\n-----   -----  --------  --------  --------  ---------   ------  --------";
+            OPF_OUT << "\n================================================================================";
+            OPF_OUT << "\n|   AC  Bus Data                                                               |";
+            OPF_OUT << "\n================================================================================";
+            OPF_OUT << "\n Area     Bus      Voltage          Generation               Load        ";
+            OPF_OUT << "\n #        #    Mag [pu] Ang [deg]   Pg [MW]  Qg [MVAr]   P [MW]  Q [MVAr]";
+            OPF_OUT << "\n-----   -----  --------  --------  --------  ---------   ------  --------";
 
             for (int ng = 0; ng < ngrids; ++ng) {
                 const auto& genidx = generator_ac[ng].col(0);
                 for (int i = 0; i < nbuses_ac[ng]; ++i) {
                     double vmag = std::sqrt(vn2_ac[ng](i).get(GRB_DoubleAttr_X));
-                    OUT << "\n"
+                    OPF_OUT << "\n"
                         << std::setw(3) << ng + 1
                         << std::setw(8) << i + 1
                         << std::setw(11) << std::fixed << std::setprecision(3) << vmag
                         << std::setw(10) << 0.0;  // Assuming angle is zero for now
 
                     if (std::find(recRef[ng].begin(), recRef[ng].end(), i) != recRef[ng].end()) {
-                        OUT << "*";
+                        OPF_OUT << "*";
                     }
 
                     bool is_generator = (genidx.array() == i + 1).any();
@@ -599,38 +616,38 @@ void PowerFlow::solve_opf(
                         double qgen = qgen_ac[ng](gen_idx).get(GRB_DoubleAttr_X) * baseMVA_ac;
 
                         if (std::find(recRef[ng].begin(), recRef[ng].end(), i) != recRef[ng].end()) {
-                            OUT << std::setw(10) << pgen << std::setw(9) << qgen;
+                            OPF_OUT << std::setw(10) << pgen << std::setw(9) << qgen;
                         }
                         else {
-                            OUT << std::setw(11) << pgen << std::setw(9) << qgen;
+                            OPF_OUT << std::setw(11) << pgen << std::setw(9) << qgen;
                         }
                         double pd = pd_ac[ng](i) * baseMVA_ac;
                         double qd = qd_ac[ng](i) * baseMVA_ac;
-                        OUT << std::setw(11) << pd << std::setw(9) << qd;
+                        OPF_OUT << std::setw(11) << pd << std::setw(9) << qd;
                     }
                     else {
-                        OUT << "          -       -";
+                        OPF_OUT << "          -       -";
                         double pd = pd_ac[ng](i) * baseMVA_ac;
                         double qd = qd_ac[ng](i) * baseMVA_ac;
-                        OUT << std::setw(12) << pd << std::setw(9) << qd;
+                        OPF_OUT << std::setw(12) << pd << std::setw(9) << qd;
                     }
 
                 }
             }
-            OUT << "\n-----   -----  --------  --------  --------  ---------   ------  --------";
+            OPF_OUT << "\n-----   -----  --------  --------  --------  ---------   ------  --------";
 
             double GenCostResUSA = model.get(GRB_DoubleAttr_ObjVal);;
             double GenCostResEURO = GenCostResUSA / 1.08;
-            OUT << "\n The total generation cost is $" << std::fixed << std::setprecision(2)
+            OPF_OUT << "\n The total generation cost is $" << std::fixed << std::setprecision(2)
                 << GenCostResUSA << "/MWh (€" << GenCostResEURO << "/MWh)";
-            OUT << "\n\n";
+            OPF_OUT << "\n\n";
 
-            OUT << "\n===========================================================================================";
-            OUT << "\n|     AC Grids Branch Data                                                                |";
-            OUT << "\n===========================================================================================";
-            OUT << "\n Area   Branch  From   To        From Branch Flow         To Branch Flow      Branch Loss";
-            OUT << "\n #      #       Bus#   Bus#    Pij [MW]   Qij [MVAr]    Pij [MW]   Qij [MVAr]  Pij_loss [MW]";
-            OUT << "\n ----   ------  -----  -----  ---------  ----------   ----------  ----------  -------------";
+            OPF_OUT << "\n===========================================================================================";
+            OPF_OUT << "\n|     AC Grids Branch Data                                                                |";
+            OPF_OUT << "\n===========================================================================================";
+            OPF_OUT << "\n Area   Branch  From   To        From Branch Flow         To Branch Flow      Branch Loss";
+            OPF_OUT << "\n #      #       Bus#   Bus#    Pij [MW]   Qij [MVAr]    Pij [MW]   Qij [MVAr]  Pij_loss [MW]";
+            OPF_OUT << "\n ----   ------  -----  -----  ---------  ----------   ----------  ----------  -------------";
 
             for (size_t ng = 0; ng < ngrids; ++ng) {
                 for (int i = 0; i < nbranches_ac[ng]; ++i) {
@@ -643,7 +660,7 @@ void PowerFlow::solve_opf(
 
                     double pij_loss = std::abs(pij_from_to + pij_to_from);
 
-                    OUT << "\n "
+                    OPF_OUT << "\n "
                         << std::setw(2) << ng + 1
                         << " " << std::setw(6) << i + 1
                         << " " << std::setw(7) << fbus_ac[ng](i)
@@ -656,7 +673,7 @@ void PowerFlow::solve_opf(
                 }
             }
 
-            OUT << "\n ----   ------  -----  -----  ---------  -----------    --------  ----------  -------------";
+            OPF_OUT << "\n ----   ------  -----  -----  ---------  -----------    --------  ----------  -------------";
 
             double NetPloss_ac = 0.0;
 
@@ -672,16 +689,16 @@ void PowerFlow::solve_opf(
                 }
             }
 
-            OUT << "\n The total AC network losses is " << std::fixed << std::setprecision(3) << NetPloss_ac << " MW.";
-            OUT << "\n";
+            OPF_OUT << "\n The total AC network losses is " << std::fixed << std::setprecision(3) << NetPloss_ac << " MW.";
+            OPF_OUT << "\n";
 
             // " dc bus print " 
-            OUT << "\n================================================================================\n";
-            OUT << "|   MTDC Bus Data                                                              |\n";
-            OUT << "================================================================================\n";
-            OUT << " Bus   Bus    AC   DC Voltage   DC Power   PCC Bus Injection   Converter loss\n";
-            OUT << " DC #  AC #  Area   Vdc [pu]    Pdc [MW]   Ps [MW]  Qs [MVAr]  Conv_Ploss [MW]\n";
-            OUT << "-----  ----  ----  ---------    --------   -------  --------    --------";
+            OPF_OUT << "\n================================================================================\n";
+            OPF_OUT << "|   MTDC Bus Data                                                              |\n";
+            OPF_OUT << "================================================================================\n";
+            OPF_OUT << " Bus   Bus    AC   DC Voltage   DC Power   PCC Bus Injection   Converter loss\n";
+            OPF_OUT << " DC #  AC #  Area   Vdc [pu]    Pdc [MW]   Ps [MW]  Qs [MVAr]  Conv_Ploss [MW]\n";
+            OPF_OUT << "-----  ----  ----  ---------    --------   -------  --------    --------";
 
             double totalConverterLoss = 0.0;
             for (int i = 0; i < nbuses_dc; ++i) {
@@ -693,8 +710,8 @@ void PowerFlow::solve_opf(
                 double qs = qs_dc(i).get(GRB_DoubleAttr_X) * baseMW_dc;
                 double ploss = convPloss_dc(i).get(GRB_DoubleAttr_X) * baseMW_dc;
                 totalConverterLoss += ploss;
-                OUT << std::fixed << std::setprecision(3);
-                OUT << "\n" << std::setw(4) << i + 1
+                OPF_OUT << std::fixed << std::setprecision(3);
+                OPF_OUT << "\n" << std::setw(4) << i + 1
                     << std::setw(6) << acBus
                     << std::setw(6) << acArea
                     << std::setw(10) << vdc
@@ -704,18 +721,18 @@ void PowerFlow::solve_opf(
                     << std::setw(11) << ploss;
             }
 
-            OUT << "\n-----  ----  ----  ---------    --------   -------  --------    --------";
-            OUT << "\n The total converter losses is " << std::fixed << std::setprecision(3)
+            OPF_OUT << "\n-----  ----  ----  ---------    --------   -------  --------    --------";
+            OPF_OUT << "\n The total converter losses is " << std::fixed << std::setprecision(3)
                 << totalConverterLoss << " MW";
-            OUT << "\n";
+            OPF_OUT << "\n";
 
             // " dc branch print " 
-            OUT << "\n ===================================================================\n";
-            OUT << " |     MTDC Branch Data                                            |\n";
-            OUT << " ===================================================================\n";
-            OUT << " Branch  From   To     From Branch    To Branch      Branch Loss\n";
-            OUT << " #       Bus#   Bus#   Flow Pij [MW]  Flow Pij [MW]  Pij_loss [MW]\n";
-            OUT << " ------  -----  -----   ---------      ---------      ---------\n";
+            OPF_OUT << "\n ===================================================================\n";
+            OPF_OUT << " |     MTDC Branch Data                                            |\n";
+            OPF_OUT << " ===================================================================\n";
+            OPF_OUT << " Branch  From   To     From Branch    To Branch      Branch Loss\n";
+            OPF_OUT << " #       Bus#   Bus#   Flow Pij [MW]  Flow Pij [MW]  Pij_loss [MW]\n";
+            OPF_OUT << " ------  -----  -----   ---------      ---------      ---------\n";
 
             double NetPloss_dc = 0.0;
             for (int i = 0; i < nbranches_dc; ++i) {
@@ -726,7 +743,7 @@ void PowerFlow::solve_opf(
                 double pij_to_from = pij_dc(to, from).get(GRB_DoubleAttr_X) * baseMW_dc * pol_dc;
                 double pij_loss = std::abs(pij_from_to + pij_to_from);
 
-                OUT << std::setw(5) << (i + 1) << " "
+                OPF_OUT << std::setw(5) << (i + 1) << " "
                     << std::setw(6) << fbus_dc(i) << " "
                     << std::setw(6) << tbus_dc(i) << " "
                     << std::setw(11) << std::fixed << std::setprecision(3) << pij_from_to << " "
@@ -736,12 +753,12 @@ void PowerFlow::solve_opf(
                 NetPloss_dc += pij_loss;
             }
 
-            OUT << " ------  -----  -----   ---------      ---------      ---------\n";
-            OUT << " The total DC network losses is " << std::fixed << std::setprecision(3) << NetPloss_dc << " MW.\n";
+            OPF_OUT << " ------  -----  -----   ---------      ---------      ---------\n";
+            OPF_OUT << " The total DC network losses is " << std::fixed << std::setprecision(3) << NetPloss_dc << " MW.\n";
 
             auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
 
-            OUT << "\n Execution time is " << duration << " s" << std::endl;
+            OPF_OUT << "\n Execution time is " << duration << " s" << std::endl;
 
             if (fout.is_open()) fout.close();
 

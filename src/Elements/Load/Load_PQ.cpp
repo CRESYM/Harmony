@@ -20,8 +20,8 @@ void LoadPQ::computePowerFlow(std::map<std::string, double>& busAC,
         throw std::runtime_error("LoadPQ is not applicable for DC networks.");
     }
     else if ((area[0] == 'A' || area[0] == 'a') && (area[1] == 'c' || area[1] == 'C')) { // AC network
-        double Pd = P / global_params["baseMVA"];
-        double Qd = Q / global_params["baseMVA"];
+        double Pd = P ;
+        double Qd = Q ;
         busAC["Pd"] += Pd;
         busAC["Qd"] += Qd;
     }
