@@ -409,7 +409,6 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
 
 }
 
-
 void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
@@ -485,6 +484,29 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
             gRow[key] = value;   
         }
     }
+
+    // If gen_info contains "Vg", update corresponding bus Vmax/Vmin and fixed it to Vg
+    auto it_vg = gen_info.find("Vg");
+    if (it_vg != gen_info.end()) {
+        double Vg_value = it_vg->second;  // e.g., 345 (in kV)
+        double base_kv = global_params["ACbaseKV"];
+        double Vg_pu = Vg_value / base_kv;
+
+        std::string bus_row_key = std::to_string(bus_id - 1);
+        if (data["busAC"].count(bus_row_key)) {
+            auto& busRow = data["busAC"][bus_row_key];
+            busRow["Vmax"] = Vg_pu;
+            busRow["Vmin"] = Vg_pu;
+            std::cout << "[make_Generator] Bus " << bus_name
+                << " voltage limits updated by gen '" << element->getElementSymbol()
+                << "': Vmax = Vmin = " << Vg_pu << " pu" << std::endl;
+        }
+        else {
+            std::cerr << "[make_Generator] Warning: Bus row not found for generator "
+                << element->getElementSymbol() << std::endl;
+        }
+    }
+
 
 	const std::string& gen_name = element->getElementSymbol();
     const std::string& area_id = to_string(gRow["area"]);
@@ -861,8 +883,8 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
         tbus_ac[ng] = branch_ac[ng].col(1).cast<int>();
         pd_ac[ng] = bus_ac[ng].col(2) / baseMVA_ac;
         qd_ac[ng] = bus_ac[ng].col(3) / baseMVA_ac;
-    }
 
+    }
 }
 
 void PowerFlow::load_params_dc(const std::string& dcgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF) {

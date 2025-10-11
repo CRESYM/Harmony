@@ -15,6 +15,8 @@ int main() {
 	// example_cable();
 	
 	// Solver examples
+	example_OPF();
+	//example_OPF_csv();
 	// example_OPF();
 	// example_OPF_csv();
 	// example_DQsym_math_operations();
