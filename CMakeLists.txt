@@ -208,6 +208,8 @@ set(Source_Files
 set(Examples_Source_files
     src/examples/example_OPF.cpp
     src/examples/example_OPF_csv.cpp
+    src/examples/example_OPF_1.cpp
+    src/examples/example_OPF_csv_1.cpp
     src/examples/example_DQsym_math_operations.cpp
     src/examples/example_MMC.cpp
     src/examples/example_WT_type_3.cpp

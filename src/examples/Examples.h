@@ -3,6 +3,8 @@
 
 extern void example_OPF();
 extern void example_OPF_csv();
+extern void example_OPF_1();
+extern void example_OPF_csv_1();
 
 extern void example_DQsym_math_operations();
 
