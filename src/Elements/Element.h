@@ -61,6 +61,7 @@ public:
     // Virtual function to compute Y-parameters (to be implemented by derived classes)
     virtual std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency);
     virtual DenseMatrix get_y_parameters() { return Y_matrix; }; 
+    virtual std::vector<std::vector<complex<double>>> apply_transformation(std::vector<std::vector<complex<double>>>& Y1, std::vector<std::vector<complex<double>>>& Y2);
     // virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num) { return substitute_symbol(Y_matrix, omega, omega_num); }; 
         
     // Generic MNA stamping 

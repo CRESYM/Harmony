@@ -36,38 +36,99 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
     double angular_frequency = 2 * frequency * M_PI;
     map_basic_basic m;
     m[omega] = real_double(angular_frequency);
-    std::vector<std::vector<complex<double>>> Y_val_exact(Y_matrix.nrows());
-    for (int i = 0; i < Y_matrix.nrows(); i++)
-        Y_val_exact[i].resize(Y_matrix.ncols());
-    for (int i = 0; i < Y_matrix.nrows(); ++i) {
-        for (int j = 0; j < Y_matrix.ncols(); ++j) {
-            RCP<const Basic> r = subs(Y_matrix.get(i, j), m);
-            Y_val_exact[i][j] = eval_complex_double(*r); 
+	double omega_0 = 100.0 * M_PI; // Default frequency 50 Hz
+	map_basic_basic m1, m2;
+	m1[omega] = real_double(angular_frequency - omega_0);
+	m2[omega] = real_double(angular_frequency + omega_0);
+
+    bool is_ac = (element_location[0] == 'A' || element_location[0] == 'a') && (element_location[1] == 'C' || element_location[1] == 'c');
+
+    if (transformation && is_ac) {
+        std::vector<std::vector<complex<double>>> Y_val_exact1(Y_matrix.nrows());
+        std::vector<std::vector<complex<double>>> Y_val_exact2(Y_matrix.nrows());
+        for (int i = 0; i < Y_matrix.nrows(); i++) {
+            Y_val_exact1[i].resize(Y_matrix.ncols());
+            Y_val_exact2[i].resize(Y_matrix.ncols());
+        }
+        for (int i = 0; i < Y_matrix.nrows(); ++i) {
+            for (int j = 0; j < Y_matrix.ncols(); ++j) {
+                RCP<const Basic> r = subs(Y_matrix.get(i, j), m1);
+                Y_val_exact1[i][j] = eval_complex_double(*r);
+				r = subs(Y_matrix.get(i, j), m2);
+				Y_val_exact2[i][j] = eval_complex_double(*r);
+            }
+        }
+		vector<vector<complex<double>>> Y = apply_transformation(Y_val_exact1, Y_val_exact2);
+		return Y;
+    }
+    else {
+        std::vector<std::vector<complex<double>>> Y_val_exact(Y_matrix.nrows());
+        for (int i = 0; i < Y_matrix.nrows(); i++)
+            Y_val_exact[i].resize(Y_matrix.ncols());
+        for (int i = 0; i < Y_matrix.nrows(); ++i) {
+            for (int j = 0; j < Y_matrix.ncols(); ++j) {
+                RCP<const Basic> r = subs(Y_matrix.get(i, j), m);
+                Y_val_exact[i][j] = eval_complex_double(*r);
+            }
+        }
+        return Y_val_exact;
+    }
+}
+
+std::vector<std::vector<complex<double>>> Element::apply_transformation(std::vector<std::vector<complex<double>>>& Y1, std::vector<std::vector<complex<double>>>& Y2) {
+    
+    // The transformation is applied to a 6x6 matrix, so we expect Y1 and Y2 to be of that size.
+    if (Y1.size() != 6 || Y1[0].size() != 6 || Y2.size() != 6 || Y2[0].size() != 6) {
+        // Return Y1 if dimensions are not as expected, or handle error appropriately
+        return Y1;
+    }
+
+    // Transformation matrix for abc to dq0 (Clarke-Park)
+    complex<double> ang = std::exp(complex<double>(0, 2.0 * M_PI / 3.0));
+    complex<double> imag_unit(0, 1);
+
+    // Using vector<vector> for transformation matrices
+    vector<vector<complex<double>>> a(3, vector<complex<double>>(3));   
+    a[0] = { 1.0, ang, ang * ang };
+    a[1] = { imag_unit, imag_unit*ang, imag_unit*ang * ang };
+    a[2] = { 0.0, 0.0, 0.0 };
+	vector<vector<complex<double>>> a_tran = mat_transpose(a);
+
+    vector<vector<complex<double>>> a_conj(3, vector<complex<double>>(3));
+    a_conj[0] = { 1.0, conj(ang), conj(ang * ang) };
+    a_conj[1] = { -imag_unit, -imag_unit * conj(ang), -imag_unit * conj(ang * ang) };
+    a_conj[2] = { 0.0, 0.0, 0.0 };
+	vector<vector<complex<double>>> a_conj_tran = mat_transpose(a_conj);
+    
+	// Admittance at angular frequency omega - omega_0
+    auto Y11 = get_block(Y1, 0, 0, 3, 3);
+    auto Y12 = get_block(Y1, 0, 3, 3, 3);
+    auto Y21 = get_block(Y1, 3, 0, 3, 3);
+    auto Y22 = get_block(Y1, 3, 3, 3, 3);
+
+	// Admittance at angular frequency omega + omega_0
+    auto Y2_11 = get_block(Y2, 0, 0, 3, 3);
+    auto Y2_12 = get_block(Y2, 0, 3, 3, 3);
+    auto Y2_21 = get_block(Y2, 3, 0, 3, 3);
+    auto Y2_22 = get_block(Y2, 3, 3, 3, 3);
+
+    // Perform transformation: Y_dq = T_inv * Y_abc * T
+    auto Y11_dq = mul_scalar(mat_add(mat_mul(mat_mul(a, Y11), a_conj_tran), mat_mul(mat_mul(a_conj, Y2_11), a_tran)), 1.0 / 6.0);
+	auto Y12_dq = mul_scalar(mat_add(mat_mul(mat_mul(a, Y12), a_conj_tran), mat_mul(mat_mul(a_conj, Y2_12), a_tran)), 1.0 / 6.0);
+	auto Y21_dq = mul_scalar(mat_add(mat_mul(mat_mul(a, Y21), a_conj_tran), mat_mul(mat_mul(a_conj, Y2_21), a_tran)), 1.0 / 6.0);
+	auto Y22_dq = mul_scalar(mat_add(mat_mul(mat_mul(a, Y22), a_conj_tran), mat_mul(mat_mul(a_conj, Y2_22), a_tran)), 1.0 / 6.0);
+
+    // Combine transformed blocks into a single matrix
+    vector<vector<complex<double>>> Y_dq(4, vector<complex<double>>(4));
+    for (int i = 0; i < 2; ++i) {
+        for (int j = 0; j < 2; ++j) {
+            Y_dq[i][j] = Y11_dq[i][j];
+            Y_dq[i][j + 2] = Y12_dq[i][j];
+            Y_dq[i + 2][j] = Y21_dq[i][j];
+            Y_dq[i + 2][j + 2] = Y22_dq[i][j];
         }
     }
-
-    if (transformation) {
-        bool is_ac = (element_location[0] == 'A' || element_location[0] == 'a') && (element_location[1] == 'C' || element_location[1] == 'c');
-        bool is_dc = (element_location[0] == 'D' || element_location[0] == 'd') && (element_location[1] == 'C' || element_location[1] == 'c');
-        if (is_ac) {
-			complex<double> ang = std::exp(complex<double>(0, 2.0 * M_PI / 3.0)); // a = exp(j120)
-			complex<double> imag_unit(0, 1);
-			MatrixXcd a = MatrixXcd::Zero(2, 3);
-			a << 1, ang, ang* ang, imag_unit, imag_unit* ang, imag_unit* ang* ang;
-            // To finish...
-                // AC grids to do - check paper of Marta Molinas
-    // T = 0.5 * [1 -1im;-1im -1]
-    /*CK = (2 / 3) * [1 - 1 / 2 - 1 / 2; 0 sqrt(3) / 2 - sqrt(3) / 2]
-        CKinv = [1 0; -1 / 2 sqrt(3) / 2; -1 / 2 - sqrt(3) / 2]
-
-        a_dq = T * CK * a₂ * CKinv * conj(T) + conj(T) * CK * a₁ * CKinv * T
-        b_dq = T * CK * b₂ * CKinv * conj(T) + conj(T) * CK * b₁ * CKinv * T
-        c_dq = T * CK * c₂ * CKinv * conj(T) + conj(T) * CK * c₁ * CKinv * T
-        d_dq = T * CK * d₂ * CKinv * conj(T) + conj(T) * CK * d₁ * CKinv * T*/
-        }    
-    }
-
-    return Y_val_exact;
+    return Y_dq;
 }
 
 // Function to print the Element's values and Y_matrix entries

@@ -18,11 +18,11 @@ Inductor::Inductor(const std::string& symbol, const std::string& location, int p
                 L.push_back(L[0]);  // Fill with the same capacitance value
             }
         }
-        for (int i = 0; i < pins; ++i) {
+        for (int i = 0; i < pins; i++) {
             RCP<const Basic> sL = mul(s, real_double(L[i]));
             RCP<const Basic> Yval = div(one, sL);
-            int a = 2 * i;
-            int b = 2 * i + 1;
+            int a = i;
+            int b = i + pins;
             Y_matrix.set(a, a, Yval);
             Y_matrix.set(a, b, mul(integer(-1), Yval));
             Y_matrix.set(b, a, mul(integer(-1), Yval));

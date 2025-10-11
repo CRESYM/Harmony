@@ -218,6 +218,7 @@ set(Examples_Source_files
     src/examples/example_constructors.cpp
     src/examples/example_visuals.cpp
     src/examples/example_stability_check.cpp
+    src/examples/example_admittance_parameters.cpp
 )
 
 # Add source_groups to create file filters (groups) in Visual Studio project

@@ -3,10 +3,6 @@
 
 #include "../Element.h"
 
-using SymEngine::RCP;
-using SymEngine::Basic;
-using SymEngine::DenseMatrix;
-
 class Inductor : public Element {
 public:
     // Frequency-domain constructor (symbolic admittance Y = 1 / (sL))
