@@ -32,6 +32,8 @@ public:
 
 	// Determine admittance of the part of the system
 	MatrixXcd compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double frequency);
+	// Determine visible impedance from one of outputs of subnetwork when other outputs are closed
+	// MatrixXcd compute_closing_impedance(SubNetwork*, vector<bool>, vector<MatrixXcd>);
 
 	void compute_transfer_function(string converter_name, string location, double frequency);
 
