@@ -5,15 +5,24 @@
 #include "../Solver/Helper_Functions/Helper_Functions.h"
 
 
-// Destructor for Element
+/**
+ * @brief Destructor for the Element class.
+ */
 Element::~Element() {}
 
-// Attach terminal to the bus
+/**
+ * @brief Attaches a bus to a specific terminal of the element.
+ * @param bus Pointer to the Bus object to attach.
+ * @param terminal The terminal number to which the bus is connected.
+ */
 void Element::attachBus(Bus* bus, int terminal) {
     connections[bus] = terminal;
 }
 
-// Getters to retrieve connected Buses
+/**
+ * @brief Retrieves all buses connected to this element.
+ * @return A vector of pointers to the connected Bus objects.
+ */
 std::vector<Bus*> Element::getBuses() {
     std::vector<Bus*> buses;
     for (std::map<Bus*, int>::iterator it = connections.begin(); it != connections.end(); ++it) {
@@ -22,7 +31,11 @@ std::vector<Bus*> Element::getBuses() {
     return buses;
 }
 
-// Function to get the other Bus connected to the Element (not the one provided)
+/**
+ * @brief Gets the other bus connected to the element, assuming it's a two-terminal element.
+ * @param bus A pointer to one of the connected buses.
+ * @return A pointer to the other connected bus, or nullptr if no other bus is found.
+ */
 Bus* Element::getOtherBus(Bus* bus) {
     for (std::map<Bus*, int>::iterator it = connections.begin(); it != connections.end(); ++it) {
         if (bus != it->first)
@@ -31,7 +44,11 @@ Bus* Element::getOtherBus(Bus* bus) {
     return nullptr; // No other bus found
 }
 
-// Implementation of compute_y_parameters 
+/**
+ * @brief Computes the numerical Y-parameter matrix at a given frequency.
+ * @param frequency The frequency in Hz for which to compute the Y-parameters.
+ * @return A 2D vector of complex numbers representing the Y-parameter matrix.
+ */
 std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double frequency) {
     double angular_frequency = 2 * frequency * M_PI;
     map_basic_basic m;
@@ -75,6 +92,12 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
     }
 }
 
+/**
+ * @brief Applies a transformation (e.g., abc to dq) to the admittance matrices.
+ * @param Y1 The admittance matrix computed at angular frequency (omega - omega_0).
+ * @param Y2 The admittance matrix computed at angular frequency (omega + omega_0).
+ * @return The transformed 2D vector of complex numbers representing the Y-parameter matrix in the new frame.
+ */
 std::vector<std::vector<complex<double>>> Element::apply_transformation(std::vector<std::vector<complex<double>>>& Y1, std::vector<std::vector<complex<double>>>& Y2) {
     
     // The transformation is applied to a 6x6 matrix, so we expect Y1 and Y2 to be of that size.
@@ -131,7 +154,9 @@ std::vector<std::vector<complex<double>>> Element::apply_transformation(std::vec
     return Y_dq;
 }
 
-// Function to print the Element's values and Y_matrix entries
+/**
+ * @brief Prints the symbolic Y-parameter matrix of the element to the console.
+ */
 void Element::printElementValues() {
     std::cout << "Element : " << getElementSymbol() << std::endl;
     std::cout << "Y matrix symbolic entries: " << endl; 
@@ -142,7 +167,13 @@ void Element::printElementValues() {
         std::cout << std::endl;
     }
 }
-// Function to write the Y-parameter matrix to a file over a frequency range
+
+/**
+ * @brief Writes the Y-parameter matrix to a CSV file over a specified frequency range.
+ * @param start_frequency The starting frequency for the sweep.
+ * @param end_frequency The ending frequency for the sweep.
+ * @param number_of_points The number of frequency points to compute and write.
+ */
 void Element::writeFile(double start_frequency, int end_frequency, int number_of_points) {
     std::ofstream myfile;
     myfile.open("files/" + element_symbol + ".csv");
@@ -169,7 +200,12 @@ void Element::writeFile(double start_frequency, int end_frequency, int number_of
     myfile.close();
 }
 
-// Function to plot the Y-parameter matrix in logarithmic scale and in dB and angles
+/**
+ * @brief Generates data and triggers a Bode plot for the Y-parameter matrix.
+ * @param start_frequency The starting frequency for the plot.
+ * @param end_frequency The ending frequency for the plot.
+ * @param number_of_points The number of points to plot across the frequency range.
+ */
 void Element::plotYParameters(double start_frequency, int end_frequency, int number_of_points) {
     std::vector<double> frequencies;
     std::vector<std::vector<double>> magnitudes(number_of_points, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));

@@ -1,15 +1,25 @@
 #include "Standard_functions.h"
 
 // Constants
-const double mu_0 = 4 * M_PI * 1e-7; // Standard mu_0
-const double epsilon_0 = 8.854e-12; // Standard epsilon_0
-const double gamma_num = 0.5772156649; // Euler-Mascheroni constant
+const double mu_0 = 4 * M_PI * 1e-7;      ///< Magnetic constant (permeability of free space).
+const double epsilon_0 = 8.854e-12;   ///< Electric constant (permittivity of free space).
+const double gamma_num = 0.5772156649; ///< Euler-Mascheroni constant.
 
+/**
+ * @brief Computes the sign of an integer.
+ * @param v The integer value.
+ * @return 1 if v > 0, -1 if v < 0, and 0 if v == 0.
+ */
 int sgn(int v) {
 	return (v > 0) - (v < 0);
 }
 
-// Function to convert a 2D vector of complex numbers to an Eigen matrix
+/**
+ * @brief Converts a 2D vector of complex numbers to an Eigen matrix.
+ * @param vec The input 2D vector (matrix).
+ * @return An Eigen::MatrixXcd representation of the input vector.
+ * @throws std::runtime_error if the inner vectors have inconsistent lengths.
+ */
 MatrixXcd vectorToMatrix(const vector<vector<complex<double>>>& vec) {
     if (vec.empty() || vec[0].empty()) {
         return MatrixXcd(); // Return empty matrix if input is empty
@@ -31,7 +41,11 @@ MatrixXcd vectorToMatrix(const vector<vector<complex<double>>>& vec) {
     return mat;
 }
 
-// Function to convert an Eigen matrix to a 2D vector of complex numbers
+/**
+ * @brief Converts an Eigen matrix of complex numbers to a 2D vector.
+ * @param mat The input Eigen::MatrixXcd.
+ * @return A 2D vector representation of the input matrix.
+ */
 vector<vector<complex<double>>> matrixToVector(const MatrixXcd& mat) {
     if (mat.rows() == 0 || mat.cols() == 0) {
         return {}; // Return an empty vector for an empty matrix
@@ -50,7 +64,13 @@ vector<vector<complex<double>>> matrixToVector(const MatrixXcd& mat) {
     return vec;
 }
 
-// Matrix multiplication helper
+/**
+ * @brief Multiplies two matrices represented as 2D vectors.
+ * @param A The left-hand side matrix.
+ * @param B The right-hand side matrix.
+ * @return The resulting matrix C = A * B.
+ * @throws std::runtime_error if matrix dimensions are incompatible for multiplication.
+ */
 vector<vector<complex<double>>> mat_mul(const vector<vector<complex<double>>>& A, const vector<vector<complex<double>>>& B) {
     // Handle empty matrices
     if (A.empty() || A[0].empty() || B.empty() || B[0].empty()) {
@@ -84,7 +104,12 @@ vector<vector<complex<double>>> mat_mul(const vector<vector<complex<double>>>& A
     return C;
 };
 
-// Scalar multiplication helper
+/**
+ * @brief Multiplies a matrix by a scalar value.
+ * @param A The matrix to be multiplied.
+ * @param scalar The complex scalar value.
+ * @return The resulting matrix C = A * scalar.
+ */
 vector<vector<complex<double>>> mul_scalar(const vector<vector<complex<double>>>& A, const complex<double>& scalar) {
     vector<vector<complex<double>>> C(A.size(), vector<complex<double>>(A[0].size(), 0.0));
     for (size_t i = 0; i < A.size(); ++i) {
@@ -95,7 +120,12 @@ vector<vector<complex<double>>> mul_scalar(const vector<vector<complex<double>>>
     return C;
 };
 
-// Matrix addition helper
+/**
+ * @brief Adds two matrices of the same dimensions.
+ * @param A The first matrix.
+ * @param B The second matrix.
+ * @return The resulting matrix C = A + B.
+ */
 vector<vector<complex<double>>> mat_add(const vector<vector<complex<double>>>& A, const vector<vector<complex<double>>>& B) {
     vector<vector<complex<double>>> C(A.size(), vector<complex<double>>(A[0].size(), 0.0));
     for (size_t i = 0; i < A.size(); ++i) {
@@ -106,7 +136,12 @@ vector<vector<complex<double>>> mat_add(const vector<vector<complex<double>>>& A
     return C;
 };
 
-// Matrix subtraction helper
+/**
+ * @brief Subtracts one matrix from another.
+ * @param A The matrix from which to subtract.
+ * @param B The matrix to subtract.
+ * @return The resulting matrix C = A - B.
+ */
 vector<vector<complex<double>>> mat_sub(const vector<vector<complex<double>>>& A, const vector<vector<complex<double>>>& B) {
     vector<vector<complex<double>>> C(A.size(), vector<complex<double>>(A[0].size(), 0.0));
     for (size_t i = 0; i < A.size(); ++i) {
@@ -117,7 +152,11 @@ vector<vector<complex<double>>> mat_sub(const vector<vector<complex<double>>>& A
     return C;
 };
 
-// Matrix transpose helper
+/**
+ * @brief Transposes a matrix.
+ * @param A The matrix to transpose.
+ * @return The transposed matrix.
+ */
 vector<vector<complex<double>>> mat_transpose(const vector<vector<complex<double>>>& A) {
     vector<vector<complex<double>>> C(A[0].size(), vector<complex<double>>(A.size(), 0.0));
     for (size_t i = 0; i < A.size(); ++i) {
@@ -128,7 +167,15 @@ vector<vector<complex<double>>> mat_transpose(const vector<vector<complex<double
     return C;
 };
 
-// Get block from a matrix
+/**
+ * @brief Extracts a block (submatrix) from a given matrix.
+ * @param Y The source matrix.
+ * @param r_off The starting row index of the block.
+ * @param c_off The starting column index of the block.
+ * @param r_num The number of rows in the block.
+ * @param c_num The number of columns in the block.
+ * @return A new matrix containing the specified block.
+ */
 extern vector<vector<complex<double>>> get_block(const vector<vector<complex<double>>>& Y, int r_off, int c_off, int r_num, int c_num) {
     vector<vector<complex<double>>> block(r_num, vector<complex<double>>(c_num));
     for (int i = 0; i < r_num; ++i) {

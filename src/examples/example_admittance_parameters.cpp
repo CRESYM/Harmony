@@ -4,6 +4,12 @@
 #include "../Bus.h"
 #include "../Include_components.h"
 
+/**
+ * @brief Example function to demonstrate the calculation of admittance parameters for a PI section.
+ *
+ * This function creates a simple circuit with a PI section element, computes its
+ * Y-parameters over a frequency range, and plots the results.
+ */
 void example_admittance_parameters() {
 	Inductor* ind = new Inductor("IND1", "AC1", 3, { 1.0 });
 

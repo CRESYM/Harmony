@@ -4,6 +4,13 @@
 #include "../Bus.h"
 #include "../Include_components.h"
 
+/**
+ * @brief Example function to model and analyze an overhead line (OHL).
+ *
+ * This function demonstrates how to create an overhead line with specific
+ * geometric and material properties, compute its electrical parameters,
+ * and analyze its behavior over a frequency range.
+ */
 void example_OHL() {
 	// OHL constructor check
 	std::vector<double> distances = { 11.8, 27.5 };
