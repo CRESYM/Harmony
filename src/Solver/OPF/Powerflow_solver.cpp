@@ -107,17 +107,21 @@ void PowerFlow::solve_opf(
         auto& branch_entire_ac = sys_ac.branch_entire_ac;
         auto& gen_entire_ac = sys_ac.gen_entire_ac;
         auto& gencost_entire_ac = sys_ac.gencost_entire_ac;
+        auto& res_entire_ac = sys_ac.res_entire_ac;
         auto& ngrids = sys_ac.ngrids;
         auto& bus_ac = sys_ac.bus_ac;
         auto& branch_ac = sys_ac.branch_ac;
         auto& generator_ac = sys_ac.generator_ac;
         auto& gencost_ac = sys_ac.gencost_ac;
+        auto& res_ac = sys_ac.res_ac;
         auto& recRef = sys_ac.recRef;
         auto& pd_ac = sys_ac.pd_ac;
         auto& qd_ac = sys_ac.qd_ac;
+        auto& sres_ac = sys_ac.sres_ac;
         auto& nbuses_ac = sys_ac.nbuses_ac;
         auto& nbranches_ac = sys_ac.nbranches_ac;
         auto& ngens_ac = sys_ac.ngens_ac;
+        auto& nress_ac = sys_ac.nress_ac;
         auto& GG_ac = sys_ac.GG_ac;
         auto& BB_ac = sys_ac.BB_ac;
         auto& GG_ft_ac = sys_ac.GG_ft_ac;
@@ -344,6 +348,7 @@ void PowerFlow::solve_opf(
         std::vector<std::vector<GRBVar>> var_ac(ngrids);
         std::vector<Eigen::Matrix<GRBVar, Eigen::Dynamic, 1>> vn2_ac(ngrids), pn_ac(ngrids), qn_ac(ngrids);
         std::vector<Eigen::Matrix<GRBVar, Eigen::Dynamic, 1>> pgen_ac(ngrids), qgen_ac(ngrids);
+        std::vector<Eigen::Matrix<GRBVar, Eigen::Dynamic, 1>> pres_ac(ngrids), qres_ac(ngrids);
         std::vector<Eigen::Matrix<GRBVar, Eigen::Dynamic, 1>> slfwd_ac(ngrids), slbwd_ac(ngrids);
         std::vector<Eigen::Matrix<GRBVar, Eigen::Dynamic, 1>> plfwd_ac(ngrids), qlfwd_ac(ngrids);
         std::vector<Eigen::Matrix<GRBVar, Eigen::Dynamic, 1>> plbwd_ac(ngrids), qlbwd_ac(ngrids);
@@ -351,7 +356,7 @@ void PowerFlow::solve_opf(
         std::vector<Eigen::Matrix<GRBVar, Eigen::Dynamic, Eigen::Dynamic>> ss_ac(ngrids), cc_ac(ngrids);
         std::vector<std::vector<int>> genindex(ngrids);
         std::vector<std::vector<int>> convindex(ngrids);
-        std::vector<Eigen::VectorXd> actgen_ac(ngrids);
+        std::vector<Eigen::VectorXd> actgen_ac(ngrids), actres_ac(ngrids);
 
         for (int ng = 0; ng < ngrids; ++ng) {
 
@@ -409,6 +414,20 @@ void PowerFlow::solve_opf(
                     ss_ac[ng](i, j) = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
                     cc_ac[ng](i, j) = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
                 }
+            }
+
+            // 8. pres_ac - RES active power output
+            pres_ac[ng].resize(nress_ac[ng]);
+            for (int i = 0; i < nress_ac[ng]; ++i) {
+                pres_ac[ng](i) = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
+                model.addConstr(pres_ac[ng](i) >= 0);
+                model.addConstr(pres_ac[ng](i) <= res_ac[ng](i, 1) / baseMVA_ac);
+            }
+
+            // 9. qres_ac - RES reactive power output
+            qres_ac[ng].resize(nress_ac[ng]);
+            for (int i = 0; i < nress_ac[ng]; ++i) {
+                qres_ac[ng](i) = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
             }
         }
 
@@ -504,6 +523,17 @@ void PowerFlow::solve_opf(
                 model.addConstr(vn2_ac[k](j) == v2s_dc(i));
             }
 
+            // 3. RES Capacity Constraints (Polygon approximation)
+            for (int k = 0; k < 8; ++k) {
+                double ck = std::cos(k * 3.141592653 / 8.0);
+                double sk = std::sin(k * 3.141592653 / 8.0);
+
+                for (int i = 0; i < nress_ac[ng]; ++i) {
+                    model.addConstr(ck * pres_ac[ng][i] + sk * qres_ac[ng][i] <= sres_ac[ng][i]);
+                    model.addConstr(ck * pres_ac[ng][i] + sk * qres_ac[ng][i] >= -sres_ac[ng][i]);
+                }
+            }
+
             //if (!recRef[ng].empty()) {
             //    int ref_index = recRef[ng][0];  
             //    model.addConstr(vn2_ac[ng](ref_index) == 1.04);
@@ -529,8 +559,11 @@ void PowerFlow::solve_opf(
         GRBQuadExpr obj = 0.0;
         for (int ng = 0; ng < ngrids; ++ng) {
             actgen_ac[ng] = generator_ac[ng].col(7);
-            if (gencost_ac[ng](0, 3) == 3) {
-                for (int i = 0; i < actgen_ac[ng].size(); ++i) {
+            actres_ac[ng] = res_ac[ng].col(10);
+
+            // Generator cost (always) 
+            if (gencost_ac[ng](0, 3) == 3) {  // Quadratic cost 
+                for (int i = 0; i < ngens_ac[ng]; ++i) {
                     obj += actgen_ac[ng](i) * (
                         baseMVA_ac * baseMVA_ac * gencost_ac[ng](i, 4) * (pgen_ac[ng](i) * pgen_ac[ng](i)) +
                         baseMVA_ac * gencost_ac[ng](i, 5) * pgen_ac[ng](i) +
@@ -538,14 +571,40 @@ void PowerFlow::solve_opf(
                         );
                 }
             }
-            else if (gencost_ac[ng](0, 3) == 2) {
-                for (int i = 0; i < actgen_ac[ng].size(); ++i) {
+
+            if (gencost_ac[ng](0, 3) == 2) {  // Linear cost 
+                for (int i = 0; i < ngens_ac[ng]; ++i) {
                     obj += actgen_ac[ng](i) * (
-                        baseMVA_ac * gencost_ac[ng](i, 4) * pgen_ac[ng](i) +
-                        gencost_ac[ng](i, 5)
+                        baseMVA_ac * gencost_ac[ng](i, 5) * pgen_ac[ng](i) +
+                        gencost_ac[ng](i, 6)
                         );
                 }
             }
+
+            // RES cost (only if)
+            if (res_ac[ng].rows() > 0) { // Quadratic cost 
+                actres_ac[ng] = res_ac[ng].col(10);
+
+                if (res_ac[ng](0, 6) == 3) {
+                    for (int i = 0; i < nress_ac[ng]; ++i) {
+                        obj += actres_ac[ng](i) * (
+                            baseMVA_ac * baseMVA_ac * res_ac[ng](i, 7) * (pres_ac[ng](i) * pres_ac[ng](i)) +
+                            baseMVA_ac * res_ac[ng](i, 8) * pres_ac[ng](i) +
+                            res_ac[ng](i, 9)
+                            );
+                    }
+                }
+
+                if (res_ac[ng](0, 6) == 2) { // Linear cost 
+                    for (int i = 0; i < nress_ac[ng]; ++i) {
+                        obj += actres_ac[ng](i) * (
+                            baseMVA_ac * res_ac[ng](i, 8) * pres_ac[ng](i) +
+                            res_ac[ng](i, 9)
+                            );
+                    }
+                }
+            }
+
         }
         GRBVar genCost = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
 
@@ -557,9 +616,6 @@ void PowerFlow::solve_opf(
         model.optimize();
 
         auto end = std::chrono::high_resolution_clock::now();
-
-
-        cout << "The value of Obj is : " << model.get(GRB_DoubleAttr_ObjVal) << endl;
 
         if (model.get(GRB_IntAttr_Status) == GRB_OPTIMAL || model.get(GRB_IntAttr_Status) == GRB_SUBOPTIMAL)
         {
@@ -581,22 +637,23 @@ void PowerFlow::solve_opf(
         #define OPF_OUT (*pio)
 
             //  " ac bus print " 
-            OPF_OUT << "\n================================================================================";
-            OPF_OUT << "\n|   AC  Bus Data                                                               |";
-            OPF_OUT << "\n================================================================================";
-            OPF_OUT << "\n Area     Bus      Voltage          Generation               Load        ";
-            OPF_OUT << "\n #        #    Mag [pu] Ang [deg]   Pg [MW]  Qg [MVAr]   P [MW]  Q [MVAr]";
-            OPF_OUT << "\n-----   -----  --------  --------  --------  ---------   ------  --------";
+            OPF_OUT << "\n=======================================================================================";
+            OPF_OUT << "\n|   AC  Grid Bus Data                                                                 |";
+            OPF_OUT << "\n=======================================================================================";
+            OPF_OUT << "\n Area    Bus   Voltage       Generation            Load                 RES";
+            OPF_OUT << "\n #       #     Mag [pu]  Pg [MW]   Qg [MVAr]  P [MW]   Q [MVAr]  Pres [MW]  Qres[MVAr] ";
+            OPF_OUT << "\n-----   -----  --------  --------  ---------  -------  -------   ---------  ---------";
 
             for (int ng = 0; ng < ngrids; ++ng) {
                 const auto& genidx = generator_ac[ng].col(0);
+                const auto& residx = res_ac[ng].col(0);
+
                 for (int i = 0; i < nbuses_ac[ng]; ++i) {
                     double vmag = std::sqrt(vn2_ac[ng](i).get(GRB_DoubleAttr_X));
                     OPF_OUT << "\n"
                         << std::setw(3) << ng + 1
                         << std::setw(8) << i + 1
-                        << std::setw(11) << std::fixed << std::setprecision(3) << vmag
-                        << std::setw(10) << 0.0;  // Assuming angle is zero for now
+                        << std::setw(11) << std::fixed << std::setprecision(3) << vmag;
 
                     if (std::find(recRef[ng].begin(), recRef[ng].end(), i) != recRef[ng].end()) {
                         OPF_OUT << "*";
@@ -616,25 +673,44 @@ void PowerFlow::solve_opf(
                         double qgen = qgen_ac[ng](gen_idx).get(GRB_DoubleAttr_X) * baseMVA_ac;
 
                         if (std::find(recRef[ng].begin(), recRef[ng].end(), i) != recRef[ng].end()) {
-                            OPF_OUT << std::setw(10) << pgen << std::setw(9) << qgen;
+                            OPF_OUT << std::setw(9) << pgen << std::setw(11) << qgen;
                         }
                         else {
-                            OPF_OUT << std::setw(11) << pgen << std::setw(9) << qgen;
+                            OPF_OUT << std::setw(10) << pgen << std::setw(11) << qgen;
                         }
                         double pd = pd_ac[ng](i) * baseMVA_ac;
                         double qd = qd_ac[ng](i) * baseMVA_ac;
-                        OPF_OUT << std::setw(11) << pd << std::setw(9) << qd;
+                        OPF_OUT << std::setw(9) << pd << std::setw(9) << qd;
                     }
                     else {
-                        OPF_OUT << "          -       -";
+                        OPF_OUT << "         -          -";
                         double pd = pd_ac[ng](i) * baseMVA_ac;
                         double qd = qd_ac[ng](i) * baseMVA_ac;
-                        OPF_OUT << std::setw(12) << pd << std::setw(9) << qd;
+                        OPF_OUT << std::setw(9) << pd << std::setw(9) << qd;
+                    }
+
+
+                    bool is_res = (residx.array() == i + 1).any();
+                    if (is_res) {
+                        int res_idx = -1;
+                        for (int j = 0; j < residx.size(); ++j) {
+                            if (residx(j) == i + 1) {
+                                res_idx = j;
+                                break;
+                            }
+                        }
+
+                        double pres = pres_ac[ng](res_idx).get(GRB_DoubleAttr_X) * baseMVA_ac;
+                        double qres = qres_ac[ng](res_idx).get(GRB_DoubleAttr_X) * baseMVA_ac;
+                        OPF_OUT << std::setw(12) << pres << std::setw(11) << qres;
+                    }
+                    else {
+                        OPF_OUT << "           -          -";
                     }
 
                 }
             }
-            OPF_OUT << "\n-----   -----  --------  --------  --------  ---------   ------  --------";
+            OPF_OUT << "\n-----   -----  --------  --------  ---------  -------  -------   ---------  ---------";
 
             double GenCostResUSA = model.get(GRB_DoubleAttr_ObjVal);;
             double GenCostResEURO = GenCostResUSA / 1.08;

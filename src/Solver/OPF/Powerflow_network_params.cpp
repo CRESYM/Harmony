@@ -779,6 +779,7 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
         branch_entire_ac = network_ac["branch"];
         gen_entire_ac = network_ac["generator"];
         gencost_entire_ac = network_ac["gencost"];
+        res_entire_ac = network_ac["res"];
     }
     else {
         // From OPF input map
@@ -801,11 +802,14 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
     branch_ac.resize(ngrids);
     generator_ac.resize(ngrids);
     gencost_ac.resize(ngrids);
+    res_ac.resize(ngrids);
     pd_ac.resize(ngrids);
     qd_ac.resize(ngrids);
+    sres_ac.resize(ngrids);
     nbuses_ac.resize(ngrids);
     nbranches_ac.resize(ngrids);
     ngens_ac.resize(ngrids);
+    nress_ac.resize(ngrids);
     GG_ac.resize(ngrids);
     BB_ac.resize(ngrids);
     fbus_ac.resize(ngrids);
@@ -820,7 +824,7 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
 
     // Partition per grid
     for (int ng = 0; ng < ngrids; ++ng) {
-        std::vector<int> bus_rows, branch_rows, gen_rows, gencost_rows;
+        std::vector<int> bus_rows, branch_rows, gen_rows, gencost_rows, res_rows;
 
         // Filter buses
         for (int i = 0; i < bus_entire_ac.rows(); ++i) {
@@ -858,10 +862,22 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
         for (size_t i = 0; i < gencost_rows.size(); ++i)
             gencost_ac[ng].row(i) = gencost_entire_ac.row(gencost_rows[i]);
 
+        // Filter RES data
+        for (int i = 0; i < res_entire_ac.rows(); ++i) {
+            if (static_cast<int>(res_entire_ac(i, 11)) == ng + 1) {
+                res_rows.push_back(i);
+            }
+        }
+        res_ac[ng] = Eigen::MatrixXd(res_rows.size(), res_entire_ac.cols());
+        for (size_t i = 0; i < res_rows.size(); ++i) {
+            res_ac[ng].row(i) = res_entire_ac.row(res_rows[i]);
+        }
+
         //Local index and references
         nbuses_ac[ng] = static_cast<int>(bus_ac[ng].rows());
         nbranches_ac[ng] = static_cast<int>(branch_ac[ng].rows());
         ngens_ac[ng] = static_cast<int>(generator_ac[ng].rows());
+        nress_ac[ng] = static_cast<int>(res_ac[ng].rows());
 
         IDtoCountmap[ng] = Eigen::VectorXi::Zero(nbuses_ac[ng]);
         for (int i = 0; i < nbuses_ac[ng]; ++i) {
@@ -883,6 +899,9 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
         tbus_ac[ng] = branch_ac[ng].col(1).cast<int>();
         pd_ac[ng] = bus_ac[ng].col(2) / baseMVA_ac;
         qd_ac[ng] = bus_ac[ng].col(3) / baseMVA_ac;
+
+        // Normalize RES capacity
+        sres_ac[ng] = res_ac[ng].col(2) / baseMVA_ac;
 
     }
 }

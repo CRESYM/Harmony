@@ -67,6 +67,7 @@ std::unordered_map<std::string, Eigen::MatrixXd> PowerFlow::create_ac(const std:
         ac["branch"] = readCSVtoCpp("../../src/data/" + case_name + "_branch_ac.csv");
         ac["generator"] = readCSVtoCpp("../../src/data/" + case_name + "_gen_ac.csv");
         ac["gencost"] = readCSVtoCpp("../../src/data/" + case_name + "_gencost_ac.csv");
+        ac["res"] = readCSVtoCpp("../../src/data/" + case_name + "_res_ac.csv");
     }
     catch (const std::exception& e) {
         std::cerr << "Error in create_ac: " << e.what() << std::endl;
