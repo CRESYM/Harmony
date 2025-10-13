@@ -649,7 +649,7 @@ void StabilityEstimate::compute_transfer_function(string converter_name, string 
 		std::cout << "Equivalent admittance matrix for AC grid " << name << ":\n" << Y_ac << "\n";
 	}
 
-    // Cross coupling for each converter
+    // Cross coupling for the admittance of each converter
 	// Depending on the side of the converter, the admittance matrix will be different
     // If it is not main converter, then the converter is always considered from DC side.
 	// If it is main converter, then if the location is on DC side, then the same applies.
@@ -674,21 +674,37 @@ void StabilityEstimate::compute_transfer_function(string converter_name, string 
         if (!ac_bus || !dc_bus) continue;
         // Get admittance matrices for the grids
 
+		// Depending on the side of the converter, the admittance matrix looking inside converter will be different
         if ((converter_name != name) || (location == dc_area)) {
             MatrixXcd Y_ac = Y_ac_matrices[ac_area];
             MatrixXcd Ymmc = vectorToMatrix(mmc_elem->compute_y_parameters(frequency));
             // The overall transfer function considering the converter's own admittance and the grid admittances.
             MatrixXcd Ydc(1, 1);
             Ydc(0, 0) = Ymmc(0, 0);
-            MatrixXcd b = Ymmc.block(0, 1, 0, 3);
-            MatrixXcd a = Ymmc.block(1, 0, 3, 0);
-            MatrixXcd Ydq = Ymmc.block(1, 1, 3, 3);
-            Y_conv_matrices[name] = b * (Ydq - Y_ac).inverse() * a + Ydc;
+            MatrixXcd b = Ymmc.block(0, 1, 0, 2);
+            MatrixXcd a = Ymmc.block(1, 0, 2, 0);
+            MatrixXcd Ydq = Ymmc.block(1, 1, 2, 2);
+            Y_conv_matrices[name] = b * (Y_ac - Ydq).inverse() * a + Ydc;
         }
-
-        // TO WRITE CONTINUATION FOR AC SIDE
     }
 
 	// CROSS-COUPLING OF THE DC SIDE OF THE CONVERTER
+	// with the DC grid admittance
 
+	// Final transfer function computation
+	// For DC cut - nothing to do
+	// For AC cut - compute the overall admittance looking into the converter from AC side
+	// i.e. repeat the same procedure as above but now from AC side
+    // 
+    //if ((converter_name == name) && (location == ac_area)) {
+    //    MatrixXcd Y_dc = Y_dc_matrices[dc_area];
+    //    MatrixXcd Ymmc = vectorToMatrix(mmc_elem->compute_y_parameters(frequency));
+    //    // The overall transfer function considering the converter's own admittance and the grid admittances.
+    //    MatrixXcd Ydq(2, 2);
+    //    Ydq = Ymmc.block(1, 1, 2, 2);
+    //    MatrixXcd b = Ymmc.block(1, 0, 2, 0);
+    //    MatrixXcd a = Ymmc.block(0, 1, 0, 2);
+    //    MatrixXcd Ydc = Ymmc.block(0, 0, 1, 1);
+    //    Y_conv_matrices[name] = (Y_dc - Ydc).inverse() * a * b + Ydq;
+    //}
 }
