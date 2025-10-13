@@ -626,7 +626,7 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     // Initialize empty elements of the data map
     std::vector<std::string> keys = {
         "bus", "busdc", "shunt", "dcline", "storage", "switch",
-        "load", "branch", "branchDC", "gen", "convdc"
+        "load", "branch", "branchDC", "gen", "convdc", "res"
     };
 
     for (const auto& key : keys) {
@@ -749,6 +749,20 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     MatrixXd gencostAC = map2dense(data.at("genCostAC"),
         { "model","startup","shutdown","n","c2","c1","c0","grid" });
 
+    // for debug
+    Eigen::MatrixXd resAC;
+
+    if (data.find("resAC") != data.end()) {
+        resAC = map2dense(data.at("resAC"),
+            { "bus","Presmax","Sresmax","model","startup","shutdown","n","c2","c1","c0","grid" });
+    }
+    else {
+        // fallback to default
+        resAC = Eigen::MatrixXd::Zero(1, 12);
+        resAC(0, 11) = 1;
+        resAC(0, 0) = 1;
+    }
+
     cout << "[make_OPF] Finished making OPF data.\n";
 
     /* 3. Put inside unordered_map<string, MatrixXd> */
@@ -761,6 +775,7 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     dataOPF["branchAC"] = std::move(branchAC);
     dataOPF["generator"] = std::move(genAC);
     dataOPF["gencost"] = std::move(gencostAC);
+    dataOPF["res"] = std::move(resAC);
 
 	cout << "[make_OPF] Finished transforming data to Eigen::MatrixXd.\n";
 
@@ -788,6 +803,7 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
         branch_entire_ac = dataOPF.at("branchAC");
         gen_entire_ac = dataOPF.at("generator");
         gencost_entire_ac = dataOPF.at("gencost");
+        res_entire_ac = dataOPF.at("res");
     }
 
     //Identify number of grids by unique area ID

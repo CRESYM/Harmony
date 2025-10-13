@@ -60,9 +60,9 @@ void example_OPF() {
     net.connectElementToBus(gen2, 1, bus2_ac);
     map<string, double> gen_info2 = {
         {"Pmax", 40.0}, {"Pmin", 40.0},
-        {"Qmax", -31.0}, {"Qmin", -33.0},
+        {"Qmax", 30.0}, {"Qmin", -33.0},
         {"c2", 0.085}, {"c1", 1.2},
-        {"c0", 600}
+        {"c0", 600},  {"Vg", 345}
 	};
 	gen2->setOPFInfo(gen_info2);
 

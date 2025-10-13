@@ -69,7 +69,7 @@ void example_OPF_1() {
         {"Pmax", 250.0}, {"Pmin", 10.0},
         {"Qmax", 300.0}, {"Qmin", -300.0},
         {"c2", 0.11}, {"c1", 5.0},
-        {"c0", 150}, {"Vg", 345.0}
+        {"c0", 150}, {"Vg", 345.0 * 1.02}
     };
     gen1->setOPFInfo(gen_info1);
 
@@ -81,7 +81,7 @@ void example_OPF_1() {
         {"Pmax", 300.0}, {"Pmin", 10.0},
         {"Qmax", 300.0}, {"Qmin", -300.0},
         {"c2", 0.085}, {"c1", 1.2},
-        {"c0", 600}
+        {"c0", 600}, {"Vg", 345.0 * 1.04}
     };
     gen2->setOPFInfo(gen_info2);
 
@@ -96,6 +96,40 @@ void example_OPF_1() {
         {"c0", 335}
     };
     gen3->setOPFInfo(gen_info3);
+
+    /*  ---------- 1.x Add RESs (debug)  ---------- */ 
+        // Example usage of the PVplant class
+    vector<double> pv_parameters = {
+        2.8e6,		// P_pv: Rated power of the PV plant in watts
+        6570,		// I_pv: Rated current of the PV plant in amperes
+        2760,		// N_s: Number of series-connected modules
+        720,		// N_p: Number of parallel-connected strings
+        1.5,		// n: ideally factor of the diode
+        2.5,		// I_sc: Short-circuit current of a single module at STC
+        1e-10,		// I0: Reverse saturation current of the diode
+        7.2e-3,     // C_pv: Capacitance of the PV array in farads
+        900.0,		// V_dc: DC link voltage in volts
+        16e-6,      // L_boost: Inductance of the boost converter in henries
+        70e-3,      // C_dc: Capacitance of the DC link in farads
+        4.9809e-06,	// kp_boost: Proportional gain for the boost converter voltage control loop
+        4.9809e-09,	// ki_boost: Integral gain for the boost converter voltage control loop
+        103e-6,		// L_1: Inductance of the filter in henries
+        0,			// R_1: Resistance of the filter in ohms
+        220e-6,		// C_f: Capacitance of the filter in farads
+        0.1,		// R_c: Resistance of the filter in ohms
+        125e-6,		// L_2: Grid-side inductance in henries
+        690.0,		// V_g: Grid voltage in volts
+        50.0,	    // f_g: Grid frequency in hertz
+        1.0,		// K_p_dc: Proportional gain of the DC voltage controller
+        500.0,		// K_i_dc: Integral gain of the DC voltage controller
+        0.45,		// K_p_i: Proportional gain of the current controller
+        69.7,		// K_i_i: Integral gain of the current controller
+        0.5,		// K_p_pll: Proportional gain of the PLL
+        1.0			// K_i_pll: Integral gain of the PLL
+    };
+
+    PVplant* pv1 = new PVplant("PV1", "AC1", pv_parameters);
+    net9bus.connectElementToBus(pv1, 1, bus5_ac);
 
     ///*  ---------- 1.4 Add Branches  ---------- */
     double ACR1 = 0.0; double ACX1 = 0.0576;
