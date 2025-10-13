@@ -33,7 +33,7 @@ public:
 	// Determine admittance of the part of the system
 	MatrixXcd compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double frequency);
 	// Determine visible impedance from one of outputs of subnetwork when other outputs are closed
-	// MatrixXcd compute_closing_impedance(SubNetwork*, vector<bool>, vector<MatrixXcd>);
+	MatrixXcd compute_closing_impedance(SubNetwork*, string&, vector<MatrixXcd>&);
 
 	void compute_transfer_function(string converter_name, string location, double frequency);
 
@@ -45,8 +45,8 @@ private:
 	std::vector<std::string> dc_grid_names;
 
 	// Core hierarchical system representation
-	std::unordered_map<std::string, std::unique_ptr<SubNetwork>> ac_grids;  // AC grids as subnetworks
-	std::unordered_map<std::string, std::unique_ptr<SubNetwork>> dc_grids;  // DC grids as subnetworks
+	std::unordered_map<std::string, SubNetwork*> ac_grids;  // AC grids as subnetworks
+	std::unordered_map<std::string, SubNetwork*> dc_grids;  // DC grids as subnetworks
 	std::unordered_map<std::string, Element*> converters; // Converter subnetworks
 
 	// Optional: internal mapping of converter interconnections between subnetworks

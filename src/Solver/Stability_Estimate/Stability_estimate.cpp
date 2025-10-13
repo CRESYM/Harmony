@@ -36,12 +36,12 @@ void StabilityEstimate::add_areas(Network* net) {
 
         // Create subnetwork if not already existing
         if (grid_map.find(area) == grid_map.end()) {
-            grid_map[area] = std::make_unique<SubNetwork>(area);
+            grid_map[area] = new SubNetwork(area);
             grid_names.push_back(area);
         }
 
         // Retrieve the SubNetwork
-        SubNetwork* sub = grid_map[area].get();
+        SubNetwork* sub = grid_map[area];
 
         // Add bus to the SubNetwork
         sub->addBus(bus);
@@ -76,10 +76,10 @@ void StabilityEstimate::add_areas(Network* net) {
 
                         // Ensure both grids exist
                         if (ac_grids.find(ac_area) == ac_grids.end()) {
-                            ac_grids[ac_area] = std::make_unique<SubNetwork>(ac_area);
+                            ac_grids[ac_area] = new SubNetwork(ac_area);
                         }
                         if (dc_grids.find(dc_area) == dc_grids.end()) {
-                            dc_grids[dc_area] = std::make_unique<SubNetwork>(dc_area);
+                            dc_grids[dc_area] = new SubNetwork(dc_area);
                         }
 
                         // Identify converter terminal buses (AC and DC)
@@ -521,8 +521,6 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
         idx++;
     }
 
-	/*cout << "Assembled Y-matrix:\n" << Y << "\n";*/
-
     MatrixXcd Y_params = MatrixXcd::Zero(num_start_buses, num_start_buses);
 
     // Iterate through the combinations of start buses to get admittance parameters
@@ -633,18 +631,20 @@ void StabilityEstimate::compute_transfer_function(string converter_name, string 
      
     // Compute equivalent Y parameters first for AC grids and then for DC grids
     // DC grids
+    int dc_side_pins = 0;
 	unordered_map<string, MatrixXcd> Y_dc_matrices;
     for (auto& [name, sub] : dc_grids) {
         std::cout << "Computing equivalent admittance for DC grid: " << name << "\n";
-        MatrixXcd Y_dc = compute_equivalent_admittance_parameters_num(sub.get(), frequency);
+        MatrixXcd Y_dc = compute_equivalent_admittance_parameters_num(sub, frequency);
 		Y_dc_matrices[name] = Y_dc;
+		dc_side_pins = Y_dc.rows(); // Assuming single bus for DC grid
         std::cout << "Equivalent admittance matrix for DC grid " << name << ":\n" << Y_dc << "\n";
 	}
     // AC grids
 	unordered_map<string, MatrixXcd> Y_ac_matrices;
 	for (auto& [name, sub] : ac_grids) {
         std::cout << "Computing equivalent admittance for AC grid: " << name << "\n";
-        MatrixXcd Y_ac = compute_equivalent_admittance_parameters_num(sub.get(), frequency);
+        MatrixXcd Y_ac = compute_equivalent_admittance_parameters_num(sub, frequency);
 		Y_ac_matrices[name] = Y_ac;
 		std::cout << "Equivalent admittance matrix for AC grid " << name << ":\n" << Y_ac << "\n";
 	}
@@ -653,7 +653,10 @@ void StabilityEstimate::compute_transfer_function(string converter_name, string 
 	// Depending on the side of the converter, the admittance matrix will be different
     // If it is not main converter, then the converter is always considered from DC side.
 	// If it is main converter, then if the location is on DC side, then the same applies.
+	int converter_number = converters.size();
+	MatrixXcd Z_closing = MatrixXcd::Zero((converter_number-1) * dc_side_pins, (converter_number-1) * dc_side_pins);
 	unordered_map<string, MatrixXcd> Y_conv_matrices;
+    int index = 0;
     for (auto& [name, elem] : converters) {
         MMC* mmc_elem = dynamic_cast<MMC*>(elem);
         if (!mmc_elem) continue;
@@ -685,8 +688,11 @@ void StabilityEstimate::compute_transfer_function(string converter_name, string 
             MatrixXcd a = Ymmc.block(1, 0, 2, 0);
             MatrixXcd Ydq = Ymmc.block(1, 1, 2, 2);
             Y_conv_matrices[name] = b * (Y_ac - Ydq).inverse() * a + Ydc;
+
+            Z_closing.block(index, index, dc_side_pins, dc_side_pins) = Y_conv_matrices[name].inverse();
         }
     }
+
 
 	// CROSS-COUPLING OF THE DC SIDE OF THE CONVERTER
 	// with the DC grid admittance
@@ -696,7 +702,6 @@ void StabilityEstimate::compute_transfer_function(string converter_name, string 
 	// For AC cut - compute the overall admittance looking into the converter from AC side
 	// i.e. repeat the same procedure as above but now from AC side
     // 
-    //if ((converter_name == name) && (location == ac_area)) {
     //    MatrixXcd Y_dc = Y_dc_matrices[dc_area];
     //    MatrixXcd Ymmc = vectorToMatrix(mmc_elem->compute_y_parameters(frequency));
     //    // The overall transfer function considering the converter's own admittance and the grid admittances.
@@ -706,5 +711,9 @@ void StabilityEstimate::compute_transfer_function(string converter_name, string 
     //    MatrixXcd a = Ymmc.block(0, 1, 0, 2);
     //    MatrixXcd Ydc = Ymmc.block(0, 0, 1, 1);
     //    Y_conv_matrices[name] = (Y_dc - Ydc).inverse() * a * b + Ydq;
-    //}
+}
+
+MatrixXcd compute_closing_impedance(SubNetwork* sub, string& connection_name, MatrixXcd& Z_closing) {
+	// Separate input and output parts
+
 }
