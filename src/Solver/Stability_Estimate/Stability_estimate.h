@@ -22,8 +22,8 @@ public:
 
 	vector<string> get_ac_grid_names() { return ac_grid_names; };
 	vector<string> get_dc_grid_names() { return dc_grid_names; };
-	std::unordered_map<std::string, std::unique_ptr<SubNetwork>>& get_ac_grids() { return ac_grids; }
-	std::unordered_map<std::string, std::unique_ptr<SubNetwork>>& get_dc_grids() { return dc_grids; }
+	std::unordered_map<std::string, SubNetwork*>& get_ac_grids() { return ac_grids; }
+	std::unordered_map<std::string, SubNetwork*>& get_dc_grids() { return dc_grids; }
 	std::unordered_map<std::string, Element*>& get_converters() { return converters; }
 
 	// Determine closing impedance of the part of the system
@@ -33,9 +33,9 @@ public:
 	// Determine admittance of the part of the system
 	MatrixXcd compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double frequency);
 	// Determine visible impedance from one of outputs of subnetwork when other outputs are closed
-	MatrixXcd compute_closing_impedance(SubNetwork*, string&, vector<MatrixXcd>&);
+	MatrixXcd compute_closing_impedance(SubNetwork*, string&, MatrixXcd&, MatrixXcd&);
 
-	void compute_transfer_function(string converter_name, string location, double frequency);
+	MatrixXcd compute_transfer_function(string converter_name, string location, double frequency);
 
 	// Print summary of areas
 	void print_summary() const;
