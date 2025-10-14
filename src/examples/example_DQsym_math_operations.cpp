@@ -51,7 +51,7 @@ void example_DQsym_math_operations()
 	// DSSS test case
 	MatrixXcd Ad(3, 3);
 	Ad << complex<double>(-0.9998, 0), complex<double>(0, 0), complex<double>(0, 0), complex<double>(0, 0), complex<double>(-0.9998, 0), complex<double>(0, 0),
-		complex<double>(0, 0), complex<double>(0, 0), complex<double>(0.9998, 0);
+		complex<double>(0, 0), complex<double>(0, 0), complex<double>(-0.9998, 0);
 	MatrixXcd Bd(3, 9);
 	Bd << 9.998900120986692e+04 , 0 ,  0 , 0 , 0 , 0.099989001209867, -0.099989001209867, 0 , 0,
 		  0 , 9.998900120986692e+04 , 0 , 0 , 0.099989001209867 , 0 , 0 , -0.099989001209867 , 0,
@@ -93,6 +93,7 @@ void example_DQsym_math_operations()
 	for (int i = 0; i < 3; i++)
 	{
 		VectorXi brkVec = brkVecs.row(i);
+		cout << u << endl;
 		cout << brkVec << endl;
 		cout << endl;
 		y = dqSym.DSSS(Ad, Bd, Cd, Dd, swOnRes, swOffRes, swType, brkVec, u, xo, 2e-5, 50.0);
