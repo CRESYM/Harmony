@@ -17,6 +17,7 @@ private:
     double L_f = 0.01; // Default value
     double X_d = 1.0;  // Default value
     double T_f = 0.1;  // Default value
+	double X_m = 1.0;  // Default value
 
 };
 

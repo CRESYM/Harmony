@@ -19,6 +19,7 @@ int main() {
 	// example_MMC();
 	// example_OHL();
 	// example_cable();
+	example_generator();
 	
 	// Solver examples
 	//example_OPF();
@@ -26,7 +27,7 @@ int main() {
 	//example_OPF_csv();
 	// example_OPF_csv_1();
 	// example_OPF_csv();
-	 example_DQsym_math_operations();
+	// example_DQsym_math_operations();
 	// example_visuals();
 	// example_stability_check();
 	//example_admittance_parameters();
