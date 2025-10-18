@@ -7,7 +7,7 @@ void example_OPF_csv_1()
     std::unordered_map<std::string, Eigen::MatrixXd>* noData = nullptr;
 
     std::string dc_case = "mtdc3slack_a";
-    std::string ac_case = "ac57ac118";
+    std::string ac_case = "ac9ac14";
 
     pf.solve_opf(dc_case, ac_case, noData,
         /*vscControl=*/true,

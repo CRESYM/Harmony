@@ -35,6 +35,7 @@ public:
         return -1; // Return -1 if the bus is not found
 	}
     Bus* getOtherBus(Bus*);
+    const std::map<Bus*, int>& getConnections() const { return connections; }
     std::map<Bus*, int> getConnections() { return connections; }
 	string getElementLocation() const { return element_location; }
     

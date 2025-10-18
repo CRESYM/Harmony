@@ -62,7 +62,9 @@ public:
     // Getters for private members variables for buses, elements, and connections
     const std::unordered_map<std::string, Bus*>& getBuses() const { return buses; }
     const std::unordered_map<std::string, Element*>& getElements() const { return elements; }
+    std::unordered_map<std::string, Element*>& getElements() { return elements; }
     const std::unordered_map<Bus*, std::vector<Element*>>& getConnections() const { return connections; }
+    std::unordered_map<Bus*, std::vector<Element*>>& getConnections() { return connections; }
 
 };
 

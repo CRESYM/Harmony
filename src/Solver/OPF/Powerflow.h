@@ -2,10 +2,30 @@
 #define POWERFLOW_H
 
 #include "../../Constants.h"
+#include "../../Bus.h"
+
+#include <string>
+#include <unordered_map>
+#include <map>
+#include <vector>
+#include <utility>
+#include <stdexcept>
+#include <cmath>
+#include <algorithm>
+#include <cctype>
 
 class Element;
 class Network;
 class Bus;
+
+struct DCBusResult {
+    std::string busName;   
+    int busIndex;         
+    double vn2;         
+    double pn;         
+    double ps, qs;        
+    double pc, qc;         
+};
 
 class PowerFlow {
 public:
@@ -53,6 +73,9 @@ public:
     const auto& getNetData() const { return data; }
     auto& getNetData() { return data; }
 
+    // get Results
+    DCBusResult getDCBusResult(const std::string& dcBusName) const;
+    // get OPF results
     // Visualization
     //void viz_opf();
 
@@ -87,18 +110,17 @@ private:
     Eigen::VectorXi fbus_dc, tbus_dc;
 
     // DC optimization variables
-    Eigen::VectorXd pn_dc, pc_dc_k, qc_dc_k, v2s_dc_k, v2c_dc_k, Ic_dc, lc_dc;
+    Eigen::VectorXd pn_dc, Ic_dc, lc_dc;
     Eigen::VectorXd Ctt_dc, Ccc_dc, Ctc_dc, Stc_dc, Cct_dc, Sct_dc, convPloss_dc;
-    Eigen::MatrixXd lij_dc_k;
+    // Eigen::MatrixXd lij_dc_k;
 
     // Visualization buffers
-    Eigen::VectorXd vn2_dc_k, ps_dc_k, qs_dc_k;
-    Eigen::MatrixXd pij_dc_k;
+    //Eigen::VectorXd vn2_dc_k, ps_dc_k, qs_dc_k;
+    //Eigen::MatrixXd pij_dc_k;
     std::vector<int> nbuses_ac_viz, ngens_ac_viz;
-    std::vector<Eigen::VectorXd> vn2_ac_k, pgen_ac_k, qgen_ac_k;
-    std::vector<Eigen::MatrixXd> pij_ac_k, qij_ac_k;
+    //std::vector<Eigen::VectorXd> vn2_ac_k, pgen_ac_k, qgen_ac_k;
+    //std::vector<Eigen::MatrixXd> pij_ac_k, qij_ac_k;
     int nconvs_dc_viz, nbuses_dc_viz, ngrids_viz;
-
 
     //store Dictionary OPF
     std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
@@ -108,6 +130,28 @@ private:
     // Internal helper
     Eigen::MatrixXd readCSVtoCpp(const std::string& filename);
     Eigen::SparseMatrix<std::complex<double>> makeYbus(double baseMVA, const Eigen::MatrixXd& bus, const Eigen::MatrixXd& branch);
+
+    // Read results
+    // --- DC-side results ---
+    Eigen::VectorXd vn2_dc_k;       // Solved DC bus voltage squared
+    Eigen::VectorXd pn_dc_k;        // Solved DC bus power injection
+    Eigen::MatrixXd pij_dc_k;       // Solved DC branch active power
+    Eigen::MatrixXd lij_dc_k;       // Solved DC branch current squared
+    Eigen::VectorXd ps_dc_k, qs_dc_k;   // Solved converter AC-side power
+    Eigen::VectorXd pc_dc_k, qc_dc_k;   // Solved converter DC-side power
+    Eigen::VectorXd convPloss_dc_k;       // Solved converter power loss
+
+    // --- AC-side results ---
+    std::vector<Eigen::VectorXd> vn2_ac_k;   // AC bus voltage squared (per grid)
+    std::vector<Eigen::VectorXd> pn_ac_k;    // AC nodal active injection
+    std::vector<Eigen::VectorXd> qn_ac_k;    // AC nodal reactive injection
+    std::vector<Eigen::VectorXd> pgen_ac_k;  // Generator active power
+    std::vector<Eigen::VectorXd> qgen_ac_k;  // Generator reactive power
+    std::vector<Eigen::MatrixXd> pij_ac_k;   // AC branch active power
+    std::vector<Eigen::MatrixXd> qij_ac_k;   // AC branch reactive power
+    std::vector<Eigen::MatrixXd> ss_ac_k;    // SOC relaxation variable (sin)
+    std::vector<Eigen::MatrixXd> cc_ac_k;    // SOC relaxation variable (cos)
+
 };
 
 #endif // POWERFLOW_H

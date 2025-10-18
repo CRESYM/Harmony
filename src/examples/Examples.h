@@ -20,4 +20,6 @@ extern void example_visuals();
 extern void example_stability_check();
 extern void example_admittance_parameters();
 
+extern void example_point2point_case();
+
 #endif

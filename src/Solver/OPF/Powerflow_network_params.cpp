@@ -5,6 +5,33 @@
 #include "../../Bus.h"
 #include "../../Include_components.h"
 
+#include <map>
+#include <unordered_map>
+#include <vector>
+#include <iostream>
+
+static void
+reNumberBusAC(Eigen::MatrixXd& busAC,
+    Eigen::MatrixXd& branchAC,
+    Eigen::MatrixXd& genAC,
+    Eigen::MatrixXd& gencostAC,
+    Eigen::MatrixXd& convDC);
+
+static void extendBusAC(std::map<std::string,
+    std::map<std::string, std::map<std::string, double>>>& data,
+    Network* net,
+    std::map<std::string, double>& global_params);
+
+static void extendBranchAC(std::map<std::string,
+    std::map<std::string, std::map<std::string, double>>>& data,
+    Network* net,
+    std::map<std::string, double>& global_params);
+
+static void extendGenAC(
+std::map<std::string,
+    std::map<std::string, std::map<std::string, double>>>& data,
+    Network* net,
+    std::map<std::string, double>& global_params);
 
 void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     Bus* bus, std::map<std::string, double>& global_params, bool print_info /* =false*/)
@@ -25,7 +52,7 @@ void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
 	// busRow["area"] = 1; // Default, but bus can overwrite it
 	busRow["Vm"] = 1.0; // Default, but bus can overwrite it
     busRow["Va"] = 0.0;
-    busRow["baseKV"] = global_params["ACbasekV"];
+    busRow["baseKV"] = global_params["ACbaseKV"];
     busRow["zone"] = 1.0;
     busRow["Vmax"] = 1.1; // Default, but bus can overwrite it    
 	busRow["Vmin"] = 0.9; // Default, but bus can overwrite it
@@ -57,7 +84,7 @@ void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     auto exists = std::any_of(dict_ac.begin(), dict_ac.end(),
         [&](const auto& row) { return row[0] == bus_name; });
     if (exists)
-        throw std::runtime_error("[Error: Duplicate entry for bus '" + bus_name + "'.");
+        throw std::runtime_error("[addBusAC] Error: Duplicate entry for bus '" + bus_name + "'.");
 
     dict_ac.push_back({
        bus_id,
@@ -112,10 +139,10 @@ void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
     // busDCRow["area"] = 1.0;
     busDCRow["Vm"] = 1.0;
     busDCRow["Va"] = 0.0;
-    busDCRow["baseKV"] = global_params["DCbasekV"];
-    busDCRow["zone"] = 1.0;
-    busDCRow["Vmax"] = 1.1;
-    busDCRow["Vmin"] = 0.9;
+    busDCRow["baseKV"] = global_params["DCbaseKV"];
+    busDCRow["zone"] = 1.0 ;
+    busDCRow["Vmax"] = 1.1 * 1.6;
+    busDCRow["Vmin"] = 0.9 * 1.6;
 
     bus->computePowerFlowDC(busDCRow, global_params);
 
@@ -609,19 +636,21 @@ void PowerFlow::make_Load(Element* element, std::map<std::string, double>& globa
 }
 
 
-void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dict, bool vscControl,
+void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_params, bool vscControl,
     bool writeTxt, bool plotResult, bool print_info)
 {
     //// Define and initialize data map
     //std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
 
     // Initialize specific elements of the data map
+   
     data["source_type"]["matpower"]["0"] = 0;
     data["name"]["network"]["0"] = 0;
     data["source_version"]["0.0.0"]["0"] = 0;
     data["per_unit"]["true"]["0"] = 1;
-    data["dcpol"]["2"]["0"] = 1;
+    data["dcpol"]["2"]["0"] = 2;
     data["baseMVA"]["100"]["0"] = 100;
+
 
     // Initialize empty elements of the data map
     std::vector<std::string> keys = {
@@ -669,10 +698,10 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     std::sort(dcBuses.begin(), dcBuses.end(), byName);
 
     for (Bus* b : acBuses)
-        addBusAC(dict_ac, b, global_dict, print_info);
+        addBusAC(dict_ac, b, global_params, print_info);
 
     for (Bus* b : dcBuses)
-        addBusDC(dict_dc, b, global_dict, print_info);
+        addBusDC(dict_dc, b, global_params, print_info);
 
 	// Process elements: loads, generators, which contribute to the buses data    
     auto& elements = net->getElements();
@@ -680,11 +709,11 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     {
         if (dynamic_cast<Load*>(element) || dynamic_cast<LoadPQ*>(element)) {
             cout << "[make_OPF] Processing element: " << element_name << endl;
-            make_Load(element, global_dict, print_info);
+            make_Load(element, global_params, print_info);
         }
         else if (dynamic_cast<Source_base*>(element)) {
             cout << "[make_OPF] Processing element: " << element_name << endl;
-            make_Generator(element, global_dict, print_info);
+            make_Generator(element, global_params, print_info);
         }
     }
 
@@ -693,10 +722,10 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     {
         if (dynamic_cast<Impedance*>(element)) {
             if (element->getInputPins() == 3) {
-                make_BranchAC(element, global_dict, print_info);
+                make_BranchAC(element, global_params, print_info);
             }
             else if (element->getInputPins() == 1) {
-                make_BranchDC(element, global_dict, print_info);
+                make_BranchDC(element, global_params, print_info);
             }
             else {
                 throw std::runtime_error("[make_OPF] Error: Unsupported impedance pin number.");
@@ -704,11 +733,15 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
 
         }
         else if (dynamic_cast<MMC*>(element)) {
-            make_Converter(element, global_dict, print_info);
+            make_Converter(element, global_params, print_info);
         }
         else {
         }
 	}
+
+    extendBusAC(data, net, global_params);
+    extendBranchAC(data, net, global_params);
+    extendGenAC(data, net, global_params);
 
 	cout << "[make_OPF] Finished processing elements.\n";
 
@@ -749,6 +782,8 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     MatrixXd gencostAC = map2dense(data.at("genCostAC"),
         { "model","startup","shutdown","n","c2","c1","c0","grid" });
 
+    reNumberBusAC(busAC, branchAC, genAC, gencostAC, convDC);
+
     // for debug
     Eigen::MatrixXd resAC;
 
@@ -758,9 +793,11 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     }
     else {
         // fallback to default
-        resAC = Eigen::MatrixXd::Zero(1, 12);
+        resAC = Eigen::MatrixXd::Zero(2, 12);
         resAC(0, 11) = 1;
         resAC(0, 0) = 1;
+        resAC(1, 11) = 1;
+        resAC(1, 0) = 1;
     }
 
     cout << "[make_OPF] Finished making OPF data.\n";
@@ -783,6 +820,232 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_dic
     solve_opf("", "", &dataOPF, vscControl, writeTxt, plotResult, print_info);
 }
 
+/// ========================================== debug start
+static void
+reNumberBusAC(
+    Eigen::MatrixXd& busAC,
+    Eigen::MatrixXd& branchAC,
+    Eigen::MatrixXd& genAC,
+    Eigen::MatrixXd& gencostAC,
+    Eigen::MatrixXd& convDC)  
+{
+    std::unordered_map<int, std::unordered_map<int, int>> newIds; 
+    std::unordered_map<int, int> counters; 
+
+    for (int i = 0; i < busAC.rows(); ++i) {
+        int old_id = static_cast<int>(busAC(i, 0));
+        int region = static_cast<int>(busAC(i, busAC.cols() - 1));
+        int new_id = ++counters[region];
+        newIds[region][old_id] = new_id;
+    }
+
+    for (int i = 0; i < busAC.rows(); ++i) {
+        int old_id = static_cast<int>(busAC(i, 0));
+        int region = static_cast<int>(busAC(i, busAC.cols() - 1));
+        busAC(i, 0) = newIds[region][old_id];
+    }
+
+    for (int i = 0; i < branchAC.rows(); ++i) {
+        int fbus = static_cast<int>(branchAC(i, 0));
+        int tbus = static_cast<int>(branchAC(i, 1));
+        int region = static_cast<int>(branchAC(i, branchAC.cols() - 1));
+        if (newIds.count(region) && newIds[region].count(fbus))
+            branchAC(i, 0) = newIds[region][fbus];
+        if (newIds.count(region) && newIds[region].count(tbus))
+            branchAC(i, 1) = newIds[region][tbus];
+    }
+
+    for (int i = 0; i < genAC.rows(); ++i) {
+        int bus = static_cast<int>(genAC(i, 0));
+        int region = static_cast<int>(genAC(i, genAC.cols() - 1));
+        if (newIds.count(region) && newIds[region].count(bus))
+            genAC(i, 0) = newIds[region][bus];
+    }
+
+    for (int i = 0; i < convDC.rows(); ++i) {
+        int oldBusAC = static_cast<int>(convDC(i, 1));  // 第2列 busac_i
+        int region = static_cast<int>(convDC(i, 2));  // 第3列 gridac
+        if (newIds.count(region) && newIds[region].count(oldBusAC)) {
+            convDC(i, 1) = newIds[region][oldBusAC];
+        }
+
+    }
+
+}
+
+static void extendBusAC(
+    std::map<std::string,
+    std::map<std::string, std::map<std::string, double>>>& data,
+    Network* net,
+    std::map<std::string, double>& global_params)
+{
+    // get the maximum bus_i according to grid area
+    std::unordered_map<int, int> max_bus_by_grid;
+    for (auto& [rowKey, row] : data["busAC"]) {
+        int g = static_cast<int>(row["grid"]);
+        int b = static_cast<int>(row["bus_i"]);
+        max_bus_by_grid[g] = std::max(max_bus_by_grid[g], b);
+    }
+
+    // When AC_source is connected, add a new bus
+    for (auto& kv : net->getElements()) {
+        Element* elem = kv.second;
+        auto* src = dynamic_cast<AC_source*>(elem);
+        if (!src) continue;
+
+        // find the connected bus with AC_source（terminal==1）
+        Bus* bus1 = nullptr;
+        for (auto& cx : elem->getConnections()) {
+            if (cx.second == 1) { bus1 = cx.first; break; }
+        }
+        if (!bus1) continue;
+
+        // get order form bus name
+        std::string bus_name = bus1->getBusName();
+        int bus1_id = -1;
+        {
+            std::smatch m;
+            if (std::regex_search(bus_name, m, std::regex(R"((\d+)$)")))
+                bus1_id = std::stoi(m[1].str());
+        }
+        if (bus1_id < 0) continue;
+
+        // find grid that the bus belong
+        int grid = -1;
+        for (auto& [k, row] : data["busAC"]) {
+            if (static_cast<int>(row["bus_i"]) == bus1_id) {
+                grid = static_cast<int>(row["grid"]);
+                break;
+            }
+        }
+        if (grid < 0) continue;
+
+        // create new bus_id
+        int new_bus_id = ++max_bus_by_grid[grid];
+
+        std::string new_row_key = std::to_string(static_cast<int>(data["busAC"].size()));
+        auto& newRow = data["busAC"][new_row_key];
+        newRow["bus_i"] = new_bus_id;
+        newRow["type"] = 1.0;
+        newRow["Pd"] = 0.0;
+        newRow["Qd"] = 0.0;
+        newRow["Gs"] = 0.0;
+        newRow["Bs"] = 0.0;
+        newRow["area"] = grid;
+        newRow["Vm"] = 1.0;
+        newRow["Va"] = 0.0;
+        newRow["baseKV"] = global_params["ACbaseKV"];
+        newRow["zone"] = 1.0;
+        newRow["Vmax"] = 1.1;
+        newRow["Vmin"] = 0.9;
+        newRow["grid"] = grid;
+
+        double zsrc = 0.0;
+        auto info = src->getOPFInfo();
+        if (info.count("Zsrc")) zsrc = info["Zsrc"];
+
+        std::string metaKey = std::to_string(static_cast<int>(data["acsrcMeta"].size()));
+        auto& meta = data["acsrcMeta"][metaKey];
+        meta["bus1_id"] = bus1_id;
+        meta["new_bus_id"] = new_bus_id;
+        meta["grid"] = grid;
+        meta["Zsrc"] = zsrc;
+    }
+}
+
+static void extendBranchAC(
+    std::map<std::string,
+    std::map<std::string, std::map<std::string, double>>>& data,
+    Network* net,
+    std::map<std::string, double>& global_params)
+{
+    // If no AC_source connected, return
+    if (data.find("acsrcMeta") == data.end()) return;
+
+    for (auto& [k, meta] : data["acsrcMeta"]) {
+        int fbus = static_cast<int>(meta["bus1_id"]);
+        int tbus = static_cast<int>(meta["new_bus_id"]);
+        int grid = static_cast<int>(meta["grid"]);
+        double zsrc = meta["Zsrc"];
+
+        std::string brKey = std::to_string(static_cast<int>(data["branchAC"].size()));
+        auto& br = data["branchAC"][brKey];
+
+        br["fbus"] = fbus;
+        br["tbus"] = tbus;
+        br["r"] = 0.0;
+        br["x"] = zsrc/global_params["Z_base"];
+        br["b"] = 0.0;
+        br["rateAC"] = 100.0;
+        br["rateB"] = 100.0;
+        br["rateC"] = 100.0;
+        br["ratio"] = 0.0;
+        br["angle"] = 0.0;
+        br["status"] = 1.0;
+        br["angmin"] = -360.0;
+        br["angmax"] = 360.0;
+        br["grid"] = grid;
+    }
+
+}
+
+static void extendGenAC(
+    std::map<std::string,
+    std::map<std::string, std::map<std::string, double>>>& data,
+    Network* net,
+    std::map<std::string, double>& global_params)
+{
+    // Iterate over all AC_source
+    for (auto& elem_pair : net->getElements()) {
+        Element* elem = elem_pair.second;
+        AC_source* src = dynamic_cast<AC_source*>(elem);
+        if (!src) continue;
+
+        // find the bus that AC_source connected with
+        Bus* connectedBus = nullptr;
+        for (auto& kv : elem->getConnections()) {
+            if (kv.second == 1) { connectedBus = kv.first; break; }
+        }
+        if (!connectedBus) continue;
+
+        std::string bus_name = connectedBus->getBusName();
+        int old_bus_id = -1;
+        int grid = -1;
+
+        for (auto& [key, busRow] : data["busAC"]) {
+            int id = static_cast<int>(busRow.at("bus_i"));
+            if (std::abs(id - std::stoi(bus_name.substr(bus_name.size() - 1))) < 1e-6) {
+                old_bus_id = id;
+                grid = static_cast<int>(busRow.at("grid"));
+                break;
+            }
+        }
+        if (grid == -1) continue;
+
+        // find the new added bus order in the grid
+        int max_bus_in_grid = 0;
+        for (auto& [key, busRow] : data["busAC"]) {
+            if (static_cast<int>(busRow.at("grid")) == grid) {
+                int id = static_cast<int>(busRow.at("bus_i"));
+                if (id > max_bus_in_grid) max_bus_in_grid = id;
+            }
+        }
+
+        // Mapping oldBus -> newBus
+        int new_bus_id = max_bus_in_grid;
+
+        for (auto& [key, genRow] : data["genAC"]) {
+            int gen_bus = static_cast<int>(genRow.at("bus"));
+            int gen_grid = static_cast<int>(genRow.at("grid"));
+            if (gen_bus == old_bus_id && gen_grid == grid) {
+                genRow["bus"] = new_bus_id;
+            }
+        }
+    }
+}
+
+
+/// ========================================== debug end
 
 void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF) {
     // Load AC data
@@ -805,6 +1068,32 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
         gencost_entire_ac = dataOPF.at("gencost");
         res_entire_ac = dataOPF.at("res");
     }
+
+    /// debug
+    Eigen::IOFormat fmt(Eigen::StreamPrecision, 0, ", ", "\n", "[", "]");
+
+    std::cout << "\n=== baseMVA_ac ===\n";
+    std::cout << baseMVA_ac << "\n";
+
+    std::cout << "\n=== bus_entire_ac (" << bus_entire_ac.rows()
+        << " x " << bus_entire_ac.cols() << ") ===\n";
+    std::cout << bus_entire_ac.format(fmt) << "\n";
+
+    std::cout << "\n=== branch_entire_ac (" << branch_entire_ac.rows()
+        << " x " << branch_entire_ac.cols() << ") ===\n";
+    std::cout << branch_entire_ac.format(fmt) << "\n";
+
+    std::cout << "\n=== gen_entire_ac (" << gen_entire_ac.rows()
+        << " x " << gen_entire_ac.cols() << ") ===\n";
+    std::cout << gen_entire_ac.format(fmt) << "\n";
+
+    std::cout << "\n=== gencost_entire_ac (" << gencost_entire_ac.rows()
+        << " x " << gencost_entire_ac.cols() << ") ===\n";
+    std::cout << gencost_entire_ac.format(fmt) << "\n";
+
+    std::cout << "\n=== res_entire_ac (" << res_entire_ac.rows()
+        << " x " << res_entire_ac.cols() << ") ===\n";
+    std::cout << res_entire_ac.format(fmt) << "\n";
 
     //Identify number of grids by unique area ID
     std::set<int> unique_areas;
@@ -919,6 +1208,8 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
         // Normalize RES capacity
         sres_ac[ng] = res_ac[ng].col(2) / baseMVA_ac;
 
+        //// mapping from "busname" to "id"
+
     }
 }
 
@@ -983,4 +1274,5 @@ void PowerFlow::load_params_dc(const std::string& dcgrid_name, const std::unorde
     aloss_dc = conv_dc.col(18) / baseMW_dc;
     bloss_dc = conv_dc.col(19).array() / basekV_dc.array();
     closs_dc = closs_dc.array() / (basekV_dc.array().square() / baseMW_dc);
+
 }

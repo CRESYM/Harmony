@@ -14,6 +14,6 @@ void example_OPF_csv()
     pf.solve_opf(dc_case, ac_case, noData,
         /*vscControl=*/true,
         /*writeTxt=*/false,
-        /*plotResult=*/true,
+        /*plotResult=*/false,
         /*print_info=*/false);
 }

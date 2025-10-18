@@ -1,7 +1,22 @@
 #include "powerflow.h"
 #include "viz_opf.h"
+#include "../../Bus.h"   
 
 using namespace std;
+
+namespace {
+    int parseTrailingNumber(const std::string& s) {
+        int r = static_cast<int>(s.size()) - 1;
+        while (r >= 0 && std::isdigit(static_cast<unsigned char>(s[r]))) {
+            --r;
+        }
+        if (r == static_cast<int>(s.size()) - 1) {
+            throw std::runtime_error("DC bus name has no trailing number: " + s);
+        }
+        const std::string num = s.substr(static_cast<size_t>(r + 1));
+        return std::stoi(num); // 1-based
+    }
+} // namespace
 
 
 Eigen::SparseMatrix<std::complex<double>> PowerFlow::makeYbus(double baseMVA, const Eigen::MatrixXd& bus, const Eigen::MatrixXd& branch) {
@@ -230,7 +245,7 @@ void PowerFlow::solve_opf(
             Sct_dc(i) = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
         }
 
-        // 15. converterPloss_dc: converter power loss
+        // 14. converterPloss_dc: converter power loss
         Eigen::Matrix<GRBVar, Eigen::Dynamic, 1> convPloss_dc(nconvs_dc);
         for (int i = 0; i < nconvs_dc; ++i) {
             convPloss_dc(i) = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
@@ -558,31 +573,32 @@ void PowerFlow::solve_opf(
 
         GRBQuadExpr obj = 0.0;
         for (int ng = 0; ng < ngrids; ++ng) {
-            actgen_ac[ng] = generator_ac[ng].col(7);
-            actres_ac[ng] = res_ac[ng].col(10);
 
-            // Generator cost (always) 
-            if (gencost_ac[ng](0, 3) == 3) {  // Quadratic cost 
-                for (int i = 0; i < ngens_ac[ng]; ++i) {
-                    obj += actgen_ac[ng](i) * (
-                        baseMVA_ac * baseMVA_ac * gencost_ac[ng](i, 4) * (pgen_ac[ng](i) * pgen_ac[ng](i)) +
-                        baseMVA_ac * gencost_ac[ng](i, 5) * pgen_ac[ng](i) +
-                        gencost_ac[ng](i, 6)
-                        );
+            // Generator cost function
+            if (generator_ac[ng].rows() > 0) {
+                actgen_ac[ng] = generator_ac[ng].col(7);
+                if (gencost_ac[ng](0, 3) == 3) {  // Quadratic cost 
+                    for (int i = 0; i < ngens_ac[ng]; ++i) {
+                        obj += actgen_ac[ng](i) * (
+                            baseMVA_ac * baseMVA_ac * gencost_ac[ng](i, 4) * (pgen_ac[ng](i) * pgen_ac[ng](i)) +
+                            baseMVA_ac * gencost_ac[ng](i, 5) * pgen_ac[ng](i) +
+                            gencost_ac[ng](i, 6)
+                            );
+                    }
+                }
+
+                if (gencost_ac[ng](0, 3) == 2) {  // Linear cost 
+                    for (int i = 0; i < ngens_ac[ng]; ++i) {
+                        obj += actgen_ac[ng](i) * (
+                            baseMVA_ac * gencost_ac[ng](i, 5) * pgen_ac[ng](i) +
+                            gencost_ac[ng](i, 6)
+                            );
+                    }
                 }
             }
 
-            if (gencost_ac[ng](0, 3) == 2) {  // Linear cost 
-                for (int i = 0; i < ngens_ac[ng]; ++i) {
-                    obj += actgen_ac[ng](i) * (
-                        baseMVA_ac * gencost_ac[ng](i, 5) * pgen_ac[ng](i) +
-                        gencost_ac[ng](i, 6)
-                        );
-                }
-            }
-
-            // RES cost (only if)
-            if (res_ac[ng].rows() > 0) { // Quadratic cost 
+            // RES cost function
+            if (res_ac[ng].rows() > 0) { 
                 actres_ac[ng] = res_ac[ng].col(10);
 
                 if (res_ac[ng](0, 6) == 3) {
@@ -595,7 +611,7 @@ void PowerFlow::solve_opf(
                     }
                 }
 
-                if (res_ac[ng](0, 6) == 2) { // Linear cost 
+                if (res_ac[ng](0, 6) == 2) { 
                     for (int i = 0; i < nress_ac[ng]; ++i) {
                         obj += actres_ac[ng](i) * (
                             baseMVA_ac * res_ac[ng](i, 8) * pres_ac[ng](i) +
@@ -958,6 +974,53 @@ void PowerFlow::solve_opf(
                 viz_opf(vis_data);
             }
 
+            this->vn2_dc_k = vn2_dc_k;
+            this->pn_dc_k = pn_dc_k;
+            this->ps_dc_k = ps_dc_k;
+            this->qs_dc_k = qs_dc_k;
+            this->pc_dc_k = pc_dc_k;
+            this->qc_dc_k = qc_dc_k;
+            this->pij_dc_k = pij_dc_k;
+            this->lij_dc_k = lij_dc_k;
+            this->convPloss_dc_k = convPloss_dc_k;
+
+            this->vn2_ac_k = vn2_ac_k;
+            this->pn_ac_k = pn_ac_k;
+            this->qn_ac_k = qn_ac_k;
+            this->pgen_ac_k = pgen_ac_k;
+            this->qgen_ac_k = qgen_ac_k;
+            this->pij_ac_k = pij_ac_k;
+            this->qij_ac_k = qij_ac_k;
+            this->ss_ac_k = ss_ac_k;
+            this->cc_ac_k = cc_ac_k;
+
+            this->baseMW_dc = baseMW_dc;
+            this->pol_dc = pol_dc;
+            this->bus_dc = bus_dc;
+            this->branch_dc = branch_dc;
+            this->conv_dc = conv_dc;
+            this->basekV_dc = basekV_dc;
+            this->nbuses_dc = nbuses_dc;
+            this->nbranches_dc = nbranches_dc;
+            this->nconvs_dc = nconvs_dc;
+            this->Y_dc = Y_dc;
+            this->y_dc = y_dc;
+            this->rtf_dc = rtf_dc;
+            this->xtf_dc = xtf_dc;
+            this->bf_dc = bf_dc;
+            this->rc_dc = rc_dc;
+            this->xc_dc = xc_dc;
+            this->ztfc_dc = ztfc_dc;
+            this->gtfc_dc = gtfc_dc;
+            this->btfc_dc = btfc_dc;
+            this->aloss_dc = aloss_dc;
+            this->bloss_dc = bloss_dc;
+            this->closs_dc = closs_dc;
+            this->convState_dc = convState_dc;
+            this->fbus_dc = fbus_dc;
+            this->tbus_dc = tbus_dc;
+
+
         }
 
 
@@ -976,3 +1039,37 @@ void PowerFlow::solve_opf(
         std::cout << "Exception during optimization" << endl;
     }
 }
+
+DCBusResult PowerFlow::getDCBusResult(const std::string& dcBusName) const {
+    if (vn2_dc_k.size() == 0 || pn_dc_k.size() == 0) {
+        throw std::runtime_error("OPF results are not available. Run make_OPF()/solve_opf() first.");
+    }
+    if (nbuses_dc <= 0) {
+        throw std::runtime_error("nbuses_dc is not initialized.");
+    }
+
+    const int idx1 = parseTrailingNumber(dcBusName);
+    if (idx1 < 1 || idx1 > nbuses_dc) {
+        throw std::runtime_error("DC bus index out of range for name: " + dcBusName);
+    }
+    const int i = idx1 - 1; // 0-based
+
+    DCBusResult r;
+    r.busName = dcBusName;
+    r.busIndex = i;
+    r.vn2 = vn2_dc_k(i);
+    r.pn = pn_dc_k(i);
+
+    auto safePick = [&](const Eigen::VectorXd& v) -> double {
+        if (i >= 0 && i < v.size()) return v(i);
+        return 0.0;
+        };
+
+    r.ps = safePick(ps_dc_k);
+    r.qs = safePick(qs_dc_k);
+    r.pc = safePick(pc_dc_k);
+    r.qc = safePick(qc_dc_k);
+
+    return r;
+}
+
