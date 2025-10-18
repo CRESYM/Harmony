@@ -19,7 +19,8 @@ int main() {
 	// example_MMC();
 	// example_OHL();
 	// example_cable();
-	
+	//example_generator();
+	example_point2point_case();
 	// Solver examples
 	//example_OPF();
 	//example_OPF_1();
@@ -30,7 +31,9 @@ int main() {
 	// example_visuals();
 	//example_stability_check();
 	//example_admittance_parameters();
-	example_point2point_case();
+	// example_stability_check();
+	//example_admittance_parameters();
+
 	return 0;
 
 }
