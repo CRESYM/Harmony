@@ -637,6 +637,165 @@ void PowerFlow::solve_opf(
         {
             std::cout << "Optimization succeeded. Solution found!" << std::endl;
 
+            /**************************************************
+            * EXTRACT THE OPTIMIZED RESULTS
+            **************************************************/
+
+            // 1. dc variable results
+            Eigen::VectorXd vn2_dc_k(nbuses_dc), pn_dc_k(nbuses_dc), ps_dc_k(nconvs_dc),
+                qs_dc_k(nconvs_dc), pc_dc_k(nconvs_dc), qc_dc_k(nconvs_dc),
+                v2s_dc_k(nconvs_dc), v2c_dc_k(nconvs_dc),
+                Ic_dc_k(nconvs_dc), lc_dc_k(nconvs_dc),
+                convPloss_dc_k(nconvs_dc);
+
+            Eigen::MatrixXd pij_dc_k(nbuses_dc, nbuses_dc), lij_dc_k(nbuses_dc, nbuses_dc),
+                Ctt_dc_k(nconvs_dc, 1), Ccc_dc_k(nconvs_dc, 1), Ctc_dc_k(nconvs_dc, 1),
+                Stc_dc_k(nconvs_dc, 1), Cct_dc_k(nconvs_dc, 1), Sct_dc_k(nconvs_dc, 1);
+
+            for (int i = 0; i < nbuses_dc; ++i) {
+                vn2_dc_k(i) = vn2_dc(i).get(GRB_DoubleAttr_X);
+                pn_dc_k(i) = pn_dc(i).get(GRB_DoubleAttr_X);
+            }
+            for (int i = 0; i < nconvs_dc; ++i) {
+                ps_dc_k(i) = ps_dc(i).get(GRB_DoubleAttr_X);
+                qs_dc_k(i) = qs_dc(i).get(GRB_DoubleAttr_X);
+                pc_dc_k(i) = pc_dc(i).get(GRB_DoubleAttr_X);
+                qc_dc_k(i) = qc_dc(i).get(GRB_DoubleAttr_X);
+                v2s_dc_k(i) = v2s_dc(i).get(GRB_DoubleAttr_X);
+                v2c_dc_k(i) = v2c_dc(i).get(GRB_DoubleAttr_X);
+                Ic_dc_k(i) = Ic_dc(i).get(GRB_DoubleAttr_X);
+                lc_dc_k(i) = lc_dc(i).get(GRB_DoubleAttr_X);
+                convPloss_dc_k(i) = convPloss_dc(i).get(GRB_DoubleAttr_X);
+
+                Ctt_dc_k(i, 0) = Ctt_dc(i).get(GRB_DoubleAttr_X);
+                Ccc_dc_k(i, 0) = Ccc_dc(i).get(GRB_DoubleAttr_X);
+                Ctc_dc_k(i, 0) = Ctc_dc(i).get(GRB_DoubleAttr_X);
+                Stc_dc_k(i, 0) = Stc_dc(i).get(GRB_DoubleAttr_X);
+                Cct_dc_k(i, 0) = Cct_dc(i).get(GRB_DoubleAttr_X);
+                Sct_dc_k(i, 0) = Sct_dc(i).get(GRB_DoubleAttr_X);
+            }
+            for (int i = 0; i < nbuses_dc; ++i)
+                for (int j = 0; j < nbuses_dc; ++j) {
+                    pij_dc_k(i, j) = pij_dc(i, j).get(GRB_DoubleAttr_X);
+                    lij_dc_k(i, j) = lij_dc(i, j).get(GRB_DoubleAttr_X);
+                }
+
+            // 2. ac variable results
+            std::vector<Eigen::VectorXd> vn2_ac_k(ngrids), pn_ac_k(ngrids), qn_ac_k(ngrids),
+                pgen_ac_k(ngrids), qgen_ac_k(ngrids), pres_ac_k(ngrids), qres_ac_k(ngrids);
+            std::vector<Eigen::MatrixXd> pij_ac_k(ngrids), qij_ac_k(ngrids),
+                ss_ac_k(ngrids), cc_ac_k(ngrids);
+
+            for (int ng = 0; ng < ngrids; ++ng) {
+                vn2_ac_k[ng].resize(nbuses_ac[ng]);
+                pn_ac_k[ng].resize(nbuses_ac[ng]);
+                qn_ac_k[ng].resize(nbuses_ac[ng]);
+                pgen_ac_k[ng].resize(ngens_ac[ng]);
+                qgen_ac_k[ng].resize(ngens_ac[ng]);
+                pres_ac_k[ng].resize(nress_ac[ng]);
+                qres_ac_k[ng].resize(nress_ac[ng]);
+                pij_ac_k[ng].resize(nbuses_ac[ng], nbuses_ac[ng]);
+                qij_ac_k[ng].resize(nbuses_ac[ng], nbuses_ac[ng]);
+                ss_ac_k[ng].resize(nbuses_ac[ng], nbuses_ac[ng]);
+                cc_ac_k[ng].resize(nbuses_ac[ng], nbuses_ac[ng]);
+
+                for (int i = 0; i < nbuses_ac[ng]; ++i) {
+                    vn2_ac_k[ng](i) = vn2_ac[ng](i).get(GRB_DoubleAttr_X);
+                    pn_ac_k[ng](i) = pn_ac[ng](i).get(GRB_DoubleAttr_X);
+                    qn_ac_k[ng](i) = qn_ac[ng](i).get(GRB_DoubleAttr_X);
+                }
+
+                for (int i = 0; i < ngens_ac[ng]; ++i) {
+                    pgen_ac_k[ng](i) = pgen_ac[ng](i).get(GRB_DoubleAttr_X);
+                    qgen_ac_k[ng](i) = qgen_ac[ng](i).get(GRB_DoubleAttr_X);
+                }
+
+                for (int i = 0; i < nress_ac[ng]; ++i) {
+                    pres_ac_k[ng](i) = pres_ac[ng](i).get(GRB_DoubleAttr_X);
+                    qres_ac_k[ng](i) = qres_ac[ng](i).get(GRB_DoubleAttr_X);
+                }
+
+                for (int i = 0; i < nbuses_ac[ng]; ++i)
+                    for (int j = 0; j < nbuses_ac[ng]; ++j) {
+                        pij_ac_k[ng](i, j) = pij_ac[ng](i, j).get(GRB_DoubleAttr_X);
+                        qij_ac_k[ng](i, j) = qij_ac[ng](i, j).get(GRB_DoubleAttr_X);
+                        ss_ac_k[ng](i, j) = ss_ac[ng](i, j).get(GRB_DoubleAttr_X);
+                        cc_ac_k[ng](i, j) = cc_ac[ng](i, j).get(GRB_DoubleAttr_X);
+                    }
+            }
+
+
+            /**************************************************
+             * RECONFIGURE BUS ANGLE
+             **************************************************/
+            std::vector<std::vector<double>> theta_ac_k(ngrids);
+            Eigen::VectorXd theta_s_k = Eigen::VectorXd::Zero(nconvs_dc);
+            Eigen::VectorXd theta_c_k = Eigen::VectorXd::Zero(nconvs_dc);
+
+            for (int ng = 0; ng < ngrids; ++ng) {
+                int ref_bus;
+
+                // ---- ¦È_ac ----
+                if (!recRef[ng].empty()) {
+                    // Find reference bus
+                    ref_bus = recRef[ng][0] - 1;
+                }
+                else {
+                    // If no reference bus, the PCC node of VSC is used as the reference bus
+                    int vsc_idx = -1;
+                    for (int k = 0; k < nconvs_dc; ++k) {
+                        if (static_cast<int>(conv_dc(k, 2)) == ng + 1) {
+                            vsc_idx = k;
+                            break;
+                        }
+                    }
+                    ref_bus = static_cast<int>(conv_dc(vsc_idx, 1)) - 1;
+                }
+
+                const Eigen::MatrixXd& cc = cc_ac_k[ng];
+                const Eigen::MatrixXd& ss = ss_ac_k[ng];
+                int nb = cc.rows();
+
+                std::vector<double> theta(nb, std::numeric_limits<double>::quiet_NaN());
+                std::vector<char> visited(nb, 0);
+                theta[ref_bus] = 0.0;
+                visited[ref_bus] = 1;
+
+                Eigen::ArrayXXd G = (cc.array().abs() > 1e-6).cast<double>();
+                for (int i = 0; i < nb; ++i) G(i, i) = 0.0;
+
+                std::vector<int> stack;
+                stack.push_back(ref_bus);
+
+                while (!stack.empty()) {
+                    int i = stack.back();
+                    stack.pop_back();
+                    for (int j = 0; j < nb; ++j) {
+                        if (!visited[j] && G(i, j)) {
+                            double dtheta = std::atan2(ss(i, j), cc(i, j));
+                            theta[j] = theta[i] - dtheta;
+                            visited[j] = 1;
+                            stack.push_back(j);
+                        }
+                    }
+                }
+
+                theta_ac_k[ng] = theta;
+            }
+
+            // ---- ¦È_s ----
+            for (int i = 0; i < nconvs_dc; ++i) {
+                int k = static_cast<int>(conv_dc(i, 2)) - 1;  // AC grid index
+                int j = static_cast<int>(conv_dc(i, 1)) - 1;  // PCC bus number
+                theta_s_k(i) = theta_ac_k[k][j];
+            }
+
+            // ---- ¦È_c ----
+            for (int i = 0; i < nconvs_dc; ++i) {
+                double dtheta_sc = std::atan2(Stc_dc_k(i, 0), Ctc_dc_k(i, 0));
+                theta_c_k(i) = theta_s_k(i) - dtheta_sc;
+            }
+
 
             /**************************************************
             * PRINT OPTIMIZATION RESULTS
@@ -650,29 +809,34 @@ void PowerFlow::solve_opf(
                 pio = &fout;
             }
 
-        #define OPF_OUT (*pio)
+            #define OPF_OUT (*pio)
 
             //  " ac bus print " 
-            OPF_OUT << "\n=======================================================================================";
-            OPF_OUT << "\n|   AC  Grid Bus Data                                                                 |";
-            OPF_OUT << "\n=======================================================================================";
-            OPF_OUT << "\n Area    Bus   Voltage       Generation            Load                 RES";
-            OPF_OUT << "\n #       #     Mag [pu]  Pg [MW]   Qg [MVAr]  P [MW]   Q [MVAr]  Pres [MW]  Qres[MVAr] ";
-            OPF_OUT << "\n-----   -----  --------  --------  ---------  -------  -------   ---------  ---------";
+            OPF_OUT << "\n=================================================================================================";
+            OPF_OUT << "\n|   AC  Grid Bus Data                                                                           |";
+            OPF_OUT << "\n=================================================================================================";
+            OPF_OUT << "\n Area    Bus        Voltage             Generation            Load                 RES";
+            OPF_OUT << "\n #       #     Mag [pu]/Ang [deg]  Pg [MW]   Qg [MVAr]  P [MW]   Q [MVAr]  Pres [MW]  Qres[MVAr] ";
+            OPF_OUT << "\n-----   -----  ------------------  --------  ---------  -------  -------   ---------  -----------";
 
             for (int ng = 0; ng < ngrids; ++ng) {
                 const auto& genidx = generator_ac[ng].col(0);
                 const auto& residx = res_ac[ng].col(0);
 
                 for (int i = 0; i < nbuses_ac[ng]; ++i) {
-                    double vmag = std::sqrt(vn2_ac[ng](i).get(GRB_DoubleAttr_X));
+                    double vmag = std::sqrt(vn2_ac_k[ng](i));
+                    double vangle = theta_ac_k[ng][i] * 180.0 / 3.141592653;
                     OPF_OUT << "\n"
                         << std::setw(3) << ng + 1
                         << std::setw(8) << i + 1
-                        << std::setw(11) << std::fixed << std::setprecision(3) << vmag;
+                        << std::setw(9) << std::fixed << std::setprecision(3) << vmag
+                        << "  / " << std::setw(6) << std::setprecision(2) << vangle;
 
-                    if (std::find(recRef[ng].begin(), recRef[ng].end(), i) != recRef[ng].end()) {
+                    if (std::find(recRef[ng].begin(), recRef[ng].end(), i + 1) != recRef[ng].end()) {
                         OPF_OUT << "*";
+                    }
+                    else {
+                        OPF_OUT << " ";
                     }
 
                     bool is_generator = (genidx.array() == i + 1).any();
@@ -689,10 +853,10 @@ void PowerFlow::solve_opf(
                         double qgen = qgen_ac[ng](gen_idx).get(GRB_DoubleAttr_X) * baseMVA_ac;
 
                         if (std::find(recRef[ng].begin(), recRef[ng].end(), i) != recRef[ng].end()) {
-                            OPF_OUT << std::setw(9) << pgen << std::setw(11) << qgen;
+                            OPF_OUT << std::setw(11) << pgen << std::setw(11) << qgen;
                         }
                         else {
-                            OPF_OUT << std::setw(10) << pgen << std::setw(11) << qgen;
+                            OPF_OUT << std::setw(11) << pgen << std::setw(11) << qgen;
                         }
                         double pd = pd_ac[ng](i) * baseMVA_ac;
                         double qd = qd_ac[ng](i) * baseMVA_ac;
@@ -702,7 +866,7 @@ void PowerFlow::solve_opf(
                         OPF_OUT << "         -          -";
                         double pd = pd_ac[ng](i) * baseMVA_ac;
                         double qd = qd_ac[ng](i) * baseMVA_ac;
-                        OPF_OUT << std::setw(9) << pd << std::setw(9) << qd;
+                        OPF_OUT << std::setw(10) << pd << std::setw(9) << qd;
                     }
 
 
@@ -721,12 +885,12 @@ void PowerFlow::solve_opf(
                         OPF_OUT << std::setw(12) << pres << std::setw(11) << qres;
                     }
                     else {
-                        OPF_OUT << "           -          -";
+                        OPF_OUT << "         -          -";
                     }
 
                 }
             }
-            OPF_OUT << "\n-----   -----  --------  --------  ---------  -------  -------   ---------  ---------";
+            OPF_OUT << "\n-----   -----  ------------------  --------  ---------  -------  -------   ---------  -----------";
 
             double GenCostResUSA = model.get(GRB_DoubleAttr_ObjVal);;
             double GenCostResEURO = GenCostResUSA / 1.08;
@@ -856,87 +1020,6 @@ void PowerFlow::solve_opf(
 
             if (writeTxt)
                 std::cout << "[info] OPF results saved to " << outfile << '\n';
-
-
-            /**************************************************
-            * EXTRACT THE OPTIMIZED RESULTS
-            **************************************************/
-
-            // 1. dc variable results
-            Eigen::VectorXd vn2_dc_k(nbuses_dc), pn_dc_k(nbuses_dc), ps_dc_k(nconvs_dc),
-                qs_dc_k(nconvs_dc), pc_dc_k(nconvs_dc), qc_dc_k(nconvs_dc),
-                v2s_dc_k(nconvs_dc), v2c_dc_k(nconvs_dc),
-                Ic_dc_k(nconvs_dc), lc_dc_k(nconvs_dc),
-                convPloss_dc_k(nconvs_dc);
-
-            Eigen::MatrixXd pij_dc_k(nbuses_dc, nbuses_dc), lij_dc_k(nbuses_dc, nbuses_dc),
-                Ctt_dc_k(nconvs_dc, 1), Ccc_dc_k(nconvs_dc, 1), Ctc_dc_k(nconvs_dc, 1),
-                Stc_dc_k(nconvs_dc, 1), Cct_dc_k(nconvs_dc, 1), Sct_dc_k(nconvs_dc, 1);
-
-            for (int i = 0; i < nbuses_dc; ++i) {
-                vn2_dc_k(i) = vn2_dc(i).get(GRB_DoubleAttr_X);
-                pn_dc_k(i) = pn_dc(i).get(GRB_DoubleAttr_X);
-            }
-            for (int i = 0; i < nconvs_dc; ++i) {
-                ps_dc_k(i) = ps_dc(i).get(GRB_DoubleAttr_X);
-                qs_dc_k(i) = qs_dc(i).get(GRB_DoubleAttr_X);
-                pc_dc_k(i) = pc_dc(i).get(GRB_DoubleAttr_X);
-                qc_dc_k(i) = qc_dc(i).get(GRB_DoubleAttr_X);
-                v2s_dc_k(i) = v2s_dc(i).get(GRB_DoubleAttr_X);
-                v2c_dc_k(i) = v2c_dc(i).get(GRB_DoubleAttr_X);
-                Ic_dc_k(i) = Ic_dc(i).get(GRB_DoubleAttr_X);
-                lc_dc_k(i) = lc_dc(i).get(GRB_DoubleAttr_X);
-                convPloss_dc_k(i) = convPloss_dc(i).get(GRB_DoubleAttr_X);
-
-                Ctt_dc_k(i, 0) = Ctt_dc(i).get(GRB_DoubleAttr_X);
-                Ccc_dc_k(i, 0) = Ccc_dc(i).get(GRB_DoubleAttr_X);
-                Ctc_dc_k(i, 0) = Ctc_dc(i).get(GRB_DoubleAttr_X);
-                Stc_dc_k(i, 0) = Stc_dc(i).get(GRB_DoubleAttr_X);
-                Cct_dc_k(i, 0) = Cct_dc(i).get(GRB_DoubleAttr_X);
-                Sct_dc_k(i, 0) = Sct_dc(i).get(GRB_DoubleAttr_X);
-            }
-            for (int i = 0; i < nbuses_dc; ++i)
-                for (int j = 0; j < nbuses_dc; ++j) {
-                    pij_dc_k(i, j) = pij_dc(i, j).get(GRB_DoubleAttr_X);
-                    lij_dc_k(i, j) = lij_dc(i, j).get(GRB_DoubleAttr_X);
-                }
-
-            // 2. ac variable results
-            std::vector<Eigen::VectorXd> vn2_ac_k(ngrids), pn_ac_k(ngrids), qn_ac_k(ngrids),
-                pgen_ac_k(ngrids), qgen_ac_k(ngrids);
-            std::vector<Eigen::MatrixXd> pij_ac_k(ngrids), qij_ac_k(ngrids),
-                ss_ac_k(ngrids), cc_ac_k(ngrids);
-
-            for (int ng = 0; ng < ngrids; ++ng) {
-                vn2_ac_k[ng].resize(nbuses_ac[ng]);
-                pn_ac_k[ng].resize(nbuses_ac[ng]);
-                qn_ac_k[ng].resize(nbuses_ac[ng]);
-                pgen_ac_k[ng].resize(ngens_ac[ng]);
-                qgen_ac_k[ng].resize(ngens_ac[ng]);
-                pij_ac_k[ng].resize(nbuses_ac[ng], nbuses_ac[ng]);
-                qij_ac_k[ng].resize(nbuses_ac[ng], nbuses_ac[ng]);
-                ss_ac_k[ng].resize(nbuses_ac[ng], nbuses_ac[ng]);
-                cc_ac_k[ng].resize(nbuses_ac[ng], nbuses_ac[ng]);
-
-                for (int i = 0; i < nbuses_ac[ng]; ++i) {
-                    vn2_ac_k[ng](i) = vn2_ac[ng](i).get(GRB_DoubleAttr_X);
-                    pn_ac_k[ng](i) = pn_ac[ng](i).get(GRB_DoubleAttr_X);
-                    qn_ac_k[ng](i) = qn_ac[ng](i).get(GRB_DoubleAttr_X);
-                }
-                for (int i = 0; i < ngens_ac[ng]; ++i) {
-                    pgen_ac_k[ng](i) = pgen_ac[ng](i).get(GRB_DoubleAttr_X);
-                    qgen_ac_k[ng](i) = qgen_ac[ng](i).get(GRB_DoubleAttr_X);
-                }
-
-                for (int i = 0; i < nbuses_ac[ng]; ++i)
-                    for (int j = 0; j < nbuses_ac[ng]; ++j) {
-                        pij_ac_k[ng](i, j) = pij_ac[ng](i, j).get(GRB_DoubleAttr_X);
-                        qij_ac_k[ng](i, j) = qij_ac[ng](i, j).get(GRB_DoubleAttr_X);
-                        ss_ac_k[ng](i, j) = ss_ac[ng](i, j).get(GRB_DoubleAttr_X);
-                        cc_ac_k[ng](i, j) = cc_ac[ng](i, j).get(GRB_DoubleAttr_X);
-                    }
-
-            }
 
             OPFVisualData vis_data;
 
