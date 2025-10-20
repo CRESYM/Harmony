@@ -555,7 +555,6 @@ void PowerFlow::solve_opf(
             //}
         }
        
-
         std::cout << "\n[Debug] Printing voltage limits for each bus:\n";
         for (int ng = 0; ng < ngrids; ++ng) {
             std::cout << "=== AC Grid " << ng + 1 << " ===\n";
@@ -733,15 +732,15 @@ void PowerFlow::solve_opf(
             Eigen::VectorXd theta_c_k = Eigen::VectorXd::Zero(nconvs_dc);
 
             for (int ng = 0; ng < ngrids; ++ng) {
-                int ref_bus;
+                int ref_bus = -1;
 
                 // ---- ¦È_ac ----
-                if (!recRef[ng].empty()) {
-                    // Find reference bus
-                    ref_bus = recRef[ng][0] - 1;
+                if (ng >= recRef.size()) continue;
+
+                if (!recRef[ng].empty() && recRef[ng][0] > 0) {
+                    ref_bus = recRef[ng][0] - 1;  // ×ªÎª 0-based
                 }
                 else {
-                    // If no reference bus, the PCC node of VSC is used as the reference bus
                     int vsc_idx = -1;
                     for (int k = 0; k < nconvs_dc; ++k) {
                         if (static_cast<int>(conv_dc(k, 2)) == ng + 1) {
@@ -749,12 +748,21 @@ void PowerFlow::solve_opf(
                             break;
                         }
                     }
+                    if (vsc_idx == -1) {
+                        theta_ac_k[ng] = std::vector<double>();
+                        continue;
+                    }
                     ref_bus = static_cast<int>(conv_dc(vsc_idx, 1)) - 1;
                 }
 
                 const Eigen::MatrixXd& cc = cc_ac_k[ng];
                 const Eigen::MatrixXd& ss = ss_ac_k[ng];
                 int nb = cc.rows();
+
+                if (ref_bus < 0 || ref_bus >= nb) {
+                    theta_ac_k[ng] = std::vector<double>();
+                    continue;
+                }
 
                 std::vector<double> theta(nb, std::numeric_limits<double>::quiet_NaN());
                 std::vector<char> visited(nb, 0);
@@ -787,7 +795,13 @@ void PowerFlow::solve_opf(
             for (int i = 0; i < nconvs_dc; ++i) {
                 int k = static_cast<int>(conv_dc(i, 2)) - 1;  // AC grid index
                 int j = static_cast<int>(conv_dc(i, 1)) - 1;  // PCC bus number
-                theta_s_k(i) = theta_ac_k[k][j];
+
+                if (k >= 0 && k < theta_ac_k.size() && j >= 0 && j < theta_ac_k[k].size()) {
+                    theta_s_k(i) = theta_ac_k[k][j];
+                }
+                else {
+                    theta_s_k(i) = 0.0;
+                }
             }
 
             // ---- ¦È_c ----

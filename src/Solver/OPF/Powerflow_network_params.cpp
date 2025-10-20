@@ -528,12 +528,28 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
                 << " voltage limits updated by gen '" << element->getElementSymbol()
                 << "': Vmax = Vmin = " << Vg_pu << " pu" << std::endl;
         }
-        else {
-            std::cerr << "[make_Generator] Warning: Bus row not found for generator "
-                << element->getElementSymbol() << std::endl;
-        }
     }
 
+    // If gen_info contains "Ref", update corresponding bus type to "3"
+    auto it_ref = gen_info.find("Ref");
+
+    std::string bus_row_key = std::to_string(bus_id - 1);
+    if (data["busAC"].count(bus_row_key)) {
+        auto& busRow = data["busAC"][bus_row_key];
+
+        if (it_ref != gen_info.end() && it_ref->second == 1.0) {
+            busRow["type"] = 3.0;
+            std::cout << "[make_Generator] Bus " << bus_name
+                << " set as SLACK (type = 3) by generator '"
+                << element->getElementSymbol() << "'\n";
+        }
+        else {
+            busRow["type"] = 2.0;
+            std::cout << "[make_Generator] Bus " << bus_name
+                << " set as PV (type = 2) by generator '"
+                << element->getElementSymbol() << "'\n";
+        }
+    }
 
 	const std::string& gen_name = element->getElementSymbol();
     const std::string& area_id = to_string(gRow["area"]);
@@ -668,21 +684,21 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
 
 	// Process buses
     // Define data structures
-  //  std::vector<std::vector<std::string>> dict_ac;
-  //  std::vector<std::vector<std::string>> dict_dc;
-  //  for (const auto& [bus_name, bus] : net->getBuses())
-  //  {
-		//cout << "[make_OPF] Processing bus: " << bus_name << endl;
-  //      if (bus->getPinNumber() == 3) {
-  //          addBusAC(dict_ac, bus, global_dict, writeTxt);
-  //      }
-  //      else if (bus->getPinNumber() == 1) {
-  //          addBusDC(dict_dc, bus, global_dict, writeTxt);
-  //      }
-  //      else {
-  //          throw std::runtime_error("[make_OPF] Error: Unsupported bus type.");
-  //      }
-  //  }
+    //  std::vector<std::vector<std::string>> dict_ac;
+    //  std::vector<std::vector<std::string>> dict_dc;
+    //  for (const auto& [bus_name, bus] : net->getBuses())
+    //  {
+    //    cout << "[make_OPF] Processing bus: " << bus_name << endl;
+    //      if (bus->getPinNumber() == 3) {
+    //          addBusAC(dict_ac, bus, global_dict, writeTxt);
+    //      }
+    //      else if (bus->getPinNumber() == 1) {
+    //          addBusDC(dict_dc, bus, global_dict, writeTxt);
+    //      }
+    //      else {
+    //          throw std::runtime_error("[make_OPF] Error: Unsupported bus type.");
+    //      }
+    //  }
 
     std::vector<std::vector<std::string>> dict_ac;
     std::vector<std::vector<std::string>> dict_dc;
@@ -1231,6 +1247,27 @@ void PowerFlow::load_params_dc(const std::string& dcgrid_name, const std::unorde
         branch_dc = dataOPF.at("branchDC");
         conv_dc = dataOPF.at("converter");
     }
+
+    /// debug
+    Eigen::IOFormat fmt(Eigen::StreamPrecision, 0, ", ", "\n", "[", "]");
+
+    std::cout << "\n=== baseMW_dc ===\n";
+    std::cout << baseMW_dc << "\n";
+
+    std::cout << "\n=== pol_dc ===\n";
+    std::cout << pol_dc << "\n";
+
+    std::cout << "\n=== bus_dc (" << bus_dc.rows()
+        << " x " << bus_dc.cols() << ") ===\n";
+    std::cout << bus_dc.format(fmt) << "\n";
+
+    std::cout << "\n=== branch_dc (" << branch_dc.rows()
+        << " x " << branch_dc.cols() << ") ===\n";
+    std::cout << branch_dc.format(fmt) << "\n";
+
+    std::cout << "\n=== conv_dc (" << conv_dc.rows()
+        << " x " << conv_dc.cols() << ") ===\n";
+    std::cout << conv_dc.format(fmt) << "\n";
 
     basekV_dc = conv_dc.col(13);
 
