@@ -16,7 +16,7 @@ void example_point2point_case() {
     Bus* bus1_ac = new Bus("ACBUS01", "AC1", 3);
     Bus* bus2_ac = new Bus("ACBUS02", "AC1", 3);
     Bus* bus3_ac = new Bus("ACBUS03", "AC2", 3);
-    Bus* bus4_ac = new Bus("ACBUS04", "AC2", 3);
+    Bus* bus4_ac = new Bus("ACBUS04", "AC2", 3); // 
 
     ///*  ---------- 1.2 Add AC Loads  ---------- */
 
@@ -170,22 +170,22 @@ void example_point2point_case() {
         << "\n";
 
     // Making Stability Estimate Object
+	//bus1_ac->setBusName("gnd"); // Change bus name to reflect its area
     StabilityEstimate* stability = new StabilityEstimate();
     stability->add_areas(&net);
-    stability->print_summary();
+    //stability->print_summary();
 
 
     // Compute equivalent impedance between two AC buses, skipping the MMCs
     auto& dc_grids = stability->get_dc_grids();
-    dc_grids["DC1"]->printConnections();
 	auto& ac_grids = stability->get_ac_grids();
     double omega_num = 2 * M_PI * 50.0; // Frequency in rad/s
-    MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], omega_num);
-	MatrixXcd Y_params_ac = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC2"], omega_num);
 
-    cout << "Equivalent Admittance Matrix at " << omega_num << " rad/s:" << endl;
+    MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], omega_num);
+    cout << "Equivalent Admittance Matrix at DC side at " << omega_num << " rad/s:" << endl;
     cout << Y_params << endl;
 
+	MatrixXcd Y_params_ac = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC2"], omega_num);
 	cout << "Equivalent Admittance Matrix of AC grid at " << omega_num << " rad/s:" << endl;
 	cout << Y_params_ac << endl;
 }

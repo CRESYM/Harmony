@@ -441,7 +441,8 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
 	string subnet_name = subnet->getName();
     int pins = 1;
     if (subnet_name[0] == 'A' || subnet_name[0] == 'a') {
-        pins = 2; // Assume 2 pins for AC networks in dq frame
+        pins = 3; // Assume 3 pins for AC networks 
+        // and 2 in dq frame, add transformation in subnetwork
     }
     else if (subnet_name[0] == 'D' || subnet_name[0] == 'd') {
         pins = 1; // Assume 1 pin for DC networks
@@ -453,16 +454,13 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
     // --- Assign matrix positions ---
     int pos = 0;
     std::unordered_map<Bus*, int> bus_positions;
-    std::vector<int> current_positions;
+	std::unordered_map<Bus*, int> bus_current_positions;
     for (auto& [name_bus, bus] : start_buses) {
         bus_positions[bus] = pos;
         pos += pins;
-        current_positions.push_back(pos);
+		bus_current_positions[bus] = pos;
+		pos += pins;
     }
-    for (int i = 0; i < pos; i++) {
-        current_positions[i] += pos - 1;
-	}
-    int equivalent_impedance_size = pos;
 
     // Add remaining buses from subnet
     for (const auto& [busName, bus] : subnet->getBuses()) {
@@ -473,16 +471,17 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
         }
     }
 
+	// cout << pos << endl;
+
     // --- Initialize admittance matrix ---
-    Eigen::MatrixXcd Y = Eigen::MatrixXcd::Zero(2*pos, 2*pos);
-	VectorXcd z = VectorXcd::Zero(2*pos,1);
+    Eigen::MatrixXcd Y = Eigen::MatrixXcd::Zero(pos, pos);
+	VectorXcd z = VectorXcd::Zero(pos,1);
 
     const auto& buses = subnet->getBuses();
 
     // --- Build Y-matrix ---
     for (const auto& [bus_name, bus] : buses) {
 		auto& elements = bus->getConnectedElements();
-		//cout << "Processing bus: " << bus->getBusName() << " with " << elements.size() << " elements.\n";
         for (Element* element : elements) {
 			// Skip if elemenet if is null, MMC, or not connected to the bus
             if (!element) continue;
@@ -514,48 +513,50 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
             }
         }
     }
-
+	
     // --- Apply current sources for start and end buses ---
-    int idx = 0;
 	int num_start_buses = start_buses.size();
     for (auto& [name_bus, bus] : start_buses) {
         int bus_pos = bus_positions[bus];
-        int curr_pos = current_positions[idx];
+        int curr_pos = bus_current_positions[bus];
 
         for (int i = 0; i < pins; ++i) {
             Y(bus_pos + i, curr_pos + i) = -1;
             Y(curr_pos + i, bus_pos + i) = 1;
         }
-        idx++;
     }
+
+    cout << Y << endl;
 
     MatrixXcd Y_params = MatrixXcd::Zero(num_start_buses*pins, num_start_buses*pins);
 
     // Iterate through the combinations of start buses to get admittance parameters
     // e.g. start for bus 1 = 1V, bus2-n = 0V, then bus1 = 0V, bus2 = 1V, etc.
     // and estimate Y11, Y12-n, etc.
-	int bus_vector_pos = 0;
+    int bus_pos = 0;
     for (auto& [name_bus, bus] : start_buses) {
-        int bus_pos = bus_positions[bus];
+        // int bus_pos = bus_positions[bus];
         // Set voltage source for this bus
         for (int i = 0; i < pins; ++i) {
-            z(current_positions[bus_vector_pos] + i, 0) = std::complex<double>(1, 0); // 1V source
+            z(bus_current_positions[bus] + i, 0) = std::complex<double>(1, 0); // 1V source
         }
         // Solve Y * x = z
         Eigen::VectorXcd solution = Y.partialPivLu().solve(z);
+		// cout << "Solution for bus " << name_bus << ":\n" << solution << "\n";
 
 		// Store results in Y_params
-		idx = 0;
-        for (idx = 0; idx < num_start_buses; idx++) {
+        int idx = 0;
+        for (auto& [name_bus_inner, bus_inner] : start_buses) {
+			int bus_pos_inner = bus_positions[bus_inner];
             for (int j = 0; j < pins; j++) {
-				Y_params(idx + j, bus_vector_pos + j) = solution(current_positions[idx] + j, 0);
+				Y_params(idx + j, bus_pos + j) = solution(bus_current_positions[bus_inner] + j, 0);
 			}	
+            idx++;
         }
         
         // Reset voltage source for this bus to 0V for next iteration
-		z.setZero();
-		// Move to next bus
-		bus_vector_pos++;
+        z.setZero();
+		bus_pos++;
 	}
  
    	return Y_params;

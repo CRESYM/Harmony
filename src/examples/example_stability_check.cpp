@@ -17,11 +17,7 @@ void example_stability_check() {
 
     ///*  ---------- 1.2 Add AC Loads  ---------- */
 
-    //LoadPQ* load1 = new LoadPQ("LOAD01", 3, {0.0, 0.0});
-    //net.connectElementToBus(load1, 1, bus1_ac);
-
-    std::vector<double> load_params1 = { 0, 0 };
-    LoadPQ* load1 = new LoadPQ("LOAD01", "AC1", 3, load_params1);
+    LoadPQ* load1 = new LoadPQ("LOAD01", "AC1", 3, { 0.0, 0.0 });
     net.connectElementToBus(load1, 1, bus1_ac);
 
     std::vector<double> load_params2 = { 5950, 37.9, 0 };
@@ -43,7 +39,7 @@ void example_stability_check() {
 
     ///*  ---------- 1.3 Add AC Generators  ---------- */
     // Generator 1
-    std::vector<double> gen1_params = { 0.02, 0.3, 0.05, 7.0 };
+    std::vector<double> gen1_params = { 0.02, 0.3, 7.0 };
     Generator* gen1 = new Generator("GEN01", "AC1", 3, gen1_params);
     net.connectElementToBus(gen1, 1, bus1_ac);
     map<string, double> gen_info1 = {
@@ -54,14 +50,14 @@ void example_stability_check() {
     };
     gen1->setOPFInfo(gen_info1);
 
-    std::vector<double> gen2_params = { 0.02, 0.3, 0.05, 7.0 };
+    std::vector<double> gen2_params = { 0.02, 0.3, 7.0 };
     Generator* gen2 = new Generator("GEN02", "AC1", 3, gen2_params);
     net.connectElementToBus(gen2, 1, bus2_ac);
     map<string, double> gen_info2 = {
         {"Pmax", 40.0}, {"Pmin", 40.0},
-        {"Qmax", -31.0}, {"Qmin", -33.0},
+        {"Qmax", 30.0}, {"Qmin", -33.0},
         {"c2", 0.085}, {"c1", 1.2},
-        {"c0", 600}
+        {"c0", 600},  {"Vg", 345}
     };
     gen2->setOPFInfo(gen_info2);
 
@@ -74,38 +70,40 @@ void example_stability_check() {
 
     double ACR2 = 0.08; double ACX2 = 0.24;
     std::complex<double> ACZ2(ACR2, ACX2);
-    Impedance* br2_ac = new Impedance("br2_ac", "AC1", 3, ACR2);
+    Impedance* br2_ac = new Impedance("br2_ac", "AC1", 3, ACZ2);
     net.connectElementToBus(br2_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br2_ac, /*terminal=*/2, bus3_ac);
 
     double ACR3 = 0.06; double ACX3 = 0.18;
     std::complex<double> ACZ3(ACR3, ACX3);
-    Impedance* br3_ac = new Impedance("br3_ac", "AC1", 3, ACR3);
+    Impedance* br3_ac = new Impedance("br3_ac", "AC1", 3, ACZ3);
     net.connectElementToBus(br3_ac, /*terminal=*/1, bus2_ac);
     net.connectElementToBus(br3_ac, /*terminal=*/2, bus3_ac);
 
     double ACR4 = 0.06; double ACX4 = 0.18;
     std::complex<double> ACZ4(ACR4, ACX4);
-    Impedance* br4_ac = new Impedance("br4_ac", "AC1", 3, ACR4);
+    Impedance* br4_ac = new Impedance("br4_ac", "AC1", 3, ACZ4);
     net.connectElementToBus(br4_ac, /*terminal=*/1, bus2_ac);
     net.connectElementToBus(br4_ac, /*terminal=*/2, bus4_ac);
 
     double ACR5 = 0.04;
     double ACX5 = 0.12;
     std::complex<double> ACZ5(ACR5, ACX5);
-    Impedance* br5_ac = new Impedance("br5_ac", "AC1", 3, ACR5);
+    Impedance* br5_ac = new Impedance("br5_ac", "AC1", 3, ACZ5);
     net.connectElementToBus(br5_ac, /*terminal=*/1, bus2_ac);
     net.connectElementToBus(br5_ac, /*terminal=*/2, bus5_ac);
 
     double ACR6 = 0.01;
     double ACX6 = 0.03;
-    Impedance* br6_ac = new Impedance("br6_ac", "AC1", 3, ACR6);
+    std::complex<double> ACZ6(ACR6, ACX6);
+    Impedance* br6_ac = new Impedance("br6_ac", "AC1", 3, ACZ6);
     net.connectElementToBus(br6_ac, /*terminal=*/1, bus3_ac);
     net.connectElementToBus(br6_ac, /*terminal=*/2, bus4_ac);
 
     double ACR7 = 0.08;
     double ACX7 = 0.24;
-    Impedance* br7_ac = new Impedance("br7_ac", "AC1", 3, ACR7);
+    std::complex<double> ACZ7(ACR7, ACX7);
+    Impedance* br7_ac = new Impedance("br7_ac", "AC1", 3, ACZ7);
     net.connectElementToBus(br7_ac, /*terminal=*/1, bus4_ac);
     net.connectElementToBus(br7_ac, /*terminal=*/2, bus5_ac);
 
@@ -211,6 +209,8 @@ void example_stability_check() {
     };
     mmc3->setOPFInfo(mmc3_info);
 
+	cout << "Network setup completed." << endl;
+
 	// Making Stability Estimate Object
     StabilityEstimate* stability = new StabilityEstimate();
 	stability->add_areas(&net);
@@ -219,12 +219,13 @@ void example_stability_check() {
 
 	// Compute equivalent impedance between two AC buses, skipping the MMCs
 	auto& dc_grids = stability->get_dc_grids();
-	dc_grids["DC1"]->printConnections();
-	vector<Bus*> start_buses = { bus1_dc, bus2_dc };
-	vector<Bus*> end_buses = { bus3_dc };
+	auto& ac_grids = stability->get_ac_grids();
 	double omega_num = 2 * M_PI * 50.0; // Frequency in rad/s
 	MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], omega_num);
 
 	cout << "Equivalent Admittance Matrix at " << omega_num << " rad/s:" << endl;
 	cout << Y_params << endl;
+
+	MatrixXcd Y_params_ac = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC1"], omega_num);
+	cout << Y_params_ac << endl;
 }
