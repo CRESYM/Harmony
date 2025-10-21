@@ -438,6 +438,17 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
         throw std::invalid_argument("Null SubNetwork pointer passed to compute_equivalent_impedance_num().");
 
     std::unordered_map<std::string, Bus*> start_buses = subnet->getOutputs();
+	string subnet_name = subnet->getName();
+    int pins = 1;
+    if (subnet_name[0] == 'A' || subnet_name[0] == 'a') {
+        pins = 2; // Assume 2 pins for AC networks in dq frame
+    }
+    else if (subnet_name[0] == 'D' || subnet_name[0] == 'd') {
+        pins = 1; // Assume 1 pin for DC networks
+    }
+    else {
+        throw std::invalid_argument("SubNetwork name must start with 'AC' or 'DC' to determine pin count.");
+	}
 
     // --- Assign matrix positions ---
     int pos = 0;
@@ -445,7 +456,7 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
     std::vector<int> current_positions;
     for (auto& [name_bus, bus] : start_buses) {
         bus_positions[bus] = pos;
-        pos += bus->getPinNumber();
+        pos += pins;
         current_positions.push_back(pos);
     }
     for (int i = 0; i < pos; i++) {
@@ -458,7 +469,7 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
         if (bus->getBusName() == "gnd") continue;
         if (bus_positions.find(bus) == bus_positions.end()) {
             bus_positions[bus] = pos;
-            pos += bus->getPinNumber();
+            pos += pins;
         }
     }
 
@@ -489,8 +500,6 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
 
             int bus_pos = bus_positions[bus];
             int other_pos = bus_positions[other_bus];
-            int pins = bus->getPinNumber();
-            int other_pins = other_bus->getPinNumber();
 
             int terminal = elem_conns.at(bus) - 1;
             int terminal_other = elem_conns.at(other_bus) - 1;
@@ -500,8 +509,8 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
                 for (int j = 0; j < pins; ++j)
                     Y(bus_pos + i, bus_pos + j) += Ye[terminal * pins + i][terminal * pins + j];
 
-                for (int j = 0; j < other_pins; ++j)
-                    Y(bus_pos + i, other_pos + j) += Ye[terminal * pins + i][terminal_other * other_pins + j];
+                for (int j = 0; j < pins; ++j)
+                    Y(bus_pos + i, other_pos + j) += Ye[terminal * pins + i][terminal_other * pins + j];
             }
         }
     }
@@ -512,7 +521,6 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
     for (auto& [name_bus, bus] : start_buses) {
         int bus_pos = bus_positions[bus];
         int curr_pos = current_positions[idx];
-        int pins = bus->getPinNumber();
 
         for (int i = 0; i < pins; ++i) {
             Y(bus_pos + i, curr_pos + i) = -1;
@@ -521,7 +529,7 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
         idx++;
     }
 
-    MatrixXcd Y_params = MatrixXcd::Zero(num_start_buses, num_start_buses);
+    MatrixXcd Y_params = MatrixXcd::Zero(num_start_buses*pins, num_start_buses*pins);
 
     // Iterate through the combinations of start buses to get admittance parameters
     // e.g. start for bus 1 = 1V, bus2-n = 0V, then bus1 = 0V, bus2 = 1V, etc.
@@ -529,7 +537,6 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
 	int bus_vector_pos = 0;
     for (auto& [name_bus, bus] : start_buses) {
         int bus_pos = bus_positions[bus];
-        int pins = bus->getPinNumber();
         // Set voltage source for this bus
         for (int i = 0; i < pins; ++i) {
             z(current_positions[bus_vector_pos] + i, 0) = std::complex<double>(1, 0); // 1V source
