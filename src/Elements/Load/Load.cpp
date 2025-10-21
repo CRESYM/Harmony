@@ -89,7 +89,7 @@ void Load::computePowerFlow(std::map<std::string, double>& busAC,
 	string area = element_location.substr(0, 2); // Extract area code from element_location
     if ((area[0] == 'A' || area[0] == 'a') && (area[1] == 'c' || area[1] == 'C')) { // AC network
 
-        double V_LL = global_params["ACbaseKV"];
+        double V_LL = global_params["ACbaseKV"] ;
         double omega = global_params["omega"];
         double V_phase = 1.0 * V_LL / std::sqrt(3.0);
 

@@ -21,10 +21,10 @@ class Bus;
 struct DCBusResult {
     std::string busName;   
     int busIndex;         
-    double vn2;         
+    double vn;         
     double pn;         
-    double ps, qs;        
-    double pc, qc;         
+    double ps, qs, vs, thetas;        
+    double pc, qc, vc, thetac;         
 };
 
 class PowerFlow {
@@ -74,7 +74,8 @@ public:
     auto& getNetData() { return data; }
 
     // get Results
-    DCBusResult getDCBusResult(const std::string& dcBusName) const;
+    DCBusResult getDCBusResult(const std::string& dcBusName,
+        const std::map<std::string, double>& global_params) const;
     // get OPF results
     // Visualization
     //void viz_opf();
@@ -139,10 +140,13 @@ private:
     Eigen::MatrixXd lij_dc_k;       // Solved DC branch current squared
     Eigen::VectorXd ps_dc_k, qs_dc_k;   // Solved converter AC-side power
     Eigen::VectorXd pc_dc_k, qc_dc_k;   // Solved converter DC-side power
+    Eigen::VectorXd theta_s_k, theta_c_k; // Solved converter theta
+    Eigen::VectorXd v2s_dc_k, v2c_dc_k; // Solved converter voltage
     Eigen::VectorXd convPloss_dc_k;       // Solved converter power loss
 
     // --- AC-side results ---
-    std::vector<Eigen::VectorXd> vn2_ac_k;   // AC bus voltage squared (per grid)
+    std::vector<Eigen::VectorXd> vn2_ac_k;   // AC bus voltage squared 
+    std::vector<Eigen::VectorXd> theta_ac_k;   // AC bus voltage squared 
     std::vector<Eigen::VectorXd> pn_ac_k;    // AC nodal active injection
     std::vector<Eigen::VectorXd> qn_ac_k;    // AC nodal reactive injection
     std::vector<Eigen::VectorXd> pgen_ac_k;  // Generator active power

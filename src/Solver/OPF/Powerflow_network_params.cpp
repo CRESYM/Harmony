@@ -10,6 +10,7 @@
 #include <vector>
 #include <iostream>
 
+
 static void
 reNumberBusAC(Eigen::MatrixXd& busAC,
     Eigen::MatrixXd& branchAC,
@@ -39,7 +40,7 @@ void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     int id = static_cast<int>(dict_ac.size()) + 1;
 
     std::string bus_id = std::to_string(id);
-    std::string bus_name = bus->getBusName(); // bus_info[0];
+    std::string bus_name = bus->getBusName(); 
 
     std::string row = std::to_string(id - 1);
     auto& busRow = data["busAC"][row];
@@ -366,8 +367,8 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
 	// convRow["gridac"] = 1; // Default grid area for AC
 	convRow["type_dc"] = 1; // Default type for DC
 	convRow["type_ac"] = 1; // Default type for AC
-	convRow["rtf"] = 0.0015; // Default rftc
-	convRow["xtf"] = 0.1121; // Default xtfc
+	convRow["rtf"] = 0.00; // Default rftc
+	convRow["xtf"] = 0.00; // Default xtfc
 	convRow["bf"] = 0.0887; // Default bf
 	convRow["rc"] = 0.0001; // Default rc
 	convRow["xc"] = 0.16428; // Default xc
@@ -879,8 +880,8 @@ reNumberBusAC(
     }
 
     for (int i = 0; i < convDC.rows(); ++i) {
-        int oldBusAC = static_cast<int>(convDC(i, 1));  // 第2列 busac_i
-        int region = static_cast<int>(convDC(i, 2));  // 第3列 gridac
+        int oldBusAC = static_cast<int>(convDC(i, 1));  
+        int region = static_cast<int>(convDC(i, 2));  
         if (newIds.count(region) && newIds[region].count(oldBusAC)) {
             convDC(i, 1) = newIds[region][oldBusAC];
         }

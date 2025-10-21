@@ -727,7 +727,7 @@ void PowerFlow::solve_opf(
             /**************************************************
              * RECONFIGURE BUS ANGLE
              **************************************************/
-            std::vector<std::vector<double>> theta_ac_k(ngrids);
+            std::vector<Eigen::VectorXd> theta_ac_k(ngrids);
             Eigen::VectorXd theta_s_k = Eigen::VectorXd::Zero(nconvs_dc);
             Eigen::VectorXd theta_c_k = Eigen::VectorXd::Zero(nconvs_dc);
 
@@ -738,7 +738,7 @@ void PowerFlow::solve_opf(
                 if (ng >= recRef.size()) continue;
 
                 if (!recRef[ng].empty() && recRef[ng][0] > 0) {
-                    ref_bus = recRef[ng][0] - 1;  // תΪ 0-based
+                    ref_bus = recRef[ng][0] - 1;  
                 }
                 else {
                     int vsc_idx = -1;
@@ -749,7 +749,7 @@ void PowerFlow::solve_opf(
                         }
                     }
                     if (vsc_idx == -1) {
-                        theta_ac_k[ng] = std::vector<double>();
+                        theta_ac_k[ng] = Eigen::VectorXd();
                         continue;
                     }
                     ref_bus = static_cast<int>(conv_dc(vsc_idx, 1)) - 1;
@@ -760,11 +760,11 @@ void PowerFlow::solve_opf(
                 int nb = cc.rows();
 
                 if (ref_bus < 0 || ref_bus >= nb) {
-                    theta_ac_k[ng] = std::vector<double>();
+                    theta_ac_k[ng] = Eigen::VectorXd();
                     continue;
                 }
 
-                std::vector<double> theta(nb, std::numeric_limits<double>::quiet_NaN());
+                Eigen::VectorXd theta = Eigen::VectorXd::Constant(nb, std::numeric_limits<double>::quiet_NaN());
                 std::vector<char> visited(nb, 0);
                 theta[ref_bus] = 0.0;
                 visited[ref_bus] = 1;
@@ -915,7 +915,7 @@ void PowerFlow::solve_opf(
             OPF_OUT << "\n===========================================================================================";
             OPF_OUT << "\n|     AC Grids Branch Data                                                                |";
             OPF_OUT << "\n===========================================================================================";
-            OPF_OUT << "\n Area   Branch  From   To        From Branch Flow         To Branch Flow      Branch Loss";
+            OPF_OUT << "\n Area   Branch  From   To        From Branch Flow         To Branch Flow        Branch Loss";
             OPF_OUT << "\n #      #       Bus#   Bus#    Pij [MW]   Qij [MVAr]    Pij [MW]   Qij [MVAr]  Pij_loss [MW]";
             OPF_OUT << "\n ----   ------  -----  -----  ---------  ----------   ----------  ----------  -------------";
 
@@ -964,11 +964,11 @@ void PowerFlow::solve_opf(
 
             // " dc bus print " 
             OPF_OUT << "\n================================================================================\n";
-            OPF_OUT << "|   MTDC Bus Data                                                              |\n";
-            OPF_OUT << "================================================================================\n";
+            OPF_OUT << "|   MTDC Bus Data                                                                |\n";
+            OPF_OUT << "==================================================================================\n";
             OPF_OUT << " Bus   Bus    AC   DC Voltage   DC Power   PCC Bus Injection   Converter loss\n";
             OPF_OUT << " DC #  AC #  Area   Vdc [pu]    Pdc [MW]   Ps [MW]  Qs [MVAr]  Conv_Ploss [MW]\n";
-            OPF_OUT << "-----  ----  ----  ---------    --------   -------  --------    --------";
+            OPF_OUT << " -----  ----  ----  ---------    --------   -------  --------   ------------";
 
             double totalConverterLoss = 0.0;
             for (int i = 0; i < nbuses_dc; ++i) {
@@ -998,8 +998,8 @@ void PowerFlow::solve_opf(
 
             // " dc branch print " 
             OPF_OUT << "\n ===================================================================\n";
-            OPF_OUT << " |     MTDC Branch Data                                            |\n";
-            OPF_OUT << " ===================================================================\n";
+            OPF_OUT << " |     MTDC Branch Data                                              |\n";
+            OPF_OUT << " =====================================================================\n";
             OPF_OUT << " Branch  From   To     From Branch    To Branch      Branch Loss\n";
             OPF_OUT << " #       Bus#   Bus#   Flow Pij [MW]  Flow Pij [MW]  Pij_loss [MW]\n";
             OPF_OUT << " ------  -----  -----   ---------      ---------      ---------\n";
@@ -1075,8 +1075,12 @@ void PowerFlow::solve_opf(
             this->pn_dc_k = pn_dc_k;
             this->ps_dc_k = ps_dc_k;
             this->qs_dc_k = qs_dc_k;
+            this->v2s_dc_k = v2s_dc_k;
+            this->theta_s_k = theta_s_k;
             this->pc_dc_k = pc_dc_k;
             this->qc_dc_k = qc_dc_k;
+            this->v2c_dc_k = v2c_dc_k;
+            this->theta_c_k = theta_c_k;
             this->pij_dc_k = pij_dc_k;
             this->lij_dc_k = lij_dc_k;
             this->convPloss_dc_k = convPloss_dc_k;
@@ -1090,7 +1094,8 @@ void PowerFlow::solve_opf(
             this->qij_ac_k = qij_ac_k;
             this->ss_ac_k = ss_ac_k;
             this->cc_ac_k = cc_ac_k;
-
+            this->theta_ac_k = theta_ac_k;
+            
             this->baseMW_dc = baseMW_dc;
             this->pol_dc = pol_dc;
             this->bus_dc = bus_dc;
@@ -1117,7 +1122,6 @@ void PowerFlow::solve_opf(
             this->fbus_dc = fbus_dc;
             this->tbus_dc = tbus_dc;
 
-
         }
 
 
@@ -1137,35 +1141,31 @@ void PowerFlow::solve_opf(
     }
 }
 
-DCBusResult PowerFlow::getDCBusResult(const std::string& dcBusName) const {
-    if (vn2_dc_k.size() == 0 || pn_dc_k.size() == 0) {
-        throw std::runtime_error("OPF results are not available. Run make_OPF()/solve_opf() first.");
-    }
-    if (nbuses_dc <= 0) {
-        throw std::runtime_error("nbuses_dc is not initialized.");
-    }
+DCBusResult PowerFlow::getDCBusResult(const std::string& dcBusName,
+    const std::map<std::string, double>& global_params) const {
 
     const int idx1 = parseTrailingNumber(dcBusName);
-    if (idx1 < 1 || idx1 > nbuses_dc) {
-        throw std::runtime_error("DC bus index out of range for name: " + dcBusName);
-    }
-    const int i = idx1 - 1; // 0-based
+    const int i = idx1 - 1; 
 
     DCBusResult r;
     r.busName = dcBusName;
     r.busIndex = i;
-    r.vn2 = vn2_dc_k(i);
-    r.pn = pn_dc_k(i);
+    r.vn = std::sqrt(vn2_dc_k(i)) * global_params.at("DCbaseKV");
+    r.pn = pn_dc_k(i) * global_params.at("baseMVA");
 
     auto safePick = [&](const Eigen::VectorXd& v) -> double {
         if (i >= 0 && i < v.size()) return v(i);
         return 0.0;
         };
 
-    r.ps = safePick(ps_dc_k);
-    r.qs = safePick(qs_dc_k);
-    r.pc = safePick(pc_dc_k);
-    r.qc = safePick(qc_dc_k);
+    r.ps = safePick(ps_dc_k) * global_params.at("baseMVA");
+    r.qs = safePick(qs_dc_k) * global_params.at("baseMVA");
+    r.thetas = safePick(theta_s_k) * 3.141592653 / 180;
+    r.vs = std::sqrt(safePick(v2s_dc_k)) * global_params.at("ACbaseKV");
+    r.pc = safePick(pc_dc_k) * global_params.at("baseMVA");;
+    r.qc = safePick(qc_dc_k) * global_params.at("baseMVA");
+    r.thetac = safePick(theta_c_k) * 3.141592653 / 180;
+    r.vc = std::sqrt(safePick(v2c_dc_k)) * global_params.at("ACbaseKV");
 
     return r;
 }

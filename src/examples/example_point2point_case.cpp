@@ -22,32 +22,31 @@ void example_point2point_case() {
     LoadPQ* load1 = new LoadPQ("LOAD01", "AC1", 3, { 0.0, 0.0 });
     net.connectElementToBus(load1, 1, bus1_ac);
 
-    LoadPQ* load2 = new LoadPQ("LOAD02", "AC2", 3, { 50.0, 0.0 });
+    std::vector<double> load_params2 = { 2380.5, 18.9, 0 };
+    Load* load2 = new Load("LOAD02", "AC2", 3, load_params2);
     net.connectElementToBus(load2, 1, bus4_ac);
 
 
     ///*  ---------- 1.3 Add AC Generators  ---------- */
 
     /// Generator 1
-    //std::vector<double> gen1_params = { 0.02, 0.3, 0.05, 7.0 };
-    //Generator* gen1 = new Generator("GEN01", "AC1", 3, gen1_params);
-    //net.connectElementToBus(gen1, 1, bus1_ac);
-    //map<string, double> gen_info1 = {
-    //    {"Pmax", 250.0/*MW*/}, {"Pmin", 10.0/*MW*/},
-    //    {"Qmax", 10.0/*MVar*/}, {"Qmin", -10.0/*MVar*/},
-    //    {"c2", 0.11}, {"c1", 5.0},
-    //    {"c0", 150}, {"Vg", 345*1.05/*kV*/}
-    //};
-    //gen1->setOPFInfo(gen_info1);
-
     double Zsrc = 0.002; 
     AC_source* src1 = new AC_source("SRC01", "AC1", 3, Zsrc);
     net.connectElementToBus(src1, 1, bus1_ac);
     map<string, double> src_info1 = {
-        {"Pmax", 250.0}, {"Pmin", 10.0},
-        {"Qmax", 10.0}, {"Qmin", -10.0},
-        {"c2", 0.11}, {"c1", 5.0}, {"c0", 150},
-        {"Vg", 345 }, {"Zsrc", Zsrc}
+        {"Pmax", 250.0},   // Maximum active power output (MW)
+        {"Pmin", 10.0},    // Minimum active power output (MW)
+
+        {"Qmax", 10.0},    // Maximum reactive power output (MVar)
+        {"Qmin", -10.0},   // Minimum reactive power output (MVar)
+
+        {"c2", 0.11},      // Quadratic coefficient of the generation cost function (c2*P^2 + c1*P + c0)
+        {"c1", 5.0},       // Linear coefficient of the generation cost function
+        {"c0", 150},       // Constant term of the generation cost function (fixed operation cost)
+
+        {"Vg", 345},       // Voltage magnitude setpoint of the source (kV)
+        {"Zsrc", Zsrc},    // Internal source impedance (Ω), used in power flow and short-circuit analysis
+        {"Ref", 1}         // Reference bus flag (1 = set as slack/reference bus)
     };
     src1->setOPFInfo(src_info1);
 
@@ -79,7 +78,7 @@ void example_point2point_case() {
         "MMC1",             // Symbol
         "AC1",              // Location
         1000.0,             // Omega (Nominal Frequency in rad/s)
-        -60.0 * 1e6,          // Active Power (P) in W
+        -60.0 * 1e6,        // Active Power (P) in W
         -40.0 * 1e6,        // Reactive Power (Q) in VA
         0.0,                // Theta (Voltage Angle in rad)
         345.0 * 1e3,        // AC Voltage (V_m) in V
@@ -141,15 +140,32 @@ void example_point2point_case() {
 
     pf.make_OPF(&net, global_params, false, false, false, false);
 
-    auto res = pf.getDCBusResult("DCBUS01");
-    std::cout << res.busName
-        << " idx=" << res.busIndex
-        << " vn2=" << res.vn2
-        << " pn=" << res.pn
-        << " ps=" << res.ps
-        << " qs=" << res.qs
-        << " pc=" << res.pc
-        << " qc=" << res.qc
+    auto res01 = pf.getDCBusResult("DCBUS01", global_params);
+    std::cout << res01.busName
+        << " Vdc=" << res01.vn << " kV "
+        << " Pdc=" << res01.pn << " MW "
+        << " Pac (PCC-side)=" << res01.ps << " MW "
+        << " Qac (PCC-side)=" << res01.qs << " Mvar "
+        << " Vac (PCC-side)=" << res01.vs << " kV "
+        << " θac (PCC-side)=" << res01.thetas << " rad "
+        << " Pac (AC terminal)=" << res01.pc << " MW "
+        << " Qac (AC terminal)=" << res01.qc << " Mvar "
+        << " Vac (AC terminal)=" << res01.vc << " kV "
+        << " θac (AC terminal)=" << res01.thetac << " rad "
+        << "\n";
+
+    auto res02 = pf.getDCBusResult("DCBUS02", global_params);
+    std::cout << res02.busName
+        << " Vdc=" << res02.vn << " kV "
+        << " Pdc=" << res02.pn << " MW "
+        << " Pac (PCC-side)=" << res02.ps << " MW "
+        << " Qac (PCC-side)=" << res02.qs << " Mvar "
+        << " Vac (PCC-side)=" << res02.vs << " kV "
+        << " θac (PCC-side)=" << res02.thetas << " rad "
+        << " Pac (AC terminal)=" << res02.pc << " MW "
+        << " Qac (AC terminal)=" << res02.qc << " Mvar "
+        << " Vac (AC terminal)=" << res02.vc << " kV "
+        << " θac (AC terminal)=" << res02.thetac << " rad "
         << "\n";
 
 }
