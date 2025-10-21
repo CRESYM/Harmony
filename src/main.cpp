@@ -21,16 +21,15 @@ int main() {
 	// example_cable();
 	//example_generator();
 	example_point2point_case();
+
 	// Solver examples
 	//example_OPF();
-	//example_OPF_1();
+	// example_OPF_1();
 	//example_OPF_csv();
 	//example_OPF_csv_1();
 	//example_OPF_csv();
 	// example_DQsym_math_operations();
 	// example_visuals();
-	//example_stability_check();
-	//example_admittance_parameters();
 	// example_stability_check();
 	//example_admittance_parameters();
 

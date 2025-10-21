@@ -4,6 +4,7 @@
 #include "../Bus.h"
 #include "../Include_components.h"
 #include "../Solver/OPF/powerflow.h"
+#include "../Solver/Stability_Estimate/Stability_estimate.h"
 
 
 void example_point2point_case() {
@@ -76,7 +77,7 @@ void example_point2point_case() {
     ///*  ---------- 2.3 Create Converters ---------- */
     MMC* mmc1 = new MMC(
         "MMC1",             // Symbol
-        "AC1",              // Location
+        "AC1_DC1",              // Location
         1000.0,             // Omega (Nominal Frequency in rad/s)
         -60.0 * 1e6,        // Active Power (P) in W
         -40.0 * 1e6,        // Reactive Power (Q) in VA
@@ -102,7 +103,7 @@ void example_point2point_case() {
 
     MMC* mmc2 = new MMC(
         "MMC2",             // Symbol
-        "AC2", 		        // Location
+        "AC2_DC1", 		    // Location
         1000.0,             // Omega (Nominal Frequency in rad/s)
         100.0 * 1e6,        // Active Power (P) in W
         50.0 * 1e6,         // Reactive Power (Q) in VA
@@ -147,11 +148,11 @@ void example_point2point_case() {
         << " Pac (PCC-side)=" << res01.ps << " MW "
         << " Qac (PCC-side)=" << res01.qs << " Mvar "
         << " Vac (PCC-side)=" << res01.vs << " kV "
-        << " θac (PCC-side)=" << res01.thetas << " rad "
+        << " theta ac (PCC-side)=" << res01.thetas << " rad "
         << " Pac (AC terminal)=" << res01.pc << " MW "
         << " Qac (AC terminal)=" << res01.qc << " Mvar "
         << " Vac (AC terminal)=" << res01.vc << " kV "
-        << " θac (AC terminal)=" << res01.thetac << " rad "
+        << " theta ac (AC terminal)=" << res01.thetac << " rad "
         << "\n";
 
     auto res02 = pf.getDCBusResult("DCBUS02", global_params);
@@ -161,11 +162,25 @@ void example_point2point_case() {
         << " Pac (PCC-side)=" << res02.ps << " MW "
         << " Qac (PCC-side)=" << res02.qs << " Mvar "
         << " Vac (PCC-side)=" << res02.vs << " kV "
-        << " θac (PCC-side)=" << res02.thetas << " rad "
+        << " theta ac (PCC-side)=" << res02.thetas << " rad "
         << " Pac (AC terminal)=" << res02.pc << " MW "
         << " Qac (AC terminal)=" << res02.qc << " Mvar "
         << " Vac (AC terminal)=" << res02.vc << " kV "
-        << " θac (AC terminal)=" << res02.thetac << " rad "
+        << " theta ac (AC terminal)=" << res02.thetac << " rad "
         << "\n";
 
+    // Making Stability Estimate Object
+    StabilityEstimate* stability = new StabilityEstimate();
+    stability->add_areas(&net);
+    stability->print_summary();
+
+
+    // Compute equivalent impedance between two AC buses, skipping the MMCs
+    auto& dc_grids = stability->get_dc_grids();
+    dc_grids["DC1"]->printConnections();
+    double omega_num = 2 * M_PI * 50.0; // Frequency in rad/s
+    MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], omega_num);
+
+    cout << "Equivalent Admittance Matrix at " << omega_num << " rad/s:" << endl;
+    cout << Y_params << endl;
 }
