@@ -526,7 +526,7 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
         }
     }
 
-    cout << Y << endl;
+    // cout << Y << endl;
 
     MatrixXcd Y_params = MatrixXcd::Zero(num_start_buses*pins, num_start_buses*pins);
 
