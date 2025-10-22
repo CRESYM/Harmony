@@ -65,7 +65,7 @@ void example_point2point_case() {
     Bus* bus2_dc = new Bus("DCBUS02", "DC1", 1);
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
-    double DCR1 = 0.052;
+    double DCR1 = 0.5;
     Impedance* br1_dc = new Impedance("br1_dc", "DC1", 1, DCR1);
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
