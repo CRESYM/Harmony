@@ -33,6 +33,7 @@ public:
 	// Get output buses
 	const std::unordered_map<std::string, Bus*>& getOutputs() const { return outputBuses; }
 	const int getNumberOfOutputs() const { return outputBuses.size(); }
+	const string getName() const { return subnetworkName; }
 
     // Optional: print info specific to SubNetwork
     void printInfo() const;

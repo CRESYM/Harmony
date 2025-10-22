@@ -23,6 +23,10 @@ public:
     //  Operator overload to compare the bus name with a string
     bool operator==(const char* name);
 
+    void setBusName(const std::string& name) {
+		busName = name;
+	}
+
     // Function to attach an element to the bus
     void attachElement(Element* elem);
 
