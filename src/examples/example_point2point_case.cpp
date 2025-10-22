@@ -19,13 +19,9 @@ void example_point2point_case() {
 
     ///*  ---------- 1.2 Add AC Loads  ---------- */
 
-    LoadPQ* load1 = new LoadPQ("LOAD01", "AC1", 3, { 0.0, 0.0 });
-    net.connectElementToBus(load1, 1, bus1_ac);
-
     std::vector<double> load_params2 = { 2380.5, 18.9, 0 };
     Load* load2 = new Load("LOAD02", "AC2", 3, load_params2);
     net.connectElementToBus(load2, 1, bus4_ac);
-
 
     ///*  ---------- 1.3 Add AC Generators  ---------- */
 
