@@ -4,6 +4,7 @@
 #include "../../network.h"
 #include "../../Bus.h"
 #include "../../Include_components.h"
+#include "../../Elements/Converter/MMC.h"
 
 #include <map>
 #include <unordered_map>
@@ -142,8 +143,8 @@ void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
     busDCRow["Va"] = 0.0;
     busDCRow["baseKV"] = global_params["DCbaseKV"];
     busDCRow["zone"] = 1.0 ;
-    busDCRow["Vmax"] = 1.1 * 1.6;
-    busDCRow["Vmin"] = 0.9 * 1.6;
+    busDCRow["Vmax"] = 1.1 * global_params["DCbaseKV"] / global_params["ACbaseKV"];
+    busDCRow["Vmin"] = 0.9 * global_params["DCbaseKV"] / global_params["ACbaseKV"];
 
     bus->computePowerFlowDC(busDCRow, global_params);
 
@@ -413,6 +414,8 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
 
     convRow["busdc_i"] = busdc_i;
     convRow["busac_i"] = busac_i;
+
+    conv_point.push_back(element);
 
     constexpr const char* cols[] = {
         "busdc_i","busac_i","gridac","type_dc","type_ac",
@@ -835,6 +838,47 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
 
     //solveHmo_opf(dataOPF, vscControl, writeTxt, plotResult);
     solve_opf("", "", &dataOPF, vscControl, writeTxt, plotResult, print_info);
+
+    
+    // Update each MMC element with OPF results
+    if (!conv_point.empty()) {
+        std::cout << "\n=== Updating " << conv_point.size()
+            << " MMC elements with OPF results ===" << std::endl;
+
+        for (size_t i = 0; i < conv_point.size(); ++i) {
+            Element* elem = conv_point[i];
+            if (!elem) continue;
+
+            auto* mmc = dynamic_cast<MMC*>(elem);
+            if (!mmc) continue;
+
+            // Retrieve OPF results
+            double Vm_kV = std::sqrt(v2s_dc_k(i)) * global_params["ACbaseKV"];
+            double theta_deg = theta_s_k(i)/ M_PI * 180;
+            double Pac_MW = ps_dc_k(i) * global_params["baseMVA"];
+            double Qac_MVar = qs_dc_k(i) * global_params["baseMVA"];
+            double Vdc_kV = std::sqrt(vn2_dc_k(i)) * global_params["ACbaseKV"];
+            double Pdc_MW = pn_dc_k(i) * global_params["baseMVA"];
+
+            // Convert units
+            double Vm_V = Vm_kV * 1e3;
+            double theta_rad = theta_deg * M_PI / 180.0;
+            double Pac_W = Pac_MW * 1e6;
+            double Qac_Var = Qac_MVar * 1e6;
+            double Vdc_V = Vdc_kV * 1e3;
+            double Pdc_W = Pdc_MW * 1e6;
+
+            // Update the MMC
+            mmc->update_MMC(Vm_V, theta_rad, Pac_W, Qac_Var, Vdc_V, Pdc_W);
+
+                std::cout << "[Updated MMC] " << elem->getElementSymbol()
+                    << " | Vm=" << Vm_kV << " kV, θ=" << theta_deg
+                    << "°, Pac=" << Pac_MW << " MW, Qac=" << Qac_MVar
+                    << " MVar, Vdc=" << Vdc_kV << " kV, Pdc=" << Pdc_MW
+                    << " MW" << std::endl;
+        }
+    }
+
 }
 
 /// ========================================== debug start

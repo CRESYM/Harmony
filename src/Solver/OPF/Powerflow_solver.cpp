@@ -804,6 +804,8 @@ void PowerFlow::solve_opf(
                 }
             }
 
+
+
             // ---- ¦È_c ----
             for (int i = 0; i < nconvs_dc; ++i) {
                 double dtheta_sc = std::atan2(Stc_dc_k(i, 0), Ctc_dc_k(i, 0));
@@ -1121,7 +1123,6 @@ void PowerFlow::solve_opf(
             this->convState_dc = convState_dc;
             this->fbus_dc = fbus_dc;
             this->tbus_dc = tbus_dc;
-
         }
 
 

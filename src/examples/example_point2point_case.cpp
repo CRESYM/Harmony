@@ -27,7 +27,7 @@ void example_point2point_case() {
     ///*  ---------- 1.3 Add AC Generators  ---------- */
 
     /// Generator 1
-    double Zsrc = 0.002; 
+    double Zsrc = 0.2; 
     AC_source* src1 = new AC_source("SRC01", "AC1", 3, Zsrc);
     net.connectElementToBus(src1, 1, bus1_ac);
     map<string, double> src_info1 = {
@@ -48,13 +48,13 @@ void example_point2point_case() {
     src1->setOPFInfo(src_info1);
 
     ///*  ---------- 1.4 Add Branches  ---------- */
-    double ACR1 = 1e-1; double ACX1 = 1;
+    double ACR1 = 1e-1; double ACX1 = 1*10;
     std::complex<double> ACZ1(ACR1, ACX1);
     Impedance* br1_ac = new Impedance("br1_ac", "AC1", 3, ACZ1);
     net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
 
-    double ACR2 = 1e-1; double ACX2 = 1;
+    double ACR2 = 1e-1; double ACX2 = 1*10;
     std::complex<double> ACZ2(ACR2, ACX2);
     Impedance* br2_ac = new Impedance("br2_ac", "AC2", 3, ACZ2);
     net.connectElementToBus(br2_ac, /*terminal=*/1, bus3_ac);
@@ -136,34 +136,6 @@ void example_point2point_case() {
     global_params["Z_base"] = global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"]; // Base impedance, can be adjusted as needed
 
     pf.make_OPF(&net, global_params, false, false, false, false);
-
-    auto res01 = pf.getDCBusResult("DCBUS01", global_params);
-    std::cout << res01.busName
-        << " Vdc=" << res01.vn << " kV "
-        << " Pdc=" << res01.pn << " MW "
-        << " Pac (PCC-side)=" << res01.ps << " MW "
-        << " Qac (PCC-side)=" << res01.qs << " Mvar "
-        << " Vac (PCC-side)=" << res01.vs << " kV "
-        << " theta ac (PCC-side)=" << res01.thetas << " rad "
-        << " Pac (AC terminal)=" << res01.pc << " MW "
-        << " Qac (AC terminal)=" << res01.qc << " Mvar "
-        << " Vac (AC terminal)=" << res01.vc << " kV "
-        << " theta ac (AC terminal)=" << res01.thetac << " rad "
-        << "\n";
-
-    auto res02 = pf.getDCBusResult("DCBUS02", global_params);
-    std::cout << res02.busName
-        << " Vdc=" << res02.vn << " kV "
-        << " Pdc=" << res02.pn << " MW "
-        << " Pac (PCC-side)=" << res02.ps << " MW "
-        << " Qac (PCC-side)=" << res02.qs << " Mvar "
-        << " Vac (PCC-side)=" << res02.vs << " kV "
-        << " theta ac (PCC-side)=" << res02.thetas << " rad "
-        << " Pac (AC terminal)=" << res02.pc << " MW "
-        << " Qac (AC terminal)=" << res02.qc << " Mvar "
-        << " Vac (AC terminal)=" << res02.vc << " kV "
-        << " theta ac (AC terminal)=" << res02.thetac << " rad "
-        << "\n";
 
     // Making Stability Estimate Object
 	//bus1_ac->setBusName("gnd"); // Change bus name to reflect its area

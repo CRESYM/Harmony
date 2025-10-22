@@ -156,6 +156,8 @@ private:
     std::vector<Eigen::MatrixXd> ss_ac_k;    // SOC relaxation variable (sin)
     std::vector<Eigen::MatrixXd> cc_ac_k;    // SOC relaxation variable (cos)
 
+    std::vector<Element*> conv_point;  // Pointers to converter (MMC) elements, aligned with conv_dc rows
+
 };
 
 #endif // POWERFLOW_H
