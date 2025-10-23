@@ -4,7 +4,6 @@
 void example_OPF_csv()
 {
 
- 
     PowerFlow pf;
     std::unordered_map<std::string, Eigen::MatrixXd>* noData = nullptr;
 

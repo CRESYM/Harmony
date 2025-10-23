@@ -44,25 +44,25 @@ void example_OPF() {
 
 	///*  ---------- 1.3 Add AC Generators  ---------- */
     // Generator 1
-    std::vector<double> gen1_params = { 0.02, 0.3, 0.05, 7.0 };
+    std::vector<double> gen1_params = { 0.02, 0.3, 0.05};
     Generator* gen1 = new Generator("GEN01", "AC1", 3, gen1_params);
     net.connectElementToBus(gen1, 1, bus1_ac);
     map<string, double> gen_info1 = {
-        {"Pmax", 200.0}, {"Pmin", 10.0},
-        {"Qmax", 84.0}, {"Qmin", 84.0},
+        {"Pmax", 300}, {"Pmin", 100},
+        {"Qmax", 500.0}, {"Qmin", -500.0},
         {"c2", 0.11}, {"c1", 50.0},
-        {"c0", 150}
+        {"c0", 150}, {"Ref", 1}, {"Vg", 345 * 1.06}
     };
 	gen1->setOPFInfo(gen_info1);
 
-    std::vector<double> gen2_params = { 0.02, 0.3, 0.05, 7.0 };
+    std::vector<double> gen2_params = { 0.02, 0.3, 0.05};
     Generator* gen2 = new Generator("GEN02", "AC1", 3, gen2_params);
     net.connectElementToBus(gen2, 1, bus2_ac);
     map<string, double> gen_info2 = {
         {"Pmax", 40.0}, {"Pmin", 40.0},
-        {"Qmax", 30.0}, {"Qmin", -33.0},
+        {"Qmax", -32.0}, {"Qmin", -32.0},
         {"c2", 0.085}, {"c1", 1.2},
-        {"c0", 600},  {"Vg", 345}
+        {"c0", 600}
 	};
 	gen2->setOPFInfo(gen_info2);
 
@@ -145,7 +145,7 @@ void example_OPF() {
         0.0,                // Theta (Voltage Angle in rad)
         345.0 * 1e3,        // AC Voltage (V_m) in V
 		60 * 1e6,           // DC power (P_dc) in W
-        500.0 * 1e3,        // DC Voltage (V_dc) in kV
+        345.0 * 1e3,        // DC Voltage (V_dc) in kV
         0.05,               // Arm Inductance (L_arm) in H
         1.07,               // Arm Resistance (R_arm) in Ω
         0.01,               // Capacitance per Submodule (C_arm) in F
@@ -166,12 +166,12 @@ void example_OPF() {
         "MMC2",             // Symbol
 		"AC1", 		        // Location
         1000.0,             // Omega (Nominal Frequency in rad/s)
-        100.0 * 1e6,        // Active Power (P) in W
-        50.0 * 1e6,         // Reactive Power (Q) in VA
+        0.0 * 1e6,        // Active Power (P) in W
+        0.0 * 1e6,         // Reactive Power (Q) in VA
         0.0,                // Theta (Voltage Angle in rad)
         345.0 * 1e3,        // AC Voltage (V_m) in V
-        -50 * 1e6,          // DC power (P_dc) in W
-        500.0 * 1e3,        // DC Voltage (V_dc) in V
+        0 * 1e6,          // DC power (P_dc) in W
+        345.0 * 1e3,        // DC Voltage (V_dc) in V
         0.05,               // Arm Inductance (L_arm) in H
         1.07,               // Arm Resistance (R_arm) in Ω
         0.01,               // Capacitance per Submodule (C_arm) in F
@@ -197,7 +197,7 @@ void example_OPF() {
         0.0,                  // Theta (Voltage Angle in rad)
         345.0 * 1e3,          // AC Voltage (V_m) in V
         -35 * 1e6,            // DC power (P_dc) in W
-        500.0 * 1e3,          // DC Voltage (V_dc) in V
+        345.0 * 1e3,          // DC Voltage (V_dc) in V
         0.05,                 // Arm Inductance (L_arm) in H
         1.07,                 // Arm Resistance (R_arm) in Ω
         0.01,                 // Capacitance per Submodule (C_arm) in F
@@ -224,7 +224,7 @@ void example_OPF() {
 	global_dict["omega"] = omega;
 	global_dict["baseMVA"] = 100;
 	global_dict["ACbaseKV"] = 345.0; // Base voltage in kV, can be adjusted as needed
-	global_dict["DCbaseKV"] = 500.0; // Base voltage for DC, can be adjusted as needed
+	global_dict["DCbaseKV"] = 345.0; // Base voltage for DC, can be adjusted as needed
 	global_dict["Z_base"] = 1.0; // Base impedance, can be adjusted as needed
     
 	pf.make_OPF(&net, global_dict, true, false, false, false);

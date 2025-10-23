@@ -368,8 +368,8 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
 	// convRow["gridac"] = 1; // Default grid area for AC
 	convRow["type_dc"] = 1; // Default type for DC
 	convRow["type_ac"] = 1; // Default type for AC
-	convRow["rtf"] = 0.00; // Default rftc
-	convRow["xtf"] = 0.00; // Default xtfc
+	convRow["rtf"] = 0.0015; // Default rftc
+	convRow["xtf"] = 0.1121; // Default xtfc
 	convRow["bf"] = 0.0887; // Default bf
 	convRow["rc"] = 0.0001; // Default rc
 	convRow["xc"] = 0.16428; // Default xc
@@ -813,11 +813,9 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
     }
     else {
         // fallback to default
-        resAC = Eigen::MatrixXd::Zero(2, 12);
-        resAC(0, 11) = 1;
-        resAC(0, 0) = 1;
-        resAC(1, 11) = 1;
-        resAC(1, 0) = 1;
+        //resAC = Eigen::MatrixXd::Zero(1, 12);
+        //resAC(0, 11) = 1;
+        //resAC(0, 0) = 1;
     }
 
     cout << "[make_OPF] Finished making OPF data.\n";
