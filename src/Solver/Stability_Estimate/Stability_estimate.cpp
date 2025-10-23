@@ -5,6 +5,15 @@
 #include "../../Elements/Element.h"      // For Element* operations (e.g., compute_y_parameters, getConnections)
 #include "../../Bus.h"          // For Bus* methods like getBusName, getPinNumber, etc.
 
+/**
+ * @brief Populates AC and DC grid subnetworks from the main network.
+ *
+ * This function iterates through all buses in the provided network, categorizes them
+ * into AC or DC areas based on their location string, and groups them into
+ * `SubNetwork` objects. It also identifies and separates MMC converters.
+ *
+ * @param net Pointer to the main Network object.
+ */
 void StabilityEstimate::add_areas(Network* net) {
     // This function can be implemented to categorize and add AC and DC grids to the system
     // For now, it is left empty as a placeholder
@@ -136,6 +145,14 @@ void StabilityEstimate::add_areas(Network* net) {
     }
 }
 
+/**
+ * @brief Computes the symbolic equivalent impedance of a portion of the network.
+ * @param net Pointer to the main Network object.
+ * @param start_buses Vector of buses where current is injected.
+ * @param end_buses Vector of buses where current is extracted.
+ * @param skip_elements Vector of elements to exclude from the calculation.
+ * @throws std::invalid_argument if start_buses is empty or contains 'gnd'.
+ */
 void StabilityEstimate::compute_equivalent_impedance(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements) {
     if (start_buses.empty())
     {
@@ -283,6 +300,16 @@ void StabilityEstimate::compute_equivalent_impedance(Network* net, std::vector<B
     //cout << equivalent_impedance_size << endl;
 }
 
+/**
+ * @brief Computes the numerical equivalent impedance of a portion of the network.
+ * @param net Pointer to the main Network object.
+ * @param start_buses Vector of buses where current is injected.
+ * @param end_buses Vector of buses where current is extracted.
+ * @param skip_elements Vector of elements to exclude from the calculation.
+ * @param frequency The frequency in Hz for the numerical calculation.
+ * @return An Eigen::MatrixXcd containing the computed equivalent impedance.
+ * @throws std::invalid_argument if start_buses is empty or contains 'gnd'.
+ */
 MatrixXcd StabilityEstimate::compute_equivalent_impedance_num(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double frequency)
 {
     if (start_buses.empty())
@@ -432,6 +459,13 @@ MatrixXcd StabilityEstimate::compute_equivalent_impedance_num(Network* net, std:
 	return equivalent_impedance;
 }
 
+/**
+ * @brief Computes the numerical equivalent multi-port admittance parameters for a subnetwork.
+ * @param subnet Pointer to the SubNetwork object.
+ * @param frequency The frequency in Hz for the calculation.
+ * @return An Eigen::MatrixXcd containing the computed Y-parameter matrix for the subnetwork's output ports.
+ * @throws std::invalid_argument if the subnet pointer is null or the subnetwork name is invalid.
+ */
 MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double frequency)
 {
     if (!subnet)
@@ -478,39 +512,51 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
 	VectorXcd z = VectorXcd::Zero(pos,1);
 
     const auto& buses = subnet->getBuses();
+    std::unordered_set<Element*> processed_elements; // Set to track processed elements
 
     // --- Build Y-matrix ---
     for (const auto& [bus_name, bus] : buses) {
 		auto& elements = bus->getConnectedElements();
         for (Element* element : elements) {
-			// Skip if elemenet if is null, MMC, or not connected to the bus
-            if (!element) continue;
-            MMC* mmc = dynamic_cast<MMC*>(element);
-			if (mmc) continue; // Skip MMCs             
+			// Skip if element is null, an MMC, already processed, or connected to ground
+            if (!element || dynamic_cast<MMC*>(element) || processed_elements.count(element)) {
+                continue;
+            }
+                     
             const auto& elem_conns = element->getConnections();
-            if (elem_conns.find(bus) == elem_conns.end())
+            if (elem_conns.find(bus) == elem_conns.end() || bus->getBusName() == "gnd") {
                 continue;
+            }
+
             Bus* other_bus = element->getOtherBus(bus);
-            if (!other_bus || bus->getBusName() == "gnd")
-                continue;
 
             // Compute numerical Y-parameters
             std::vector<std::vector<complex<double>>> Ye = element->compute_y_parameters(frequency);
 
             int bus_pos = bus_positions[bus];
-            int other_pos = bus_positions[other_bus];
-
             int terminal = elem_conns.at(bus) - 1;
-            int terminal_other = elem_conns.at(other_bus) - 1;
+			int terminal_other = 1 - terminal;
 
-            // Fill admittance terms
+            // Add all contributions of the element to the Y-matrix at once
             for (int i = 0; i < pins; ++i) {
-                for (int j = 0; j < pins; ++j)
+                for (int j = 0; j < pins; ++j) {
+                    // Y_bus,bus
                     Y(bus_pos + i, bus_pos + j) += Ye[terminal * pins + i][terminal * pins + j];
-
-                for (int j = 0; j < pins; ++j)
-                    Y(bus_pos + i, other_pos + j) += Ye[terminal * pins + i][terminal_other * pins + j];
+                                        
+                    if (other_bus && other_bus->getBusName() != "gnd") {
+                        int other_pos = bus_positions[other_bus];
+                        // Y_bus,other_bus
+                        Y(bus_pos + i, other_pos + j) += Ye[terminal * pins + i][terminal_other * pins + j];
+                        // Y_other_bus,bus
+                        Y(other_pos + i, bus_pos + j) += Ye[terminal_other * pins + i][terminal * pins + j];
+                        // Y_other_bus,other_bus
+                        Y(other_pos + i, other_pos + j) += Ye[terminal_other * pins + i][terminal_other * pins + j];
+                    }
+                }
             }
+            
+            // Mark element as processed
+            processed_elements.insert(element);
         }
     }
 	
@@ -562,6 +608,9 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
    	return Y_params;
 }
 
+/**
+ * @brief Prints a summary of the detected AC/DC grids and converters.
+ */
 void StabilityEstimate::print_summary() const {
     std::cout << "\n================= STABILITY ESTIMATE SUMMARY =================\n";
 
@@ -621,6 +670,13 @@ void StabilityEstimate::print_summary() const {
     std::cout << "\n===============================================================\n";
 }
 
+/**
+ * @brief Computes the transfer function for stability analysis of a specific converter.
+ * @param converter_name The name of the converter under analysis.
+ * @param location The side of the converter from which the analysis is performed (e.g., "AC1" or "DC1").
+ * @param frequency The frequency in Hz for the calculation.
+ * @return An Eigen::MatrixXcd representing the resulting transfer function matrix.
+ */
 MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, string location, double frequency) {
     // Check if converter exists
     if (converters.find(converter_name) == converters.end()) {
@@ -642,7 +698,7 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
     int dc_side_pins = 0;
     unordered_map<string, MatrixXcd> Y_dc_matrices;
     for (auto& [name, sub] : dc_grids) {
-        std::cout << "Computing equivalent admittance for DC grid: " << name << "\n";
+        //std::cout << "Computing equivalent admittance for DC grid: " << name << "\n";
         MatrixXcd Y_dc = compute_equivalent_admittance_parameters_num(sub, frequency);
         Y_dc_matrices[name] = Y_dc;
         dc_side_pins = Y_dc.rows(); // Assuming single bus for DC grid
@@ -651,7 +707,7 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
     // AC grids
     unordered_map<string, MatrixXcd> Y_ac_matrices;
     for (auto& [name, sub] : ac_grids) {
-        std::cout << "Computing equivalent admittance for AC grid: " << name << "\n";
+        //std::cout << "Computing equivalent admittance for AC grid: " << name << "\n";
         MatrixXcd Y_ac = compute_equivalent_admittance_parameters_num(sub, frequency);
         Y_ac_matrices[name] = Y_ac;
         std::cout << "Equivalent admittance matrix for AC grid " << name << ":\n" << Y_ac << "\n";
@@ -683,8 +739,8 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
                 dc_bus = bus;
         }
         if (!ac_bus || !dc_bus) continue;
+        
         // Get admittance matrices for the grids
-
         // Depending on the side of the converter, the admittance matrix looking inside converter will be different
         if ((converter_name != name) || (location == dc_area)) {
             MatrixXcd Y_ac = Y_ac_matrices[ac_area];
@@ -696,6 +752,8 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
             MatrixXcd a = Ymmc.block(1, 0, 2, 0);
             MatrixXcd Ydq = Ymmc.block(1, 1, 2, 2);
             Y_conv_matrices[name] = b * (Y_ac - Ydq).inverse() * a + Ydc;
+
+			cout << "Converter " << name << " admittance matrix from DC side:\n" << Y_conv_matrices[name] << "\n";
 
             Z_closing.block(index, index, dc_side_pins, dc_side_pins) = Y_conv_matrices[name].inverse();
         }
@@ -740,6 +798,20 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
     }
 }
 
+/**
+ * @brief Computes the equivalent closing impedance for a subnetwork port.
+ *
+ * This function calculates the equivalent impedance seen from a specific output port
+ * (`connection_name`) of a subnetwork, considering the loading effects of other
+ * connected converters represented by `Z_closing`.
+ *
+ * @param sub Pointer to the SubNetwork object.
+ * @param connection_name The name of the output port for which to compute the impedance.
+ * @param Y_parameters The multi-port admittance matrix of the subnetwork.
+ * @param Z_closing The closing impedance matrix representing loads at other ports.
+ * @return An Eigen::MatrixXcd representing the equivalent closing impedance.
+ * @throws std::runtime_error if the connection_name is not found in the subnetwork's outputs.
+ */
 MatrixXcd StabilityEstimate::compute_closing_impedance(SubNetwork* sub, string& connection_name, MatrixXcd& Y_parameters, MatrixXcd& Z_closing) {
 	// Get the list of output ports from the subnetwork
     auto outputs = sub->getOutputs();
