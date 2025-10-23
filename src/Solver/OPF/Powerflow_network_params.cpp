@@ -498,14 +498,6 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
 	// Here is easier to get the data from the element
 	map<string, double> gen_info = element->getOPFInfo();
 
-    //   for (const auto& [key, value] : gen_info) {
-    //       if (gRow.find(key) == gRow.end()) {
-	//		cRow[key] = value; // Fill in the cost data
-    //       }
-    //       else
-	//	    gRow[key] = value; // Fill in the generator data
-	//   }
-	//  cRow["grid"] = gRow["grid"]; // Ensure grid is consistent
 
     for (const auto& [key, value] : gen_info) {
         if (key == "c0" || key == "c1" || key == "c2") {
@@ -617,16 +609,6 @@ void PowerFlow::make_Load(Element* element, std::map<std::string, double>& globa
     int bus_id = busName2Id_.at(bus_name);        
     std::string row = std::to_string(bus_id - 1);   
 
-    //auto& busRow = data["busAC"][row];
-	//busRow["bus_i"] = busName2Id_[bus_name];
-	//busRow["type"] = 1; // Load type
-	//busRow["Vm"] = global_params["basekV"]; // Voltage magnitude in kV
-	//busRow["Va"] = 0.0; // Voltage angle in degrees
-	//busRow["baseKV"] = global_params["ACbasekV"]; // Base voltage in kV
-	//busRow["zone"] = 1.0; // Default zone, can be changed based on your logic
-	//busRow["Vmax"] = 1.1; // Maximum voltage in pu
-	//busRow["Vmin"] = 0.9; // Minimum voltage in pu
-
     if (!data["busAC"].count(row))
         throw std::runtime_error("[make_Load] AC bus not found)");
 
@@ -659,8 +641,6 @@ void PowerFlow::make_Load(Element* element, std::map<std::string, double>& globa
 void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_params, bool vscControl,
     bool writeTxt, bool plotResult, bool print_info)
 {
-    //// Define and initialize data map
-    //std::map<std::string, std::map<std::string, std::map<std::string, double>>> data;
 
     // Initialize specific elements of the data map
    
@@ -685,24 +665,6 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
     // Define and initialize data map
 
     cout << "\n[make_OPF] Start making OPF data...\n";
-
-	// Process buses
-    // Define data structures
-    //  std::vector<std::vector<std::string>> dict_ac;
-    //  std::vector<std::vector<std::string>> dict_dc;
-    //  for (const auto& [bus_name, bus] : net->getBuses())
-    //  {
-    //    cout << "[make_OPF] Processing bus: " << bus_name << endl;
-    //      if (bus->getPinNumber() == 3) {
-    //          addBusAC(dict_ac, bus, global_dict, writeTxt);
-    //      }
-    //      else if (bus->getPinNumber() == 1) {
-    //          addBusDC(dict_dc, bus, global_dict, writeTxt);
-    //      }
-    //      else {
-    //          throw std::runtime_error("[make_OPF] Error: Unsupported bus type.");
-    //      }
-    //  }
 
     std::vector<std::vector<std::string>> dict_ac;
     std::vector<std::vector<std::string>> dict_dc;
@@ -872,8 +834,8 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
             mmc->update_MMC(Vm_V, theta_rad, Pac_W, Qac_Var, Vdc_V, Pdc_W);
 
                 std::cout << "[Updated MMC] " << elem->getElementSymbol()
-                    << " | Vm=" << Vm_kV << " kV, θ=" << theta_deg
-                    << "°, Pac=" << Pac_MW << " MW, Qac=" << Qac_MVar
+                    << " | Vm=" << Vm_kV << " kV, theta=" << theta_deg
+                    << " deg, Pac=" << Pac_MW << " MW, Qac=" << Qac_MVar
                     << " MVar, Vdc=" << Vdc_kV << " kV, Pdc=" << Pdc_MW
                     << " MW" << std::endl;
         }

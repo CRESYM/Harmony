@@ -5,6 +5,7 @@
 #include "../Include_components.h"
 #include "../Solver/OPF/powerflow.h"
 #include "../Solver/Stability_Estimate/Stability_estimate.h"
+#include "../Solver/Helper_Functions/Standard_functions.h"
 
 
 void example_point2point_case() {
@@ -146,14 +147,17 @@ void example_point2point_case() {
 
     // Compute equivalent impedance between two AC buses, skipping the MMCs
     auto& dc_grids = stability->get_dc_grids();
-	auto& ac_grids = stability->get_ac_grids();
-    double omega_num = 2 * M_PI * 50.0; // Frequency in rad/s
+    auto& ac_grids = stability->get_ac_grids();
 
-    MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], omega_num);
-    cout << "Equivalent Admittance Matrix at DC side at " << omega_num << " rad/s:" << endl;
+    MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], omega);
+    cout << "Equivalent Admittance Matrix at DC side at " << omega << " rad/s:" << endl;
     cout << Y_params << endl;
 
-	MatrixXcd Y_params_ac = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC2"], omega_num);
-	cout << "Equivalent Admittance Matrix of AC grid at " << omega_num << " rad/s:" << endl;
+	MatrixXcd Y_params_ac = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC2"], omega);
+	cout << "Equivalent Admittance Matrix of AC grid at " << omega << " rad/s:" << endl;
 	cout << Y_params_ac << endl;
+
+	// stability->compute_transfer_function("MMC1", "AC", omega_num);
+
+	delete stability;
 }
