@@ -4,228 +4,173 @@
 #include "../Bus.h"
 #include "../Include_components.h"
 #include "../Solver/Stability_Estimate/Stability_estimate.h"
+#include "../Solver/OPF/powerflow.h"
 
 void example_stability_check() {
     ///* ---------- 0 Set Network Object ---------- */
     Network net;
+
     ///* ---------- 1.1 Create AC Buses ---------- */
     Bus* bus1_ac = new Bus("ACBUS01", "AC1", 3);
     Bus* bus2_ac = new Bus("ACBUS02", "AC1", 3);
-    Bus* bus3_ac = new Bus("ACBUS03", "AC1", 3);
-    Bus* bus4_ac = new Bus("ACBUS04", "AC1", 3);
-    Bus* bus5_ac = new Bus("ACBUS05", "AC1", 3);
+    Bus* bus3_ac = new Bus("ACBUS03", "AC2", 3);
+    Bus* bus4_ac = new Bus("ACBUS04", "AC2", 3); // 
 
     ///*  ---------- 1.2 Add AC Loads  ---------- */
 
-    LoadPQ* load1 = new LoadPQ("LOAD01", "AC1", 3, { 0.0, 0.0 });
-    net.connectElementToBus(load1, 1, bus1_ac);
-
-    std::vector<double> load_params2 = { 5950, 37.9, 0 };
-    Load* load2 = new Load("LOAD02", "AC1", 3, load_params2);
-    net.connectElementToBus(load2, 1, bus2_ac);
-
-    std::vector<double> load_params3 = { 2650, 25.2, 0 };
-    Load* load3 = new Load("LOAD03", "AC1", 3, load_params3);
-    net.connectElementToBus(load3, 1, bus3_ac);
-
-    std::vector<double> load_params4 = { 2976, 75.7, 0 };
-    Load* load4 = new Load("LOAD04", "AC1", 3, load_params4);
-    net.connectElementToBus(load4, 1, bus4_ac);
-
-    std::vector<double> load_params5 = { 1984, 37.9, 0 };
-    Load* load5 = new Load("LOAD05", "AC1", 3, load_params5);
-    net.connectElementToBus(load5, 1, bus5_ac);
-
+    std::vector<double> load_params2 = { 2380.5, 18.9, 0 };
+    Load* load2 = new Load("LOAD02", "AC2", 3, load_params2);
+    net.connectElementToBus(load2, 1, bus4_ac);
 
     ///*  ---------- 1.3 Add AC Generators  ---------- */
-    // Generator 1
-    std::vector<double> gen1_params = { 0.02, 0.3, 7.0 };
-    Generator* gen1 = new Generator("GEN01", "AC1", 3, gen1_params);
-    net.connectElementToBus(gen1, 1, bus1_ac);
-    map<string, double> gen_info1 = {
-        {"Pmax", 200.0}, {"Pmin", 10.0},
-        {"Qmax", 84.0}, {"Qmin", 84.0},
-        {"c2", 0.11}, {"c1", 50.0},
-        {"c0", 150}
-    };
-    gen1->setOPFInfo(gen_info1);
 
-    std::vector<double> gen2_params = { 0.02, 0.3, 7.0 };
-    Generator* gen2 = new Generator("GEN02", "AC1", 3, gen2_params);
-    net.connectElementToBus(gen2, 1, bus2_ac);
-    map<string, double> gen_info2 = {
-        {"Pmax", 40.0}, {"Pmin", 40.0},
-        {"Qmax", 30.0}, {"Qmin", -33.0},
-        {"c2", 0.085}, {"c1", 1.2},
-        {"c0", 600},  {"Vg", 345}
+    /// Generator 1
+    double Zsrc = 0.1;
+    AC_source* src1 = new AC_source("SRC01", "AC1", 3, Zsrc);
+    net.connectElementToBus(src1, 1, bus1_ac);
+    map<string, double> src_info1 = {
+        {"Pmax", 250.0},   // Maximum active power output (MW)
+        {"Pmin", 10.0},    // Minimum active power output (MW)
+
+        {"Qmax", 10.0},    // Maximum reactive power output (MVar)
+        {"Qmin", -10.0},   // Minimum reactive power output (MVar)
+
+        {"c2", 0.11},      // Quadratic coefficient of the generation cost function (c2*P^2 + c1*P + c0)
+        {"c1", 5.0},       // Linear coefficient of the generation cost function
+        {"c0", 150},       // Constant term of the generation cost function (fixed operation cost)
+
+        {"Vg", 345},       // Voltage magnitude setpoint of the source (kV)
+        {"Zsrc", Zsrc},    // Internal source impedance (Ω), used in power flow and short-circuit analysis
+        {"Ref", 1}         // Reference bus flag (1 = set as slack/reference bus)
     };
-    gen2->setOPFInfo(gen_info2);
+    src1->setOPFInfo(src_info1);
 
     ///*  ---------- 1.4 Add Branches  ---------- */
-    double ACR1 = 0.02; double ACX1 = 0.06;
+    double ACR1 = 1e-1; double ACX1 = 1;
     std::complex<double> ACZ1(ACR1, ACX1);
     Impedance* br1_ac = new Impedance("br1_ac", "AC1", 3, ACZ1);
     net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
 
-    double ACR2 = 0.08; double ACX2 = 0.24;
+    double ACR2 = 1e-1; double ACX2 = 1;
     std::complex<double> ACZ2(ACR2, ACX2);
-    Impedance* br2_ac = new Impedance("br2_ac", "AC1", 3, ACZ2);
-    net.connectElementToBus(br2_ac, /*terminal=*/1, bus1_ac);
-    net.connectElementToBus(br2_ac, /*terminal=*/2, bus3_ac);
-
-    double ACR3 = 0.06; double ACX3 = 0.18;
-    std::complex<double> ACZ3(ACR3, ACX3);
-    Impedance* br3_ac = new Impedance("br3_ac", "AC1", 3, ACZ3);
-    net.connectElementToBus(br3_ac, /*terminal=*/1, bus2_ac);
-    net.connectElementToBus(br3_ac, /*terminal=*/2, bus3_ac);
-
-    double ACR4 = 0.06; double ACX4 = 0.18;
-    std::complex<double> ACZ4(ACR4, ACX4);
-    Impedance* br4_ac = new Impedance("br4_ac", "AC1", 3, ACZ4);
-    net.connectElementToBus(br4_ac, /*terminal=*/1, bus2_ac);
-    net.connectElementToBus(br4_ac, /*terminal=*/2, bus4_ac);
-
-    double ACR5 = 0.04;
-    double ACX5 = 0.12;
-    std::complex<double> ACZ5(ACR5, ACX5);
-    Impedance* br5_ac = new Impedance("br5_ac", "AC1", 3, ACZ5);
-    net.connectElementToBus(br5_ac, /*terminal=*/1, bus2_ac);
-    net.connectElementToBus(br5_ac, /*terminal=*/2, bus5_ac);
-
-    double ACR6 = 0.01;
-    double ACX6 = 0.03;
-    std::complex<double> ACZ6(ACR6, ACX6);
-    Impedance* br6_ac = new Impedance("br6_ac", "AC1", 3, ACZ6);
-    net.connectElementToBus(br6_ac, /*terminal=*/1, bus3_ac);
-    net.connectElementToBus(br6_ac, /*terminal=*/2, bus4_ac);
-
-    double ACR7 = 0.08;
-    double ACX7 = 0.24;
-    std::complex<double> ACZ7(ACR7, ACX7);
-    Impedance* br7_ac = new Impedance("br7_ac", "AC1", 3, ACZ7);
-    net.connectElementToBus(br7_ac, /*terminal=*/1, bus4_ac);
-    net.connectElementToBus(br7_ac, /*terminal=*/2, bus5_ac);
+    Impedance* br2_ac = new Impedance("br2_ac", "AC2", 3, ACZ2);
+    net.connectElementToBus(br2_ac, /*terminal=*/1, bus3_ac);
+    net.connectElementToBus(br2_ac, /*terminal=*/2, bus4_ac);
 
     ///*  ---------- 2.1 Create DC Buses  ---------- */
     Bus* bus1_dc = new Bus("DCBUS01", "DC1", 1);
     Bus* bus2_dc = new Bus("DCBUS02", "DC1", 1);
-    Bus* bus3_dc = new Bus("DCBUS03", "DC1", 1);
-
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
-
-    double DCR1 = 0.052;
+    double DCR1 = 0.05;
     Impedance* br1_dc = new Impedance("br1_dc", "DC1", 1, DCR1);
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
 
-    double DCR2 = 0.073;
-    Impedance* br2_dc = new Impedance("br2_dc", "DC1", 1, DCR2);
-    net.connectElementToBus(br2_dc, /*terminal=*/1, bus1_dc);
-    net.connectElementToBus(br2_dc, /*terminal=*/2, bus3_dc);
-
-    double DCR3 = 0.052;
-    Impedance* br3_dc = new Impedance("br3_dc", "DC1", 1, DCR3);
-    net.connectElementToBus(br3_dc, /*terminal=*/1, bus2_dc);
-    net.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
-
     ///*  ---------- 2.3 Create Converters ---------- */
-    MMC* mmc1 = new MMC(
-        "MMC1",             // Symbol
-        "AC1_DC1",              // Location
-        1000.0,             // Omega (Nominal Frequency in rad/s)
-        -60.0 * 1e6,          // Active Power (P) in W
-        -40.0 * 1e6,        // Reactive Power (Q) in VA
-        0.0,                // Theta (Voltage Angle in rad)
-        345.0 * 1e3,        // AC Voltage (V_m) in V
-        60 * 1e6,           // DC power (P_dc) in W
-        500.0 * 1e3,        // DC Voltage (V_dc) in kV
-        0.05,               // Arm Inductance (L_arm) in H
-        1.07,               // Arm Resistance (R_arm) in Ω
-        0.01,               // Capacitance per Submodule (C_arm) in F
-        400,                // Number of Submodules (N)
-        0.0005,             // Reactor Inductance (L_reactor) in H
-        0.0001,             // Reactor Resistance (R_reactor) in Ω
-        0.00015             // Time Delay (t_delay) in seconds
-    );
+    vector<double> converter_params1 = {
+        2 * M_PI * 50,  // Omega (Nominal Frequency in rad/s)
+        50.0 * 1e6,     // Active Power (P) in W
+        0 * 1e6,        // Reactive Power (Q) in VA
+        0.0,            // Theta (Voltage Angle in rad)
+        345.0 * 1e3,    // AC Voltage (V_m) in V
+        50 * 1e6,       // DC power (P_dc) in W
+        400.0 * 1e3,    // DC Voltage (V_dc) in kV
+        0.05,           // Arm Inductance (L_arm) in H
+        1.07,           // Arm Resistance (R_arm) in Ω
+        0.01,           // Capacitance per Submodule (C_arm) in F
+        400,            // Number of Submodules (N)
+        0.0005,         // Reactor Inductance (L_reactor) in H
+        0.0001,         // Reactor Resistance (R_reactor) in Ω
+        0.0             // Time Delay (t_delay) in seconds
+    };
+    std::vector<double> controller_params1 = {
+        1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
+        0, // DC voltage controller parameters
+        1, 0, 6.6667e-07, 3.3333e-04, 1, 50e6, // active power
+        0, // AC voltage
+        1, 0, 6.6667e-07, 3.3333e-04, 1, 0, // reactive power
+        1, 0, 120, 400, 1, 0, // energy controller parameters 
+        1, 0, 19.93, 4500, 1, 166.67, // zcc controller parameters 
+        1, 0, 117.93, 8.5e4, 2, 666.67, 0, // occ controller parameters
+        1, 0, 19.93, 4500, 2, 0, 0, // ccc controller parameters
+        0 // droop control
+    };
+    MMC* mmc1 = new MMC("MMC1", "AC1_DC1", converter_params1, controller_params1);
     net.connectElementToBus(mmc1, 1, bus2_ac);
     net.connectElementToBus(mmc1, 2, bus1_dc);
-    map<string, double> mmc1_info = {
-        {"type_dc", 1},            // 2
-        {"type_ac", 1},            // 3
-    };
-    mmc1->setOPFInfo(mmc1_info);
 
-    MMC* mmc2 = new MMC(
-        "MMC2",             // Symbol
-        "AC1_DC1", 		        // Location
-        1000.0,             // Omega (Nominal Frequency in rad/s)
-        100.0 * 1e6,        // Active Power (P) in W
-        50.0 * 1e6,         // Reactive Power (Q) in VA
-        0.0,                // Theta (Voltage Angle in rad)
-        345.0 * 1e3,        // AC Voltage (V_m) in V
-        -50 * 1e6,          // DC power (P_dc) in W
-        500.0 * 1e3,        // DC Voltage (V_dc) in V
-        0.05,               // Arm Inductance (L_arm) in H
-        1.07,               // Arm Resistance (R_arm) in Ω
-        0.01,               // Capacitance per Submodule (C_arm) in F
-        400,                // Number of Submodules (N)
-        0.0005,             // Reactor Inductance (L_reactor) in H
-        0.0001,             // Reactor Resistance (R_reactor) in Ω
-        0.00015             // Time Delay (t_delay) in seconds
-    );
+    vector<double> converter_params2 = {
+        2 * M_PI * 50,  // Omega (Nominal Frequency in rad/s)
+        -50.0 * 1e6,    // Active Power (P) in W
+        -20e6,          // Reactive Power (Q) in VA
+        0.0,            // Theta (Voltage Angle in rad)
+        345.0 * 1e3,    // AC Voltage (V_m) in V
+        -50 * 1e6,       // DC power (P_dc) in W
+        400.0 * 1e3,    // DC Voltage (V_dc) in kV
+        0.05,           // Arm Inductance (L_arm) in H
+        1.07,           // Arm Resistance (R_arm) in Ω
+        0.01,           // Capacitance per Submodule (C_arm) in F
+        400,            // Number of Submodules (N)
+        0.0005,         // Reactor Inductance (L_reactor) in H
+        0.0001,         // Reactor Resistance (R_reactor) in Ω
+        0.0             // Time Delay (t_delay) in seconds
+    };
+    std::vector<double> controller_params2 = {
+        1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
+        1, 0, 2, 42, 2, 0, 400e3, // DC voltage controller parameters
+        0, // active power
+        0, // AC voltage
+        1, 0, 6.6667e-07, 3.3333e-04, 1, -20e6, // reactive power
+        1, 0, 120, 400, 1, 0, // energy controller parameters 
+        1, 0, 19.93, 4500, 1, -41.66, // zcc controller parameters 
+        1, 0, 117.93, 8.5e4, 2, -89.71, 0, // occ controller parameters
+        1, 0, 19.93, 4500, 2, 0, 0, // ccc controller parameters
+        0  // droop control
+    };
+    MMC* mmc2 = new MMC("MMC2", "AC2_DC1", converter_params2, controller_params2);
     net.connectElementToBus(mmc2, 1, bus3_ac);
     net.connectElementToBus(mmc2, 2, bus2_dc);
-    map<string, double> mmc2_info = {
-        {"type_dc", 2},            // 2
-        {"type_ac", 2},            // 3
-    };
-    mmc2->setOPFInfo(mmc2_info);
 
-    MMC* mmc3 = new MMC(
-        "MMC3",               // Symbol
-        "AC1_DC1", 			      // Location
-        1000.0,               // Omega (Nominal Frequency in rad/s)
-        35.0 * 1e6,           // Active Power (P) in W
-        5.0 * 1e6,            // Reactive Power (Q) in VA
-        0.0,                  // Theta (Voltage Angle in rad)
-        345.0 * 1e3,          // AC Voltage (V_m) in V
-        -35 * 1e6,            // DC power (P_dc) in W
-        500.0 * 1e3,          // DC Voltage (V_dc) in V
-        0.05,                 // Arm Inductance (L_arm) in H
-        1.07,                 // Arm Resistance (R_arm) in Ω
-        0.01,                 // Capacitance per Submodule (C_arm) in F
-        400,                  // Number of Submodules (N)
-        0.0005,               // Reactor Inductance (L_reactor) in H
-        0.0001,               // Reactor Resistance (R_reactor) in Ω
-        0.00015               // Time Delay (t_delay) in seconds
-    );
-    net.connectElementToBus(mmc3, 1, bus5_ac);
-    net.connectElementToBus(mmc3, 2, bus3_dc);
-    map<string, double> mmc3_info = {
-    {"type_dc", 1},            // 2
-    {"type_ac", 1},            // 3
-    };
-    mmc3->setOPFInfo(mmc3_info);
+    ///*----- 3 OPF Implementatiopn ----- */
+    PowerFlow pf;
 
-	cout << "Network setup completed." << endl;
+    //const auto& data = net.getNetData();
+    std::map<std::string, double> global_params;
+    double omega = 2 * M_PI * 50;
+    global_params["omega"] = omega;
+    global_params["baseMVA"] = 100;
+    global_params["ACbaseKV"] = 345.0; // Base voltage in kV, can be adjusted as needed
+    global_params["DCbaseKV"] = 400.0; // Base voltage for DC, can be adjusted as needed
+    global_params["Z_base"] = global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"]; // Base impedance, can be adjusted as needed
 
-	// Making Stability Estimate Object
+    pf.make_OPF(&net, global_params, false, false, false, true);
+
+    // Making Stability Estimate Object
     StabilityEstimate* stability = new StabilityEstimate();
-	stability->add_areas(&net);
-	stability->print_summary();
+    stability->add_areas(&net);
+
+    // KEEP FOR TEST CASES
+    // Compute equivalent impedance between two AC buses, skipping the MMCs
+    //auto& dc_grids = stability->get_dc_grids();
+    //auto& ac_grids = stability->get_ac_grids();
+
+ //   MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], omega);
+ //   cout << "Equivalent Admittance Matrix at DC side at " << omega << " rad/s:" << endl;
+ //   cout << Y_params << endl;
+
+ //   MatrixXcd Y_params_ac1 = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC1"], omega);
+ //   cout << "Equivalent Admittance Matrix of AC1 grid at " << omega << " rad/s:" << endl;
+ //   cout << Y_params_ac1 << endl;
+
+    //MatrixXcd Y_params_ac2 = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC2"], omega);
+    //cout << "Equivalent Admittance Matrix of AC2 grid at " << omega << " rad/s:" << endl;
+    //cout << Y_params_ac2 << endl;
 
 
-	// Compute equivalent impedance between two AC buses, skipping the MMCs
-	auto& dc_grids = stability->get_dc_grids();
-	auto& ac_grids = stability->get_ac_grids();
-	double omega_num = 2 * M_PI * 50.0; // Frequency in rad/s
-	MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], omega_num);
+    // TO TEST TRANSFER FUNCTION COMPUTATION
+    // stability->compute_transfer_function("MMC1", "AC", omega_num);
 
-	cout << "Equivalent Admittance Matrix at " << omega_num << " rad/s:" << endl;
-	cout << Y_params << endl;
-
-	MatrixXcd Y_params_ac = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC1"], omega_num);
-	cout << Y_params_ac << endl;
+    delete stability;
 }
