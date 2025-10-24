@@ -124,10 +124,10 @@ MMC::MMC(const std::string& symbol, const std::string& location, const std::vect
         if (pade_order == 2) {
             padeDelaySystemMulti2(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
 			// cout << "Using 2nd order Padé approximation for delay system." << endl;
-			cout << Adelay << endl;
-			cout << Bdelay << endl;
-			cout << Cdelay << endl;
-			cout << Ddelay << endl;
+			//cout << Adelay << endl;
+			//cout << Bdelay << endl;
+			//cout << Cdelay << endl;
+			//cout << Ddelay << endl;
         }
         else if (pade_order == 3) {
             padeDelaySystemMulti3(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);

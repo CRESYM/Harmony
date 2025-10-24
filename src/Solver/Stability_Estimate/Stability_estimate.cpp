@@ -67,7 +67,7 @@ void StabilityEstimate::add_areas(Network* net) {
                     std::string conv_name = elem->getElementSymbol();
                     if (converters.find(conv_name) == converters.end()) {
                         converters[conv_name] = elem; 
-                        std::cout << "Detected MMC converter: " << conv_name << "\n";
+                        //std::cout << "Detected MMC converter: " << conv_name << "\n";
                     }
 
                     std::string loc = mmc->getElementLocation();

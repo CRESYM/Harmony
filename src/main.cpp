@@ -20,7 +20,7 @@ int main() {
 	// example_OHL();
 	// example_cable();
 	// example_generator();
-	// example_point2point_case();
+	example_point2point_case();
 
 	// Solver examples
 	// example_OPF();

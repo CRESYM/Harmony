@@ -65,6 +65,7 @@ public:
     {
         for (auto& [key, value] : element_OPF_info)
 			data[key] = value; // Copy OPF info to branch data
+
 		//data["bf"] = 0.0; // conductance of the filter
 		//data["rf"] = 0.0; // Resistance of the filter
 		//data["xf"] = 0.0; // Reactance of the filter
@@ -75,6 +76,25 @@ public:
         data["Vtar"] = V_dc / 1e3 / globalParams["DCbaseKV"]; // Seting of DC v-control value
 
 		data["gridac"] = (int)element_location[2] - '0'; // AC grid number
+
+        // DC side type_dc(1 = constant DC power control (i.e. active power), 2 = constant DC voltage control, 3 = DC droop control)
+        if (controls.count("active_power")) {
+            data["type_dc"] = 1;
+		}
+        else if (controls.count("dc_voltage")) {
+			data["type_dc"] = 2;
+		}
+        else if (controls.count("droop")) {
+			data["type_dc"] = 3;
+        }
+        
+        // AC side control type_ac (1 = constant AC voltage control, 2 = constant reactive power control)
+        if (controls.count("ac_voltage")) {
+			data["type_ac"] = 1;
+        }
+        else if (controls.count("reactive_power")) {
+            data["type_ac"] = 2;
+        }
     }
 
 private:

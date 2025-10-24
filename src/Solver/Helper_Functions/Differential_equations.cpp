@@ -103,28 +103,112 @@ Eigen::VectorXd findEquilibriumLM(
     double tol,
     int max_iter)
 {
-    // Wrap into functor
-    SystemFunctor functor(f, u, static_cast<int>(x0.size()));
+    //// Wrap into functor
+    //SystemFunctor functor(f, u, static_cast<int>(x0.size()));
 
-    // Use numerical differentiation to compute Jacobian
+    //// Use numerical differentiation to compute Jacobian
+    //Eigen::NumericalDiff<SystemFunctor> numDiff(functor);
+
+    //// Levenberg-Marquardt solver
+    //Eigen::LevenbergMarquardt<Eigen::NumericalDiff<SystemFunctor>, double> lm(numDiff);
+
+    //// Tolerances and max function evaluations
+    //lm.parameters.ftol = tol;       // function tolerance
+    //lm.parameters.xtol = tol;       // parameter tolerance
+    //lm.parameters.maxfev = max_iter;
+
+    //Eigen::VectorXd x = x0;
+    //Eigen::LevenbergMarquardtSpace::Status status = lm.minimize(x);
+
+    //// Print a short summary
+    //std::cout << "LM solver status: " << int(status)
+    //    << " | final residual norm: " << f(x, u).norm() << std::endl;
+
+    //return x;
+
+    if (x0.size() == 0 || u.size() == 0)
+        throw std::invalid_argument("Initial state and input vectors must be non-empty.");
+
+    // 🔹 Step 1: Compute scaling vector (auto-scaling)
+    Eigen::VectorXd scale = x0.cwiseAbs().cwiseMax(1e-6);
+    Eigen::VectorXd xs = x0.cwiseQuotient(scale);
+
+    // 🔹 Step 2: Define scaled functor
+    auto scaled_f = [&](const Eigen::VectorXd& xs, const Eigen::VectorXd& u) -> Eigen::VectorXd {
+        Eigen::VectorXd x_unscaled = xs.cwiseProduct(scale);
+        return f(x_unscaled, u);
+        };
+
+    SystemFunctor functor(scaled_f, u, static_cast<int>(xs.size()));
     Eigen::NumericalDiff<SystemFunctor> numDiff(functor);
-
-    // Levenberg-Marquardt solver
     Eigen::LevenbergMarquardt<Eigen::NumericalDiff<SystemFunctor>, double> lm(numDiff);
 
-    // Tolerances and max function evaluations
-    lm.parameters.ftol = tol;       // function tolerance
-    lm.parameters.xtol = tol;       // parameter tolerance
+    lm.parameters.ftol = tol;
+    lm.parameters.xtol = tol;
     lm.parameters.maxfev = max_iter;
 
-    Eigen::VectorXd x = x0;
-    Eigen::LevenbergMarquardtSpace::Status status = lm.minimize(x);
+    Eigen::VectorXd x = xs;
+    Eigen::VectorXd fx = scaled_f(x, u);
+    double fx_norm = fx.norm();
 
-    // Print a short summary
-    std::cout << "LM solver status: " << int(status)
-        << " | final residual norm: " << f(x, u).norm() << std::endl;
+    double prev_fx_norm = fx_norm;
+    int consecutive_failures = 0;
 
-    return x;
+    for (int iter = 0; iter < max_iter; ++iter) {
+        // Run one LM iteration manually
+        Eigen::VectorXd x_old = x;
+        Eigen::LevenbergMarquardtSpace::Status status = lm.minimizeInit(x);
+        status = lm.minimizeOneStep(x);
+
+        Eigen::VectorXd fx_new = scaled_f(x, u);
+        double fx_norm_new = fx_new.norm();
+
+        if (fx_norm_new < tol) {
+            std::cout << "Converged in " << iter << " iterations. Residual = " << fx_norm_new << "\n";
+            return x.cwiseProduct(scale);
+        }
+
+        // 🔹 Step 3: Fallback line search if residual increased
+        if (fx_norm_new > fx_norm * 1.05) {
+            ++consecutive_failures;
+            double alpha = 1.0;
+            bool accepted = false;
+            for (int ls = 0; ls < 8; ++ls) {
+                alpha *= 0.5;
+                Eigen::VectorXd x_trial = x_old + alpha * (x - x_old);
+                double fx_trial_norm = scaled_f(x_trial, u).norm();
+                if (fx_trial_norm < fx_norm) {
+                    x = x_trial;
+                    fx_norm_new = fx_trial_norm;
+                    accepted = true;
+                    break;
+                }
+            }
+
+            if (!accepted) {
+                std::cerr << "Line search failed at iter " << iter
+                    << " | residual: " << fx_norm_new << "\n";
+                if (++consecutive_failures > 5) break;
+            }
+        }
+        else {
+            consecutive_failures = 0;
+        }
+
+        fx_norm = fx_norm_new;
+
+        if (std::abs(fx_norm - prev_fx_norm) < tol * 1e-3) {
+            std::cout << "Stagnation detected after " << iter << " iterations.\n";
+            return x.cwiseProduct(scale);
+        }
+
+        prev_fx_norm = fx_norm;
+    }
+
+    std::cerr << "Solver did not converge after " << max_iter
+        << " iterations. Final residual = " << fx_norm << std::endl;
+
+    return x.cwiseProduct(scale);
 }
 
 
