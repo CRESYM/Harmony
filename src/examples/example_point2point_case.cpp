@@ -28,7 +28,7 @@ void example_point2point_case() {
     ///*  ---------- 1.3 Add AC Generators  ---------- */
 
     /// Generator 1
-    double Zsrc = 0.2; 
+    double Zsrc = 0.01; 
     AC_source* src1 = new AC_source("SRC01", "AC1", 3, Zsrc);
     net.connectElementToBus(src1, 1, bus1_ac);
     map<string, double> src_info1 = {
@@ -122,13 +122,13 @@ void example_point2point_case() {
     };
     std::vector<double> controller_params2 = { 
         1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
-        1, 0, 2, 2.2, 2, 0, 400e3, // DC voltage controller parameters
+        1, 0, 2, 42, 2, 0, 400e3, // DC voltage controller parameters
         0, // active power
         0, // AC voltage
         1, 0, 6.6667e-07, 3.3333e-04, 1, -20e6, // reactive power
         1, 0, 120, 400, 1, 0, // energy controller parameters 
-        1, 0, 19.93, 4500, 1, 166.67, // zcc controller parameters 
-        1, 0, 117.93, 8.5e4, 2, 666.67, 0, // occ controller parameters
+        1, 0, 19.93, 4500, 1, -41.66, // zcc controller parameters 
+        1, 0, 117.93, 8.5e4, 2, -89.71, 0, // occ controller parameters
         1, 0, 19.93, 4500, 2, 0, 0, // ccc controller parameters
         0  // droop control
     };

@@ -808,7 +808,7 @@ void MMC::solveEquilibrium() {
         };
 
     // Call external equilibrium solver
-    Eigen::VectorXd x_eq = findEquilibriumLM(x0, u, f);
+    Eigen::VectorXd x_eq = findEquilibrium(x0, u, f);
 
     // Store result
     equilibrium_state = Eigen::VectorXd::Zero(number_of_states);
