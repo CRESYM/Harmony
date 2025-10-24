@@ -59,8 +59,9 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
 	m2[omega] = real_double(angular_frequency + omega_0);
 
     bool is_ac = (element_location[0] == 'A' || element_location[0] == 'a') && (element_location[1] == 'C' || element_location[1] == 'c');
+    bool is_mmc = (element_location.find('_') < element_location.length());
 
-    if (transformation && is_ac) {
+    if (transformation && is_ac && !is_mmc) {
         std::vector<std::vector<complex<double>>> Y_val_exact1(Y_matrix.nrows());
         std::vector<std::vector<complex<double>>> Y_val_exact2(Y_matrix.nrows());
         for (int i = 0; i < Y_matrix.nrows(); i++) {

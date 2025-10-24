@@ -1,12 +1,13 @@
-﻿#include "Examples.h"
-
+﻿#include <gtest/gtest.h>
 #include "../network.h"
 #include "../Bus.h"
 #include "../Include_components.h"
 #include "../Solver/Stability_Estimate/Stability_estimate.h"
 #include "../Solver/OPF/powerflow.h"
 
-void example_stability_check() {
+class TestStabilityEstimate : public testing::Test {};
+
+TEST_F(TestStabilityEstimate, TestOperatingPoint) {
     ///* ---------- 0 Set Network Object ---------- */
     Network net;
 
@@ -145,16 +146,40 @@ void example_stability_check() {
     global_params["DCbaseKV"] = 400.0; // Base voltage for DC, can be adjusted as needed
     global_params["Z_base"] = global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"]; // Base impedance, can be adjusted as needed
 
-    pf.make_OPF(&net, global_params, false, false, false, false);
+    pf.make_OPF(&net, global_params, false, false, false, true);
 
     // Making Stability Estimate Object
     StabilityEstimate* stability = new StabilityEstimate();
     stability->add_areas(&net);
 
-    std::cout << std::setprecision(10);
+    // Compute equivalent impedance between two AC buses, skipping the MMCs
+    auto& dc_grids = stability->get_dc_grids();
+    auto& ac_grids = stability->get_ac_grids();
 
-    // TO TEST TRANSFER FUNCTION COMPUTATION
-    stability->compute_transfer_function("MMC2", "AC", 1000*omega);
+    complex<double> y1 = 1.0 / ACZ1;
+    complex<double> yeq1 = y1 * (1.0 / Zsrc) / (y1 + 1.0 / Zsrc);
+	complex<double> y2 = 1.0 / (2380.5, omega * 18.9);
+	complex<double> yeq2 = y1 * y2 / (y1 + y2);
+
+
+    MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], omega);
+    EXPECT_EQ(Y_params(0, 0), 1.0 / DCR1); 
+    EXPECT_EQ(Y_params(0, 1), -1.0 / DCR1);
+    EXPECT_EQ(Y_params(1, 0), -1.0 / DCR1);
+	EXPECT_EQ(Y_params(1, 1), 1.0 / DCR1);
+
+
+    MatrixXcd Y_params_ac1 = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC1"], omega);
+	EXPECT_EQ(Y_params_ac1(0, 0), yeq1);
+	EXPECT_EQ(Y_params_ac1(0, 1), 0);
+	EXPECT_EQ(Y_params_ac1(1, 0), 0);
+	EXPECT_EQ(Y_params_ac1(1, 1), yeq1);
+
+    MatrixXcd Y_params_ac2 = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC2"], omega);
+	EXPECT_EQ(Y_params_ac2(0, 0), yeq2);
+	EXPECT_EQ(Y_params_ac2(0, 1), 0);
+	EXPECT_EQ(Y_params_ac2(1, 0), 0);
+	EXPECT_EQ(Y_params_ac2(1, 1), yeq2);
 
     delete stability;
 }

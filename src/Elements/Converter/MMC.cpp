@@ -736,34 +736,6 @@ void MMC::computeABCD() {
     }
 
     D_matrix = Eigen::MatrixXd::Zero(3, 3);
-
-    /*DenseMatrix I;
-    SymEngine::eye(I, 3);
-    DenseMatrix A_s;
-    mul_dense_scalar(A_s, s, I);
-    add_dense_dense(A_s, A_s, eigenToSymEngineDenseMatrix(-A_matrix));
-    DenseMatrix inv_A_s = A_s.inv();
-
-    DenseMatrix B_c = eigenToSymEngineDenseMatrix(B_matrix);
-    DenseMatrix C_c = eigenToSymEngineDenseMatrix(C_matrix);
-    DenseMatrix D_c = eigenToSymEngineDenseMatrix(D_matrix);
-	mul_dense_dense(Y_matrix, C_c, inv_A_s);
-	mul_dense_dense(Y_matrix, Y_matrix, B_c);
-	add_dense_dense(Y_matrix, Y_matrix, D_c);
-
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < n; ++j) {
-            Y_matrix.set(i, j, Y.get(i, j));
-        }
-	}
-
-    Y_matrix.set(1, 1, neg(Y_matrix.get(1, 1))); // Correct the sign for the second row, second column
-    Y_matrix.set(2, 2, neg(Y_matrix.get(2, 2))); // Correct the sign for the third row, third column
-
-    if (controls.count("dc")) {
-		RCP<const Basic> value = real_double(-C_arm * (6.0 / N));
-        Y_matrix.set(0, 0, mul(real_double(2.0), (Y_matrix.get(0, 0), mul(s, value)))); // Correct the sign for the first row, first column
-	} */
 }
 
 /**

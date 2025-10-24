@@ -35,7 +35,7 @@ TEST_F(TestImpedance, TestYMatrix) {
 
     // Case 1
     Impedance z1("z1", "AC1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) })); // 1/wi
-    MatrixXcd y1 = z1.compute_y_parameters_num(10000);
+    MatrixXcd y1 = vectorToMatrix(z1.compute_y_parameters(10000));
     MatrixXcd y1expected(2, 2);
     y1expected(0, 0) = std::complex<double>(0, 10000);
     y1expected(0, 1) = std::complex<double>(0, -10000);
@@ -45,7 +45,7 @@ TEST_F(TestImpedance, TestYMatrix) {
 
     // Case 2
     Impedance z2("z2", "AC1", 2, DenseMatrix(1, 2, { div(integer(1), mul(j, omega)), mul(integer(2), mul(j, omega))})); // 1/wi, 2*(wi)
-    MatrixXcd y2 = z2.compute_y_parameters_num(1500);    
+    MatrixXcd y2 = vectorToMatrix(z2.compute_y_parameters(1500));    
     MatrixXcd y2expected(4, 4);
     std::complex<double> i1500(0, 1500);
     std::complex<double> i0(0, 0);

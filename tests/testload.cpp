@@ -46,7 +46,7 @@ TEST_F(TestLoad, TestYMatrix) {
 
     // Case1
     Load l1("l1", "AC1", 1, { 0, 0, 1 });
-    MatrixXcd y1 = l1.compute_y_parameters_num(10000);
+    MatrixXcd y1 = vectorToMatrix(l1.compute_y_parameters(10000.0));
     MatrixXcd y1expected(2, 2);
     y1expected(0, 0) = std::complex<double>(6.12323e-13, 10000);
     y1expected(0, 1) = std::complex<double>(-6.12323e-13, -10000);
@@ -56,7 +56,7 @@ TEST_F(TestLoad, TestYMatrix) {
 
     // Case2
     Load l2("l2", "AC1", 3, { 1, 1, 1 });
-    MatrixXcd y2 = l2.compute_y_parameters_num(1500);
+    MatrixXcd y2 = vectorToMatrix(l2.compute_y_parameters(1500));
     Eigen::MatrixXcd y2expected = Eigen::MatrixXcd::Zero(6, 6);
     std::complex<double> value(4.44445e-07, -0.000666667);
     y2expected.diagonal().setConstant(value);

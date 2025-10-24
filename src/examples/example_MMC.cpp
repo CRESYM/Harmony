@@ -41,11 +41,12 @@ void example_MMC() {
 	std::cout << "Equilibrium state:\n" << x_eq.transpose() << "\n";
 
 	//// Numerical Jacobian
-	//mmc1->computeABCD();
-	//std::cout << "\nA:\n" << mmc1->getA() << "\n";
-	//std::cout << "\nB:\n" << mmc1->getB() << "\n";
+	mmc1->computeABCD();
+	std::cout << "\nA:\n" << mmc1->getA() << "\n";
+	std::cout << "\nB:\n" << mmc1->getB() << "\n";
+	std::cout << "\nC:\n" << mmc1->getC() << "\n";
 
-	mmc1->printElementValues();  // Print MMC parameters
+	//mmc1->printElementValues();  // Print MMC parameters
 
-	// mmc1->plotYParameters(1, 1000, 1000);
+	mmc1->plotYParameters(1, 1000, 1000);
 }

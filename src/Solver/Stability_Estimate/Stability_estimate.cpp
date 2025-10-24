@@ -700,14 +700,13 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
 
     // Compute equivalent Y parameters first for AC grids and then for DC grids
     // DC grids
-    int dc_side_pins = 0;
+    int dc_side_pins = 1;
     unordered_map<string, MatrixXcd> Y_dc_matrices;
     for (auto& [name, sub] : dc_grids) {
         //std::cout << "Computing equivalent admittance for DC grid: " << name << "\n";
         MatrixXcd Y_dc = compute_equivalent_admittance_parameters_num(sub, frequency);
         Y_dc_matrices[name] = Y_dc;
-        dc_side_pins = Y_dc.rows(); // Assuming single bus for DC grid
-        std::cout << "Equivalent admittance matrix for DC grid " << name << ":\n" << Y_dc << "\n";
+        //std::cout << "Equivalent admittance matrix for DC grid " << name << ":\n" << Y_dc << "\n";
     }
     // AC grids
     unordered_map<string, MatrixXcd> Y_ac_matrices;
@@ -715,7 +714,7 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         //std::cout << "Computing equivalent admittance for AC grid: " << name << "\n";
         MatrixXcd Y_ac = compute_equivalent_admittance_parameters_num(sub, frequency);
         Y_ac_matrices[name] = Y_ac;
-        std::cout << "Equivalent admittance matrix for AC grid " << name << ":\n" << Y_ac << "\n";
+        //std::cout << "Equivalent admittance matrix for AC grid " << name << ":\n" << Y_ac << "\n";
     }
 
     // Cross coupling for the admittance of each converter
@@ -749,12 +748,13 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         // Depending on the side of the converter, the admittance matrix looking inside converter will be different
         if ((converter_name != name) || (location == dc_area)) {
             MatrixXcd Y_ac = Y_ac_matrices[ac_area];
+			vector<vector<complex<double>>> mmc_y_params = mmc_elem->compute_y_parameters(frequency);
             MatrixXcd Ymmc = vectorToMatrix(mmc_elem->compute_y_parameters(frequency));
             // The overall transfer function considering the converter's own admittance and the grid admittances.
             MatrixXcd Ydc(1, 1);
             Ydc(0, 0) = Ymmc(0, 0);
-            MatrixXcd b = Ymmc.block(0, 1, 0, 2);
-            MatrixXcd a = Ymmc.block(1, 0, 2, 0);
+            MatrixXcd b = Ymmc.block(0, 1, 1, 2);
+            MatrixXcd a = Ymmc.block(1, 0, 2, 1);
             MatrixXcd Ydq = Ymmc.block(1, 1, 2, 2);
             Y_conv_matrices[name] = b * (Y_ac - Ydq).inverse() * a + Ydc;
 
@@ -765,10 +765,13 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         index++;
     }
 
+	cout << "Closing impedance matrix Z_closing:\n" << Z_closing << "\n";
 
     // CROSS-COUPLING OF THE DC SIDE OF THE CONVERTER
     // with the DC grid admittance
     MatrixXcd Y_dc = compute_closing_impedance(dc_grids[dc_area], dc_area, Y_dc_matrices[dc_area], Z_closing);
+
+	cout << "Equivalent DC admittance looking from converter " << converter_name << ":\n" << Y_dc << "\n";
 
     // Final transfer function computation
     // For DC cut 
@@ -778,8 +781,8 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         // The overall transfer function considering the converter's own admittance and the grid admittances.
         MatrixXcd Ydc(1, 1);
         Ydc(0, 0) = Ymmc(0, 0);
-        MatrixXcd b = Ymmc.block(0, 1, 0, 2);
-        MatrixXcd a = Ymmc.block(1, 0, 2, 0);
+        MatrixXcd b = Ymmc.block(0, 1, 1, 2);
+        MatrixXcd a = Ymmc.block(1, 0, 2, 1);
         MatrixXcd Ydq = Ymmc.block(1, 1, 2, 2);
         Y_conv_matrices[converter_name] = b * (Y_ac - Ydq).inverse() * a + Ydc;
 		MatrixXcd TF = Y_conv_matrices[converter_name] * Y_dc;
