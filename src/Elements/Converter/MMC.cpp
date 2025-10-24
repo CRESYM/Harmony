@@ -341,7 +341,7 @@ void MMC::update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc
 
     // DC voltage control has priority over active power
     if (controls.count("dc_voltage")) {
-        controls["dc_voltage"]->setReference({ Vdc });
+        controls["dc_voltage"]->setReference({ 0, Vdc });
     }
     else if (controls.count("active_power")) {
         controls["active_power"]->setReference({ Pac });

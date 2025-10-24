@@ -28,7 +28,7 @@ void example_point2point_case() {
     ///*  ---------- 1.3 Add AC Generators  ---------- */
 
     /// Generator 1
-    double Zsrc = 0.01; 
+    double Zsrc = 0.1; 
     AC_source* src1 = new AC_source("SRC01", "AC1", 3, Zsrc);
     net.connectElementToBus(src1, 1, bus1_ac);
     map<string, double> src_info1 = {
@@ -149,14 +149,6 @@ void example_point2point_case() {
     global_params["Z_base"] = global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"]; // Base impedance, can be adjusted as needed
 
     pf.make_OPF(&net, global_params, false, false, false, false);
-
-    std::cout << "\nEquilibrium Solution: \n";
-    mmc1->solveEquilibrium();
-    const Eigen::VectorXd x_eq = mmc1->getEquilibriumState();
-    std::cout << "Equilibrium state MMC1:\n" << x_eq.transpose() << "\n";
-	mmc2->solveEquilibrium();
-	const Eigen::VectorXd x_eq2 = mmc2->getEquilibriumState();
-	std::cout << "Equilibrium state MMC2:\n" << x_eq2.transpose() << "\n";
 
     // Making Stability Estimate Object
     StabilityEstimate* stability = new StabilityEstimate();

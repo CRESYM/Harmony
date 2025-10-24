@@ -831,15 +831,19 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
             // Update the MMC
             mmc->update_MMC(Vm_V, theta_rad, Pac_W, Qac_Var, Vdc_V, Pdc_W);
 
+            // Solve equilibrium and compute state-space matrices
+            mmc->solveEquilibrium();         
+            mmc->computeABCD();
+
+            if (print_info) {
                 std::cout << "[Updated MMC] " << elem->getElementSymbol()
                     << " | Vm=" << Vm_kV << " kV, theta=" << theta_deg
                     << " deg, Pac=" << Pac_MW << " MW, Qac=" << Qac_MVar
                     << " MVar, Vdc=" << Vdc_kV << " kV, Pdc=" << Pdc_MW
                     << " MW" << std::endl;
-
-            // Solve equilibrium and compute state-space matrices
-            mmc->solveEquilibrium();
-            mmc->computeABCD();
+                const Eigen::VectorXd x_eq = mmc->getEquilibriumState();
+                std::cout << "Equilibrium state:\n" << x_eq.tail(12).transpose() << "\n";
+            }
         }
     }
 
