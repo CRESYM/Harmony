@@ -836,6 +836,10 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
                     << " deg, Pac=" << Pac_MW << " MW, Qac=" << Qac_MVar
                     << " MVar, Vdc=" << Vdc_kV << " kV, Pdc=" << Pdc_MW
                     << " MW" << std::endl;
+
+            // Solve equilibrium and compute state-space matrices
+            mmc->solveEquilibrium();
+            mmc->computeABCD();
         }
     }
 

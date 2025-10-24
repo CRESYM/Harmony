@@ -72,24 +72,35 @@ void example_point2point_case() {
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
 
     ///*  ---------- 2.3 Create Converters ---------- */
-    MMC* mmc1 = new MMC(
-        "MMC1",             // Symbol
-        "AC1_DC1",              // Location
-        1000.0,             // Omega (Nominal Frequency in rad/s)
-        -60.0 * 1e6,        // Active Power (P) in W
-        -40.0 * 1e6,        // Reactive Power (Q) in VA
-        0.0,                // Theta (Voltage Angle in rad)
-        345.0 * 1e3,        // AC Voltage (V_m) in V
-        60 * 1e6,           // DC power (P_dc) in W
-        500.0 * 1e3,        // DC Voltage (V_dc) in kV
-        0.05,               // Arm Inductance (L_arm) in H
-        1.07,               // Arm Resistance (R_arm) in Ω
-        0.01,               // Capacitance per Submodule (C_arm) in F
-        400,                // Number of Submodules (N)
-        0.0005,             // Reactor Inductance (L_reactor) in H
-        0.0001,             // Reactor Resistance (R_reactor) in Ω
-        0.00015             // Time Delay (t_delay) in seconds
-    );
+    vector<double> converter_params1 = {
+        2 * M_PI * 50,  // Omega (Nominal Frequency in rad/s)
+        -60.0 * 1e6,    // Active Power (P) in W
+        -40.0 * 1e6,    // Reactive Power (Q) in VA
+        0.0,            // Theta (Voltage Angle in rad)
+        345.0 * 1e3,    // AC Voltage (V_m) in V
+        60 * 1e6,       // DC power (P_dc) in W
+        500.0 * 1e3,    // DC Voltage (V_dc) in kV
+        0.05,           // Arm Inductance (L_arm) in H
+        1.07,           // Arm Resistance (R_arm) in Ω
+        0.01,           // Capacitance per Submodule (C_arm) in F
+        400,            // Number of Submodules (N)
+        0.0005,         // Reactor Inductance (L_reactor) in H
+        0.0001,         // Reactor Resistance (R_reactor) in Ω
+        0.0             // Time Delay (t_delay) in seconds
+	};
+    std::vector<double> controller_params1 = { 0,
+        //1, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
+        0, // 1, 8.0, 272.0, 2, 0, Vdc, // DC voltage controller parameters
+        1, 0, 6.6667e-07, 3.3333e-04, 1, -60e6, // active power
+        0, // AC voltage
+        1, 0, 6.6667e-07, 3.3333e-04, 1, -40e6, // reactive power
+        1, 0, 120, 400, 1, 0, // energy controller parameters 
+        1, 0, 19.93, 4500, 1, 166.67, // zcc controller parameters 
+        1, 0, 117.93, 8.5e4, 2, 666.67, 0, // occ controller parameters
+        1, 0, 19.93, 4500, 2, 0, 0, // ccc controller parameters
+        0 // 1, 1, -0.0001, 2, 500e3, 100e6 // droop control
+    };
+    MMC* mmc1 = new MMC("MMC1", "AC1_DC1", converter_params1, controller_params1);
     net.connectElementToBus(mmc1, 1, bus2_ac);
     net.connectElementToBus(mmc1, 2, bus1_dc);
     map<string, double> mmc1_info = {
@@ -98,24 +109,35 @@ void example_point2point_case() {
     };
     mmc1->setOPFInfo(mmc1_info);
 
-    MMC* mmc2 = new MMC(
-        "MMC2",             // Symbol
-        "AC2_DC1", 		    // Location
-        1000.0,             // Omega (Nominal Frequency in rad/s)
-        100.0 * 1e6,        // Active Power (P) in W
-        50.0 * 1e6,         // Reactive Power (Q) in VA
-        0.0,                // Theta (Voltage Angle in rad)
-        345.0 * 1e3,        // AC Voltage (V_m) in V
-        -50 * 1e6,          // DC power (P_dc) in W
-        500.0 * 1e3,        // DC Voltage (V_dc) in V
-        0.05,               // Arm Inductance (L_arm) in H
-        1.07,               // Arm Resistance (R_arm) in Ω
-        0.01,               // Capacitance per Submodule (C_arm) in F
-        400,                // Number of Submodules (N)
-        0.0005,             // Reactor Inductance (L_reactor) in H
-        0.0001,             // Reactor Resistance (R_reactor) in Ω
-        0.00015             // Time Delay (t_delay) in seconds
-    );
+    vector<double> converter_params2 = {
+    2 * M_PI * 50,  // Omega (Nominal Frequency in rad/s)
+    100.0 * 1e6,    // Active Power (P) in W
+    50.0 * 1e6,     // Reactive Power (Q) in VA
+    0.0,            // Theta (Voltage Angle in rad)
+    345.0 * 1e3,    // AC Voltage (V_m) in V
+    -50 * 1e6,      // DC power (P_dc) in W
+    500.0 * 1e3,    // DC Voltage (V_dc) in kV
+    0.05,           // Arm Inductance (L_arm) in H
+    1.07,           // Arm Resistance (R_arm) in Ω
+    0.01,           // Capacitance per Submodule (C_arm) in F
+    400,            // Number of Submodules (N)
+    0.0005,         // Reactor Inductance (L_reactor) in H
+    0.0001,         // Reactor Resistance (R_reactor) in Ω
+    0.0             // Time Delay (t_delay) in seconds
+    };
+    std::vector<double> controller_params2 = { 0,
+        //1, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
+        0, // 1, 8.0, 272.0, 2, 0, Vdc, // DC voltage controller parameters
+        1, 0, 6.6667e-07, 3.3333e-04, 1, 100e6, // active power
+        0, // AC voltage
+        1, 0, 6.6667e-07, 3.3333e-04, 1, 50e6, // reactive power
+        1, 0, 120, 400, 1, 0, // energy controller parameters 
+        1, 0, 19.93, 4500, 1, 166.67, // zcc controller parameters 
+        1, 0, 117.93, 8.5e4, 2, 666.67, 0, // occ controller parameters
+        1, 0, 19.93, 4500, 2, 0, 0, // ccc controller parameters
+        0 // 1, 1, -0.0001, 2, 500e3, 100e6 // droop control
+    };
+    MMC* mmc2 = new MMC("MMC2", "AC2_DC1", converter_params2, controller_params2);
     net.connectElementToBus(mmc2, 1, bus3_ac);
     net.connectElementToBus(mmc2, 2, bus2_dc);
     map<string, double> mmc2_info = {
@@ -139,11 +161,8 @@ void example_point2point_case() {
     pf.make_OPF(&net, global_params, false, false, false, false);
 
     // Making Stability Estimate Object
-	//bus1_ac->setBusName("gnd"); // Change bus name to reflect its area
     StabilityEstimate* stability = new StabilityEstimate();
     stability->add_areas(&net);
-    //stability->print_summary();
-
 
     // Compute equivalent impedance between two AC buses, skipping the MMCs
     auto& dc_grids = stability->get_dc_grids();
@@ -153,9 +172,13 @@ void example_point2point_case() {
     cout << "Equivalent Admittance Matrix at DC side at " << omega << " rad/s:" << endl;
     cout << Y_params << endl;
 
-	MatrixXcd Y_params_ac = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC2"], omega);
-	cout << "Equivalent Admittance Matrix of AC grid at " << omega << " rad/s:" << endl;
-	cout << Y_params_ac << endl;
+    MatrixXcd Y_params_ac1 = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC1"], omega);
+    cout << "Equivalent Admittance Matrix of AC1 grid at " << omega << " rad/s:" << endl;
+    cout << Y_params_ac1 << endl;
+
+	MatrixXcd Y_params_ac2 = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC2"], omega);
+	cout << "Equivalent Admittance Matrix of AC2 grid at " << omega << " rad/s:" << endl;
+	cout << Y_params_ac2 << endl;
 
 	// stability->compute_transfer_function("MMC1", "AC", omega_num);
 

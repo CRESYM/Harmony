@@ -28,19 +28,19 @@ Eigen::VectorXd findEquilibrium(const Eigen::VectorXd& x0, const Eigen::VectorXd
         throw std::invalid_argument("Initial state and input vectors must be non-empty.");
     }
 
-    const double eps = 1e-8;
+    const double eps = 1e-6;
     double lambda = 1e-3;
 
     for (int iter = 0; iter < max_iter; ++iter) {
         VectorXd fx = f(x, u);
         double fx_norm = fx.norm();
 
-        std::cout << "Iter " << iter
-            << " | ‖f(x)‖ = " << fx_norm
-            << " | λ = " << lambda << std::endl;
+        //std::cout << "Iter " << iter
+        //    << " | ||f(x)|| = " << fx_norm
+        //    << " | lambda = " << lambda << std::endl;
 
         if (fx_norm < tol) {
-            std::cout << "✅ Converged (residual tolerance) in " << iter << " iterations.\n";
+            std::cout << "Converged (residual tolerance) in " << iter << " iterations.\n";
             return x;
         }
 
@@ -67,7 +67,7 @@ Eigen::VectorXd findEquilibrium(const Eigen::VectorXd& x0, const Eigen::VectorXd
         VectorXd dx = -H.ldlt().solve(JTr);
 
         if (dx.norm() < tol) {
-            std::cout << "✅ Converged (small step) in " << iter << " iterations.\n";
+            std::cout << "Converged (small step) in " << iter << " iterations.\n";
             return x;
         }
 
@@ -91,9 +91,42 @@ Eigen::VectorXd findEquilibrium(const Eigen::VectorXd& x0, const Eigen::VectorXd
             lambda *= 10.0;
         }
     }
-	std::cerr << "⚠️ Solver did not converge after " << max_iter << " iterations. Final residual: " << f(x, u).norm() << "\n";
+	std::cerr << "Solver did not converge after " << max_iter << " iterations. Final residual: " << f(x, u).norm() << "\n";
     return x;  // Return last iterate anyway
 }
+
+// Wrapper around Eigen's Levenberg–Marquardt
+Eigen::VectorXd findEquilibriumLM(
+    const Eigen::VectorXd& x0,
+    const Eigen::VectorXd& u,
+    DerivFunc f,
+    double tol,
+    int max_iter)
+{
+    // Wrap into functor
+    SystemFunctor functor(f, u, static_cast<int>(x0.size()));
+
+    // Use numerical differentiation to compute Jacobian
+    Eigen::NumericalDiff<SystemFunctor> numDiff(functor);
+
+    // Levenberg-Marquardt solver
+    Eigen::LevenbergMarquardt<Eigen::NumericalDiff<SystemFunctor>, double> lm(numDiff);
+
+    // Tolerances and max function evaluations
+    lm.parameters.ftol = tol;       // function tolerance
+    lm.parameters.xtol = tol;       // parameter tolerance
+    lm.parameters.maxfev = max_iter;
+
+    Eigen::VectorXd x = x0;
+    Eigen::LevenbergMarquardtSpace::Status status = lm.minimize(x);
+
+    // Print a short summary
+    std::cout << "LM solver status: " << int(status)
+        << " | final residual norm: " << f(x, u).norm() << std::endl;
+
+    return x;
+}
+
 
 /**
  * @brief Numerically computes the Jacobian matrices A = ∂f/∂x and B = ∂f/∂u using finite differences.

@@ -13,14 +13,14 @@ void example_MMC() {
 	std::vector<double> controller_params = { 0,
 		//1, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
 		0, // 1, 8.0, 272.0, 2, 0, Vdc, // DC voltage controller parameters
-		0, // 1, 0, 6.6667e-07, 3.3333e-04, 1, 100e6, // active power
+		1, 0, 6.6667e-07, 3.3333e-04, 1, 100e6, // active power
 		0, // AC voltage
 		1, 0, 6.6667e-07, 3.3333e-04, 1, 0, // reactive power
 		1, 0, 120, 400, 1, 0, // energy controller parameters 
 		1, 0, 19.93, 4500, 1, 166.67, // zcc controller parameters 
 		1, 0, 117.93, 8.5e4, 2, 666.67, 0, // occ controller parameters
 		1, 0, 19.93, 4500, 2, 0, 0, // ccc controller parameters
-		1, 1, -0.0001, 2, Vdc, 100e6 // droop control
+		0 //1, 1, -0.0001, 2, Vdc, 100e6 // droop control
 	}; 
 
 	std::vector<double> filter_params = { // 0, 
@@ -41,9 +41,9 @@ void example_MMC() {
 	std::cout << "Equilibrium state:\n" << x_eq.transpose() << "\n";
 
 	//// Numerical Jacobian
-	//mmc1->computeABCD();
-	//std::cout << "\nA:\n" << mmc1->getA() << "\n";
-	//std::cout << "\nB:\n" << mmc1->getB() << "\n";
+	mmc1->computeABCD();
+	std::cout << "\nA:\n" << mmc1->getA() << "\n";
+	std::cout << "\nB:\n" << mmc1->getB() << "\n";
 
 	mmc1->printElementValues();  // Print MMC parameters
 

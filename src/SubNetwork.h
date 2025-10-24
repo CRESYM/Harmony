@@ -9,6 +9,7 @@ class SubNetwork : public Network {
 private:
     std::unordered_map<std::string, Bus*> outputBuses;  // Output buses specific to this subnetwork
     std::string subnetworkName;
+    bool transformation = true;
 
 public:
     // Default constructor
@@ -29,6 +30,9 @@ public:
             outputBuses[busName] = bus;
         }
 	}
+
+	void setTransformation(bool flag) { transformation = flag; }
+	bool getTransformation() const { return transformation; }
 
 	// Get output buses
 	const std::unordered_map<std::string, Bus*>& getOutputs() const { return outputBuses; }

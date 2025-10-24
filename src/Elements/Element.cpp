@@ -75,6 +75,7 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
 				Y_val_exact2[i][j] = eval_complex_double(*r);
             }
         }
+		//cout << "Applying transformation to element: " << element_symbol << endl;
 		vector<vector<complex<double>>> Y = apply_transformation(Y_val_exact1, Y_val_exact2);
 		return Y;
     }

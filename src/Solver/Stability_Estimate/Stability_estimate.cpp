@@ -66,7 +66,7 @@ void StabilityEstimate::add_areas(Network* net) {
                 if (mmc) {
                     std::string conv_name = elem->getElementSymbol();
                     if (converters.find(conv_name) == converters.end()) {
-                        converters[conv_name] = elem; // std::make_unique<Element>(elem);
+                        converters[conv_name] = elem; 
                         std::cout << "Detected MMC converter: " << conv_name << "\n";
                     }
 
@@ -114,7 +114,7 @@ void StabilityEstimate::add_areas(Network* net) {
                         }
                         if (dc_bus) {
                             dc_grids[dc_area]->addOutput(dc_bus->getBusName(), dc_bus);
-                        }
+                        }						
                     }
                     else {
                         std::cerr << "[WARN] Converter " << mmc->getElementSymbol()
@@ -123,8 +123,10 @@ void StabilityEstimate::add_areas(Network* net) {
                 }
                 else {
                     sub->addElement(elem);
-					// sub->connectElementToBus(elem, elem->getBusIndex(bus), bus);
+					
                 }
+
+                elem->setTransformation(sub->getTransformation()); // Set transformation flag for non-MMC elements
          
             }
         }
@@ -475,8 +477,11 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
 	string subnet_name = subnet->getName();
     int pins = 1;
     if (subnet_name[0] == 'A' || subnet_name[0] == 'a') {
-        pins = 3; // Assume 3 pins for AC networks 
-        // and 2 in dq frame, add transformation in subnetwork
+        if (subnet->getTransformation()) {
+            pins = 2; // Assume 2 pins for AC networks in dq frame
+        }
+        else
+			pins = 3; // Assume 3 pins for AC networks in abc frame
     }
     else if (subnet_name[0] == 'D' || subnet_name[0] == 'd') {
         pins = 1; // Assume 1 pin for DC networks

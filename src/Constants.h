@@ -32,6 +32,8 @@ using SymEngine::RealMPFR;
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <unsupported/Eigen/MatrixFunctions>
+#include <unsupported/Eigen/NonLinearOptimization>
+#include <unsupported/Eigen/NumericalDiff>
 
 #define _USE_MATH_DEFINES
 #include <math.h> 
