@@ -154,7 +154,7 @@ void example_stability_check() {
     std::cout << std::setprecision(10);
 
     // TO TEST TRANSFER FUNCTION COMPUTATION
-    stability->compute_transfer_function("MMC2", "AC", 1000*omega);
+    stability->compute_transfer_function("MMC2", "AC", 1000);
 
     delete stability;
 }

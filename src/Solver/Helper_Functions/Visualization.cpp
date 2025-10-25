@@ -7,6 +7,7 @@ void bode_plot(const std::vector<double>& freq,
     const std::vector<std::string>& labels,
 	const std::string& title) {
 
+
     // Before plotting
     std::ofstream null_stream;
     null_stream.open("nul"); // On Windows, use "nul"; on Linux, use "/dev/null"

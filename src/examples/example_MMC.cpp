@@ -29,7 +29,6 @@ void example_MMC() {
 		1, 0, 0.7, 100.48, // active power filter parameters
 		1, 0, 0.7, 100.48, // reactive power filter parameters
 		1, 0, 0.7, 6280 // DC voltage filter parameters
-		//0 
 	};
 
 	MMC* mmc1 = new MMC("MMC1", "AC1_DC1", converter_params, controller_params); // , filter_params);
@@ -37,16 +36,23 @@ void example_MMC() {
 	// Equilibrium Solution
 	std::cout << "\nEquilibrium Solution: \n";
 	mmc1->solveEquilibrium();
-	const Eigen::VectorXd x_eq = mmc1->getEquilibriumState();
-	std::cout << "Equilibrium state:\n" << x_eq.transpose() << "\n";
+	cout << std::setprecision(6);
+	const Eigen::VectorXd x_eq = mmc1->getEquilibriumState().tail(12);
+	std::cout << std::setprecision(6) << "Equilibrium state:\n" << x_eq.transpose() << "\n";
 
-	//// Numerical Jacobian
+	// Numerical Jacobian
 	mmc1->computeABCD();
-	std::cout << "\nA:\n" << mmc1->getA() << "\n";
-	std::cout << "\nB:\n" << mmc1->getB() << "\n";
-	std::cout << "\nC:\n" << mmc1->getC() << "\n";
+	//std::cout << "\nA:\n" << mmc1->getA() << "\n";
+	//std::cout << "\nB:\n" << mmc1->getB() << "\n";
+	//td::cout << "\nC:\n" << mmc1->getC() << "\n";
 
-	//mmc1->printElementValues();  // Print MMC parameters
+	//mmc1->printElementValues();  // Print MMC parameters, together with the reference values for the controllers
 
-	mmc1->plotYParameters(1, 1000, 1000);
+	MatrixXcd Y = vectorToMatrix(mmc1->compute_y_parameters(50));
+	cout << std::setprecision(4);
+	cout << "\nY-parameters at 50 Hz:\n" << Y << "\n";
+
+	mmc1->writeFile(1.0, 1000.0, 1000);
+
+	//mmc1->plotYParameters(1, 1000, 1000);
 }

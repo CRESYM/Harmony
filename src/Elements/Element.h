@@ -54,10 +54,10 @@ public:
     virtual void printElementValues();
 
     // Function to write the Y-parameter matrix to a file over a frequency range 
-    void writeFile(double start_frequency, int end_frequency, int number_of_points);
+    void writeFile(double start_frequency, double end_frequency, int number_of_points);
 
 	// Function to plot the Y-parameter matrix entries
-    void plotYParameters(double start_frequency, int end_frequency, int number_of_points);
+    void plotYParameters(double start_frequency, double end_frequency, int number_of_points);
 
     // Virtual function to compute Y-parameters (to be implemented by derived classes)
     virtual std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency);

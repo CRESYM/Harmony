@@ -176,13 +176,13 @@ void Element::printElementValues() {
  * @param end_frequency The ending frequency for the sweep.
  * @param number_of_points The number of frequency points to compute and write.
  */
-void Element::writeFile(double start_frequency, int end_frequency, int number_of_points) {
+void Element::writeFile(double start_frequency, double end_frequency, int number_of_points) {
     std::ofstream myfile;
-    myfile.open("files/" + element_symbol + ".csv");
+    myfile.open("./files/" + element_symbol + ".csv");
 
     // Print the Y-parameters in file
-    double gap = (end_frequency - start_frequency) / (number_of_points - 1);
-    int frequency = start_frequency;
+    double gap = (end_frequency - start_frequency) * 1.0 / (number_of_points - 1);
+    double frequency = start_frequency;
     for (int p = 0; p < number_of_points; p++) {
         std::vector<std::vector<complex<double>>> Y = compute_y_parameters(frequency);
         
@@ -208,12 +208,12 @@ void Element::writeFile(double start_frequency, int end_frequency, int number_of
  * @param end_frequency The ending frequency for the plot.
  * @param number_of_points The number of points to plot across the frequency range.
  */
-void Element::plotYParameters(double start_frequency, int end_frequency, int number_of_points) {
+void Element::plotYParameters(double start_frequency, double end_frequency, int number_of_points) {
     std::vector<double> frequencies;
     std::vector<std::vector<double>> magnitudes(number_of_points, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));
     std::vector<std::vector<double>> phases(number_of_points, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));
     std::vector<std::string> labels;
-    double gap = (end_frequency - start_frequency) / (number_of_points - 1);
+    double gap = (end_frequency - start_frequency) * 1.0 / (number_of_points - 1);
 	cout << gap << endl;
     double frequency = start_frequency;
     for (int p = 0; p < number_of_points; p++) {

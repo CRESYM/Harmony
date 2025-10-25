@@ -46,7 +46,8 @@ int main() {
 	// Print information of each element
 	std::vector<ComponentType> components = sim.getComponents();
 	for (const auto& c : components) {
-		std::visit([](const auto& elem){ elem.printElementInfo(); }, c);
+		std::visit([](const auto& elem){ //elem.printElementInfo(); 
+			}, c);
 	}
 
 

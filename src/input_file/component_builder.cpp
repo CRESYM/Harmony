@@ -36,9 +36,10 @@ Load ComponentBuilder::buildLoad(const JSON& comp) {
 	findNonEmptyNumericArray("values", comp);
 
 	std::string id = comp["id"];
+	std::string location = comp["location"];
 	int pins = comp["pins"];
 	std::vector<double> values = comp["values"].get<std::vector<double>>();
-	return Load(id, pins, values);
+	return Load(id, location, pins, values);
 }
 
 Transformer_real ComponentBuilder::buildTransformerReal(const JSON& comp) {
@@ -60,8 +61,9 @@ Transformer_real ComponentBuilder::buildTransformerReal(const JSON& comp) {
 		values.push_back(comp["values"]["phase_shift"]);
 
 		std::string id = comp["id"];
+		std::string location = comp["location"];
 		int pins = comp["pins"];
-		return Transformer_real(id, pins, values);
+		return Transformer_real(id, location, pins, values);
 
 	}
 }

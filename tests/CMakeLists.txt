@@ -73,6 +73,7 @@ add_executable(
     testinductor.cpp
     testswitch.cpp
     testrealtransformer.cpp
+    testMMC.cpp
     testStabilityEstimate.cpp
     utils.cpp
     ${HARMONY_SOURCE_FILES}

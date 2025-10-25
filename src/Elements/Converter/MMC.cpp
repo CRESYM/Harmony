@@ -792,9 +792,10 @@ void MMC::solveEquilibrium() {
  * @param omega Angular frequency (rad/s).
  * @return Eigen::MatrixXcd Admittance matrix.
  */
-std::vector<std::vector<complex<double>>> MMC::compute_y_parameters(double omega) {
+std::vector<std::vector<complex<double>>> MMC::compute_y_parameters(double frequency) {
     // s: Laplace variable (jω)
-	std::complex<double> s_num = std::complex<double>(0, omega);
+	double omega_num = 2.0 * M_PI * frequency;
+	std::complex<double> s_num = std::complex<double>(0, omega_num);
     const int n = A_matrix.rows();
     Eigen::MatrixXcd I = Eigen::MatrixXcd::Identity(n, n);
     Eigen::MatrixXcd A_s = s_num * I - A_matrix.cast<std::complex<double>>();
@@ -809,6 +810,7 @@ std::vector<std::vector<complex<double>>> MMC::compute_y_parameters(double omega
 	Y(2, 2) = -Y(2, 2); // Correct the sign for the third row, third column
 
     if (controls.count("dc")) {
+		Y(0, 0) = 1.0 / Y(0, 0); // Invert to get admittance from impedance
         Y(0, 0) = 2.0 * (Y(0, 0) - s_num *  C_arm * (6.0/N)); // Correct the sign for the first row, first column
     }
 
