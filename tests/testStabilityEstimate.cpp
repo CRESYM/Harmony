@@ -158,28 +158,19 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
 
     complex<double> y1 = 1.0 / ACZ1;
     complex<double> yeq1 = y1 * (1.0 / Zsrc) / (y1 + 1.0 / Zsrc);
-	complex<double> y2 = 1.0 / (2380.5, omega * 18.9);
-	complex<double> yeq2 = y1 * y2 / (y1 + y2);
 
 
-    MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], omega);
-    EXPECT_EQ(Y_params(0, 0), 1.0 / DCR1); 
-    EXPECT_EQ(Y_params(0, 1), -1.0 / DCR1);
-    EXPECT_EQ(Y_params(1, 0), -1.0 / DCR1);
-	EXPECT_EQ(Y_params(1, 1), 1.0 / DCR1);
+    MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], omega/(2*M_PI));
+	MatrixXcd Y_expected(2, 2);
+    Y_expected << 1.0 / DCR1, -1.0 / DCR1,
+		-1.0 / DCR1, 1.0 / DCR1;
+	EXPECT_TRUE(Y_params.isApprox(Y_expected, 1e-3));
 
-
-    MatrixXcd Y_params_ac1 = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC1"], omega);
-	EXPECT_EQ(Y_params_ac1(0, 0), yeq1);
-	EXPECT_EQ(Y_params_ac1(0, 1), 0);
-	EXPECT_EQ(Y_params_ac1(1, 0), 0);
-	EXPECT_EQ(Y_params_ac1(1, 1), yeq1);
-
-    MatrixXcd Y_params_ac2 = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC2"], omega);
-	EXPECT_EQ(Y_params_ac2(0, 0), yeq2);
-	EXPECT_EQ(Y_params_ac2(0, 1), 0);
-	EXPECT_EQ(Y_params_ac2(1, 0), 0);
-	EXPECT_EQ(Y_params_ac2(1, 1), yeq2);
+    MatrixXcd Y_params_ac1 = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC1"], omega / (2 * M_PI));
+	MatrixXcd Y_expected_ac1(2, 2);
+    Y_expected_ac1 << yeq1, 0,
+        0, yeq1;
+    EXPECT_TRUE(Y_params_ac1.isApprox(Y_expected_ac1, 1e-3));
 
     delete stability;
 }

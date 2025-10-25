@@ -16,7 +16,7 @@ void ProportionalIntegralController::updateParameters(double newKp, double newKi
     std::cout << "Controller parameters updated: \n"
         << "  New Proportional Gain (Kp): " << Kp << "\n"
         << "  New Integral Gain (Ki): " << Ki << "\n"
-        << "  New Damping Ratio (ζ): " << zeta << "\n"
+        << "  New Damping Ratio (zeta): " << zeta << "\n"
         << "  New Bandwidth: " << bandwidth << " Hz\n";
 }
 

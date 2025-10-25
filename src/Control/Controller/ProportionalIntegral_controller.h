@@ -27,7 +27,7 @@ public:
 		std::cout << "  Controller type: PI \n"
 			<< "  Proportional Gain (Kp): " << Kp << "\n"
 			<< "  Integral Gain (Ki): " << Ki << "\n"
-			<< "  Damping Ratio (ζ): " << zeta << "\n"
+			<< "  Damping Ratio (zeta): " << zeta << "\n"
 			<< "  Bandwidth: " << bandwidth << " Hz\n"
 			<< "  Reference Values: ";
 		for (const auto& ref : reference) {

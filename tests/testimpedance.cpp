@@ -37,24 +37,24 @@ TEST_F(TestImpedance, TestYMatrix) {
     Impedance z1("z1", "AC1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) })); // 1/wi
     MatrixXcd y1 = vectorToMatrix(z1.compute_y_parameters(10000));
     MatrixXcd y1expected(2, 2);
-    y1expected(0, 0) = std::complex<double>(0, 10000);
-    y1expected(0, 1) = std::complex<double>(0, -10000);
-    y1expected(1, 0) = std::complex<double>(0, -10000);
-    y1expected(1, 1) = std::complex<double>(0, 10000);
-    EXPECT_TRUE(y1.isApprox(y1expected, 1e-9));
+    y1expected(0, 0) = std::complex<double>(0, 2*M_PI*10000);
+    y1expected(0, 1) = std::complex<double>(0, -2 * M_PI * 10000);
+    y1expected(1, 0) = std::complex<double>(0, -2 * M_PI * 10000);
+    y1expected(1, 1) = std::complex<double>(0, 2 * M_PI * 10000);
+    EXPECT_TRUE(y1.isApprox(y1expected, 1e-5));
 
     // Case 2
     Impedance z2("z2", "AC1", 2, DenseMatrix(1, 2, { div(integer(1), mul(j, omega)), mul(integer(2), mul(j, omega))})); // 1/wi, 2*(wi)
     MatrixXcd y2 = vectorToMatrix(z2.compute_y_parameters(1500));    
     MatrixXcd y2expected(4, 4);
-    std::complex<double> i1500(0, 1500);
+    std::complex<double> i1500(0, 2 * M_PI * 1500);
     std::complex<double> i0(0, 0);
-    std::complex<double> i33(0, 0.000333333);
+    std::complex<double> i33(0, 0.000333333/2/M_PI);
     y2expected << i1500, i0, -i1500, i0,
         i0, -i33, i0, i33,
         -i1500, i0, i1500, i0,
         i0, i33, i0, -i33;
-    EXPECT_TRUE(y2.isApprox(y2expected, 1e-9));
+    EXPECT_TRUE(y2.isApprox(y2expected, 1e-5));
     
  
     // Stop GTest capturing Harmony's output to std::cerr

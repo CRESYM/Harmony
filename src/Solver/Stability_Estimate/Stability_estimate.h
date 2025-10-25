@@ -26,10 +26,6 @@ public:
 	std::unordered_map<std::string, SubNetwork*>& get_dc_grids() { return dc_grids; }
 	std::unordered_map<std::string, Element*>& get_converters() { return converters; }
 
-	// Determine closing impedance of the part of the system
-	void compute_equivalent_impedance(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements);
-	MatrixXcd compute_equivalent_impedance_num(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double frequency);
-
 	// Determine admittance of the part of the system
 	MatrixXcd compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double frequency);
 	// Determine visible impedance from one of outputs of subnetwork when other outputs are closed
@@ -49,8 +45,10 @@ private:
 	std::unordered_map<std::string, SubNetwork*> dc_grids;  // DC grids as subnetworks
 	std::unordered_map<std::string, Element*> converters; // Converter subnetworks
 
-	// Optional: internal mapping of converter interconnections between subnetworks
-	std::unordered_map<std::string, std::pair<SubNetwork*, SubNetwork*>> converter_connections;
+	// Determine closing impedance of the part of the system, private version, not to be used outside
+	void compute_equivalent_impedance(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements);
+	MatrixXcd compute_equivalent_impedance_num(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double frequency);
+
 };
 
 

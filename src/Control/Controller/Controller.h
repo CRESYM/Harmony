@@ -48,8 +48,8 @@ public:
         return controller_symbol; // Get controller symbol
     }
 
-	virtual vector<double> getParameters() const = 0; // Pure virtual function for parameters
-	virtual void setParameters(const vector<double>& params) = 0; // Pure virtual function to set parameters
+    virtual vector<double> getParameters() const { return reference; }; // Pure virtual function for parameters
+    virtual void setParameters(const vector<double>& params) {}; // Pure virtual function to set parameters
 
 	virtual ~Controller() = default; // Virtual destructor for proper cleanup
 
