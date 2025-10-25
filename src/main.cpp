@@ -29,7 +29,7 @@ int main() {
 	// example_OPF_csv_1();
 	// example_DQsym_math_operations();
 	// example_visuals();
-	//example_stability_check();
+	example_stability_check();
 	// example_admittance_parameters();
 
 	return 0;

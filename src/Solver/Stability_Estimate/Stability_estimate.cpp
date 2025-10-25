@@ -722,7 +722,7 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
     // If it is not main converter, then the converter is always considered from DC side.
     // If it is main converter, then if the location is on DC side, then the same applies.
     int converter_number = converters.size();
-    MatrixXcd Z_closing = MatrixXcd::Zero((converter_number - 1) * dc_side_pins, (converter_number - 1) * dc_side_pins);
+    MatrixXcd Y_closing = MatrixXcd::Zero((converter_number - 1) * dc_side_pins, (converter_number - 1) * dc_side_pins);
     unordered_map<string, MatrixXcd> Y_conv_matrices;
     int index = 0;
     for (auto& [name, elem] : converters) {
@@ -760,16 +760,32 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
 
 			cout << "Converter " << name << " admittance matrix from DC side:\n" << Y_conv_matrices[name] << "\n";
 
-            Z_closing.block(index, index, dc_side_pins, dc_side_pins) = Y_conv_matrices[name].inverse();
+            Y_closing.block(index, index, dc_side_pins, dc_side_pins) = Y_conv_matrices[name];
         }
         index++;
     }
 
-	cout << "Closing impedance matrix Z_closing:\n" << Z_closing << "\n";
+	cout << "Closing impedance matrix Z_closing:\n" << Y_closing << "\n";
 
     // CROSS-COUPLING OF THE DC SIDE OF THE CONVERTER
     // with the DC grid admittance
-    MatrixXcd Y_dc = compute_closing_impedance(dc_grids[dc_area], dc_area, Y_dc_matrices[dc_area], Z_closing);
+
+	// Identify converter terminal buses (AC and DC)
+	auto conns = mmc->getConnections();
+    Bus* ac_bus = nullptr;
+    Bus* dc_bus = nullptr;
+    for (const auto& [bus, terminal] : conns) {
+        if (!bus) continue;
+        std::string bname = bus->getBusLocation();
+        std::string bname_lower = bname;
+        std::transform(bname_lower.begin(), bname_lower.end(), bname_lower.begin(), ::tolower);
+        if (bname_lower.rfind("ac", 0) == 0)
+            ac_bus = bus;
+        else if (bname_lower.rfind("dc", 0) == 0)
+            dc_bus = bus;
+    }
+
+    MatrixXcd Y_dc = compute_closing_impedance(dc_grids[dc_area], dc_bus->getBusName(), Y_dc_matrices[dc_area], Y_closing);
 
 	cout << "Equivalent DC admittance looking from converter " << converter_name << ":\n" << Y_dc << "\n";
 
@@ -787,6 +803,8 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         Y_conv_matrices[converter_name] = b * (Y_ac - Ydq).inverse() * a + Ydc;
 		MatrixXcd TF = Y_conv_matrices[converter_name] * Y_dc;
 
+		cout << "Transfer function matrix for converter " << converter_name << " from DC side:\n" << TF << "\n";
+
         return TF;
     }
     else {
@@ -796,11 +814,13 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         // The overall transfer function considering the converter's own admittance and the grid admittances.
         MatrixXcd Ydq(2, 2);
         Ydq = Ymmc.block(1, 1, 2, 2);
-        MatrixXcd b = Ymmc.block(1, 0, 2, 0);
-        MatrixXcd a = Ymmc.block(0, 1, 0, 2);
+        MatrixXcd b = Ymmc.block(1, 0, 2, 1);
+        MatrixXcd a = Ymmc.block(0, 1, 1, 2);
         MatrixXcd Ydc = Ymmc.block(0, 0, 1, 1);
         Y_conv_matrices[converter_name] = (Y_dc - Ydc).inverse() * a * b + Ydq;
 		MatrixXcd TF = Y_conv_matrices[converter_name] * Y_ac_matrices[ac_area];
+
+		cout << "Transfer function matrix for converter " << converter_name << " from AC side:\n" << TF << "\n";
 
 		return TF;
     }
@@ -820,7 +840,7 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
  * @return An Eigen::MatrixXcd representing the equivalent closing impedance.
  * @throws std::runtime_error if the connection_name is not found in the subnetwork's outputs.
  */
-MatrixXcd StabilityEstimate::compute_closing_impedance(SubNetwork* sub, string& connection_name, MatrixXcd& Y_parameters, MatrixXcd& Z_closing) {
+MatrixXcd StabilityEstimate::compute_closing_impedance(SubNetwork* sub, string& bus_name, MatrixXcd& Y_parameters, MatrixXcd& Y_closing) {
 	// Get the list of output ports from the subnetwork
     auto outputs = sub->getOutputs();
     int total_ports = outputs.size();
@@ -832,7 +852,7 @@ MatrixXcd StabilityEstimate::compute_closing_impedance(SubNetwork* sub, string& 
     int i = 0;
     for (const auto& [name, bus] : outputs) {
         output_names.push_back(name);
-        if (name == connection_name) {
+        if (name == bus_name) {
             input_idx = i;
         }
         i++;
@@ -846,7 +866,7 @@ MatrixXcd StabilityEstimate::compute_closing_impedance(SubNetwork* sub, string& 
     int N = total_ports - 1;
     if (N == 0) {
         // If there are no other outputs, the closing impedance is simply Z_closing
-        return Z_closing;
+        return Y_closing;
     }
 
     // Partition the Y_parameters matrix
@@ -882,9 +902,7 @@ MatrixXcd StabilityEstimate::compute_closing_impedance(SubNetwork* sub, string& 
     // Compute the closing impedance using the partitioned matrices
     // Z_eq = (Y11 - Y12 * (Y22 + Y_load)^-1 * Y21)^-1
     // Assuming Y_load is represented by Z_closing.inverse()
-    // MatrixXcd Y_load = Z_closing.inverse();
-	MatrixXcd I = MatrixXcd::Identity(Y22.rows(), Y22.cols());
-    MatrixXcd Z_eq = (Y11 - Y12 * (I + Y22 * Z_closing).inverse() * Y21).inverse();
+    MatrixXcd Z_eq = (Y11 - Y12 * (Y_closing + Y22).inverse() * Y21).inverse();
 
     return Z_eq;
 }
