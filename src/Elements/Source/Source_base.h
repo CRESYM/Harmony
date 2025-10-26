@@ -5,16 +5,19 @@
 
 class Source_base : public Element {
 public:
-	Source_base(const std::string& symbol, const std::string& location, int pins) : Element(symbol, location, pins, pins) {}
+	Source_base(const std::string& symbol, const std::string& location, int pins, double V) : Element(symbol, location, pins, pins), Vg(V) {}
 	~Source_base() {}
 
     // Power flow computations for AC and DC networks
     void computePowerFlow(std::map<std::string, double>& branchData,
         std::map<std::string, double>& globalParams) const override;
+
+	double getZsrc() const { return Zsrc; }
+	double getVg() const { return Vg; }
 protected:
-    DenseMatrix Z; // Source series impedance [Omega]
-    double V;      // Voltage amplitude [kV]
-    double theta;  // Phase shift [radians]
+	double Zsrc = 0;    // Internal source impedance [Ohms]
+    double Vg;          // Voltage amplitude [kV]
+    double theta;       // Phase shift [radians]
 
     // Properties used for power flow
     double P;      // Active power output [MW]

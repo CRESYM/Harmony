@@ -26,7 +26,7 @@ void example_stability_check() {
 
     /// Generator 1
     double Zsrc = 0.1;
-    AC_source* src1 = new AC_source("SRC01", "AC1", 3, Zsrc);
+    AC_source* src1 = new AC_source("SRC01", "AC1", 3, 345e3, Zsrc);
     net.connectElementToBus(src1, 1, bus1_ac);
     map<string, double> src_info1 = {
         {"Pmax", 250.0},   // Maximum active power output (MW)
@@ -39,8 +39,8 @@ void example_stability_check() {
         {"c1", 5.0},       // Linear coefficient of the generation cost function
         {"c0", 150},       // Constant term of the generation cost function (fixed operation cost)
 
-        {"Vg", 345},       // Voltage magnitude setpoint of the source (kV)
-        {"Zsrc", Zsrc},    // Internal source impedance (Ω), used in power flow and short-circuit analysis
+        {"Vmax", 1.0},    // Maximum voltage limit (p.u.)
+        {"Vmin", 1.0},    // Minimum voltage limit (p.u.)
         {"Ref", 1}         // Reference bus flag (1 = set as slack/reference bus)
     };
     src1->setOPFInfo(src_info1);

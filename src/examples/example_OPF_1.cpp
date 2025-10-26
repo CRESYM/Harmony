@@ -28,10 +28,6 @@ void example_OPF_1() {
     LoadPQ* load1 = new LoadPQ("LOAD01", "AC1", 3, { 0.0, 0.0 });
     net9bus.connectElementToBus(load1, 1, bus1_ac);
 
-    //std::vector<double> load_params1 = { 0, 0 };
-    //LoadPQ* load1 = new LoadPQ("LOAD01", "AC1", 3, load_params1);
-    //net.connectElementToBus(load1, 1, bus1_ac);
-
     LoadPQ* load2 = new LoadPQ("LOAD02", "AC1", 3, { 0.0, 0.0 });
     net9bus.connectElementToBus(load2, 1, bus2_ac);
 
@@ -40,10 +36,6 @@ void example_OPF_1() {
 
     LoadPQ* load4 = new LoadPQ("LOAD04", "AC1", 3, { 0.0, 0.0 });
     net9bus.connectElementToBus(load4, 1, bus4_ac);
-
-    // std::vector<double> load_params5 = {1322.7, 12.6, 0 };
-    // Load* load5 = new Load("LOAD05", "AC1", 3, load_params5);
-    // net.connectElementToBus(load5, 1, bus5_ac);
 
     LoadPQ* load5 = new LoadPQ("LOAD05", "AC1", 3, { 90.0, 30.0 });
     net9bus.connectElementToBus(load5, 1, bus5_ac);
@@ -63,31 +55,31 @@ void example_OPF_1() {
     ///*  ---------- 1.3 Add AC Generators  ---------- */
     // Generator 1
     std::vector<double> gen1_params = { 0.02, 0.3, 0.05};
-    Generator* gen1 = new Generator("GEN01", "AC1", 3, gen1_params);
+    Generator* gen1 = new Generator("GEN01", "AC1", 3, 345.0e3 * 1.02, gen1_params);
     net9bus.connectElementToBus(gen1, 1, bus1_ac);
     map<string, double> gen_info1 = {
         {"Pmax", 250.0}, {"Pmin", 10.0},
         {"Qmax", 300.0}, {"Qmin", -300.0},
         {"c2", 0.11}, {"c1", 5.0},
-        {"c0", 150}, {"Vg", 345.0 * 1.02}
+		{"c0", 150}, {"Vmax", 1.02}, {"Vmin", 1.02}
     };
     gen1->setOPFInfo(gen_info1);
 
     // Generator 2
     std::vector<double> gen2_params = { 0.02, 0.3, 0.05};
-    Generator* gen2 = new Generator("GEN02", "AC1", 3, gen2_params);
+    Generator* gen2 = new Generator("GEN02", "AC1", 3, 345.0e3 * 1.04, gen2_params);
     net9bus.connectElementToBus(gen2, 1, bus2_ac);
     map<string, double> gen_info2 = {
         {"Pmax", 300.0}, {"Pmin", 10.0},
         {"Qmax", 300.0}, {"Qmin", -300.0},
         {"c2", 0.085}, {"c1", 1.2},
-        {"c0", 600}, {"Vg", 345.0 * 1.04}
+        {"c0", 600}, {"Vmax", 1.04}, {"Vmin", 1.04}
     };
     gen2->setOPFInfo(gen_info2);
 
     // Generator 3
     std::vector<double> gen3_params = { 0.02, 0.3, 0.05};
-    Generator* gen3 = new Generator("GEN03", "AC1", 3, gen3_params);
+    Generator* gen3 = new Generator("GEN03", "AC1", 3, 345e3, gen3_params);
     net9bus.connectElementToBus(gen3, 1, bus3_ac);
     map<string, double> gen_info3 = {
         {"Pmax", 270.0}, {"Pmin", 10.0},

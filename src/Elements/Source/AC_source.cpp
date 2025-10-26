@@ -1,7 +1,7 @@
 #include "AC_source.h"
 
-AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, DenseMatrix Z)
-	: Source_base(symbol, location, pins)
+AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, double V, DenseMatrix Z)
+	: Source_base(symbol, location, pins, V)
 {
     if (Z.ncols() != 0)  // if there are entries
     {
@@ -28,10 +28,12 @@ AC_source::AC_source(const std::string& symbol, const std::string& location, int
             Y_matrix.set(pins + i, pins + j, Y_matrix.get(i, j));
             Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
         }
+
+	Zsrc = substitute_symbol(Z.get(0, 0), omega, 2 * M_PI * 50.0).real(); // Assuming 50 Hz for AC source
 }
 
-AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& Z)
-    : Source_base(symbol, location, pins)
+AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, double V, const std::vector<double>& Z)
+    : Source_base(symbol, location, pins, V)
 {
     if (Z.size() != 0)  // if there are entries
     {
@@ -58,10 +60,11 @@ AC_source::AC_source(const std::string& symbol, const std::string& location, int
             Y_matrix.set(pins + i, pins + j, Y_matrix.get(i, j));
             Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
         }
+	Zsrc = Z[0];
 }
 
-AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, const double Z)
-    : Source_base(symbol, location, pins)
+AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, double V, const double Z)
+    : Source_base(symbol, location, pins, V)
 {
     if (pins > 0) { // Check for valid number of pins
         for (int i = 0; i < pins; i++)
@@ -77,6 +80,7 @@ AC_source::AC_source(const std::string& symbol, const std::string& location, int
             Y_matrix.set(pins + i, pins + j, Y_matrix.get(i, j));
             Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
         }
+	Zsrc = Z;
 }
 
 // Destructor

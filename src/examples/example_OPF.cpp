@@ -45,18 +45,18 @@ void example_OPF() {
 	///*  ---------- 1.3 Add AC Generators  ---------- */
     // Generator 1
     std::vector<double> gen1_params = { 0.02, 0.3, 0.05};
-    Generator* gen1 = new Generator("GEN01", "AC1", 3, gen1_params);
+    Generator* gen1 = new Generator("GEN01", "AC1", 3, 345e3 * 1.06, gen1_params);
     net.connectElementToBus(gen1, 1, bus1_ac);
     map<string, double> gen_info1 = {
         {"Pmax", 300}, {"Pmin", 100},
         {"Qmax", 500.0}, {"Qmin", -500.0},
         {"c2", 0.11}, {"c1", 50.0},
-        {"c0", 150}, {"Ref", 1}, {"Vg", 345 * 1.06}
+        {"c0", 150}, {"Ref", 1}
     };
 	gen1->setOPFInfo(gen_info1);
 
     std::vector<double> gen2_params = { 0.02, 0.3, 0.05};
-    Generator* gen2 = new Generator("GEN02", "AC1", 3, gen2_params);
+    Generator* gen2 = new Generator("GEN02", "AC1", 3, 345e3, gen2_params);
     net.connectElementToBus(gen2, 1, bus2_ac);
     map<string, double> gen_info2 = {
         {"Pmax", 40.0}, {"Pmin", 40.0},

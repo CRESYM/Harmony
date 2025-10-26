@@ -481,13 +481,12 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
         cRow[key] = 0; // Empty structure for each
     }
 
-	element->computePowerFlow(gRow, global_params); // Sets grid and area
-
     gRow["bus"] = bus_id;
     gRow["Vg"] = 1.0;
     gRow["mBase"] = 100.0;
     gRow["status"] = 1.0;
-    // gRow["grid"] = 1; // Default area ID, can be changed based on your logic
+
+	element->computePowerFlow(gRow, global_params); // Sets grid, area, Vg and Zsrc
 
     cRow["model"] = 2.0;
     cRow["startup"] = 1500.0;
@@ -505,24 +504,6 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
         }
         else {
             gRow[key] = value;   
-        }
-    }
-
-    // If gen_info contains "Vg", update corresponding bus Vmax/Vmin and fixed it to Vg
-    auto it_vg = gen_info.find("Vg");
-    if (it_vg != gen_info.end()) {
-        double Vg_value = it_vg->second;  // e.g., 345 (in kV)
-        double base_kv = global_params["ACbaseKV"];
-        double Vg_pu = Vg_value / base_kv;
-
-        std::string bus_row_key = std::to_string(bus_id - 1);
-        if (data["busAC"].count(bus_row_key)) {
-            auto& busRow = data["busAC"][bus_row_key];
-            busRow["Vmax"] = Vg_pu;
-            busRow["Vmin"] = Vg_pu;
-            std::cout << "[make_Generator] Bus " << bus_name
-                << " voltage limits updated by gen '" << element->getElementSymbol()
-                << "': Vmax = Vmin = " << Vg_pu << " pu" << std::endl;
         }
     }
 
@@ -969,9 +950,7 @@ static void extendBusAC(
         newRow["Vmin"] = 0.9;
         newRow["grid"] = grid;
 
-        double zsrc = 0.0;
-        auto info = src->getOPFInfo();
-        if (info.count("Zsrc")) zsrc = info["Zsrc"];
+        double zsrc = src->getZsrc();
 
         std::string metaKey = std::to_string(static_cast<int>(data["acsrcMeta"].size()));
         auto& meta = data["acsrcMeta"][metaKey];

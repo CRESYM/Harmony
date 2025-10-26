@@ -6,7 +6,7 @@
 class Generator : public Source_base {
 public:
     // Constructor
-    Generator(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values);
+    Generator(const std::string& symbol, const std::string& location, int pins, double V, const std::vector<double>& values);
  
     // Destructor
     ~Generator() {}

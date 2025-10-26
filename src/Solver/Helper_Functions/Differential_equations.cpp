@@ -28,8 +28,8 @@ Eigen::VectorXd findEquilibrium(const Eigen::VectorXd& x0, const Eigen::VectorXd
         throw std::invalid_argument("Initial state and input vectors must be non-empty.");
     }
 
-    const double eps = 1e-6;
-    double lambda = 1e-3;
+    const double eps = 1e-8;
+    double lambda = 1e-4;
 
     for (int iter = 0; iter < max_iter; ++iter) {
         VectorXd fx = f(x, u);
