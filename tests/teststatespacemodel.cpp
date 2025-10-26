@@ -13,7 +13,7 @@ TEST_F(TestStateSpaceModel, TestCutsets) {
 
 	std::vector<Bus*> buses = { bus0, bus1, bus2 };
 	// Create Elements (assumes ACSource and Resistor constructors take two buses and a value)
-	AC_source* ac = new AC_source("ac", "AC1", 1, DenseMatrix(1, 1, { integer(10) }));
+	AC_source* ac = new AC_source("ac", "AC1", 1, 345e3, DenseMatrix(1, 1, { integer(10) }));
 	Resistor* r1 = new Resistor("R1", "AC1", 1, { 2.0 });
 	Resistor* r2 = new Resistor("R2", "AC1", 1, { 2.0 });
 	Resistor* r3 = new Resistor("R3", "AC1", 1, { 2.0 });
@@ -84,7 +84,7 @@ TEST_F(TestStateSpaceModel, TestLoops) {
 
 	std::vector<Bus*> buses = { bus0, bus1, bus2 };
 	// Create Elements (assumes ACSource and Resistor constructors take two buses and a value)
-	AC_source* ac = new AC_source("ac", "AC1", 1, DenseMatrix(1, 1, { integer(10) }));
+	AC_source* ac = new AC_source("ac", "AC1", 1, 345e3, DenseMatrix(1, 1, { integer(10) }));
 	Resistor* r1 = new Resistor("R1", "AC1", 1, { 2.0 });
 	Resistor* r2 = new Resistor("R2", "AC1", 1, { 2.0 });
 	Resistor* r3 = new Resistor("R3", "AC1", 1, { 2.0 });

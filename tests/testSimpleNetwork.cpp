@@ -8,7 +8,7 @@ class TestNetwork : public testing::Test {};
 TEST_F(TestNetwork, TestSimpleNetwork) {
 	// Create a simple network with one bus and one component
 	Impedance* z = new Impedance("z1", "AC1", 1, DenseMatrix(1, 1, { div(integer(1), mul(j, omega)) }));
-	AC_source* ac = new AC_source("ac", "AC1", 1, DenseMatrix(1, 1, { integer(10) }));
+	AC_source* ac = new AC_source("ac", "AC1", 1, 345e3, DenseMatrix(1, 1, { integer(10) }));
 
 	Network* myNetwork = new Network();
 

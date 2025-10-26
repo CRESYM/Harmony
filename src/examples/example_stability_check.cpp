@@ -145,13 +145,20 @@ void example_stability_check() {
     global_params["DCbaseKV"] = 400.0; // Base voltage for DC, can be adjusted as needed
     global_params["Z_base"] = global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"]; // Base impedance, can be adjusted as needed
 
-    pf.make_OPF(&net, global_params, false, false, false, false);
+    pf.make_OPF(&net, global_params, false, false, false, true);
 
     // Making Stability Estimate Object
     StabilityEstimate* stability = new StabilityEstimate();
     stability->add_areas(&net);
 
+    auto& ac_grids = stability->get_ac_grids();
+    MatrixXcd Y_params_ac2 = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC2"], 1000);
+
+	/*std::cout << "Equivalent Admittance Parameters of AC2 at 1000 Hz:\n";
     std::cout << std::setprecision(10);
+	std::cout << Y_params_ac2 << std::endl;*/
+
+    
 
     // TO TEST TRANSFER FUNCTION COMPUTATION
     stability->compute_transfer_function("MMC2", "AC", 1000);

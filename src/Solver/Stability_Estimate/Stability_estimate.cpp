@@ -538,6 +538,8 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
             // Compute numerical Y-parameters
             std::vector<std::vector<complex<double>>> Ye = element->compute_y_parameters(frequency);
 
+			//cout << "Element " << element->getElementSymbol() << " Y-parameters " << setprecision(10) << vectorToMatrix(Ye) << endl;
+
             int bus_pos = bus_positions[bus];
             int terminal = elem_conns.at(bus) - 1;
 			int terminal_other = 1 - terminal;
@@ -577,7 +579,7 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
         }
     }
 
-    // cout << Y << endl;
+    //cout << Y << endl;
 
     MatrixXcd Y_params = MatrixXcd::Zero(num_start_buses*pins, num_start_buses*pins);
 
@@ -590,23 +592,25 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
         // Set voltage source for this bus
         for (int i = 0; i < pins; ++i) {
             z(bus_current_positions[bus] + i, 0) = std::complex<double>(1, 0); // 1V source
-        }
-        // Solve Y * x = z
-        Eigen::VectorXcd solution = Y.partialPivLu().solve(z);
-		// cout << "Solution for bus " << name_bus << ":\n" << solution << "\n";
-
-		// Store results in Y_params
-        int idx = 0;
-        for (auto& [name_bus_inner, bus_inner] : start_buses) {
-			int bus_pos_inner = bus_positions[bus_inner];
-            for (int j = 0; j < pins; j++) {
-				Y_params(idx + j, bus_pos + j) = solution(bus_current_positions[bus_inner] + j, 0);
-			}	
-            idx++;
-        }
         
-        // Reset voltage source for this bus to 0V for next iteration
-        z.setZero();
+            // Solve Y * x = z
+            Eigen::VectorXcd solution = Y.partialPivLu().solve(z);
+		    //cout << "Solution for bus " << name_bus << ":\n" << solution << "\n";
+
+		    // Store results in Y_params
+            int idx = 0;
+            for (auto& [name_bus_inner, bus_inner] : start_buses) {
+			    int bus_pos_inner = bus_positions[bus_inner];
+                for (int j = 0; j < pins; j++) {
+                    //cout << bus_current_positions[bus_inner] << endl;
+				    Y_params(idx + j, bus_pos + i) = solution(bus_current_positions[bus_inner] + j, 0);
+			    }	
+                idx++;
+            }
+        
+            // Reset voltage source for this bus to 0V for next iteration
+            z.setZero();
+        }
 		bus_pos++;
 	}
  
@@ -703,18 +707,16 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
     int dc_side_pins = 1;
     unordered_map<string, MatrixXcd> Y_dc_matrices;
     for (auto& [name, sub] : dc_grids) {
-        //std::cout << "Computing equivalent admittance for DC grid: " << name << "\n";
         MatrixXcd Y_dc = compute_equivalent_admittance_parameters_num(sub, frequency);
         Y_dc_matrices[name] = Y_dc;
-        //std::cout << "Equivalent admittance matrix for DC grid " << name << ":\n" << Y_dc << "\n";
+        std::cout << "Equivalent admittance matrix for DC grid " << name << ":\n" << setprecision(10) << Y_dc << "\n";
     }
     // AC grids
     unordered_map<string, MatrixXcd> Y_ac_matrices;
     for (auto& [name, sub] : ac_grids) {
-        //std::cout << "Computing equivalent admittance for AC grid: " << name << "\n";
         MatrixXcd Y_ac = compute_equivalent_admittance_parameters_num(sub, frequency);
         Y_ac_matrices[name] = Y_ac;
-        //std::cout << "Equivalent admittance matrix for AC grid " << name << ":\n" << Y_ac << "\n";
+        std::cout << "Equivalent admittance matrix for AC grid " << name << ":\n" << setprecision(10) << Y_ac << "\n";
     }
 
     // Cross coupling for the admittance of each converter
