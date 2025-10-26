@@ -46,13 +46,13 @@ void example_stability_check() {
     src1->setOPFInfo(src_info1);
 
     ///*  ---------- 1.4 Add Branches  ---------- */
-    double ACR1 = 1e-1; double ACX1 = 1;
+    double ACR1 = 1e-1; double ACX1 = 10;
     std::complex<double> ACZ1(ACR1, ACX1);
     Impedance* br1_ac = new Impedance("br1_ac", "AC1", 3, ACZ1);
     net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
 
-    double ACR2 = 1e-1; double ACX2 = 1;
+    double ACR2 = 1e-1; double ACX2 = 10;
     std::complex<double> ACZ2(ACR2, ACX2);
     Impedance* br2_ac = new Impedance("br2_ac", "AC2", 3, ACZ2);
     net.connectElementToBus(br2_ac, /*terminal=*/1, bus3_ac);
@@ -76,7 +76,7 @@ void example_stability_check() {
         0.0,            // Theta (Voltage Angle in rad)
         345.0 * 1e3,    // AC Voltage (V_m) in V
         50 * 1e6,       // DC power (P_dc) in W
-        400.0 * 1e3,    // DC Voltage (V_dc) in kV
+        440.0 * 1e3,    // DC Voltage (V_dc) in kV
         0.05,           // Arm Inductance (L_arm) in H
         1.07,           // Arm Resistance (R_arm) in Ω
         0.01,           // Capacitance per Submodule (C_arm) in F
@@ -108,7 +108,7 @@ void example_stability_check() {
         0.0,            // Theta (Voltage Angle in rad)
         345.0 * 1e3,    // AC Voltage (V_m) in V
         -50 * 1e6,       // DC power (P_dc) in W
-        400.0 * 1e3,    // DC Voltage (V_dc) in kV
+        440.0 * 1e3,    // DC Voltage (V_dc) in kV
         0.05,           // Arm Inductance (L_arm) in H
         1.07,           // Arm Resistance (R_arm) in Ω
         0.01,           // Capacitance per Submodule (C_arm) in F
@@ -119,7 +119,7 @@ void example_stability_check() {
     };
     std::vector<double> controller_params2 = {
         1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
-        1, 0, 2, 42, 2, 0, 400e3, // DC voltage controller parameters
+        1, 0, 2, 82, 2, 0, 440e3, // DC voltage controller parameters
         0, // active power
         0, // AC voltage
         1, 0, 6.6667e-07, 3.3333e-04, 1, -20e6, // reactive power
