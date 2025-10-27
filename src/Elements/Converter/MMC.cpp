@@ -513,7 +513,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         i += 1;
         if (has_occ) controls["occ"]->setReference(iDelta_d_ref, 0);
     } else if (has_dc_voltage_ctrl) {
-        double Idc = P_dc / Vdc; // u(0);
+        double Idc = u(0);
 		x1 << 0, x(i+1);
         u1 << (-Idc + 3.0 * iSigma_z) / (1.0 * Ce), x(i);
 		c1 << 0, 0; // No additional control inputs for dc_voltage
@@ -728,7 +728,7 @@ void MMC::computeABCD() {
 	C_matrix(1, n - 12) = 1; // location of iDelta_d
 	C_matrix(2, n - 11) = 1; // location of iDelta_q
 
-    if (!controls.count("dc")) {
+    if (!controls.count("dc_voltage")) {
 		C_matrix(0, n - 10) = 3; // location of iSigma_z
     }
 	else { // to repair the C matrix
@@ -769,6 +769,7 @@ void MMC::solveEquilibrium() {
     Eigen::VectorXd u(3);
     if (controls.count("dc_voltage")) {
         u << P_dc/V_dc, V_m* cos(omega_0), V_m* sin(omega_0);
+		x0(vdc_index) = V_dc;
     } 
     else {
         u << V_dc, V_m * cos(omega_0), V_m * sin(omega_0); 

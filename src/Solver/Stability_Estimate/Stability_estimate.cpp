@@ -709,14 +709,14 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
     for (auto& [name, sub] : dc_grids) {
         MatrixXcd Y_dc = compute_equivalent_admittance_parameters_num(sub, frequency);
         Y_dc_matrices[name] = Y_dc;
-        std::cout << "Equivalent admittance matrix for DC grid " << name << ":\n" << setprecision(10) << Y_dc << "\n";
+        //std::cout << "Equivalent admittance matrix for DC grid " << name << ":\n" << setprecision(10) << Y_dc << "\n";
     }
     // AC grids
     unordered_map<string, MatrixXcd> Y_ac_matrices;
     for (auto& [name, sub] : ac_grids) {
         MatrixXcd Y_ac = compute_equivalent_admittance_parameters_num(sub, frequency);
         Y_ac_matrices[name] = Y_ac;
-        std::cout << "Equivalent admittance matrix for AC grid " << name << ":\n" << setprecision(10) << Y_ac << "\n";
+        //std::cout << "Equivalent admittance matrix for AC grid " << name << ":\n" << setprecision(10) << Y_ac << "\n";
     }
 
     // Cross coupling for the admittance of each converter
@@ -745,13 +745,21 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
                 dc_bus = bus;
         }
         if (!ac_bus || !dc_bus) continue;
+
+		// Get AC and DC areas
+		std::string ac_area1 = mmc_elem->getACarea();
+		std::string dc_area1 = mmc_elem->getDCarea();
         
         // Get admittance matrices for the grids
         // Depending on the side of the converter, the admittance matrix looking inside converter will be different
         if ((converter_name != name) || (location == dc_area)) {
-            MatrixXcd Y_ac = Y_ac_matrices[ac_area];
+            MatrixXcd Y_ac = Y_ac_matrices[ac_area1];
+			//cout << "AC grid admittance matrix connected to converter " << name << "AC grid " << ac_area << ":\n" << setprecision(10) << Y_ac << "\n";
 			vector<vector<complex<double>>> mmc_y_params = mmc_elem->compute_y_parameters(frequency);
             MatrixXcd Ymmc = vectorToMatrix(mmc_elem->compute_y_parameters(frequency));
+
+			//cout << "Converter " << name << " Y-parameters:\n" << Ymmc << "\n";
+
             // The overall transfer function considering the converter's own admittance and the grid admittances.
             MatrixXcd Ydc(1, 1);
             Ydc(0, 0) = Ymmc(0, 0);
@@ -760,14 +768,14 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
             MatrixXcd Ydq = Ymmc.block(1, 1, 2, 2);
             Y_conv_matrices[name] = b * (Y_ac - Ydq).inverse() * a + Ydc;
 
-			cout << "Converter " << name << " admittance matrix from DC side:\n" << Y_conv_matrices[name] << "\n";
+			//cout << "Converter " << name << " admittance matrix from DC side:\n" << Y_conv_matrices[name] << "\n";
 
             Y_closing.block(index, index, dc_side_pins, dc_side_pins) = Y_conv_matrices[name];
         }
         index++;
     }
 
-	cout << "Closing impedance matrix Z_closing:\n" << Y_closing << "\n";
+	//cout << "Closing impedance matrix Z_closing:\n" << Y_closing << "\n";
 
     // CROSS-COUPLING OF THE DC SIDE OF THE CONVERTER
     // with the DC grid admittance
@@ -787,13 +795,13 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
             dc_bus = bus;
     }
 
-    MatrixXcd Y_dc = compute_closing_impedance(dc_grids[dc_area], dc_bus->getBusName(), Y_dc_matrices[dc_area], Y_closing);
+    MatrixXcd Z_dc = compute_closing_impedance(dc_grids[dc_area], dc_bus->getBusName(), Y_dc_matrices[dc_area], Y_closing);
 
-	cout << "Equivalent DC admittance looking from converter " << converter_name << ":\n" << Y_dc << "\n";
+	//cout << "Equivalent DC admittance looking from converter " << converter_name << ":\n" << Y_dc << "\n";
 
     // Final transfer function computation
     // For DC cut 
-    if (location == dc_area) {
+    if (location.rfind("DC", 0) == 0 || location.rfind("dc", 0) == 0) {
         MatrixXcd Y_ac = Y_ac_matrices[ac_area];
         MatrixXcd Ymmc = vectorToMatrix(mmc->compute_y_parameters(frequency));
         // The overall transfer function considering the converter's own admittance and the grid admittances.
@@ -803,9 +811,9 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         MatrixXcd a = Ymmc.block(1, 0, 2, 1);
         MatrixXcd Ydq = Ymmc.block(1, 1, 2, 2);
         Y_conv_matrices[converter_name] = b * (Y_ac - Ydq).inverse() * a + Ydc;
-		MatrixXcd TF = Y_conv_matrices[converter_name] * Y_dc;
+		MatrixXcd TF = Y_conv_matrices[converter_name] * Z_dc;
 
-		cout << "Transfer function matrix for converter " << converter_name << " from DC side:\n" << TF << "\n";
+		//cout << "Transfer function matrix for converter " << converter_name << " from DC side:\n" << TF << "\n";
 
         return TF;
     }
@@ -813,6 +821,9 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         // For AC cut - compute the overall admittance looking into the converter from AC side
         // i.e. repeat the same procedure as above but now from AC side
         MatrixXcd Ymmc = vectorToMatrix(mmc->compute_y_parameters(frequency));
+        MatrixXcd Y_dc = Z_dc.inverse();
+		//cout << "Converter " << converter_name << " Y-parameters:\n" << setprecision(10) << Ymmc << "\n";
+
         // The overall transfer function considering the converter's own admittance and the grid admittances.
         MatrixXcd Ydq(2, 2);
         Ydq = Ymmc.block(1, 1, 2, 2);
@@ -820,9 +831,12 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         MatrixXcd a = Ymmc.block(0, 1, 1, 2);
         MatrixXcd Ydc = Ymmc.block(0, 0, 1, 1);
         Y_conv_matrices[converter_name] = (Y_dc - Ydc).inverse() * a * b + Ydq;
-		MatrixXcd TF = Y_conv_matrices[converter_name] * Y_ac_matrices[ac_area];
 
-		cout << "Transfer function matrix for converter " << converter_name << " from AC side:\n" << TF << "\n";
+		//cout << "Converter " << converter_name << " admittance matrix from AC side:\n" << Y_conv_matrices[converter_name] << "\n";
+
+		MatrixXcd TF = Y_conv_matrices[converter_name] * Y_ac_matrices[ac_area].inverse();
+
+		//cout << "Transfer function matrix for converter " << converter_name << " from AC side:\n" << TF << "\n";
 
 		return TF;
     }
@@ -907,4 +921,97 @@ MatrixXcd StabilityEstimate::compute_closing_impedance(SubNetwork* sub, string& 
     MatrixXcd Z_eq = (Y11 - Y12 * (Y_closing + Y22).inverse() * Y21).inverse();
 
     return Z_eq;
+}
+
+
+/**
+ * @brief Writes the Y-parameter matrix to a CSV file over a specified frequency range.
+ * @param start_frequency The starting frequency for the sweep.
+ * @param end_frequency The ending frequency for the sweep.
+ * @param number_of_points The number of frequency points to compute and write.
+ */
+void StabilityEstimate::writeFileTF(string converter_name, string location, double start_frequency, double end_frequency, int number_of_points) {
+    std::ofstream myfile;
+    myfile.open("./files/" + converter_name + "_" + location + ".csv");
+
+    // Print the Y-parameters in file
+    double gap = (end_frequency - start_frequency) * 1.0 / (number_of_points - 1);
+    double frequency = start_frequency;
+    for (int p = 0; p < number_of_points; p++) {
+		MatrixXcd TF = compute_transfer_function(converter_name, location, frequency);
+
+        // write in file
+        myfile << frequency << ",";
+        
+        for (int i = 0; i < TF.rows(); i++) {
+            for (int j = 0; j < TF.cols(); ++j) {
+                myfile << TF(i, j).real() << "+1i*(" << TF(i, j).imag() << "),";
+			}
+        }
+
+        myfile << "\n";
+
+        frequency = frequency + gap; // increase frequency
+    }
+
+    myfile.close();
+}
+
+/**
+ * @brief Generates data and triggers a Bode plot for the Y-parameter matrix.
+ * @param start_frequency The starting frequency for the plot.
+ * @param end_frequency The ending frequency for the plot.
+ * @param number_of_points The number of points to plot across the frequency range.
+ */
+void StabilityEstimate::plotTF(string converter_name, string location, double start_frequency, double end_frequency, int number_of_points) {
+    std::vector<double> frequencies;
+
+	// Check if location is on AC or DC side
+	bool is_ac = false;
+	bool is_dc = false;
+	int num_values = 0;
+    std::vector<std::string> labels;
+	if (location.rfind("AC", 0) == 0 || location.rfind("ac", 0) == 0) {
+		is_ac = true;
+		num_values = 4; // dq frame
+        labels.push_back("TF_{dd}");
+		labels.push_back("TF_{dq}");
+		labels.push_back("TF_{qd}");
+		labels.push_back("TF_{qq}");
+	}
+	else if (location.rfind("DC", 0) == 0 || location.rfind("dc", 0) == 0) {
+		is_dc = true;
+		num_values = 1; // DC side
+        labels.push_back("TF");
+	}
+    else {
+        std::cerr << "Error: Location " << location << " is neither AC nor DC side.\n";
+        return;
+	}
+
+    std::vector<std::vector<double>> magnitudes(number_of_points, std::vector<double>(num_values, 0.0));
+    std::vector<std::vector<double>> phases(number_of_points, std::vector<double>(num_values, 0.0));
+    
+    double gap = (end_frequency - start_frequency) * 1.0 / (number_of_points - 1);
+    cout << gap << endl;
+    double frequency = start_frequency;
+    for (int p = 0; p < number_of_points; p++) {
+        frequencies.push_back(frequency);
+		MatrixXcd TF = compute_transfer_function(converter_name, location, frequency);
+
+		// Extract magnitude and phase for each element in TF
+        for (int i = 0; i < TF.rows(); ++i) {
+            for (int j = 0; j < TF.cols(); ++j) {
+                double magnitude = 20 * log10(std::abs(TF(i,j)));
+                double phase = std::arg(TF(i,j)) * 180.0 / M_PI; // Convert to degrees
+                magnitudes[p][TF.cols() * i + j] = magnitude;
+                phases[p][TF.cols() * i + j] = phase;
+            }
+		}
+
+        //cout << "Frequency: " << frequency << " Hz" << endl;
+        frequency += gap; // increase frequency
+    }
+
+    bode_plot(frequencies, magnitudes, phases, labels, "TF of power system cut on " + location + " side of " + converter_name);
 }
