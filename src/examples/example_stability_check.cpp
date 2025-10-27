@@ -154,8 +154,8 @@ void example_stability_check() {
     // TO TEST TRANSFER FUNCTION COMPUTATION
     stability->compute_transfer_function("MMC2", "AC", 1000);
 
-	stability->writeFileTF("MMC2", "AC", 10, 2000, 500);
-	stability->plotTF("MMC2", "AC", 10, 2000, 500);
+	stability->writeFileTF("MMC2", "DC", 10, 2000, 500);
+	stability->plotTF("MMC2", "DC", 10, 2000, 500);
 
     delete stability;
 }

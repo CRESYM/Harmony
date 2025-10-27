@@ -801,7 +801,7 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
 
     // Final transfer function computation
     // For DC cut 
-    if (location == dc_area) {
+    if (location.rfind("DC", 0) == 0 || location.rfind("dc", 0) == 0) {
         MatrixXcd Y_ac = Y_ac_matrices[ac_area];
         MatrixXcd Ymmc = vectorToMatrix(mmc->compute_y_parameters(frequency));
         // The overall transfer function considering the converter's own admittance and the grid admittances.
@@ -813,7 +813,7 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         Y_conv_matrices[converter_name] = b * (Y_ac - Ydq).inverse() * a + Ydc;
 		MatrixXcd TF = Y_conv_matrices[converter_name] * Y_dc;
 
-		//cout << "Transfer function matrix for converter " << converter_name << " from DC side:\n" << TF << "\n";
+		cout << "Transfer function matrix for converter " << converter_name << " from DC side:\n" << TF << "\n";
 
         return TF;
     }
