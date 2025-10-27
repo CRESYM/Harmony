@@ -368,8 +368,8 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
 	// convRow["gridac"] = 1; // Default grid area for AC
 	convRow["type_dc"] = 1; // Default type for DC
 	convRow["type_ac"] = 1; // Default type for AC
-	convRow["rtf"] = 0.0015; // Default rftc
-	convRow["xtf"] = 0.1121; // Default xtfc
+	convRow["rtf"] = 0.0; // Default rftc
+	convRow["xtf"] = 0.0; // Default xtfc
 	convRow["bf"] = 0.0887; // Default bf
 	convRow["rc"] = 0.0001; // Default rc
 	convRow["xc"] = 0.16428; // Default xc
@@ -504,6 +504,24 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
         }
         else {
             gRow[key] = value;   
+        }
+    }
+
+    // If gen_info contains "Vg", update corresponding bus Vmax/Vmin and fixed it to Vg
+    auto it_vg = gen_info.find("Vg");
+    if (it_vg != gen_info.end()) {
+        double Vg_value = it_vg->second;  // e.g., 345 (in kV)
+        double base_kv = global_params["ACbaseKV"];
+        double Vg_pu = Vg_value / base_kv;
+
+        std::string bus_row_key = std::to_string(bus_id - 1);
+        if (data["busAC"].count(bus_row_key)) {
+            auto& busRow = data["busAC"][bus_row_key];
+            busRow["Vmax"] = Vg_pu;
+            busRow["Vmin"] = Vg_pu;
+            std::cout << "[make_Generator] Bus " << bus_name
+                << " voltage limits updated by gen '" << element->getElementSymbol()
+                << "': Vmax = Vmin = " << Vg_pu << " pu" << std::endl;
         }
     }
 

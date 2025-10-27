@@ -51,7 +51,7 @@ void example_OPF() {
         {"Pmax", 300}, {"Pmin", 100},
         {"Qmax", 500.0}, {"Qmin", -500.0},
         {"c2", 0.11}, {"c1", 50.0},
-        {"c0", 150}, {"Ref", 1}
+        {"c0", 150}, {"Ref", 1}, {"Vg", 345 * 1.06}
     };
 	gen1->setOPFInfo(gen_info1);
 
@@ -227,6 +227,6 @@ void example_OPF() {
 	global_dict["DCbaseKV"] = 345.0; // Base voltage for DC, can be adjusted as needed
 	global_dict["Z_base"] = 1.0; // Base impedance, can be adjusted as needed
     
-	pf.make_OPF(&net, global_dict, true, false, false, false);
+	pf.make_OPF(&net, global_dict, true, false, false, true);
 
 }
