@@ -795,7 +795,7 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
             dc_bus = bus;
     }
 
-    MatrixXcd Y_dc = compute_closing_impedance(dc_grids[dc_area], dc_bus->getBusName(), Y_dc_matrices[dc_area], Y_closing).inverse();
+    MatrixXcd Z_dc = compute_closing_impedance(dc_grids[dc_area], dc_bus->getBusName(), Y_dc_matrices[dc_area], Y_closing);
 
 	//cout << "Equivalent DC admittance looking from converter " << converter_name << ":\n" << Y_dc << "\n";
 
@@ -811,9 +811,9 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         MatrixXcd a = Ymmc.block(1, 0, 2, 1);
         MatrixXcd Ydq = Ymmc.block(1, 1, 2, 2);
         Y_conv_matrices[converter_name] = b * (Y_ac - Ydq).inverse() * a + Ydc;
-		MatrixXcd TF = Y_conv_matrices[converter_name] * Y_dc;
+		MatrixXcd TF = Y_conv_matrices[converter_name] * Z_dc;
 
-		cout << "Transfer function matrix for converter " << converter_name << " from DC side:\n" << TF << "\n";
+		//cout << "Transfer function matrix for converter " << converter_name << " from DC side:\n" << TF << "\n";
 
         return TF;
     }
@@ -821,7 +821,7 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         // For AC cut - compute the overall admittance looking into the converter from AC side
         // i.e. repeat the same procedure as above but now from AC side
         MatrixXcd Ymmc = vectorToMatrix(mmc->compute_y_parameters(frequency));
-
+        MatrixXcd Y_dc = Z_dc.inverse();
 		//cout << "Converter " << converter_name << " Y-parameters:\n" << setprecision(10) << Ymmc << "\n";
 
         // The overall transfer function considering the converter's own admittance and the grid admittances.
@@ -834,7 +834,7 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
 
 		//cout << "Converter " << converter_name << " admittance matrix from AC side:\n" << Y_conv_matrices[converter_name] << "\n";
 
-		MatrixXcd TF = Y_conv_matrices[converter_name] * Y_ac_matrices[ac_area];
+		MatrixXcd TF = Y_conv_matrices[converter_name] * Y_ac_matrices[ac_area].inverse();
 
 		//cout << "Transfer function matrix for converter " << converter_name << " from AC side:\n" << TF << "\n";
 
