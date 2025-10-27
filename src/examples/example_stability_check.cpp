@@ -151,17 +151,11 @@ void example_stability_check() {
     StabilityEstimate* stability = new StabilityEstimate();
     stability->add_areas(&net);
 
-    auto& ac_grids = stability->get_ac_grids();
-    MatrixXcd Y_params_ac2 = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC2"], 1000);
-
-	/*std::cout << "Equivalent Admittance Parameters of AC2 at 1000 Hz:\n";
-    std::cout << std::setprecision(10);
-	std::cout << Y_params_ac2 << std::endl;*/
-
-    
-
     // TO TEST TRANSFER FUNCTION COMPUTATION
     stability->compute_transfer_function("MMC2", "AC", 1000);
+
+	stability->writeFileTF("MMC2", "AC", 10, 2000, 500);
+	stability->plotTF("MMC2", "AC", 10, 2000, 500);
 
     delete stability;
 }

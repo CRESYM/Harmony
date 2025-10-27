@@ -33,6 +33,12 @@ public:
 
 	MatrixXcd compute_transfer_function(string converter_name, string location, double frequency);
 
+	// Function to write the Y-parameter matrix to a file over a frequency range 
+	void writeFileTF(string converter_name, string location, double start_frequency, double end_frequency, int number_of_points);
+
+	// Function to plot the Y-parameter matrix entries
+	void plotTF(string converter_name, string location, double start_frequency, double end_frequency, int number_of_points);
+
 	// Print summary of areas
 	void print_summary() const;
 private:
