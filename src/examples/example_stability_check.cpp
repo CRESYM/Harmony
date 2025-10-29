@@ -145,7 +145,7 @@ void example_stability_check() {
     global_params["DCbaseKV"] = 400.0; // Base voltage for DC, can be adjusted as needed
     global_params["Z_base"] = global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"]; // Base impedance, can be adjusted as needed
 
-    pf.make_OPF(&net, global_params, false, false, false, true);
+    pf.make_OPF(&net, global_params, false, false, false, false);
 
     // Making Stability Estimate Object
     StabilityEstimate* stability = new StabilityEstimate();
@@ -155,7 +155,7 @@ void example_stability_check() {
     stability->compute_transfer_function("MMC2", "AC", 1000);
 
 	stability->writeFileTF("MMC2", "DC", 10, 2000, 500);
-	stability->bodeplotTF("MMC2", "DC", 10, 2000, 500);
+	//stability->bodeplotTF("MMC2", "DC", 10, 2000, 500);
 	//stability->nyquistplotTF("MMC2", "DC", 10, 2000, 2000);
 
     delete stability;
