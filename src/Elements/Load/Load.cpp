@@ -86,20 +86,31 @@ Load::Load(const std::string& symbol, const std::string& location, int pins, std
 void Load::computePowerFlow(std::map<std::string, double>& busAC,
     std::map<std::string, double>& global_params) const {
 
-	string area = element_location.substr(0, 2); // Extract area code from element_location
-    if ((area[0] == 'A' || area[0] == 'a') && (area[1] == 'c' || area[1] == 'C')) { // AC network
+    std::string area = element_location.substr(0, 2);
+    if ((area[0] == 'A' || area[0] == 'a') && (area[1] == 'c' || area[1] == 'C')) {
 
-        double V_LL = global_params["ACbaseKV"] ;
-        double omega = global_params["omega"];
-        double V_phase = 1.0 * V_LL / std::sqrt(3.0);
+        // --- Retrieve basic parameters ---
+        double V_LL = global_params["ACbaseKV"] * 1e3;   // convert kV → V
+        double omega = global_params["omega"];           // rad/s
+        double V_phase = V_LL / std::sqrt(3.0);          // phase voltage (V)
 
-        double G = (R[0] == 0) ? 0.0 : 1.0 / R[0];
-        double B_L = (L[0] == 0.0) ? 0.0 : -1.0 / (omega * L[0]);
-        double B_C = (C[0] == 0.0) ? 0.0 : omega * C[0];
-        double B = B_L + B_C;
+        // --- Series RLC model ---
+        double Rl = (R[0] == 0.0) ? 1e-12 : R[0];
+        double Xl = (L[0] == 0.0) ? 0.0 : omega * L[0];
+        double Xc = (C[0] == 0.0) ? 0.0 : -1.0 / (omega * C[0]);
+        double X = Xl + Xc;
 
-        double Pd = 3.0 * V_phase * V_phase * G;
-        double Qd = -3.0 * V_phase * V_phase * B;
+        double Z_real = Rl;
+        double Z_imag = X;
+        double Z_mag2 = Z_real * Z_real + Z_imag * Z_imag;
+
+        // --- Power calculation (in W / var) ---
+        double Pd_W = 3.0 * V_phase * V_phase * Z_real / Z_mag2;
+        double Qd_var = 3.0 * V_phase * V_phase * Z_imag / Z_mag2;
+
+        // --- Convert to MW / Mvar for storage ---
+        double Pd = Pd_W / 1e6;
+        double Qd = Qd_var / 1e6;
 
         busAC["Pd"] += Pd;
         busAC["Qd"] += Qd;
@@ -108,7 +119,6 @@ void Load::computePowerFlow(std::map<std::string, double>& busAC,
     else {
         throw std::runtime_error("Invalid network type specified in global parameters.");
     }
-
 }
 
 
