@@ -14,7 +14,9 @@ extern const double gamma_num;
 // Helper sign function
 extern int sgn(int v);
 extern MatrixXcd vectorToMatrix(const vector<vector<complex<double>>>& vec);
+extern MatrixXd vectorToMatrix(const vector<vector<double>>& vec);
 extern vector<vector<complex<double>>> matrixToVector(const MatrixXcd& mat);
+extern vector<vector<double>> matrixToVector(const MatrixXd& mat);
 
 // Functions for matrix operations
 extern vector<vector<complex<double>>> mat_mul(const vector<vector<complex<double>>>& A, const vector<vector<complex<double>>>& B);

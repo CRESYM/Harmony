@@ -48,12 +48,11 @@ MMC::MMC(const std::string& symbol, const std::string& location,
     double armInductance, double armResistance, double armCapacitance,
     int numSubmodules, double reactorInductance, double reactorResistance,
     double timeDelay)
-    : Element(symbol, location, 3, 1), // AC side - input pins; DC side - output pins
-    omega_0(omega), P(activePower), Q(reactivePower), theta(angle), V_m(acVoltage), V_dc(dcVoltage),
-    L_arm(armInductance), R_arm(armResistance), C_arm(armCapacitance),
-    N(numSubmodules), L_reactor(reactorInductance), R_reactor(reactorResistance), t_delay(timeDelay),
-    P_dc(Pdc)
+    : Converter(symbol, location) // AC side - input pins; DC side - output pins
 {
+    omega_0 = omega; P = activePower; Q = reactivePower; theta = angle; V_m = acVoltage; V_dc = dcVoltage; P_dc = Pdc;
+    L_arm = armInductance; R_arm = armResistance; C_arm = armCapacitance;
+    N = numSubmodules; L_reactor = reactorInductance; R_reactor = reactorResistance; t_delay = timeDelay; 
     // Initialize active and reactive power limits for power flow calculations
     P_min = 0.5 * P;
     P_max = 1.5 * P;
@@ -92,12 +91,13 @@ MMC::MMC(const std::string& symbol, const std::string& location,
  * @param converter_params Vector of converter parameters.
  */
 MMC::MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params)
-    : Element(symbol, location, 3, 1), // AC side - input pins; DC side - output pins
-    omega_0(converter_params[0]), P(converter_params[1]), Q(converter_params[2]),
-    theta(converter_params[3]), V_m(converter_params[4]), P_dc(converter_params[5]), V_dc(converter_params[6]),
-    L_arm(converter_params[7]), R_arm(converter_params[8]), C_arm(converter_params[9]),
-    N(static_cast<int>(converter_params[10])), L_reactor(converter_params[11]),
-    R_reactor(converter_params[12]), t_delay(converter_params[13]) {
+    : Converter(symbol, location) // AC side - input pins; DC side - output pins 
+{
+    omega_0 = converter_params[0]; P = converter_params[1]; Q = converter_params[2]; theta = converter_params[3]; 
+    V_m = converter_params[4]; P_dc = converter_params[5]; V_dc = converter_params[6];
+    L_arm = converter_params[7]; R_arm = converter_params[8]; C_arm = converter_params[9];
+    N = static_cast<int>(converter_params[10]); L_reactor = converter_params[11]; 
+    R_reactor = converter_params[12]; t_delay = converter_params[13];
 
     // Initialize active and reactive power limits for power flow calculations
     P_min = 0.5 * P;
@@ -211,7 +211,7 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
                     }
 					std::vector<double> values = { controller_params[++i] };
 					number_of_values = static_cast<int>(controller_params[++i]);
-                    cout << number_of_values << " " << i << endl;
+                    //cout << number_of_values << " " << i << endl;
                     std::vector<double> refs;
                     if ((i + number_of_values) < controller_params.size()) {
                         refs = std::vector<double>(controller_params.begin() + i + 1, controller_params.begin() + i + 1 + number_of_values);
@@ -826,38 +826,6 @@ std::vector<std::vector<complex<double>>> MMC::compute_y_parameters(double frequ
     return Y_val_exact;
 }
 
-/**
- * @brief Check system stability by evaluating eigenvalues of the A matrix.
- */
-void MMC::checkStability() const {
-    Eigen::EigenSolver<Eigen::MatrixXd> es(A_matrix);
-
-    bool stable = true;
-    for (int i = 0; i < es.eigenvalues().size(); ++i) {
-        if (es.eigenvalues()(i).real() > 0) {
-            stable = false;
-            break;
-        }
-    }
-
-    if (stable) {
-        std::cout << "System is STABLE around this operating point.\n";
-    }
-    else if (es.eigenvalues().real().maxCoeff() > 0) {
-        std::cout << "System is UNSTABLE around this operating point.\n";
-    }
-    else {
-        std::cout << "System is MARGINALLY STABLE or needs further analysis.\n";
-    }
-}
-
-/**
- * @brief Print eigenvalues of the A matrix.
- */
-void MMC::printEigenvalues() const {
-    Eigen::EigenSolver<Eigen::MatrixXd> es(A_matrix);
-    std::cout << "Eigenvalues:\n" << es.eigenvalues() << "\n";
-}
 
 /**
  * @brief Print MMC element and controller parameter values.

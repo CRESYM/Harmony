@@ -41,6 +41,7 @@
 #include "./Elements/Transmission_Line/Cable.h"
 
 // Power Electronics
+#include "./Elements/Converter/Converter.h"
 #include "./Elements/Converter/MMC.h"
 
 // RES

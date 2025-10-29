@@ -30,6 +30,7 @@ find_package(casadi CONFIG)
 set(Element_Header_Files src/Elements/Element.h)
 #set(Element_Admittance_Header_Files src/Admittance.h)
 set(Element_Converter_Header_Files
+    src/Elements/Converter/Converter.h
     src/Elements/Converter/MMC.h
 )
 set(Element_Impedance_Header_Files
@@ -121,6 +122,7 @@ set(Examples_Header_files
 # Group source files
 set(Element_Source_Files src/Elements/Element.cpp)
 set(Element_Converter_Source_Files
+    src/Elements/Converter/Converter.cpp
     src/Elements/Converter/MMC.cpp
 )
 set(Element_Impedance_Source_Files

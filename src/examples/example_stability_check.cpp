@@ -155,7 +155,8 @@ void example_stability_check() {
     stability->compute_transfer_function("MMC2", "AC", 1000);
 
 	stability->writeFileTF("MMC2", "DC", 10, 2000, 500);
-	stability->plotTF("MMC2", "DC", 10, 2000, 500);
+	stability->bodeplotTF("MMC2", "DC", 10, 2000, 500);
+	//stability->nyquistplotTF("MMC2", "DC", 10, 2000, 2000);
 
     delete stability;
 }

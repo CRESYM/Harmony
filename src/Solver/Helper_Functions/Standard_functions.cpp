@@ -42,6 +42,33 @@ MatrixXcd vectorToMatrix(const vector<vector<complex<double>>>& vec) {
 }
 
 /**
+ * @brief Converts a 2D vector of complex numbers to an Eigen matrix.
+ * @param vec The input 2D vector (matrix).
+ * @return An Eigen::MatrixXcd representation of the input vector.
+ * @throws std::runtime_error if the inner vectors have inconsistent lengths.
+ */
+MatrixXd vectorToMatrix(const vector<vector<double>>& vec) {
+    if (vec.empty() || vec[0].empty()) {
+        return MatrixXd(); // Return empty matrix if input is empty
+    }
+
+    size_t rows = vec.size();
+    size_t cols = vec[0].size();
+    MatrixXd mat(rows, cols);
+
+    for (size_t i = 0; i < rows; ++i) {
+        if (vec[i].size() != cols) {
+            throw std::runtime_error("All inner vectors must have the same length");
+        }
+        for (size_t j = 0; j < cols; ++j) {
+            mat(i, j) = vec[i][j];
+        }
+    }
+
+    return mat;
+}
+
+/**
  * @brief Converts an Eigen matrix of complex numbers to a 2D vector.
  * @param mat The input Eigen::MatrixXcd.
  * @return A 2D vector representation of the input matrix.
@@ -61,6 +88,21 @@ vector<vector<complex<double>>> matrixToVector(const MatrixXcd& mat) {
         }
     }
 
+    return vec;
+}
+
+vector<vector<double>> matrixToVector(const MatrixXd& mat) {
+    if (mat.rows() == 0 || mat.cols() == 0) {
+        return {}; // Return an empty vector for an empty matrix
+    }
+    size_t rows = mat.rows();
+    size_t cols = mat.cols();
+    vector<vector<double>> vec(rows, vector<double>(cols));
+    for (size_t i = 0; i < rows; ++i) {
+        for (size_t j = 0; j < cols; ++j) {
+            vec[i][j] = mat(i, j);
+        }
+    }
     return vec;
 }
 

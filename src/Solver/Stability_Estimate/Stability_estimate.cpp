@@ -61,16 +61,16 @@ void StabilityEstimate::add_areas(Network* net) {
             for (auto& elem : conn_it->second) {
                 if (!elem) continue;
 
-                // --- Check if element is an MMC dynamically ---
-                MMC* mmc = dynamic_cast<MMC*>(elem);
-                if (mmc) {
+                // --- Check if element is a Converter dynamically ---
+                Converter* converter = dynamic_cast<Converter*>(elem);
+                if (converter) {
                     std::string conv_name = elem->getElementSymbol();
                     if (converters.find(conv_name) == converters.end()) {
                         converters[conv_name] = elem; 
                         //std::cout << "Detected MMC converter: " << conv_name << "\n";
                     }
 
-                    std::string loc = mmc->getElementLocation();
+                    std::string loc = converter->getElementLocation();
                     if (loc.empty()) continue;
 
                     // Normalize and parse format "ACi_DCj" (case-insensitive)
@@ -92,7 +92,7 @@ void StabilityEstimate::add_areas(Network* net) {
                         }
 
                         // Identify converter terminal buses (AC and DC)
-                        auto conns = mmc->getConnections();
+                        auto conns = converter->getConnections();
                         Bus* ac_bus = nullptr;
                         Bus* dc_bus = nullptr;
 
@@ -117,7 +117,7 @@ void StabilityEstimate::add_areas(Network* net) {
                         }						
                     }
                     else {
-                        std::cerr << "[WARN] Converter " << mmc->getElementSymbol()
+                        std::cerr << "[WARN] Converter " << converter->getElementSymbol()
                             << " has invalid location format: " << loc << "\n";
                     }
                 }
@@ -523,8 +523,8 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
     for (const auto& [bus_name, bus] : buses) {
 		auto& elements = bus->getConnectedElements();
         for (Element* element : elements) {
-			// Skip if element is null, an MMC, already processed, or connected to ground
-            if (!element || dynamic_cast<MMC*>(element) || processed_elements.count(element)) {
+			// Skip if element is null, a Converter, already processed, or connected to ground
+            if (!element || dynamic_cast<Converter*>(element) || processed_elements.count(element)) {
                 continue;
             }
                      
@@ -668,7 +668,7 @@ void StabilityEstimate::print_summary() const {
     // --- Converters ---
     std::cout << "\n--- Converters (" << converters.size() << ") ---\n";
     if (converters.empty()) {
-        std::cout << "No MMC converters detected.\n";
+        std::cout << "No converters detected.\n";
     }
     else {
         for (const auto& [name, elem] : converters) {
@@ -693,14 +693,14 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         return MatrixXcd::Zero(1, 1);
     }
     Element* converter = converters[converter_name];
-    MMC* mmc = dynamic_cast<MMC*>(converter);
-    if (!mmc) {
-        std::cerr << "Error: Element " << converter_name << " is not an MMC.\n";
+    Converter* conv = dynamic_cast<Converter*>(converter);
+    if (!conv) {
+        std::cerr << "Error: Element " << converter_name << " is not a converter.\n";
         return MatrixXcd::Zero(1,1);
     }
 
-    std::string ac_area = mmc->getACarea();
-    std::string dc_area = mmc->getDCarea();
+    std::string ac_area = conv->getACarea();
+    std::string dc_area = conv->getDCarea();
 
     // Compute equivalent Y parameters first for AC grids and then for DC grids
     // DC grids
@@ -728,10 +728,10 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
     unordered_map<string, MatrixXcd> Y_conv_matrices;
     int index = 0;
     for (auto& [name, elem] : converters) {
-        MMC* mmc_elem = dynamic_cast<MMC*>(elem);
-        if (!mmc_elem) continue;
+        Converter* conv_elem = dynamic_cast<Converter*>(elem);
+        if (!conv_elem) continue;
         // Identify converter terminal buses (AC and DC)
-        auto conns_elem = mmc_elem->getConnections();
+        auto conns_elem = conv_elem->getConnections();
         Bus* ac_bus = nullptr;
         Bus* dc_bus = nullptr;
         for (const auto& [bus, terminal] : conns_elem) {
@@ -747,25 +747,25 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
         if (!ac_bus || !dc_bus) continue;
 
 		// Get AC and DC areas
-		std::string ac_area1 = mmc_elem->getACarea();
-		std::string dc_area1 = mmc_elem->getDCarea();
+		std::string ac_area1 = conv_elem->getACarea();
+		std::string dc_area1 = conv_elem->getDCarea();
         
         // Get admittance matrices for the grids
         // Depending on the side of the converter, the admittance matrix looking inside converter will be different
         if ((converter_name != name) || (location == dc_area)) {
             MatrixXcd Y_ac = Y_ac_matrices[ac_area1];
 			//cout << "AC grid admittance matrix connected to converter " << name << "AC grid " << ac_area << ":\n" << setprecision(10) << Y_ac << "\n";
-			vector<vector<complex<double>>> mmc_y_params = mmc_elem->compute_y_parameters(frequency);
-            MatrixXcd Ymmc = vectorToMatrix(mmc_elem->compute_y_parameters(frequency));
+			vector<vector<complex<double>>> conv_y_params = conv_elem->compute_y_parameters(frequency);
+            MatrixXcd Yconv = vectorToMatrix(conv_elem->compute_y_parameters(frequency));
 
-			//cout << "Converter " << name << " Y-parameters:\n" << Ymmc << "\n";
+			//cout << "Converter " << name << " Y-parameters:\n" << Yconv << "\n";
 
             // The overall transfer function considering the converter's own admittance and the grid admittances.
             MatrixXcd Ydc(1, 1);
-            Ydc(0, 0) = Ymmc(0, 0);
-            MatrixXcd b = Ymmc.block(0, 1, 1, 2);
-            MatrixXcd a = Ymmc.block(1, 0, 2, 1);
-            MatrixXcd Ydq = Ymmc.block(1, 1, 2, 2);
+            Ydc(0, 0) = Yconv(0, 0);
+            MatrixXcd b = Yconv.block(0, 1, 1, 2);
+            MatrixXcd a = Yconv.block(1, 0, 2, 1);
+            MatrixXcd Ydq = Yconv.block(1, 1, 2, 2);
             Y_conv_matrices[name] = b * (Y_ac - Ydq).inverse() * a + Ydc;
 
 			//cout << "Converter " << name << " admittance matrix from DC side:\n" << Y_conv_matrices[name] << "\n";
@@ -781,7 +781,7 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
     // with the DC grid admittance
 
 	// Identify converter terminal buses (AC and DC)
-	auto conns = mmc->getConnections();
+	auto conns = conv->getConnections();
     Bus* ac_bus = nullptr;
     Bus* dc_bus = nullptr;
     for (const auto& [bus, terminal] : conns) {
@@ -803,13 +803,13 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
     // For DC cut 
     if (location.rfind("DC", 0) == 0 || location.rfind("dc", 0) == 0) {
         MatrixXcd Y_ac = Y_ac_matrices[ac_area];
-        MatrixXcd Ymmc = vectorToMatrix(mmc->compute_y_parameters(frequency));
+        MatrixXcd Yconv = vectorToMatrix(conv->compute_y_parameters(frequency));
         // The overall transfer function considering the converter's own admittance and the grid admittances.
         MatrixXcd Ydc(1, 1);
-        Ydc(0, 0) = Ymmc(0, 0);
-        MatrixXcd b = Ymmc.block(0, 1, 1, 2);
-        MatrixXcd a = Ymmc.block(1, 0, 2, 1);
-        MatrixXcd Ydq = Ymmc.block(1, 1, 2, 2);
+        Ydc(0, 0) = Yconv(0, 0);
+        MatrixXcd b = Yconv.block(0, 1, 1, 2);
+        MatrixXcd a = Yconv.block(1, 0, 2, 1);
+        MatrixXcd Ydq = Yconv.block(1, 1, 2, 2);
         Y_conv_matrices[converter_name] = b * (Y_ac - Ydq).inverse() * a + Ydc;
 		MatrixXcd TF = Y_conv_matrices[converter_name] * Z_dc;
 
@@ -820,16 +820,16 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
     else {
         // For AC cut - compute the overall admittance looking into the converter from AC side
         // i.e. repeat the same procedure as above but now from AC side
-        MatrixXcd Ymmc = vectorToMatrix(mmc->compute_y_parameters(frequency));
+        MatrixXcd Yconv = vectorToMatrix(conv->compute_y_parameters(frequency));
         MatrixXcd Y_dc = Z_dc.inverse();
-		//cout << "Converter " << converter_name << " Y-parameters:\n" << setprecision(10) << Ymmc << "\n";
+		//cout << "Converter " << converter_name << " Y-parameters:\n" << setprecision(10) << Yconv << "\n";
 
         // The overall transfer function considering the converter's own admittance and the grid admittances.
         MatrixXcd Ydq(2, 2);
-        Ydq = Ymmc.block(1, 1, 2, 2);
-        MatrixXcd b = Ymmc.block(1, 0, 2, 1);
-        MatrixXcd a = Ymmc.block(0, 1, 1, 2);
-        MatrixXcd Ydc = Ymmc.block(0, 0, 1, 1);
+        Ydq = Yconv.block(1, 1, 2, 2);
+        MatrixXcd b = Yconv.block(1, 0, 2, 1);
+        MatrixXcd a = Yconv.block(0, 1, 1, 2);
+        MatrixXcd Ydc = Yconv.block(0, 0, 1, 1);
         Y_conv_matrices[converter_name] = (Y_dc - Ydc).inverse() * a * b + Ydq;
 
 		//cout << "Converter " << converter_name << " admittance matrix from AC side:\n" << Y_conv_matrices[converter_name] << "\n";
@@ -963,7 +963,7 @@ void StabilityEstimate::writeFileTF(string converter_name, string location, doub
  * @param end_frequency The ending frequency for the plot.
  * @param number_of_points The number of points to plot across the frequency range.
  */
-void StabilityEstimate::plotTF(string converter_name, string location, double start_frequency, double end_frequency, int number_of_points) {
+void StabilityEstimate::bodeplotTF(string converter_name, string location, double start_frequency, double end_frequency, int number_of_points) {
     std::vector<double> frequencies;
 
 	// Check if location is on AC or DC side
@@ -1014,4 +1014,52 @@ void StabilityEstimate::plotTF(string converter_name, string location, double st
     }
 
     bode_plot(frequencies, magnitudes, phases, labels, "TF of power system cut on " + location + " side of " + converter_name);
+}
+
+/**
+ * @brief Generates data and triggers a Nyquist plot for the Y-parameter matrix.
+ * @param start_frequency The starting frequency for the plot.
+ * @param end_frequency The ending frequency for the plot.
+ * @param number_of_points The number of points to plot across the frequency range.
+ */
+void StabilityEstimate::nyquistplotTF(string converter_name, string location, double start_frequency, double end_frequency, int number_of_points) {
+    // Check if location is on AC or DC side
+    bool is_ac = false;
+    bool is_dc = false;
+    int num_values = 0;
+    std::vector<std::string> labels;
+    if (location.rfind("AC", 0) == 0 || location.rfind("ac", 0) == 0) {
+        is_ac = true;
+        num_values = 4; // dq frame
+        labels.push_back("TF_{dd}");
+        labels.push_back("TF_{dq}");
+        labels.push_back("TF_{qd}");
+        labels.push_back("TF_{qq}");
+    }
+    else if (location.rfind("DC", 0) == 0 || location.rfind("dc", 0) == 0) {
+        is_dc = true;
+        num_values = 1; // DC side
+        labels.push_back("TF");
+    }
+    else {
+        std::cerr << "Error: Location " << location << " is neither AC nor DC side.\n";
+        return;
+    }
+
+    std::vector<vector<complex<double>>> TF(number_of_points, std::vector<complex<double>>(num_values, 0.0));
+    double gap = (end_frequency - start_frequency) * 1.0 / (number_of_points - 1);
+    double frequency = start_frequency;
+    for (int p = 0; p < number_of_points; p++) {
+        MatrixXcd TF_freq = compute_transfer_function(converter_name, location, frequency);
+        
+        // Extract magnitude and phase for each element in TF
+        for (int i = 0; i < TF_freq.rows(); ++i) {
+            for (int j = 0; j < TF_freq.cols(); ++j) {
+				TF[p][TF_freq.cols() * i + j] = TF_freq(i, j);
+            }
+        }
+
+        frequency += gap; // increase frequency
+    }
+    nyquist_plot(TF, labels, "Nyquist Plot of TF on " + location + " side of " + converter_name);
 }

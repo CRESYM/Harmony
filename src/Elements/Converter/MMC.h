@@ -1,14 +1,14 @@
 ﻿#ifndef MMC_H
 #define MMC_H
 
-#include "../Element.h"
+#include "Converter.h"
 #include "../../Include_control_blocks.h"
 
 // Forward declarations
 class Controller;
 class Filter;
 
-class MMC : public Element {
+class MMC : public Converter {
 public:
     // Constructor 
     MMC(const std::string& symbol, const std::string& location,
@@ -33,36 +33,16 @@ public:
 
     // Destructor
     ~MMC() {};
-    
-        
-    //getter
-    Eigen::MatrixXd getA() const { return A_matrix; }
-    Eigen::MatrixXd getB() const { return B_matrix; }
-    Eigen::MatrixXd getC() const { return C_matrix; }
-    Eigen::MatrixXd getD() const { return D_matrix; }
-    Eigen::VectorXd getEquilibriumState() const { return equilibrium_state; }
-	string getACarea() const { 
-        auto pos = element_location.find('_');
-        return element_location.substr(0, pos);
-    } // Get AC area from location string
-	string getDCarea() const { 
-        auto pos = element_location.find('_');
-        return element_location.substr(pos+1); 
-    } // Get DC area from location string
-    
+       
     
     // Equilibrium point calculation
-    void solveEquilibrium();
-    Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u);
-    void computeABCD();
+    virtual void solveEquilibrium() override;
+    virtual Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u) override;
+    virtual void computeABCD() override;
 
 	// Y-parameter computation
     std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency) override;
-
-    // System analysis
-    void checkStability() const;
-    void printEigenvalues() const;
-
+        
     // Override to print MMC-specific parameters
     virtual void printElementValues() override;
 
@@ -104,49 +84,17 @@ public:
     }
 
 private:
-    double omega_0;  // Nominal frequency
-    double P;        // Active power [W]
-    double Q;        // Reactive power [VA]
-    double P_dc;     // DC power [W]
-    double P_min;    // Min active power output [W]
-    double P_max;    // Max active power output [W]
-    double Q_min;    // Min reactive power output [VA]
-    double Q_max;    // Max reactive power output [VA]
-    double theta;    // AC voltage angle [rad]
-    double V_m;      // AC voltage amplitude [V]
-    double V_dc;     // DC-bus voltage [V]
     double L_arm;    // Arm inductance [H]
     double R_arm;    // Arm resistance
     double C_arm;    // Capacitance per submodule [F]
     int N;           // Number of submodules per arm
-    double L_reactor; // Inductance of the phase reactor [H]
-    double R_reactor; // Resistance of the phase reactor [Ω]
-    double t_delay;   // Time delay [s]
+    
     
 	// State variables
     int number_of_states = 12;
 	int vdc_index = 0; // Index for DC voltage in state vector
 
-    // System matrices
-    Eigen::MatrixXd A_matrix, B_matrix, C_matrix, D_matrix;
-	Eigen::MatrixXd Adelay, Bdelay, Cdelay, Ddelay; // Delay system matrices
-	int pade_order = 2; // Order of Padé approximation for delays
-    Eigen::VectorXd equilibrium_state;
     
-    // Sub-elements
-    std::vector<std::pair<std::string, std::shared_ptr<Element>>> subElements;
-
-	std::map<std::string, Controller*> controls; // Map of existing controllers
-	std::map<std::string, Filter*> filters;      // Map of existing filters   
-
-	// List of controller and filter names, it can be changed only by developers
-    const std::vector<std::string> controller_list = {
-        "pll",  "dc_voltage", "active_power", "ac_voltage", "reactive_power", "energy", "zcc", "occ", "ccc", 
-        "droop"
-	}; // List of controller names
-    const std::vector<std::string> filter_list = {
-		"ac_voltage_dq", "ac_voltage", "active_power", "reactive_power", "dc_voltage"
-	}; // List of filter names
 };
 
 #endif // MMC_H

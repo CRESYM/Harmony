@@ -48,6 +48,10 @@ public:
         return controller_symbol; // Get controller symbol
     }
 
+    int getNumberOfSignals() const {
+        return static_cast<int>(reference.size()); // Get number of signals
+	}
+
     virtual vector<double> getParameters() const { return reference; }; // Pure virtual function for parameters
     virtual void setParameters(const vector<double>& params) {}; // Pure virtual function to set parameters
 

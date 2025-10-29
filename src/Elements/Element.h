@@ -58,6 +58,12 @@ public:
 
 	// Function to plot the Y-parameter matrix entries
     void plotYParameters(double start_frequency, double end_frequency, int number_of_points);
+    virtual void plotEigenvalues() { 
+		cout << "Eigenvalue plotting is not available for the linear element." << endl;
+    };
+    virtual void plotParticipationFactors() {
+        cout << "Participation factors plotting is not available for the linear element." << endl;
+    };
 
     // Virtual function to compute Y-parameters (to be implemented by derived classes)
     virtual std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency);

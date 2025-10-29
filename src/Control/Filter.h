@@ -32,7 +32,9 @@ public:
     VectorXd define_differential_equations(const VectorXd& x, const double u);
     VectorXd define_differential_equations(const double x, const double u);
 
-
+    int getFilterSize() const {
+        return filter_size*filter_order;
+	}
 
 private:
 	string filter_symbol; // Symbol for the filter
