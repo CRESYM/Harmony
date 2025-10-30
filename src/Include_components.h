@@ -1,39 +1,57 @@
 #ifndef INCLUDE_COMPONENTS_H
 #define INCLUDE_COMPONENTS_H
 
-#include "Element.h"
+// ELEMENTS
+#include "./Elements/Element.h"
 
-#include "Admittance.h"
-#include "Impedance.h"
-#include "Resistor.h"
-#include "Load.h"
-#include "Capacitor.h"
-#include "Switch.h"
-#include "Inductor.h"
+// Impedances
+#include "./Elements/Impedance/Impedance_base.h"
+#include "./Elements/Impedance/Admittance.h"
+#include "./Elements/Impedance/Impedance.h"
+#include "./Elements/Impedance/Resistor.h"
+#include "./Elements/Impedance/Capacitor.h"
+#include "./Elements/Impedance/Inductor.h"
 
-#include "Transformer_base.h"
-#include "Transformer_real.h"
-#include "Transformer_classic.h"
-#include "Transformer_Delta_Delta.h"
-#include "Transformer_Y_Delta.h"
-#include "Transformer_Delta_Y.h"
-#include "Transformer_Y_Y.h"
+// Loads
+#include "./Elements/Load/Load_base.h"
+#include "./Elements/Load/Load.h"
+#include "./Elements/Load/Load_PQ.h"
 
-#include "AC_source.h"
-#include "Generator.h"
+// Switches and Breakers
+#include "./Elements/Switch/Switch.h"
 
-#include "Transmissionline.h"
-#include "overhead_line.h"
-#include "Cable.h"
+// Transformers
+#include "./Elements/Transformer/Transformer_base.h"
+#include "./Elements/Transformer/Transformer_real.h"
+#include "./Elements/Transformer/Transformer_classic.h"
+#include "./Elements/Transformer/Transformer_Delta_Delta.h"
+#include "./Elements/Transformer/Transformer_Y_Delta.h"
+#include "./Elements/Transformer/Transformer_Delta_Y.h"
+#include "./Elements/Transformer/Transformer_Delta_Y_real.h"
+#include "./Elements/Transformer/Transformer_Y_Y.h"
+#include "./Elements/Transformer/Transformer_Y_Y_real.h"
 
-#include "MMC.h"
-#include "Filter.h"
-#include "Controller.h"
+// Sources
+#include "./Elements/Source/AC_source.h"
+#include "./Elements/Source/Generator.h"
 
-#include "solve_opf.h"
+// Lines
+#include "./Elements/Transmission_Line/Transmissionline.h"
+#include "./Elements/Transmission_Line/overhead_line.h"
+#include "./Elements/Transmission_Line/Cable.h"
 
-#include "State_Space_Model.h"
+// Power Electronics
+#include "./Elements/Converter/Converter.h"
+#include "./Elements/Converter/MMC.h"
 
+// RES
+#include "./Elements/RES/RES_base.h"
+#include "./Elements/RES/WT_type_3.h"
+#include "./Elements/RES/WT_type_4.h"
+#include "./Elements/RES/WP_plant.h"
+#include "./Elements/RES/PV_plant.h"
+
+#include "./Solver/State_Space_Model/State_Space_Model.h"
 
 
 #endif // !INCLUDE_COMPONENTS_H

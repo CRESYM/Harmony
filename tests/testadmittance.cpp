@@ -5,7 +5,7 @@ class TestAdmittance : public testing::Test {};
 
 // Test constructor 
 TEST_F(TestAdmittance, TestConstructor) {
-	Admittance* y = new Admittance("y1", 1, DenseMatrix(1, 1, { mul(j, omega) }));
+	Admittance* y = new Admittance("y1", "AC1", 1, DenseMatrix(1, 1, { mul(j, omega) }));
 
     EXPECT_EQ(y->getInputPins(), 1);
     EXPECT_EQ(y->getOutputPins(), 1);
@@ -19,13 +19,13 @@ TEST_F(TestAdmittance, TestYMatrix) {
     testing::internal::CaptureStderr();
 
     // Case 1
-    Admittance y("y1", 1, DenseMatrix(1, 1, { mul(j, omega) }));
-    MatrixXcd y1 = y.compute_y_parameters_num(1000);
+    Admittance y("y1", "AC1", 1, DenseMatrix(1, 1, { mul(j, omega) }));
+    MatrixXcd y1 = vectorToMatrix(y.compute_y_parameters(1000));
     MatrixXcd y1expected(2, 2);
-    y1expected(0, 0) = std::complex<double>(0, 1000);
-    y1expected(0, 1) = std::complex<double>(0, -1000);
-    y1expected(1, 0) = std::complex<double>(0, -1000);
-    y1expected(1, 1) = std::complex<double>(0, 1000);
+    y1expected(0, 0) = std::complex<double>(0, 1000 * 2 * M_PI);
+    y1expected(0, 1) = std::complex<double>(0, -1000 * 2 * M_PI);
+    y1expected(1, 0) = std::complex<double>(0, -1000 * 2 * M_PI);
+    y1expected(1, 1) = std::complex<double>(0, 1000 * 2 * M_PI);
     EXPECT_TRUE(y1.isApprox(y1expected, 1e-9));
 
     

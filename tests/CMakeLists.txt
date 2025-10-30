@@ -39,18 +39,31 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 # Define HARMONY_SOURCE_FILES variable (all of Harmony's' *.cpp files except main.cpp)
-file(GLOB HARMONY_SOURCE_FILES "${CMAKE_SOURCE_DIR}/../src/*.cpp")
-# Remove main.cpp from source file list (we are testing on a class basis)
+file(GLOB_RECURSE HARMONY_SOURCE_FILES "${CMAKE_SOURCE_DIR}/../src/*.cpp")
 list(REMOVE_ITEM HARMONY_SOURCE_FILES "${CMAKE_SOURCE_DIR}/../src/main.cpp")
 
 # Specify directories from which to import Harmony header files
-include_directories(${CMAKE_SOURCE_DIR}/../src)
+# include_directories(${CMAKE_SOURCE_DIR}/../src)
+# Recursively find all directories containing header files in ../src
+file(GLOB_RECURSE HEADER_FILES "${CMAKE_SOURCE_DIR}/../src/*.h" "${CMAKE_SOURCE_DIR}/../src/*.hpp")
+
+# Extract unique directories from the header files
+set(HEADER_DIRS "")
+foreach(header ${HEADER_FILES})
+    get_filename_component(dir ${header} DIRECTORY)
+    list(APPEND HEADER_DIRS ${dir})
+endforeach()
+list(REMOVE_DUPLICATES HEADER_DIRS)
+
+# Add all header directories to the include path
+include_directories(${HEADER_DIRS})
 
 # Define an executable testharmony made up of various cpp files
 add_executable(
     testharmony
     testSimpleNetwork.cpp
     teststatespacemodel.cpp
+    testABCDforming.cpp
     testelement.cpp
     testimpedance.cpp
     testadmittance.cpp
@@ -59,6 +72,9 @@ add_executable(
     testresistor.cpp
     testinductor.cpp
     testswitch.cpp
+    testrealtransformer.cpp
+    testMMC.cpp
+    testStabilityEstimate.cpp
     utils.cpp
     ${HARMONY_SOURCE_FILES}
 )

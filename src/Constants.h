@@ -1,6 +1,7 @@
 ﻿#ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+// SymEngine library for symbolic mathematics
 #include <symengine/basic.h>
 #include <symengine/symbol.h>
 #include <symengine/add.h>
@@ -23,6 +24,16 @@
 #include <symengine/matrix_expressions.h>
 #include <symengine/matrices/immutable_dense_matrix.h>
 #include <symengine/polys/basic_conversions.h>
+#include <symengine/printers.h>  // Correct header for printing
+#include <symengine/real_mpfr.h>
+using SymEngine::RealMPFR;
+
+// Eigen library for linear algebra
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
+#include <unsupported/Eigen/MatrixFunctions>
+#include <unsupported/Eigen/NonLinearOptimization>
+#include <unsupported/Eigen/NumericalDiff>
 
 #define _USE_MATH_DEFINES
 #include <math.h> 
@@ -36,49 +47,56 @@
 #include <variant>
 #include <algorithm>
 #include <sstream>
+#include <thread>
+#include <chrono>
 #include <any>
 #include <map>
 #include <cctype> // Include the header for std::tolower
-#include <memory>
+#include <regex>
+#include <memory>  
+#include <unordered_map>
+#include <cmath>
+#include <functional>
+#include <iomanip>
+#include <filesystem>
+#include <set>
 
+#include<matplot/matplot.h>
+using namespace matplot;
+#include "gurobi_c++.h"
 
-// Eigen library for linear algebra
-#include <Eigen/Dense>
-#include <unsupported/Eigen/MatrixFunctions>
-
+using SymEngine::RCP;
+using SymEngine::Basic;
+using SymEngine::DenseMatrix;
+using SymEngine::integer;
+using SymEngine::mul;
+using SymEngine::symbol;
+using SymEngine::one;
+using SymEngine::ComplexDouble;
 using namespace std;
 using namespace std::complex_literals;
 using namespace SymEngine; // Use the SymEngine namespace
 using namespace Eigen;
 
+template<typename Table>
+Eigen::MatrixXd map2dense(const Table& tbl,
+    const std::vector<std::string>& colNames)
+{
+    const int nRow = static_cast<int>(tbl.size());
+    const int nCol = static_cast<int>(colNames.size());
+    Eigen::MatrixXd M(nRow, nCol);
 
-// Define a constant for π (pi) using SymEngine
-extern const RCP<const Basic> PI;
+    for (const auto& [rowKey, colMap] : tbl)
+    {
+        int r = std::stoi(rowKey);
+        for (int c = 0; c < nCol; ++c)
+        {
+            auto it = colMap.find(colNames[c]);
+            M(r, c) = (it != colMap.end()) ? it->second : 0.0;
+        }
+    }
+    return M;
+}
 
-extern const double mu_0; // vacuum permitivity
-extern const double epsilon_0; // vacuum permeability
-extern const double gamma_num;
-
-// Define imaginary unit and symbol for angular frequency
-extern RCP<const Basic> j;  // Imaginary unit
-extern RCP<const Basic> omega;
-extern RCP<const Basic> s; // s = j * omega
-
-extern DenseMatrix createZeroMatrix(int size1, int size2);
-
-extern complex<double> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, double value);
-extern complex<double> substitute_symbol(const RCP<const Basic>& expr, RCP<const Basic> symbol_name, double value);
-extern complex<double> substitute_symbol(const RCP<const Basic>& expr, const std::string& symbol_name, complex<double> value);
-extern complex<double> substitute_symbol(const RCP<const Basic>& expr, RCP<const Basic> symbol_name, complex<double> value);
-
-extern MatrixXcd substitute_symbol(DenseMatrix, const string&, double);
-extern MatrixXcd substitute_symbol(DenseMatrix, const string&, complex<double>);
-extern MatrixXcd substitute_symbol(DenseMatrix, RCP<const Basic>, double);
-extern MatrixXcd substitute_symbol(DenseMatrix, RCP<const Basic>, complex<double>);
-
-extern 	double eval_basic(const RCP<const Basic>& expr);
-
-extern MatrixXd kron_reduction(MatrixXd, vector<int>);
-extern DenseMatrix kron_reduction(DenseMatrix, vector<int>);
 
 #endif // CONSTANTS_H

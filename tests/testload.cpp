@@ -20,23 +20,21 @@ TEST_F(TestLoad, TestConstructor) {
 
     // Test excepction for invalid number of pins
     // Pins must be > 0
-    EXPECT_THROW(Load("l", 0, { 1, 2, 3 }), std::invalid_argument);
+    EXPECT_THROW(Load("l", "AC1", 0, { 1, 2, 3 }), std::invalid_argument);
     //EXPECT_THROW(Load("1", -5, { 1, 2, 3 }), std::invalid_argument);
 
     // Test exception for invalid number of values
     // size(values) = num pins, or size(values) = 3 * num pins
-    EXPECT_THROW(Load("l", 1, { 1, 2, 3, 4 }), std::invalid_argument);
-    EXPECT_THROW(Load("l", 1, {}), std::invalid_argument);
-    EXPECT_NO_THROW(Load("l", 2, { 1, 2, 3, 4, 5, 6 }));
+    EXPECT_THROW(Load("l", "AC1", 1, { 1, 2, 3, 4 }), std::invalid_argument);
+    EXPECT_THROW(Load("l", "AC1", 1, {}), std::invalid_argument);
+    EXPECT_NO_THROW(Load("l", "AC1", 2, { 1, 2, 3, 4, 5, 6 }));
     
     // Test cerr log msgs for initializing load parameters
-    std::string expected1 = "Load parameters initialized correctly";
-    Load l1("l", 1, { 0, 0, 0 });
+    Load l1("l", "AC1", 1, { 0, 0, 0 });
     std::string expected2 = "Load parameters not initialized correctly for phase 1";
     // Stop GTest capturing Harmony's output to std::cerr; save output to str
     std::string cerroutput = testing::internal::GetCapturedStderr();
     // Check cerroutput contains the expected msgs
-    EXPECT_FALSE(cerroutput.find(expected1) == std::string::npos);
     EXPECT_FALSE(cerroutput.find(expected2) == std::string::npos);
 }
 
@@ -47,8 +45,8 @@ TEST_F(TestLoad, TestYMatrix) {
     testing::internal::CaptureStderr();
 
     // Case1
-    Load l1("l1", 1, { 0, 0, 1 });
-    MatrixXcd y1 = l1.compute_y_parameters_num(10000);
+    Load l1("l1", "AC1", 1, { 0, 0, 1 });
+    MatrixXcd y1 = vectorToMatrix(l1.compute_y_parameters(10000.0/2.0/M_PI));
     MatrixXcd y1expected(2, 2);
     y1expected(0, 0) = std::complex<double>(6.12323e-13, 10000);
     y1expected(0, 1) = std::complex<double>(-6.12323e-13, -10000);
@@ -57,8 +55,8 @@ TEST_F(TestLoad, TestYMatrix) {
     EXPECT_TRUE(y1.isApprox(y1expected, 1e-9));
 
     // Case2
-    Load l2("l2", 3, { 1, 1, 1 });
-    MatrixXcd y2 = l2.compute_y_parameters_num(1500);
+    Load l2("l2", "AC1", 3, { 1, 1, 1 });
+    MatrixXcd y2 = vectorToMatrix(l2.compute_y_parameters(1500/2.0/M_PI));
     Eigen::MatrixXcd y2expected = Eigen::MatrixXcd::Zero(6, 6);
     std::complex<double> value(4.44445e-07, -0.000666667);
     y2expected.diagonal().setConstant(value);
@@ -81,12 +79,12 @@ TEST_F(TestLoad, TestResistance) {
     testing::internal::CaptureStderr();
 
     // Case 1
-    Load l1("l1", 1, { 7, 0, 1 });
+    Load l1("l1", "AC1", 1, { 7, 0, 1 });
     EXPECT_DOUBLE_EQ(l1.getResistance(0), 7);
     EXPECT_THROW(l1.getResistance(1), std::out_of_range);
 
     // Case 2
-    Load l2("l2", 3, { 7, 8, 9 });
+    Load l2("l2", "AC1", 3, { 7, 8, 9 });
     EXPECT_DOUBLE_EQ(l2.getResistance(0), 7);
     EXPECT_DOUBLE_EQ(l2.getResistance(1), 7);
     EXPECT_DOUBLE_EQ(l2.getResistance(2), 7);
@@ -106,12 +104,12 @@ TEST_F(TestLoad, TestInductance) {
     testing::internal::CaptureStderr();
 
     // Case 1
-    Load l1("l1", 1, { 1, 7, 1 });
+    Load l1("l1", "AC1", 1, { 1, 7, 1 });
     EXPECT_DOUBLE_EQ(l1.getInductance(0), 7);
     EXPECT_THROW(l1.getInductance(1), std::out_of_range);
 
     // Case 2
-    Load l2("l2", 3, { 7, 8, 9 });
+    Load l2("l2", "AC1", 3, { 7, 8, 9 });
     EXPECT_DOUBLE_EQ(l2.getInductance(0), 8);
     EXPECT_DOUBLE_EQ(l2.getInductance(1), 8);
     EXPECT_DOUBLE_EQ(l2.getInductance(2), 8);
@@ -131,12 +129,12 @@ TEST_F(TestLoad, TestCapacitance) {
     testing::internal::CaptureStderr();
 
     // Case 1
-    Load l1("l1", 1, { 1, 1, 7 });
+    Load l1("l1", "AC1", 1, { 1, 1, 7 });
     EXPECT_DOUBLE_EQ(l1.getCapacitance(0), 7);
     EXPECT_THROW(l1.getCapacitance(1), std::out_of_range);
 
     // Case 2
-    Load l2("l2", 3, { 7, 8, 9 });
+    Load l2("l2", "AC1", 3, { 7, 8, 9 });
     EXPECT_DOUBLE_EQ(l2.getCapacitance(0), 9);
     EXPECT_DOUBLE_EQ(l2.getCapacitance(1), 9);
     EXPECT_DOUBLE_EQ(l2.getCapacitance(2), 9);

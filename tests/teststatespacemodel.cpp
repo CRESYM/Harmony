@@ -7,16 +7,16 @@ class TestStateSpaceModel : public testing::Test {};
 
 TEST_F(TestStateSpaceModel, TestCutsets) {
 	// Cutset
-	Bus* bus0 = new Bus("0", 1);
-	Bus* bus1 = new Bus("1", 1);
-	Bus* bus2 = new Bus("2", 1);
+	Bus* bus0 = new Bus("0", "AC1", 1);
+	Bus* bus1 = new Bus("1", "AC1", 1);
+	Bus* bus2 = new Bus("2", "AC1", 1);
 
 	std::vector<Bus*> buses = { bus0, bus1, bus2 };
 	// Create Elements (assumes ACSource and Resistor constructors take two buses and a value)
-	AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
-	Resistor* r1 = new Resistor("R1", 2, 2.0);
-	Resistor* r2 = new Resistor("R2", 2, 2.0);
-	Resistor* r3 = new Resistor("R3", 2, 2.0);
+	AC_source* ac = new AC_source("ac", "AC1", 1, 345e3, DenseMatrix(1, 1, { integer(10) }));
+	Resistor* r1 = new Resistor("R1", "AC1", 1, { 2.0 });
+	Resistor* r2 = new Resistor("R2", "AC1", 1, { 2.0 });
+	Resistor* r3 = new Resistor("R3", "AC1", 1, { 2.0 });
 
 	// Manually connect elements to buses
 	ac->attachBus(bus1, 1);
@@ -40,7 +40,7 @@ TEST_F(TestStateSpaceModel, TestCutsets) {
 	StateSpaceModel model;
 
 	//Generate all bus cutsets
-	std::vector<std::vector<Bus*>> cutset_nodes = model.from_cutset_nodes(buses, {});
+	std::vector<std::vector<Bus*>> cutset_nodes = model.form_cutset_nodes(buses, {});
 
 	std::cout << "Cutset Nodes:" << std::endl;
 	for (const auto& group : cutset_nodes) {
@@ -52,7 +52,7 @@ TEST_F(TestStateSpaceModel, TestCutsets) {
 	}
 
 	// Generate element cutsets from the bus cutsets
-	std::vector<std::vector<Element*>> cutset_elements = model.from_cutsets(cutset_nodes, busToElementsMap);
+	std::vector<std::vector<Element*>> cutset_elements = model.form_cutsets(cutset_nodes, busToElementsMap);
 
 	std::cout << "\nCutset Elements:" << std::endl;
 	for (const auto& group : cutset_elements) {
@@ -78,16 +78,16 @@ TEST_F(TestStateSpaceModel, TestCutsets) {
 
 TEST_F(TestStateSpaceModel, TestLoops) {
 	// Cutset
-	Bus* bus0 = new Bus("0", 1);
-	Bus* bus1 = new Bus("1", 1);
-	Bus* bus2 = new Bus("2", 1);
+	Bus* bus0 = new Bus("0", "AC1", 1);
+	Bus* bus1 = new Bus("1", "AC1", 1);
+	Bus* bus2 = new Bus("2", "AC1", 1);
 
 	std::vector<Bus*> buses = { bus0, bus1, bus2 };
 	// Create Elements (assumes ACSource and Resistor constructors take two buses and a value)
-	AC_source* ac = new AC_source("ac", 1, DenseMatrix(1, 1, { integer(10) }));
-	Resistor* r1 = new Resistor("R1", 2, 2.0);
-	Resistor* r2 = new Resistor("R2", 2, 2.0);
-	Resistor* r3 = new Resistor("R3", 2, 2.0);
+	AC_source* ac = new AC_source("ac", "AC1", 1, 345e3, DenseMatrix(1, 1, { integer(10) }));
+	Resistor* r1 = new Resistor("R1", "AC1", 1, { 2.0 });
+	Resistor* r2 = new Resistor("R2", "AC1", 1, { 2.0 });
+	Resistor* r3 = new Resistor("R3", "AC1", 1, { 2.0 });
 
 	// Manually connect elements to buses
 	ac->attachBus(bus1, 1);

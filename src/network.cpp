@@ -1,8 +1,10 @@
 ﻿#include "network.h"
-#include "Element.h" 
+#include "./Elements/Element.h" 
 #include "Bus.h"
-#include <algorithm>
-#include <stdexcept>
+
+
+Network::Network() : pins(0) {
+}
 
 
 Network::~Network() {
@@ -45,6 +47,12 @@ void Network::addElement(const std::string& designator, Element* elem) {
 
 // Function to connect an element to a bus
 void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
+    if (elements.find(elem->getElementSymbol()) == elements.end()) {
+		elements[elem->getElementSymbol()] = elem;  // Add the element if it doesn't exist
+	}
+    if (buses.find(bus->getBusName()) == buses.end()) {
+        buses[bus->getBusName()] = bus;  // Add the bus if it doesn't exist
+	}
     int pins;
     if (terminal == 1) {
         pins = elem->getInputPins();
@@ -59,10 +67,6 @@ void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
         exit(1);
     }
 
-    //std::cout << "[Debug] Trying to connect " << elem->getElementSymbol()
-    //    << " (pins=" << pins << ", terminal=" << terminal << ") to bus "
-    //    << bus->getBusName() << " (bus pins=" << bus->getPinNumber() << ")\n";
-
     // Check if the number of pins matches between the element and the bus
     if (pins == bus->getPinNumber()) {
         // Add the element to the connections map for this bus
@@ -71,8 +75,6 @@ void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
         elem->attachBus(bus, terminal);
         // Attach the element to the bus
         bus->attachElement(elem);  // Attach the element to the bus
-        //std::cout << "[Debug] Successfully connected " << elem->getElementSymbol()
-        //    << " to bus " << bus->getBusName() << std::endl;
     }
     else {
         std::cerr << "Connection failed: element pins = " << pins
@@ -113,7 +115,19 @@ void Network::printConnections() {
         for (Element* elem : connection.second) {
             std::cout << "  - " << elem->getElementSymbol() << std::endl; // Use the getter method
         }
-        std::cout << "Total number of pins is " << pins << std::endl;
+        //std::cout << "Total number of pins is " << pins << std::endl;
+    }
+}
+
+void Network::printBuses() {
+    for (const auto& bus : buses) {
+        std::cout << "Bus: " << bus.first << ", Pin Number: " << bus.second->getPinNumber() << std::endl;
+    }
+}
+
+void Network::printElements() {
+    for (const auto& elem : elements) {
+        std::cout << "Element: " << elem.first << ", Symbol: " << elem.second->getElementSymbol() << std::endl;
     }
 }
 
