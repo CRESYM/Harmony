@@ -7,24 +7,36 @@ using JSON = nlohmann::json;
 
 
 using ComponentType = std::variant<
+	// Sources
 	AC_source,
+	Generator,
+	// Impedance
 	Admittance,
-	Cable,
+	Impedance,
 	Capacitor,
+	Inductor,
+	Resistor,
+	// Transmission Line
+	TransmissionLine,
+	Cable,
+	Overhead_Line,
+	// Load
+	Load,
+	LoadPQ,
+	// Converter
+	MMC,
+	// Controllers
 	Controller,
 	Filter,
-	Impedance,
-	Inductor,
-	Generator,
-	Load,
-	MMC,
-	Overhead_Line,
-	Resistor,
+	// Switches and relays
 	Switch,
+	// Transformer
 	TransformerDeltaDelta,
+	TransformerDeltaY_real,
 	TransformerDeltaY,
 	Transformer_real,
 	TransformerYDelta,
+	TransformerYY_real,
 	TransformerYY,
 	TransmissionLine
 >;
@@ -38,8 +50,17 @@ public:
 private:
 
 	// One builder function per component type
-
+	// 
+	// Impedance
+	static Capacitor buildCapacitor(const JSON& comp);
+	static Inductor buildInductor(const JSON& comp);
+	static Resistor buildResistor(const JSON& comp);
+	// Loads
 	static Load buildLoad(const JSON& comp);
+	static LoadPQ buildLoadPQ(const JSON& comp);
+	// Source
+	static AC_source buildACSource(const JSON& comp);
+	static Generator buildGenerator(const JSON& comp);
 
 	static Transformer_real buildTransformerReal(const JSON& comp);
 

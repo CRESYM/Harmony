@@ -32,6 +32,36 @@ ComponentType ComponentBuilder::buildFromJSON(const JSON& comp, const unsigned i
 	}
 }
 
+Capacitor ComponentBuilder::buildCapacitor(const JSON& comp) {
+	findNonEmptyNumericArray("values", comp);
+
+	std::string id = comp["id"];
+	std::string location = comp["location"];
+	int pins = comp["pins"];
+	std::vector<double> values = comp["values"].get<std::vector<double>>();
+	return Capacitor(id, location, pins, values);
+}
+
+Inductor ComponentBuilder::buildInductor(const JSON& comp) {
+	findNonEmptyNumericArray("values", comp);
+
+	std::string id = comp["id"];
+	std::string location = comp["location"];
+	int pins = comp["pins"];
+	std::vector<double> values = comp["values"].get<std::vector<double>>();
+	return Inductor(id, location, pins, values);
+}
+
+Resistor ComponentBuilder::buildResistor(const JSON& comp) {
+	findNonEmptyNumericArray("values", comp);
+
+	std::string id = comp["id"];
+	std::string location = comp["location"];
+	int pins = comp["pins"];
+	std::vector<double> values = comp["values"].get<std::vector<double>>();
+	return Load(id, location, pins, values);
+}
+
 Load ComponentBuilder::buildLoad(const JSON& comp) {
 	findNonEmptyNumericArray("values", comp);
 
@@ -40,6 +70,36 @@ Load ComponentBuilder::buildLoad(const JSON& comp) {
 	int pins = comp["pins"];
 	std::vector<double> values = comp["values"].get<std::vector<double>>();
 	return Load(id, location, pins, values);
+}
+
+LoadPQ ComponentBuilder::buildLoadPQ(const JSON& comp) {
+	findNonEmptyNumericArray("values", comp);
+
+	std::string id = comp["id"];
+	std::string location = comp["location"];
+	int pins = comp["pins"];
+	std::vector<double> values = comp["values"].get<std::vector<double>>();
+	return LoadPQ(id, location, pins, values);
+}
+
+AC_source ComponentBuilder::buildACSource(const JSON& comp) {
+	findNonEmptyNumericArray("values", comp);
+	std::string id = comp["id"];
+	std::string location = comp["location"];
+	int pins = comp["pins"];
+	double V = comp["voltage"];
+	std::vector<double> values = comp["values"].get<std::vector<double>>();
+	return AC_source(id, location, pins, V, values);
+}
+
+Generator ComponentBuilder::buildGenerator(const JSON& comp) {
+	findNonEmptyNumericArray("values", comp);
+	std::string id = comp["id"];
+	std::string location = comp["location"];
+	int pins = comp["pins"];
+	double V = comp["voltage"];
+	std::vector<double> values = comp["values"].get<std::vector<double>>();
+	return Generator(id, location, pins, V, values);
 }
 
 Transformer_real ComponentBuilder::buildTransformerReal(const JSON& comp) {
