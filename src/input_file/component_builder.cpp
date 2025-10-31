@@ -106,17 +106,17 @@ Transformer_real ComponentBuilder::buildTransformerReal(const JSON& comp) {
 
 	if (comp.contains("values")) {
 		findNumber("R_primary", comp["values"]);
-		findNumber("X_primary", comp["values"]);
+		findNumber("L_primary", comp["values"]);
 		findNumber("R_secondary", comp["values"]);
-		findNumber("X_secondary", comp["values"]);
+		findNumber("L_secondary", comp["values"]);
 		findNumber("turns_ratio", comp["values"]);
 		findNumber("phase_shift", comp["values"]);
 
 		std::vector<double> values;
 		values.push_back(comp["values"]["R_primary"]);
-		values.push_back(comp["values"]["X_primary"]);
-		values.push_back(comp["values"]["R_secondary"]);
-		values.push_back(comp["values"]["X_secondary"]);
+		values.push_back(comp["values"]["L_primary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["L_secondary"]);
 		values.push_back(comp["values"]["turns_ratio"]);
 		values.push_back(comp["values"]["phase_shift"]);
 
@@ -124,6 +124,178 @@ Transformer_real ComponentBuilder::buildTransformerReal(const JSON& comp) {
 		std::string location = comp["location"];
 		int pins = comp["pins"];
 		return Transformer_real(id, location, pins, values);
+
+	}
+}
+
+Transformer_classic ComponentBuilder::buildTransformerClassic(const JSON& comp) {
+
+	if (comp.contains("values")) {
+		findNumber("R_primary", comp["values"]);
+		findNumber("L_primary", comp["values"]);
+		findNumber("R_secondary", comp["values"]);
+		findNumber("L_secondary", comp["values"]);
+		findNumber("M", comp["values"]);
+
+		std::vector<double> values;
+		values.push_back(comp["values"]["R_primary"]);
+		values.push_back(comp["values"]["L_primary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["M"]);
+
+		std::string id = comp["id"];
+		std::string location = comp["location"];
+		int pins = comp["pins"];
+		return Transformer_classic(id, location, pins, values);
+
+	}
+}
+
+TransformerYY ComponentBuilder::buildTransformerYY(const JSON& comp) {
+
+	if (comp.contains("values")) {
+		findNumber("R_primary", comp["values"]);
+		findNumber("L_primary", comp["values"]);
+		findNumber("R_secondary", comp["values"]);
+		findNumber("L_secondary", comp["values"]);
+		findNumber("M", comp["values"]);
+
+		std::vector<double> values;
+		values.push_back(comp["values"]["R_primary"]);
+		values.push_back(comp["values"]["L_primary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["M"]);
+
+		std::string id = comp["id"];
+		std::string location = comp["location"];
+		int pins = comp["pins"];
+		return TransformerYY(id, location, pins, values);
+
+	}
+}
+
+TransformerYY_real ComponentBuilder::buildTransformerYYReal(const JSON& comp) {
+
+	if (comp.contains("values")) {
+		findNumber("R_primary", comp["values"]);
+		findNumber("L_primary", comp["values"]);
+		findNumber("R_secondary", comp["values"]);
+		findNumber("L_secondary", comp["values"]);
+		findNumber("turns_ratio", comp["values"]);
+		findNumber("phase_shift", comp["values"]);
+
+		std::vector<double> values;
+		values.push_back(comp["values"]["R_primary"]);
+		values.push_back(comp["values"]["L_primary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["turns_ratio"]);
+		values.push_back(comp["values"]["phase_shift"]);
+
+		std::string id = comp["id"];
+		std::string location = comp["location"];
+		int pins = comp["pins"];
+		return TransformerYY_real(id, location, pins, values);
+
+	}
+}
+
+TransformerDeltaY ComponentBuilder::buildTransformerDeltaY(const JSON& comp) {
+
+	if (comp.contains("values")) {
+		findNumber("R_primary", comp["values"]);
+		findNumber("L_primary", comp["values"]);
+		findNumber("R_secondary", comp["values"]);
+		findNumber("L_secondary", comp["values"]);
+		findNumber("M", comp["values"]);
+
+		std::vector<double> values;
+		values.push_back(comp["values"]["R_primary"]);
+		values.push_back(comp["values"]["L_primary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["M"]);
+
+		std::string id = comp["id"];
+		std::string location = comp["location"];
+		int pins = comp["pins"];
+		return TransformerDeltaY(id, location, pins, values);
+
+	}
+}
+
+TransformerDeltaY_real ComponentBuilder::buildTransformerDeltaYReal(const JSON& comp) {
+
+	if (comp.contains("values")) {
+		findNumber("R_primary", comp["values"]);
+		findNumber("L_primary", comp["values"]);
+		findNumber("R_secondary", comp["values"]);
+		findNumber("L_secondary", comp["values"]);
+		findNumber("turns_ratio", comp["values"]);
+		findNumber("phase_shift", comp["values"]);
+
+		std::vector<double> values;
+		values.push_back(comp["values"]["R_primary"]);
+		values.push_back(comp["values"]["L_primary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["turns_ratio"]);
+		values.push_back(comp["values"]["phase_shift"]);
+
+		std::string id = comp["id"];
+		std::string location = comp["location"];
+		int pins = comp["pins"];
+		return TransformerDeltaY_real(id, location, pins, values);
+
+	}
+}
+
+TransformerYDelta ComponentBuilder::buildTransformerYDelta(const JSON& comp) {
+
+	if (comp.contains("values")) {
+		findNumber("R_primary", comp["values"]);
+		findNumber("L_primary", comp["values"]);
+		findNumber("R_secondary", comp["values"]);
+		findNumber("L_secondary", comp["values"]);
+		findNumber("M", comp["values"]);
+
+		std::vector<double> values;
+		values.push_back(comp["values"]["R_primary"]);
+		values.push_back(comp["values"]["L_primary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["M"]);
+
+		std::string id = comp["id"];
+		std::string location = comp["location"];
+		int pins = comp["pins"];
+		return TransformerYDelta(id, location, pins, values);
+
+	}
+}
+
+TransformerDeltaDelta ComponentBuilder::buildTransformerDeltaDelta(const JSON& comp) {
+
+	if (comp.contains("values")) {
+		findNumber("R_primary", comp["values"]);
+		findNumber("L_primary", comp["values"]);
+		findNumber("R_secondary", comp["values"]);
+		findNumber("L_secondary", comp["values"]);
+		findNumber("M", comp["values"]);
+
+		std::vector<double> values;
+		values.push_back(comp["values"]["R_primary"]);
+		values.push_back(comp["values"]["L_primary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["L_secondary"]);
+		values.push_back(comp["values"]["M"]);
+
+		std::string id = comp["id"];
+		std::string location = comp["location"];
+		int pins = comp["pins"];
+		return TransformerDeltaDelta(id, location, pins, values);
 
 	}
 }

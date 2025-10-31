@@ -35,10 +35,10 @@ using ComponentType = std::variant<
 	TransformerDeltaY_real,
 	TransformerDeltaY,
 	Transformer_real,
+	Transformer_classic,
 	TransformerYDelta,
 	TransformerYY_real,
-	TransformerYY,
-	TransmissionLine
+	TransformerYY
 >;
 
 class ComponentBuilder {
@@ -55,14 +55,24 @@ private:
 	static Capacitor buildCapacitor(const JSON& comp);
 	static Inductor buildInductor(const JSON& comp);
 	static Resistor buildResistor(const JSON& comp);
+	static Impedance buildImpedance(const JSON& comp);
+	static Admittance buildAdmittance(const JSON& comp);
 	// Loads
 	static Load buildLoad(const JSON& comp);
 	static LoadPQ buildLoadPQ(const JSON& comp);
 	// Source
 	static AC_source buildACSource(const JSON& comp);
 	static Generator buildGenerator(const JSON& comp);
-
+	// Transformer
 	static Transformer_real buildTransformerReal(const JSON& comp);
+	static Transformer_classic buildTransformerClassic(const JSON& comp);
+	static TransformerDeltaDelta buildTransformerDeltaDelta(const JSON& comp);
+	static TransformerDeltaY_real buildTransformerDeltaYReal(const JSON& comp);
+	static TransformerDeltaY buildTransformerDeltaY(const JSON& comp);
+	static TransformerYDelta buildTransformerYDelta(const JSON& comp);
+	static TransformerYY_real buildTransformerYYReal(const JSON& comp);
+	static TransformerYY buildTransformerYY(const JSON& comp);
+
 
 	// Helper functions to check for a specific key within a JSON component
 	// Throws invalid_argument if not found or invalid
