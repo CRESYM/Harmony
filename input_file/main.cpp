@@ -7,7 +7,7 @@
 
 int main() {
 
-	std::string inputfilepath = "../example.json";
+	std::string inputfilepath = "../../../src/examples/example.json";
 
 	// Check input file exists
 	if (!std::filesystem::exists(inputfilepath)) {
@@ -46,7 +46,7 @@ int main() {
 	// Print information of each element
 	std::vector<ComponentType> components = sim.getComponents();
 	for (const auto& c : components) {
-		std::visit([](const auto& elem){ //elem.printElementInfo(); 
+		std::visit([](const auto& elem) { elem.printElementInfo();
 			}, c);
 	}
 

@@ -30,9 +30,9 @@ find_package(casadi CONFIG)
 # They need to be configured after add_executable(Harmony ...)
 
 # Define HARMONY_SOURCE_FILES variable (all of Harmony's' *.cpp files except main.cpp)
-file(GLOB HARMONY_SOURCE_FILES "${CMAKE_SOURCE_DIR}/../*.cpp")
+file(GLOB_RECURSE HARMONY_SOURCE_FILES "${CMAKE_SOURCE_DIR}/../src/*.cpp")
 # Remove main.cpp from source file list (we are testing on a class basis)
-list(REMOVE_ITEM HARMONY_SOURCE_FILES "${CMAKE_SOURCE_DIR}/../main.cpp")
+list(REMOVE_ITEM HARMONY_SOURCE_FILES "${CMAKE_SOURCE_DIR}/../src/main.cpp")
 
 # Define an executable named 'Harmony' made up of source and header files
 add_executable(

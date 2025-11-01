@@ -1,10 +1,11 @@
 #pragma once
 #include <iostream>
-#include "../Include_components.h"
 
 #include <nlohmann/json.hpp>
 using JSON = nlohmann::json;
 
+#include "../src/network.h"
+#include "../src/Include_components.h"
 
 using ComponentType = std::variant<
 	// Sources
@@ -25,9 +26,6 @@ using ComponentType = std::variant<
 	LoadPQ,
 	// Converter
 	MMC,
-	// Controllers
-	Controller,
-	Filter,
 	// Switches and relays
 	Switch,
 	// Transformer
@@ -55,8 +53,8 @@ private:
 	static Capacitor buildCapacitor(const JSON& comp);
 	static Inductor buildInductor(const JSON& comp);
 	static Resistor buildResistor(const JSON& comp);
-	static Impedance buildImpedance(const JSON& comp);
-	static Admittance buildAdmittance(const JSON& comp);
+	//static Impedance buildImpedance(const JSON& comp);
+	//static Admittance buildAdmittance(const JSON& comp);
 	// Loads
 	static Load buildLoad(const JSON& comp);
 	static LoadPQ buildLoadPQ(const JSON& comp);

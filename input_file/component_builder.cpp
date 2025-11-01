@@ -21,6 +21,19 @@ ComponentType ComponentBuilder::buildFromJSON(const JSON& comp, const unsigned i
 		// create element
 		if (comptype == "load") { return buildLoad(comp); }
 		else if (comptype == "transformer_real") { return buildTransformerReal(comp); }
+		else if (comptype == "transformer_classic") { return buildTransformerClassic(comp); }
+		else if (comptype == "transformer_yy") { return buildTransformerYY(comp); }
+		else if (comptype == "transformer_yy_real") { return buildTransformerYYReal(comp); }
+		else if (comptype == "transformer_deltay") { return buildTransformerDeltaY(comp); }
+		else if (comptype == "transformer_deltay_real") { return buildTransformerDeltaYReal(comp); }
+		else if (comptype == "transformer_ydelta") { return buildTransformerYDelta(comp); }
+		else if (comptype == "transformer_deltadelta") { return buildTransformerDeltaDelta(comp); }
+		else if (comptype == "load_pq") { return buildLoadPQ(comp); }
+		else if (comptype == "ac_source") { return buildACSource(comp); }
+		else if (comptype == "generator") { return buildGenerator(comp); }
+		else if (comptype == "capacitor") { return buildCapacitor(comp); }
+		else if (comptype == "inductor") { return buildInductor(comp); }
+		else if (comptype == "resistor") { return buildResistor(comp); }
 		else {
 			// Unknown component type
 			throw std::invalid_argument("ERROR: Component [" + std::to_string(i) + "] has unknown type '" + comptype + "'.\n");
@@ -59,7 +72,7 @@ Resistor ComponentBuilder::buildResistor(const JSON& comp) {
 	std::string location = comp["location"];
 	int pins = comp["pins"];
 	std::vector<double> values = comp["values"].get<std::vector<double>>();
-	return Load(id, location, pins, values);
+	return Resistor(id, location, pins, values);
 }
 
 Load ComponentBuilder::buildLoad(const JSON& comp) {
