@@ -45,6 +45,7 @@ To build and run Harmony, open Visual Studio and select "Continue without code" 
 # Donwload the repository
 git clone https://github.com/CRESYM/Harmony.git
 cd Harmony
+# If you want to run the code with input file, go to the folder input_file (cd Harmony/src/input_file) and follow the rest of the istructions
 
 # Create conda environment with dependencies
 conda env create -f environment.yml
@@ -63,6 +64,8 @@ cmake --build . --config Release
 cd Release
 ./Harmony
 ```
+
+
 
 ### Run the tests
 To run the tests, you should follow a similar procedure as for the building and running the code.
