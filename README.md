@@ -2,11 +2,11 @@
 
 HARMONic stabilitY assessment of PE-penetrated power systems
 
-Like other power systems, the European grid experiences a massive RES development, bringing up many new challenges for system operation. One of such challenges is the massive penetration of Power Electronic (PE) converters (e.g. PV & wind generation units, batteries & chargers, HVDC connections, statcoms, etc.) on a large scale as they may cause instable system operation (resonance) or harmonic waves that can interfere and/or damage the neighbouring equipment. 
+Like other power systems, the European grid experiences a massive RES development, bringing up many new challenges for system operation. One of such challenges is the massive penetration of Power Electronic (PE) converters (e.g., PV & wind generation units, batteries & chargers, HVDC connections, statcoms, etc.) on a large scale, as they may cause unstable system operation (resonance) or harmonic waves that can interfere and/or damage the neighbouring equipment. 
 
-Where a few, local (a plant) and rather simple situations had to be analysed in the past, the risk is growing exponentially, as more devices connect, as they are more diverse, and as they are closer to one another. Grid regulations are all the more demanding because complex situations cannot actually be addressed. And, as a consequence, strong mitigation measures are integrated in every piece of equipment, at a significant additional cost… without preventing all undesired interactions.    
+Where a few, local (a plant) and rather simple situations had to be analyzed in the past, the risk is growing exponentially as more devices connect, become more diverse, and are closer to one another. Grid regulations are all the more demanding because complex situations cannot be addressed directly. And, as a consequence, strong mitigation measures are integrated in every piece of equipment, at a significant additional cost… without preventing all undesired interactions.    
 
-There is a small number of publicly available, but limited, tools for such analyses, often requiring time-consuming modeling of the power system and the detailed control algorithms, possibly limited in terms of phasor-based simulation, or unable to model all power converters, or unable to satisfactorily model an AC-DC hybrid system. 
+There is a limited number of publicly available tools for such analyses, often requiring time-consuming modeling of the power system and detailed control algorithms, which may be limited in terms of phasor-based simulation, unable to model all power converters, or unable to satisfactorily model an AC-DC hybrid system. 
 Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) project deals with the development of a mathematical framework capable of simulating all components in AC-DC systems for converter-driven stability assessment studies becomes crucial, in order to complement present tools, and eventually:  
 
 (i) ease the performance of stability assessment studies; 
@@ -36,16 +36,17 @@ Harmony can be compiled on Windows. The requirements are:
 - [gnuplot](https://sourceforge.net/projects/gnuplot/) - required by Matplot++ at runtime. Install through one of the [provided installers](https://sourceforge.net/projects/gnuplot/files/gnuplot/).
 
 > [!WARNING]
-> When installing gnuplot, make sure you select the option **'Add application directory to your PATH environment variable'**. The option can be a bit hidden in the installer so pay close attention. This option allows gnuplot to be discoverable by Harmony at execution time. 
+> When installing gnuplot, make sure you select the option **'Add application directory to your PATH environment variable'**. The option can be a bit hidden in the installer, so pay close attention to it. This option allows gnuplot to be discoverable by Harmony at execution time. 
 
 ### Build and Run
-To build and run Harmony, open Visual Studio and select "Continue without code" on the welcome dialogue. From the top menu, select View->Terminal. This will open the Visual Studio developer prompt. From there, type the following commands:
+To build and run Harmony, open Visual Studio and select "Continue without code" on the welcome dialogue. From the top menu, select View->Terminal. This will open the Visual Studio Developer Command Prompt. From there, type the following commands:
 
 ```bash
-# Donwload the repository
+# Download the repository
 git clone https://github.com/CRESYM/Harmony.git
 cd Harmony
-# If you want to run the code with input file, go to the folder input_file (cd Harmony/src/input_file) and follow the rest of the istructions
+# If you want to run the code with an input file, go to the folder input_file
+# (cd Harmony/src/input_file) and follow the rest of the instructions
 
 # Create conda environment with dependencies
 conda env create -f environment.yml
@@ -68,7 +69,7 @@ cd Release
 
 
 ### Run the tests
-To run the tests, you should follow a similar procedure as for the building and running the code.
+To run the tests, you should follow a similar procedure to building and running the code.
 ```bash
 # Open the tests directory
 cd tests
