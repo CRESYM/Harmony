@@ -18,7 +18,7 @@ void example_stability_check() {
 
     ///*  ---------- 1.2 Add AC Loads  ---------- */
 
-    std::vector<double> load_params2 = { 2380.5, 18.9, 0 };
+    std::vector<double> load_params2 = { 2.28e3, 1.457, 0 };
     Load* load2 = new Load("LOAD02", "AC2", 3, load_params2);
     net.connectElementToBus(load2, 1, bus4_ac);
 

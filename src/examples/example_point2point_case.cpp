@@ -20,14 +20,17 @@ void example_point2point_case() {
 
     ///*  ---------- 1.2 Add AC Loads  ---------- */
 
-    std::vector<double> load_params2 = { 2380.5, 18.9, 0 };
+    // using RLC model
+    std::vector<double> load_params2 = { 2.28e3, 1.457, 0 };
     Load* load2 = new Load("LOAD02", "AC2", 3, load_params2);
+    // using PQ load model
+    // LoadPQ* load2 = new LoadPQ("LOAD02", "AC2", 3, { 50e6, 5e6 });
     net.connectElementToBus(load2, 1, bus4_ac);
 
     ///*  ---------- 1.3 Add AC Generators  ---------- */
 
     /// Generator 1
-    double Zsrc = 0.1; 
+    double Zsrc = 1; 
     AC_source* src1 = new AC_source("SRC01", "AC1", 3, 345e3, Zsrc);
     net.connectElementToBus(src1, 1, bus1_ac);
     map<string, double> src_info1 = {
@@ -48,13 +51,13 @@ void example_point2point_case() {
     src1->setOPFInfo(src_info1);
 
     ///*  ---------- 1.4 Add Branches  ---------- */
-    double ACR1 = 1e-1; double ACX1 = 1*10;
+    double ACR1 = 3; double ACX1 = 20;
     std::complex<double> ACZ1(ACR1, ACX1);
     Impedance* br1_ac = new Impedance("br1_ac", "AC1", 3, ACZ1);
     net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
 
-    double ACR2 = 1e-1; double ACX2 = 1*10;
+    double ACR2 = 3; double ACX2 = 20;
     std::complex<double> ACZ2(ACR2, ACX2);
     Impedance* br2_ac = new Impedance("br2_ac", "AC2", 3, ACZ2);
     net.connectElementToBus(br2_ac, /*terminal=*/1, bus3_ac);
@@ -65,7 +68,7 @@ void example_point2point_case() {
     Bus* bus2_dc = new Bus("DCBUS02", "DC1", 1);
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
-    double DCR1 = 0.05;
+    double DCR1 = 1;
     Impedance* br1_dc = new Impedance("br1_dc", "DC1", 1, DCR1);
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
