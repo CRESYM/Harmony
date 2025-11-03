@@ -54,6 +54,9 @@ public:
     void make_Generator(Element* element, std::map<std::string, double>& global_params, 
         bool print_info = false);
 
+    void make_RES(Element* element, std::map<std::string, double>& global_params,
+        bool print_info = false);
+
     void make_Load(Element* element, std::map<std::string, double>& global_params,
         bool print_info = false);
 

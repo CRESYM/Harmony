@@ -150,5 +150,5 @@ void example_point2point_case() {
     global_params["DCbaseKV"] = 400.0; // Base voltage for DC, can be adjusted as needed
     global_params["Z_base"] = global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"]; // Base impedance, can be adjusted as needed
 
-    pf.make_OPF(&net, global_params, false, false, false, true);
+    pf.make_OPF(&net, global_params, false, false, false, false);
 }

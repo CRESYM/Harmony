@@ -519,6 +519,7 @@ void PowerFlow::solve_opf(
                 pm_ac(index) += pgen_ac[ng](i);
                 qm_ac(index) += qgen_ac[ng](i);
             }
+
             for (int i = 0; i < nconvs_dc; ++i) {
                 if (static_cast<int>(conv_dc(i, 2)) == ng + 1) {
                     int index = static_cast<int>(conv_dc(i, 1)) - 1;
@@ -526,6 +527,13 @@ void PowerFlow::solve_opf(
                     qm_ac(index) -= qs_dc(i);
                 }
             }
+
+            for (int i = 0; i < nress_ac[ng]; ++i) {
+                int index = static_cast<int>(res_ac[ng](i, 0)) - 1;
+                pm_ac(index) += pres_ac[ng](i);
+                qm_ac(index) += qres_ac[ng](i);
+            }
+
             for (int i = 0; i < nbuses_ac[ng]; ++i) {
                 model.addConstr(pn_ac[ng](i) == pm_ac(i) - pd_ac[ng](i));
                 model.addConstr(qn_ac[ng](i) == qm_ac(i) - qd_ac[ng](i));

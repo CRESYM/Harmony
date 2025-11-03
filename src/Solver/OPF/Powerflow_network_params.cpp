@@ -5,6 +5,9 @@
 #include "../../Bus.h"
 #include "../../Include_components.h"
 #include "../../Elements/Converter/MMC.h"
+#include "../../Elements/RES/PV_plant.h"
+#include "../../Elements/RES/WT_type_3.h"
+#include "../../Elements/RES/WT_type_4.h"
 
 #include <map>
 #include <unordered_map>
@@ -590,6 +593,81 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
     }
 }
 
+void PowerFlow::make_RES(Element* element, std::map<std::string, double>& global_params,
+    bool print_info /* = false */)
+{
+    // Step 1. 找到连接母线
+    Bus* attachedBus = nullptr;
+    for (Bus* b : element->getBuses()) {
+        if (b->getBusName() != "gnd")
+            attachedBus = b;
+    }
+
+    if (!attachedBus)
+        throw std::runtime_error("[make_RES] Error: RES not connected to any bus.");
+
+    const std::string& bus_name = attachedBus->getBusName();
+    int bus_id = busName2Id_.at(bus_name);
+    std::string bus_row_key = std::to_string(bus_id - 1);
+
+    // Step 2. 从 busAC 表中读取所属 grid
+    if (!data["busAC"].count(bus_row_key))
+        throw std::runtime_error("[make_RES] Cannot find bus " + bus_name + " in busAC.");
+
+    double grid_id = data["busAC"][bus_row_key]["grid"];
+
+    // Step 3. 解析类型与额定功率
+    double Presmax = 0.0;
+    if (auto* pv = dynamic_cast<PVplant*>(element))
+        Presmax = pv->P_pv / 1e6;
+    else if (auto* wt3 = dynamic_cast<WTtype3*>(element))
+        Presmax = wt3->p / 1e6;
+    else if (auto* wt4 = dynamic_cast<WTtype4*>(element))
+        Presmax = wt4->Pwt / 1e6;
+    else
+        throw std::runtime_error("[make_RES] Unknown RES type detected.");
+
+    // Step 4. 写入 resAC（与 genAC 结构一致）
+    std::string key = std::to_string(data["resAC"].size());
+    auto& row = data["resAC"][key];
+
+    row["bus"] = static_cast<double>(bus_id);
+    row["Presmax"] = Presmax;
+    row["Sresmax"] = 1.1 * Presmax;
+    row["model"] = 2.0;
+    row["startup"] = 0.0;
+    row["shutdown"] = 0.0;
+    row["n"] = 3.0;
+    row["c2"] = 0.0;
+    row["c1"] = 0.0;
+    row["c0"] = 0.0;
+    row["vm"] = 1.0;
+    row["grid"] = grid_id;
+
+    if (print_info)
+    {
+        std::cout << "[make_RES] Element: " << element->getElementSymbol()
+            << ", attachedBus=" << bus_name
+            << ", bus_id=" << bus_id
+            << ", grid=" << grid_id
+            << ", Presmax=" << Presmax << std::endl;
+
+        constexpr const char* colOrder[11] = {
+            "bus","Presmax","Sresmax","model","startup","shutdown","n","c2","c1","c0","grid"
+        };
+
+        std::cout << "\n[data.resAC]  (" << data["resAC"].size() << " × 11)\n";
+        for (const auto& [key, row] : data["resAC"]) {
+            for (int c = 0; c < 11; ++c)
+                std::cout << std::setw(10) << row.at(colOrder[c]) << " ";
+            std::cout << '\n';
+        }
+        std::cout << std::endl;
+    }
+}
+
+
+
 void PowerFlow::make_Load(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
@@ -696,6 +774,12 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
             cout << "[make_OPF] Processing element: " << element_name << endl;
             make_Generator(element, global_params, print_info);
         }
+        else if (dynamic_cast<PVplant*>(element) ||
+            dynamic_cast<WTtype3*>(element) ||
+            dynamic_cast<WTtype4*>(element)) {
+            cout << "[make_OPF] Processing RES element: " << element_name << endl;
+            make_RES(element, global_params, print_info);
+        }
     }
 
 	// Process branches: AC and DC branches, i.e., transmission lines, impedances, etc.
@@ -719,6 +803,9 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
         else {
         }
 	}
+
+
+
 
     extendBusAC(data, net, global_params);
     extendBranchAC(data, net, global_params);
@@ -763,14 +850,13 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
     MatrixXd gencostAC = map2dense(data.at("genCostAC"),
         { "model","startup","shutdown","n","c2","c1","c0","grid" });
 
+
     reNumberBusAC(busAC, branchAC, genAC, gencostAC, convDC);
 
-    // for debug
     Eigen::MatrixXd resAC;
-
     if (data.find("resAC") != data.end()) {
         resAC = map2dense(data.at("resAC"),
-            { "bus","Presmax","Sresmax","model","startup","shutdown","n","c2","c1","c0","grid" });
+            { "bus","Presmax","Sresmax","model","startup","shutdown","n","c2","c1","c0","vm","grid" });
     }
     else {
         // fallback to default

@@ -4,6 +4,7 @@
 #include "RES_base.h"
 
 class WTtype4 : public RES_base {
+	friend class PowerFlow;
 public:
 	WTtype4(const string& symbol, const std::string& location, const vector<double>& parameters);
 

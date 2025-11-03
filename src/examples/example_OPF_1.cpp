@@ -37,19 +37,19 @@ void example_OPF_1() {
     LoadPQ* load4 = new LoadPQ("LOAD04", "AC1", 3, { 0.0, 0.0 });
     net9bus.connectElementToBus(load4, 1, bus4_ac);
 
-    LoadPQ* load5 = new LoadPQ("LOAD05", "AC1", 3, { 90.0, 30.0 });
+    LoadPQ* load5 = new LoadPQ("LOAD05", "AC1", 3, { 90e6, 30e6 });
     net9bus.connectElementToBus(load5, 1, bus5_ac);
 
     LoadPQ* load6 = new LoadPQ("LOAD06", "AC1", 3, { 0.0, 0.0 });
     net9bus.connectElementToBus(load6, 1, bus6_ac);
 
-    LoadPQ* load7 = new LoadPQ("LOAD07", "AC1", 3, { 100.0, 35.0 });
+    LoadPQ* load7 = new LoadPQ("LOAD07", "AC1", 3, { 100e6, 35e6 });
     net9bus.connectElementToBus(load7, 1, bus7_ac);
 
     LoadPQ* load8 = new LoadPQ("LOAD08", "AC1", 3, { 0.0, 0.0 });
     net9bus.connectElementToBus(load8, 1, bus8_ac);
 
-    LoadPQ* load9 = new LoadPQ("LOAD09", "AC1", 3, { 125.0, 50.0 });
+    LoadPQ* load9 = new LoadPQ("LOAD09", "AC1", 3, { 125e6, 50e6 });
     net9bus.connectElementToBus(load9, 1, bus9_ac);
 
     ///*  ---------- 1.3 Add AC Generators  ---------- */
@@ -122,6 +122,8 @@ void example_OPF_1() {
 
     PVplant* pv1 = new PVplant("PV1", "AC1", pv_parameters);
     net9bus.connectElementToBus(pv1, 1, bus5_ac);
+
+
 
     ///*  ---------- 1.4 Add Branches  ---------- */
     double ACR1 = 0.0; double ACX1 = 0.0576;

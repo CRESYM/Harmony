@@ -9,6 +9,7 @@
 * The PV array is taken as an aggregated model of the entire plant.
 */
 class PVplant : public RES_base {
+	friend class PowerFlow;
 public:
 	PVplant(const string& symbol, const std::string& location, const vector<double>& parameters);
 	~PVplant() {}
