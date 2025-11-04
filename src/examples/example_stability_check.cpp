@@ -75,7 +75,7 @@ void example_stability_check() {
         0 * 1e6,        // Reactive Power (Q) in VA
         0.0,            // Theta (Voltage Angle in rad)
         345.0 * 1e3,    // AC Voltage (V_m) in V
-        100 * 1e6,       // DC power (P_dc) in W
+        50 * 1e6,       // DC power (P_dc) in W
         400.0 * 1e3,    // DC Voltage (V_dc) in kV
         0.05,           // Arm Inductance (L_arm) in H
         1.07,           // Arm Resistance (R_arm) in Ω
@@ -88,7 +88,7 @@ void example_stability_check() {
     std::vector<double> controller_params1 = {
         1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
         0, // DC voltage controller parameters
-        1, 0, 6.6667e-07, 3.3333e-04, 1, 100e6, // active power
+        1, 0, 6.6667e-07, 3.3333e-04, 1, 50e6, // active power
         0, // AC voltage
         1, 0, 6.6667e-07, 3.3333e-04, 1, 0, // reactive power
         1, 0, 120, 400, 1, 0, // energy controller parameters 
@@ -103,11 +103,11 @@ void example_stability_check() {
 
     vector<double> converter_params2 = {
         2 * M_PI * 50,  // Omega (Nominal Frequency in rad/s)
-        -100.0 * 1e6,    // Active Power (P) in W
-        0,          // Reactive Power (Q) in VA
+        -50.0 * 1e6,   // Active Power (P) in W
+        -10e6,              // Reactive Power (Q) in VA
         0.0,            // Theta (Voltage Angle in rad)
         345.0 * 1e3,    // AC Voltage (V_m) in V
-        -50 * 1e6,       // DC power (P_dc) in W
+        -50 * 1e6,     // DC power (P_dc) in W
         400.0 * 1e3,    // DC Voltage (V_dc) in kV
         0.05,           // Arm Inductance (L_arm) in H
         1.07,           // Arm Resistance (R_arm) in Ω
@@ -122,7 +122,7 @@ void example_stability_check() {
         1, 0, 2, 82, 2, 0, 400e3, // DC voltage controller parameters
         0, // active power
         0, // AC voltage
-        1, 0, 6.6667e-07, 3.3333e-04, 1, 0, // reactive power
+        1, 0, 6.6667e-07, 3.3333e-04, 1, -10e6, // reactive power
         1, 0, 120, 400, 1, 0, // energy controller parameters 
         1, 0, 19.93, 4500, 1, -41.66, // zcc controller parameters 
         1, 0, 117.93, 8.5e4, 2, -89.71, 0, // occ controller parameters
@@ -154,8 +154,16 @@ void example_stability_check() {
     // TO TEST TRANSFER FUNCTION COMPUTATION
     stability->compute_transfer_function("MMC2", "AC", 1000);
 
+    MatrixXcd Y1 = vectorToMatrix(mmc1->compute_y_parameters(1000));
+	MatrixXcd Y2 = vectorToMatrix(mmc2->compute_y_parameters(1000));
+
+	cout << "Y1 at 1000 Hz: \n" << setprecision(10) << Y1 << endl;
+	cout << "Y2 at 1000 Hz: \n" << setprecision(10) << Y2 << endl;
+
+    //mmc2->plotYParameters(1, 1000, 1000);
+
 	//stability->writeFileTF("MMC2", "DC", 10, 2000, 500);
-	stability->bodeplotTF("MMC2", "DC", 0.1, 2000, 1500);
+	//stability->bodeplotTF("MMC2", "DC", 0.1, 10000, 10000);
 	//stability->nyquistplotTF("MMC2", "DC", 10, 2000, 2000);
 
     delete stability;
