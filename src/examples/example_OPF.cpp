@@ -25,19 +25,19 @@ void example_OPF() {
     //LoadPQ* load1 = new LoadPQ("LOAD01", "AC1", 3, load_params1);
     //net.connectElementToBus(load1, 1, bus1_ac);
 
-    std::vector<double> load_params2 = { 5950, 37.9, 0 };
+    std::vector<double> load_params2 = { 4761, 7.58, 0 };
     Load* load2 = new Load("LOAD02", "AC1", 3, load_params2);
     net.connectElementToBus(load2, 1, bus2_ac);
 
-    std::vector<double> load_params3 = { 2650, 25.2, 0 };
+    std::vector<double> load_params3 = { 2380.5, 2.526, 0 };
     Load* load3 = new Load("LOAD03", "AC1", 3, load_params3);
     net.connectElementToBus(load3, 1, bus3_ac);
 
-    std::vector<double> load_params4 = { 2976, 75.7, 0 };
+    std::vector<double> load_params4 = { 2929.85, 1.166, 0 };
     Load* load4 = new Load("LOAD04", "AC1", 3, load_params4);
     net.connectElementToBus(load4, 1, bus4_ac);
 
-    std::vector<double> load_params5 = { 1984, 37.9, 0 };
+    std::vector<double> load_params5 = { 1930.14, 1.024, 0 };
     Load* load5 = new Load("LOAD05", "AC1", 3, load_params5);
     net.connectElementToBus(load5, 1, bus5_ac);
 
