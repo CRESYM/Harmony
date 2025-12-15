@@ -30,7 +30,7 @@ void example_point2point_case() {
     ///*  ---------- 1.3 Add AC Generators  ---------- */
 
     /// Generator 1
-    double Zsrc = 1; 
+    double Zsrc = 5; 
     AC_source* src1 = new AC_source("SRC01", "AC1", 3, 345e3, Zsrc);
     net.connectElementToBus(src1, 1, bus1_ac);
     map<string, double> src_info1 = {
@@ -44,20 +44,19 @@ void example_point2point_case() {
         {"c1", 5.0},       // Linear coefficient of the generation cost function
         {"c0", 150},       // Constant term of the generation cost function (fixed operation cost)
 
-        {"Vmax", 1.0},    // Maximum voltage limit (p.u.)
-		{"Vmin", 1.0},    // Minimum voltage limit (p.u.)
-        {"Ref", 1}         // Reference bus flag (1 = set as slack/reference bus)
+        {"Ref", 1},         // Reference bus flag (1 = set as slack/reference bus)
+        {"Vg", 345 * 1.06} // Generator terminal voltage reference
     };
     src1->setOPFInfo(src_info1);
 
     ///*  ---------- 1.4 Add Branches  ---------- */
-    double ACR1 = 3; double ACX1 = 20;
+    double ACR1 = 5; double ACX1 = 140;
     std::complex<double> ACZ1(ACR1, ACX1);
     Impedance* br1_ac = new Impedance("br1_ac", "AC1", 3, ACZ1);
     net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
 
-    double ACR2 = 3; double ACX2 = 20;
+    double ACR2 = 5; double ACX2 = 140;
     std::complex<double> ACZ2(ACR2, ACX2);
     Impedance* br2_ac = new Impedance("br2_ac", "AC2", 3, ACZ2);
     net.connectElementToBus(br2_ac, /*terminal=*/1, bus3_ac);
@@ -68,7 +67,7 @@ void example_point2point_case() {
     Bus* bus2_dc = new Bus("DCBUS02", "DC1", 1);
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
-    double DCR1 = 1;
+    double DCR1 = 20;
     Impedance* br1_dc = new Impedance("br1_dc", "DC1", 1, DCR1);
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
@@ -150,5 +149,5 @@ void example_point2point_case() {
     global_params["DCbaseKV"] = 400.0; // Base voltage for DC, can be adjusted as needed
     global_params["Z_base"] = global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"]; // Base impedance, can be adjusted as needed
 
-    pf.make_OPF(&net, global_params, false, false, false, false);
+    pf.make_OPF(&net, global_params, false, false, false, true);
 }
