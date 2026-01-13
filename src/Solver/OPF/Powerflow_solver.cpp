@@ -563,16 +563,16 @@ void PowerFlow::solve_opf(
             //}
         }
        
-        std::cout << "\n[Debug] Printing voltage limits for each bus:\n";
-        for (int ng = 0; ng < ngrids; ++ng) {
-            std::cout << "=== AC Grid " << ng + 1 << " ===\n";
-            for (int i = 0; i < nbuses_ac[ng]; ++i) {
-                std::cout << "Bus " << std::setw(3) << i + 1
-                    << "  Vmax(col11)=" << std::setw(8) << bus_ac[ng](i, 11)
-                    << "  Vmin(col12)=" << std::setw(8) << bus_ac[ng](i, 12)
-                    << std::endl;
-            }
-        }
+        //std::cout << "\n[Debug] Printing voltage limits for each bus:\n";
+        //for (int ng = 0; ng < ngrids; ++ng) {
+        //    std::cout << "=== AC Grid " << ng + 1 << " ===\n";
+        //    for (int i = 0; i < nbuses_ac[ng]; ++i) {
+        //        std::cout << "Bus " << std::setw(3) << i + 1
+        //            << "  Vmax(col11)=" << std::setw(8) << bus_ac[ng](i, 11)
+        //            << "  Vmin(col12)=" << std::setw(8) << bus_ac[ng](i, 12)
+        //            << std::endl;
+        //    }
+        //}
 
         /**************************************************
         * SET OPTIMIZATION OBJECTIVE

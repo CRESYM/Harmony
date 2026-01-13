@@ -14,30 +14,96 @@
 #include <vector>
 #include <iostream>
 
-
-static void
-reNumberBusAC(Eigen::MatrixXd& busAC,
+/**
+ * @brief Renumber AC buses to ensure consistent indexing across all components.
+ *
+ * This function renumbers the AC bus indices so that the
+ * `busAC`, `branchAC`, `genAC`, `gencostAC`, and `convDC` matrices share
+ * consistent and continuous bus numbering for subsequent optimal power flow.
+ *
+ * @param busAC       Matrix of AC bus data.
+ * @param branchAC    Matrix of AC branch data.
+ * @param genAC       Matrix of AC generator data.
+ * @param gencostAC   Matrix of generator cost data.
+ * @param convDC      Matrix of DC converter data associated with AC buses.
+ */
+static void reNumberBusAC(Eigen::MatrixXd& busAC,
     Eigen::MatrixXd& branchAC,
     Eigen::MatrixXd& genAC,
     Eigen::MatrixXd& gencostAC,
     Eigen::MatrixXd& convDC);
 
+
+/**
+ * @brief Extend AC bus data from the input map into the network structure.
+ *
+ * This function parses AC bus-related parameters from the hierarchical
+ * `data` structure and appends or initializes corresponding bus elements
+ * within the network model `net`. Global parameters may be used to fill
+ * missing fields or apply scaling factors.
+ *
+ * @param data           Nested map containing parsed AC data.
+ * @param net            Pointer to the Network object to be extended.
+ * @param global_params  Map of global system parameters.
+ */
 static void extendBusAC(std::map<std::string,
     std::map<std::string, std::map<std::string, double>>>& data,
     Network* net,
     std::map<std::string, double>& global_params);
 
+
+/**
+ * @brief Extend the AC branch dataset by adding new lines that 
+ *        connect newly created buses or converter terminals.
+ *
+ * This function processes the hierarchical AC data map (`data["branchAC"]`)
+ * and extends the branch list based on network topology changes introduced
+ * by `extendBusAC()`. The function ensures proper connectivity between new 
+ * and existing buses and may assign default line parameters (resistance,
+ * reactance, susceptance, rate limits).
+ *
+ * @param data           Nested map containing parsed AC network data.
+ * @param net            Pointer to the Network object to be extended.
+ * @param global_params  Map of global parameters for base values or scaling.
+ */
 static void extendBranchAC(std::map<std::string,
     std::map<std::string, std::map<std::string, double>>>& data,
     Network* net,
     std::map<std::string, double>& global_params);
 
+
+/**
+ * @brief Extend the AC generator dataset by adding generation units or
+ *        converter-linked power sources associated with new buses.
+ *
+ * This function reads and augments the generator-related data
+ * (`data["genAC"]`) to include generation units associated with
+ * newly added AC buses. It ensures that generator attributes (e.g., 
+ * active/reactive power limits, cost coefficients, grid ID) are
+ * properly initialized and consistent with the extended network topology.
+ *
+ * @param data           Nested map containing parsed AC generation data.
+ * @param net            Pointer to the Network object to be extended.
+ * @param global_params  Map of global parameters used for initialization.
+ */
 static void extendGenAC(
 std::map<std::string,
     std::map<std::string, std::map<std::string, double>>>& data,
     Network* net,
     std::map<std::string, double>& global_params);
 
+
+/**
+ * @brief Add an AC bus entry to the system data table.
+ *
+ * Creates a new AC bus in `data["busAC"]`, initializes default parameters,
+ * and updates the bus dictionary `dict_ac` and mapping `busName2Id_`.
+ *
+ * @param dict_ac        AC bus dictionary.
+ * @param bus            Pointer to the Bus object.
+ * @param global_params  Global parameters.
+ * @param print_info     If true, print formatted bus data.
+ */
 void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     Bus* bus, std::map<std::string, double>& global_params, bool print_info /* =false*/)
 {
@@ -54,37 +120,26 @@ void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     busRow["Qd"] = 0.0;
     busRow["Gs"] = 0.0;
     busRow["Bs"] = 0.0;
-	// busRow["area"] = 1; // Default, but bus can overwrite it
-	busRow["Vm"] = 1.0; // Default, but bus can overwrite it
+	// busRow["area"] = 1; 
+	busRow["Vm"] = 1.0; 
     busRow["Va"] = 0.0;
     busRow["baseKV"] = global_params["ACbaseKV"];
     busRow["zone"] = 1.0;
     busRow["Vmax"] = 1.1; // Default, but bus can overwrite it    
 	busRow["Vmin"] = 0.9; // Default, but bus can overwrite it
-    // busRow["grid"] = 1; // Default, but bus can overwrite it
+    // busRow["grid"] = 1; 
 
 	bus->computePowerFlowAC(busRow, global_params);
 
 	string area_id = std::to_string(busRow["area"]);
 	double v_upper = busRow["Vmax"];
+    string v_upper_str = std::to_string(v_upper);
 	double v_lower = busRow["Vmin"];
+    string v_lower_str = std::to_string(v_upper);
 	double rated_kv = busRow["baseKV"];
 	string rated_kv_str = std::to_string(rated_kv);
 	double base_mw = global_params["baseMVA"];
 	string base_mw_str = std::to_string(base_mw);
-
-    bool is_pu = (v_upper <= 2.0 && v_lower <= 2.0);
-
-    double v_upper_pu, v_lower_pu;
-
-    if (is_pu) {
-        v_upper_pu = v_upper;
-        v_lower_pu = v_lower;
-    }
-    else {
-        v_upper_pu = v_upper / rated_kv;
-        v_lower_pu = v_lower / rated_kv;
-    }
 
     auto exists = std::any_of(dict_ac.begin(), dict_ac.end(),
         [&](const auto& row) { return row[0] == bus_name; });
@@ -97,9 +152,9 @@ void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
        area_id,
        base_mw_str,
        rated_kv_str,
-       std::to_string(v_upper_pu),
-       std::to_string(v_lower_pu)
-        });
+       v_upper_str,
+       v_lower_str
+    });
 
     busName2Id_[bus_name] = id;
 
@@ -124,6 +179,18 @@ void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     }
 }
 
+
+/**
+ * @brief Add a DC bus entry to the system data table.
+ *
+ * Creates and initializes a new DC bus in `data["busDC"]` with default parameters,
+ * The function also updates the DC bus dictionary `dict_dc` and mapping `busName2Id_`.
+ *
+ * @param dict_dc        DC bus dictionary.
+ * @param bus            Pointer to the Bus object.
+ * @param global_params  Global parameters.
+ * @param print_info     If true, print formatted DC bus data.
+ */
 void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
     Bus* bus, std::map<std::string, double>& global_params,
     bool  print_info /* =false*/)
@@ -146,37 +213,20 @@ void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
     busDCRow["Va"] = 0.0;
     busDCRow["baseKV"] = global_params["DCbaseKV"];
     busDCRow["zone"] = 1.0 ;
-    busDCRow["Vmax"] = 1.1 * global_params["DCbaseKV"] / global_params["ACbaseKV"];
+    busDCRow["Vmax"] = 1.1 * global_params["DCbaseKV"] / global_params["ACbaseKV"]; 
     busDCRow["Vmin"] = 0.9 * global_params["DCbaseKV"] / global_params["ACbaseKV"];
 
     bus->computePowerFlowDC(busDCRow, global_params);
 
     string area_id = std::to_string(busDCRow["area"]);
     double v_upper = busDCRow["Vmax"];
+    string v_upper_str = std::to_string(v_upper);
     double v_lower = busDCRow["Vmin"];
+    string v_lower_str = std::to_string(v_lower);
     double rated_kv = busDCRow["baseKV"];
     string rated_kv_str = std::to_string(rated_kv);
     double base_mw = global_params["baseMVA"];
     string base_mw_str = std::to_string(base_mw);
-
-    bool is_pu = (v_upper <= 2.0 && v_lower <= 2.0);
-
-    double v_upper_pu, v_lower_pu;
-
-    if (is_pu) {
-        v_upper_pu = v_upper;
-        v_lower_pu = v_lower;
-    }
-    else {
-        v_upper_pu = v_upper / rated_kv;
-        v_lower_pu = v_lower / rated_kv;
-    }
-
-    if (v_lower_pu > v_upper_pu) {
-        std::cerr << "[addBusDC] Error: voltage_lower (" << v_lower_pu
-            << " pu) is greater than voltage_upper (" << v_upper_pu << " pu) for bus "
-            << bus_name << ".\n";
-    }
 
     auto exists = std::any_of(dict_dc.begin(), dict_dc.end(),
         [&](const auto& row) { return row[0] == bus_name; });
@@ -187,12 +237,11 @@ void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
       bus_id,
       bus_name,
       rated_kv_str,
-      std::to_string(v_upper_pu),
-      std::to_string(v_lower_pu)
-        });
+      v_upper_str,
+      v_lower_str
+    });
 
     busName2Id_[bus_name] = id;
-
 
     if (print_info)
     {
@@ -217,6 +266,22 @@ void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
 }
 
 
+/**
+ * @brief Add an AC branch entry to the system data table.
+ *
+ * Creates and initializes one new AC branch row in `data["branchAC"]` with default values,
+ * then fills branch electrical parameters by calling `element->computePowerFlow(...)`.
+ * The function identifies the from-bus and to-bus IDs using `busName2Id_` based on the
+ * two terminal buses returned by `element->getBuses()`.
+ *
+ * If `print_info` is true, the function prints the formatted `data["branchAC"]` table.
+ *
+ * @param element        Pointer to the branch element object (should connect exactly two buses).
+ * @param global_params  Global parameters used in power flow calculations (e.g., baseMVA, baseKV).
+ * @param print_info     If true, print the formatted AC branch data table.
+ *
+ * @throw std::runtime_error If the element is not connected to exactly two buses.
+ */
 void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
@@ -278,13 +343,28 @@ void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& g
         }
         std::cout << std::endl;
     }
-
-    if (print_info) {
-        std::cout << "Branch '" << branch_name << "' successfully added.\n";
-	}
 }
 
 
+/**
+ * @brief Add a DC branch entry to the system data table.
+ *
+ * Creates and initializes one new DC branch row in `data["branchDC"]` with default values,
+ * then computes the branch electrical parameters by calling
+ * `element->computePowerFlow(...)`.
+ *
+ * The function assumes that the DC branch element connects exactly two DC buses.
+ * The from-bus and to-bus indices are obtained via `busName2Id_` using the bus names
+ * returned by `element->getBuses()`.
+ *
+ * If `print_info` is enabled, the formatted DC branch data table is printed to stdout.
+ *
+ * @param element        Pointer to the DC branch element object (must connect exactly two DC buses).
+ * @param global_params  Global parameters used in DC power flow calculations.
+ * @param print_info     If true, print the formatted DC branch data table.
+ *
+ * @throw std::runtime_error If the branch element is not connected to exactly two buses.
+ */
 void PowerFlow::make_BranchDC(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 
@@ -345,11 +425,29 @@ void PowerFlow::make_BranchDC(Element* element, std::map<std::string, double>& g
         std::cout << std::endl;
     }
 
-    if (print_info) {
-        std::cout << "Branch '" << branch_name << "' successfully added.\n";
-    }
 }
 
+
+/**
+ * @brief Add a converter entry to the system data table.
+ *
+ * Creates and initializes one new converter row in `data["conv"]` with default parameters,
+ * then updates converter electrical parameters by calling `element->computePowerFlow(...)`.
+ *
+ * The function requires the converter element to connect exactly two buses: one AC bus and one DC bus.
+ * It identifies the AC/DC bus by `Bus::getPinNumber()` (pin = 3 treated as AC bus in current logic),
+ * maps bus names to indices using `busName2Id_`, and writes `busac_i` / `busdc_i` into the converter row.
+ *
+ * The converter element pointer is also stored in `conv_point` for later use. If `print_info` is enabled,
+ * the function prints the formatted `data["conv"]` table.
+ *
+ * @param element        Pointer to the converter element object (must connect exactly one AC bus and one DC bus).
+ * @param global_params  Global parameters used in converter power flow calculations (e.g., baseKV, baseMVA).
+ * @param print_info     If true, print the formatted converter data table.
+ *
+ * @throw std::runtime_error If the converter is not connected to exactly two buses.
+ * @throw std::runtime_error If the two buses cannot be identified as one AC bus and one DC bus.
+ */
 void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& global_params,
     bool print_info /*=false*/)
 {
@@ -365,7 +463,7 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
      "droop","Pdcset","Vdcset","dvdcset"
     };
     for (const auto& key : keys) {
-        convRow[key] = 0.0; // Initialize all keys to 0.0
+        convRow[key] = 0.0; 
 	}
 
 	// convRow["gridac"] = 1; // Default grid area for AC
@@ -443,6 +541,25 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
 
 }
 
+
+/**
+ * @brief Add a generator entry and its cost entry to the system data tables.
+ *
+ * Creates and initializes one generator row in `data["genAC"]` and one cost row in
+ * `data["genCostAC"]`, then updates parameters using `element->computePowerFlow(...)`
+ * and OPF data from `element->getOPFInfo()`.
+ *
+ * The generator is assumed to be connected to one AC bus and ground. The non-ground bus
+ * is mapped to an internal bus index via `busName2Id_`. Bus voltage limits and bus type
+ * (PV or SLACK) may be updated according to OPF information.
+ *
+ * @param element        Pointer to the generator element object.
+ * @param global_params  Global parameters used in power flow and OPF data construction.
+ * @param print_info     If true, print the formatted generator and cost tables.
+ *
+ * @throw std::runtime_error    If the generator is not properly connected to a bus.
+ * @throw std::invalid_argument If generator power limits are inconsistent.
+ */
 void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
@@ -1182,30 +1299,30 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
     }
 
     /// debug
-    Eigen::IOFormat fmt(Eigen::StreamPrecision, 0, ", ", "\n", "[", "]");
+    //Eigen::IOFormat fmt(Eigen::StreamPrecision, 0, ", ", "\n", "[", "]");
 
-    std::cout << "\n=== baseMVA_ac ===\n";
-    std::cout << baseMVA_ac << "\n";
+    //std::cout << "\n=== baseMVA_ac ===\n";
+    //std::cout << baseMVA_ac << "\n";
 
-    std::cout << "\n=== bus_entire_ac (" << bus_entire_ac.rows()
-        << " x " << bus_entire_ac.cols() << ") ===\n";
-    std::cout << bus_entire_ac.format(fmt) << "\n";
+    //std::cout << "\n=== bus_entire_ac (" << bus_entire_ac.rows()
+    //    << " x " << bus_entire_ac.cols() << ") ===\n";
+    //std::cout << bus_entire_ac.format(fmt) << "\n";
 
-    std::cout << "\n=== branch_entire_ac (" << branch_entire_ac.rows()
-        << " x " << branch_entire_ac.cols() << ") ===\n";
-    std::cout << branch_entire_ac.format(fmt) << "\n";
+    //std::cout << "\n=== branch_entire_ac (" << branch_entire_ac.rows()
+    //    << " x " << branch_entire_ac.cols() << ") ===\n";
+    //std::cout << branch_entire_ac.format(fmt) << "\n";
 
-    std::cout << "\n=== gen_entire_ac (" << gen_entire_ac.rows()
-        << " x " << gen_entire_ac.cols() << ") ===\n";
-    std::cout << gen_entire_ac.format(fmt) << "\n";
+    //std::cout << "\n=== gen_entire_ac (" << gen_entire_ac.rows()
+    //    << " x " << gen_entire_ac.cols() << ") ===\n";
+    //std::cout << gen_entire_ac.format(fmt) << "\n";
 
-    std::cout << "\n=== gencost_entire_ac (" << gencost_entire_ac.rows()
-        << " x " << gencost_entire_ac.cols() << ") ===\n";
-    std::cout << gencost_entire_ac.format(fmt) << "\n";
+    //std::cout << "\n=== gencost_entire_ac (" << gencost_entire_ac.rows()
+    //    << " x " << gencost_entire_ac.cols() << ") ===\n";
+    //std::cout << gencost_entire_ac.format(fmt) << "\n";
 
-    std::cout << "\n=== res_entire_ac (" << res_entire_ac.rows()
-        << " x " << res_entire_ac.cols() << ") ===\n";
-    std::cout << res_entire_ac.format(fmt) << "\n";
+    //std::cout << "\n=== res_entire_ac (" << res_entire_ac.rows()
+    //    << " x " << res_entire_ac.cols() << ") ===\n";
+    //std::cout << res_entire_ac.format(fmt) << "\n";
 
     //Identify number of grids by unique area ID
     std::set<int> unique_areas;
