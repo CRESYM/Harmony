@@ -89,10 +89,10 @@ void example_OPF_1() {
     };
     gen3->setOPFInfo(gen_info3);
 
-    /*  ---------- 1.x Add RESs (debug)  ---------- */ 
-        // Example usage of the PVplant class
+    ///*  ---------- 1.4 Add RESs  ---------- */ 
+    // PV plant
     vector<double> pv_parameters = {
-        2.8e6,		// P_pv: Rated power of the PV plant in watts
+        2e6,		// P_pv: Rated power of the PV plant in watts
         6570,		// I_pv: Rated current of the PV plant in amperes
         2760,		// N_s: Number of series-connected modules
         720,		// N_p: Number of parallel-connected strings
@@ -123,9 +123,61 @@ void example_OPF_1() {
     PVplant* pv1 = new PVplant("PV1", "AC1", pv_parameters);
     net9bus.connectElementToBus(pv1, 1, bus5_ac);
 
+    // Wind type-3
+    vector<double> wt3_parameters = {
+        1080.0,			// nm_rpm
+        3e6,				// p
+        0.0644e-3,		// Lr
+        0.0092,			// Rr
+        1.0 / 0.33,		// Nsr
+        0.0092,			// Rs
+        0.1356e-3,		// Ls
+        48.873,			// Kp_pll
+        3070.1,			// Ki_pll
+        564.1,			// V1_mag
+        -59,			// V1_theta_deg
+        0.052,			// Krp
+        0.027,			// Kri
+        0.00245,		// Krd
+        5.8,			// Ir_mag
+        -22,			// Ir_theta_deg
+        1.452,			// Ksp
+        3384.0,			// Ksi
+        0.025,			// Ksd
+        152.3,			// Ic_mag
+        114.0,			// Ic_theta_deg
+        0.0,			// Rf
+        0.001,			// Lf
+        50.0			// f1 (Grid frequency in Hz)
+    };
+
+    WTtype3* wt1 = new WTtype3("DFIG", "AC1", wt3_parameters);
+    net9bus.connectElementToBus(wt1, 1, bus5_ac);
+
+    // Wind type-4
+    vector<double>  wt4_parameters = {
+        690,		// Vm (Grid voltage line-to-line in V)
+        60.0,		// f1 (Grid frequency in Hz)
+        3.0e6,		// Pwt (Wind turbine power in W)
+        1000,		// Vdc (DC link voltage in V)
+        0.93,		// Kp_pll (PLL proportional gain)
+        50,			// Ki_pll (PLL integral gain)
+        0.053,		// Kpi (Current controller proportional gain)
+        30.59,		// Kii (Current controller integral gain)
+        1.5 / 2.5e3,	// Tdelay (Delay in seconds)
+        1.23e6,     // wn (Natural frequency in rad/s)
+        4.74e-13,   // zeta (Damping ratio)
+        0.095,      // Rf (Filter resistance in Ohms)
+        0.0045,     // Lf (Filter inductance in H)
+        -75.73,     // Id_ref (Reference Id current in A)
+        0.0        // Iq_ref (Reference Iq current in A)
+    };
+
+    WTtype4* wt2 = new WTtype4("PMSG", "AC1", wt4_parameters);
+    net9bus.connectElementToBus(wt2, 1, bus8_ac);
 
 
-    ///*  ---------- 1.4 Add Branches  ---------- */
+    ///*  ---------- 1.6 Add Branches  ---------- */
     double ACR1 = 0.0; double ACX1 = 0.0576;
     std::complex<double> ACZ1(ACR1, ACX1);
     Impedance* br1_ac = new Impedance("br1_ac", "AC1", 3, ACZ1);

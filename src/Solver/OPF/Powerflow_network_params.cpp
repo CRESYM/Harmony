@@ -580,7 +580,7 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
         throw std::runtime_error("[make_Generator] Error: Bus name unknown");
     int bus_id = idIt->second;
 
-    /* ---------- Write data["genAC"] ---------- */
+
     std::string rowGen = std::to_string(data["genAC"].size());
     auto& gRow = data["genAC"][rowGen];
     std::vector<std::string> keys = {
@@ -589,7 +589,7 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
             "ramp_agc","ramp_10","ramp_30","ramp_q","apf","grid"
     };
     for (const auto& key : keys) {
-        gRow[key] = 0; // Empty structure for each
+        gRow[key] = 0; 
     }
 
     std::string rowCost = std::to_string(data["genCostAC"].size());
@@ -598,12 +598,12 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
         "model","startup","shutdown","n","c2","c1","c0","grid"
 	};
     for (const auto& key : cost_keys) {
-        cRow[key] = 0; // Empty structure for each
+        cRow[key] = 0; 
     }
 
     gRow["bus"] = bus_id;
     gRow["Vg"] = 1.0;
-    gRow["mBase"] = 100.0;
+    gRow["mBase"] = 100.0; // Default setting, can be changed
     gRow["status"] = 1.0;
 
 	element->computePowerFlow(gRow, global_params); // Sets grid, area, Vg and Zsrc
@@ -713,7 +713,7 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
 void PowerFlow::make_RES(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
-    // Step 1. 找到连接母线
+    // Step 1. connected with bus
     Bus* attachedBus = nullptr;
     for (Bus* b : element->getBuses()) {
         if (b->getBusName() != "gnd")
@@ -727,13 +727,13 @@ void PowerFlow::make_RES(Element* element, std::map<std::string, double>& global
     int bus_id = busName2Id_.at(bus_name);
     std::string bus_row_key = std::to_string(bus_id - 1);
 
-    // Step 2. 从 busAC 表中读取所属 grid
+    // Step 2. Read the associated grid from the busAC table
     if (!data["busAC"].count(bus_row_key))
         throw std::runtime_error("[make_RES] Cannot find bus " + bus_name + " in busAC.");
 
     double grid_id = data["busAC"][bus_row_key]["grid"];
 
-    // Step 3. 解析类型与额定功率
+    // Step 3. Parse the type and rated power
     double Presmax = 0.0;
     if (auto* pv = dynamic_cast<PVplant*>(element))
         Presmax = pv->P_pv / 1e6;
@@ -744,22 +744,45 @@ void PowerFlow::make_RES(Element* element, std::map<std::string, double>& global
     else
         throw std::runtime_error("[make_RES] Unknown RES type detected.");
 
-    // Step 4. 写入 resAC（与 genAC 结构一致）
-    std::string key = std::to_string(data["resAC"].size());
-    auto& row = data["resAC"][key];
+    // Step 4. Write to resAC (same structure as genAC)
+    std::string found_key;
+    bool found = false;
 
-    row["bus"] = static_cast<double>(bus_id);
-    row["Presmax"] = Presmax;
-    row["Sresmax"] = 1.1 * Presmax;
-    row["model"] = 2.0;
-    row["startup"] = 0.0;
-    row["shutdown"] = 0.0;
-    row["n"] = 3.0;
-    row["c2"] = 0.0;
-    row["c1"] = 0.0;
-    row["c0"] = 0.0;
-    row["vm"] = 1.0;
-    row["grid"] = grid_id;
+    for (const auto& [k, r] : data["resAC"]) {
+        auto it = r.find("bus");
+        if (it != r.end() && static_cast<int>(it->second) == bus_id) {
+            found_key = k;
+            found = true;
+            break;
+        }
+    }
+
+    if (found) {
+        // Update existing row (sum Presmax)
+        auto& row = data["resAC"][found_key];
+        row["Presmax"] += Presmax;
+        row["Sresmax"] = 1.1 * row["Presmax"];
+        row["grid"] = grid_id;   
+        row["vm"] = 1.0;
+    }
+    else {
+        // Create new row
+        std::string key = std::to_string(data["resAC"].size());
+        auto& row = data["resAC"][key];
+
+        row["bus"] = static_cast<double>(bus_id);
+        row["Presmax"] = Presmax;
+        row["Sresmax"] = 1.1 * Presmax;
+        row["model"] = 2.0;
+        row["startup"] = 0.0;
+        row["shutdown"] = 0.0;
+        row["n"] = 3.0;
+        row["c2"] = 0.0;
+        row["c1"] = 0.0;
+        row["c0"] = 0.0;
+        row["vm"] = 1.0;
+        row["grid"] = grid_id;
+    }
 
     if (print_info)
     {
@@ -784,7 +807,19 @@ void PowerFlow::make_RES(Element* element, std::map<std::string, double>& global
 }
 
 
-
+/**
+ * @brief Register an AC load by updating the corresponding busAC entry.
+ *
+ * Identifies the non-ground bus connected to the load element and updates
+ * its load parameters in the `busAC` table via power flow computation.
+ *
+ * @param element        Pointer to the load element.
+ * @param global_params  Global parameters used in power flow calculation.
+ * @param print_info     If true, print the updated busAC table.
+ *
+ * @throw std::runtime_error
+ *        If no valid AC bus is connected or the bus entry is not found.
+ */
 void PowerFlow::make_Load(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
