@@ -521,7 +521,7 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
 
     // --- Build Y-matrix ---
     for (const auto& [bus_name, bus] : buses) {
-		auto& elements = bus->getConnectedElements();
+		auto elements = bus->getConnectedElements();
         for (Element* element : elements) {
 			// Skip if element is null, a Converter, already processed, or connected to ground
             if (!element || dynamic_cast<Converter*>(element) || processed_elements.count(element)) {
@@ -795,7 +795,8 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
             dc_bus = bus;
     }
 
-    MatrixXcd Z_dc = compute_closing_impedance(dc_grids[dc_area], dc_bus->getBusName(), Y_dc_matrices[dc_area], Y_closing);
+    std::string dc_busname = dc_bus->getBusName();
+    MatrixXcd Z_dc = compute_closing_impedance(dc_grids[dc_area], dc_busname, Y_dc_matrices[dc_area], Y_closing);
 
 	//cout << "Equivalent DC admittance looking from converter " << converter_name << ":\n" << Y_dc << "\n";
 

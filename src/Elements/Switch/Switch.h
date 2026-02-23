@@ -13,15 +13,11 @@ public:
     void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
 
 	// change the state of the switch
-    void setOpen() { 
-        for (auto& state : phaseState) {
-            state = false; // Set all phases to open
-        }
+    void setOpen() {
+        phaseState.assign(phaseState.size(), false); // Set all phases to open
 	}
     void setClosed() {
-        for (auto& state : phaseState) {
-            state = true; // Set all phases to closed
-        }
+        phaseState.assign(phaseState.size(), true); // Set all phases to closed
     }
     void setState(int phase, bool state) {
         if (phase >= 0 && phase < phaseState.size()) {

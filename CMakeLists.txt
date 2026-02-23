@@ -1,6 +1,7 @@
 # This File will generate the Visual Studio Solution for Harmony.
-# The paths to the dependencies (symengne, casadi, etc.) will be 
-# automatically configured by CMake
+# The path to Eigen and symengine will be configured automatically by CMake
+# The path to Gurobi and Mathplot++ are supplied by the user and
+# configured by by CMake
 
 cmake_minimum_required(VERSION 4.0)
 project(Harmony)
@@ -229,7 +230,7 @@ set(Examples_Source_files
 )
 
 # Add source_groups to create file filters (groups) in Visual Studio project
-if(WIN32) # workds for x64 as well
+if(MSVC)
     source_group("Header Files" FILES ${Header_Files})
     source_group("Header Files\\Elements" FILES ${Element_Header_Files})
     #source_group("Header Files\\Elements\\Admittance" FILES ${Element_Admittance_Header_Files})
@@ -322,7 +323,7 @@ add_executable(
 )
 
 # Set Harmony as a starup project on Visual Studio Solution
-if (WIN32) # works for win64
+if (MSVC)
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Harmony)
 endif()
 
@@ -338,106 +339,161 @@ target_link_libraries(
 set(GUROBI_PATH "" CACHE PATH "Path to Gurobi installation")
 if(NOT GUROBI_PATH)
     # User did not provide a path for the Gurobi installation
-    message(WARNING "Path to Gurobi was not specified. You will need to configure it manually in the Visual Studio Project Properties")
+    message(WARNING 
+        "Gurobi path not specified. The project may fail to link.\n"
+        "To fix this, provide the Gurobi installation directory via CMake:\n"
+        "  cmake -DGUROBI_PATH=\"/path/to/gurobi\" ..\n\n"
+        "Common default paths:\n"
+        "  - Windows: C:\gurobi1200\win64\n"
+        "  - macOS:   /Library/gurobi1200/macos_universal2\n"
+        "  - Linux:   /opt/gurobi1200/linux64"
+    )
 elseif(NOT EXISTS "${GUROBI_PATH}")
-    message(FATAL_ERROR "The specified GUROBI_PATH does not exist: ${GUROBI_PATH}")
+    # Path was provided but is invalid
+    message(FATAL_ERROR 
+        " Invalid GUROBI_PATH: \"${GUROBI_PATH}\"\n"
+        " The directory does not exist. Please check for typos or ensure Gurobi is correctly installed."
+    )
 else()
-    message(STATUS "The specified GUROBI_PATH is: ${GUROBI_PATH}")
+    message(STATUS "Found Gurobi in: ${GUROBI_PATH}")
 
     # Add Gurobi header files
     include_directories("${GUROBI_PATH}/include")
     
-    # Find gurobi*.lib that is NOT the C++ wrapper
-    file(GLOB GUROBI_CORE_LIB "${GUROBI_PATH}/lib/gurobi[0-9]*.lib")
+    if(MSVC)
+        # 1. Find gurobi*.lib that is NOT the C++ wrapper
+        file(GLOB GUROBI_CORE_LIB "${GUROBI_PATH}/lib/gurobi[0-9]*.lib")
 
-    # Based on build config, choose the C++ wrapper lib pattern
-    file(GLOB GUROBI_CPP_DEBUG_LIB "${GUROBI_PATH}/lib/gurobi_c++mdd*.lib")
-    file(GLOB GUROBI_CPP_RELEASE_LIB "${GUROBI_PATH}/lib/gurobi_c++md[0-9]*.lib")
+        # 2. Based on build config, choose the C++ wrapper lib pattern
+        file(GLOB GUROBI_CPP_DEBUG_LIB "${GUROBI_PATH}/lib/gurobi_c++mdd*.lib")
+        file(GLOB GUROBI_CPP_RELEASE_LIB "${GUROBI_PATH}/lib/gurobi_c++md[0-9]*.lib")
 
-    # Fail if either is missing
-    if(NOT GUROBI_CORE_LIB)
-        message(FATAL_ERROR "Could not find Gurobi core library (gurobi*.lib) in ${GUROBI_PATH}/lib")
+        # Fail if either is missing
+        if(NOT GUROBI_CORE_LIB)
+            message(FATAL_ERROR "Could not find Gurobi core library (gurobi*.lib) in ${GUROBI_PATH}/lib")
+        endif()
+
+        if(NOT GUROBI_CPP_DEBUG_LIB OR NOT GUROBI_CPP_RELEASE_LIB)
+            message(FATAL_ERROR "Could not find Gurobi C++ wrapper library (gurobi_c++md*.lib or gurobi_c++mdd*.lib) in ${GUROBI_PATH}/lib")
+        endif()
+
+        message(STATUS "Using Gurobi core lib: ${GUROBI_CORE_LIB}")
+        message(STATUS "Using Gurobi C++ Debug lib: ${GUROBI_CPP_DEBUG_LIB}")
+        message(STATUS "Using Gurobi C++ Release lib: ${GUROBI_CPP_RELEASE_LIB}")
+
+        # Link the libraries
+        target_link_libraries(
+            Harmony
+            "${GUROBI_CORE_LIB}"
+            $<$<CONFIG:Debug>:${GUROBI_CPP_DEBUG_LIB}>
+            $<$<CONFIG:Release>:${GUROBI_CPP_RELEASE_LIB}>
+        )
+    elseif(APPLE)
+        # 1. Find the Core Library (Dynamic)
+        # On Mac, this is libgurobi[ver].dylib
+        file(GLOB GUROBI_CORE_LIB "${GUROBI_PATH}/lib/libgurobi[0-9]*.dylib")
+
+        # 2. Find the C++ Wrapper (Static)
+        # Usually just libgurobi_c++.a. Unlike Windows, there isn't usually a separate debug version.
+        set(GUROBI_CPP_LIB "${GUROBI_PATH}/lib/libgurobi_c++.a")
+
+        # Fail if either is missing
+        if(NOT GUROBI_CORE_LIB)
+            message(FATAL_ERROR "Could not find Gurobi core library (libgurobi*.dylib) in ${GUROBI_PATH}/lib")
+        endif()
+
+        if(NOT EXISTS "${GUROBI_CPP_LIB}")
+            message(FATAL_ERROR "Could not find Gurobi C++ wrapper (libgurobi_c++.a) in ${GUROBI_PATH}/lib")
+        endif()
+
+        message(STATUS "Using Gurobi core lib: ${GUROBI_CORE_LIB}")
+        message(STATUS "Using Gurobi C++ lib: ${GUROBI_CPP_LIB}")
+
+        # Link the libraries
+        target_link_libraries(
+            Harmony
+            "${GUROBI_CORE_LIB}"
+            "${GUROBI_CPP_LIB}"
+        )
     endif()
 
-    if(NOT GUROBI_CPP_DEBUG_LIB OR NOT GUROBI_CPP_RELEASE_LIB)
-        message(FATAL_ERROR "Could not find Gurobi C++ wrapper library (gurobi_c++md*.lib or gurobi_c++mdd*.lib) in ${GUROBI_PATH}/lib")
-    endif()
-
-    message(STATUS "Using Gurobi core lib: ${GUROBI_CORE_LIB}")
-    message(STATUS "Using Gurobi C++ Debug lib: ${GUROBI_CPP_DEBUG_LIB}")
-    message(STATUS "Using Gurobi C++ Release lib: ${GUROBI_CPP_RELEASE_LIB}")
-
-    # Link the libraries
-    target_link_libraries(
-        Harmony
-        "${GUROBI_CORE_LIB}"
-        $<$<CONFIG:Debug>:${GUROBI_CPP_DEBUG_LIB}>
-        $<$<CONFIG:Release>:${GUROBI_CPP_RELEASE_LIB}>
-    )
 endif()
 
 
 # Set Matplot++ path 
-set(MATPLOT_PATH "" CACHE PATH "Path to MatPlot++ installation")
+set(MATPLOT_PATH "" CACHE PATH "Path to Matplot++ installation")
 if(NOT MATPLOT_PATH)
     # User did not provide a path for the Matplot installation
-    message(WARNING "Path to Matplot++ was not specified. You will need to configure it manually in the Visual Studio Project Properties")
+    message(WARNING 
+        "Matplot++ path not specified. The project may fail to link.\n"
+        "To fix this, provide the Matplot++ installation directory via CMake:\n"
+        "  cmake -DMATPLOT_PATH=\"/path/to/matplotplusplus\" ..\n\n"
+        "Common installation hints:\n"
+        "  - Windows (msi): C:\Program Files\Matplot++\n"
+        "  - macOS (brew):    /opt/homebrew/opt/matplotplusplus\n"
+        "  - Linux (manual):  /usr/local/include/matplot"
+    )
 elseif(NOT EXISTS "${MATPLOT_PATH}")
-    message(FATAL_ERROR "The specified MATPLOT_PATH does not exist: ${MATPLOT_PATH}")
+    # Path was provided but is invalid
+    message(FATAL_ERROR 
+        " Invalid MATPLOT_PATH: \"${MATPLOT_PATH}\"\n"
+        " The directory does not exist. Please check for typos or ensure Matplot++ is correctly installed."
+    )
 else()
-    message(STATUS "The specified MATPLOT_PATH is: ${MATPLOT_PATH}")
+    message(STATUS "Found Matplot++ in: ${MATPLOT_PATH}")
 
     # Matplot supports CMake. We will use Matplot++Config.cmake contained in MATPLOT_PATH to configure the package
     list(APPEND CMAKE_PREFIX_PATH "${MATPLOT_PATH}")
     find_package(Matplot++ REQUIRED)
-    # Add Matplot++ header files
+    # Add Matplot++ header files (not needed due to cmake)
     #include_directories("${MATPLOT_PATH}/include")
     # Link the library
     target_link_libraries(Harmony Matplot++::matplot)
-
 endif()
 
 
-# Find path to symengine dll and add it as a link directory
-get_target_property(SYMENGINE_DLL_PATH symengine LOCATION)
-get_filename_component(SYMENGINE_DLL_DIR "${SYMENGINE_DLL_PATH}" DIRECTORY)
-target_link_directories(Harmony PRIVATE ${SYMENGINE_DLL_DIR})
+if(MSVC)
+    # Find path to symengine dll and add it as a link directory
+    get_target_property(SYMENGINE_DLL_PATH symengine LOCATION)
+    get_filename_component(SYMENGINE_DLL_DIR "${SYMENGINE_DLL_PATH}" DIRECTORY)
+    target_link_directories(Harmony PRIVATE ${SYMENGINE_DLL_DIR})
 
 
-# Find path to dlls required by symengine, which are in the same dir as the symengine dll
-file(GLOB FLINT_DLL_PATH "${SYMENGINE_DLL_DIR}/flint*.dll")
-file(GLOB LIBGMP_DLL_PATH "${SYMENGINE_DLL_DIR}/libgmp*.dll")
-file(GLOB LIBMPFR_DLL_PATH "${SYMENGINE_DLL_DIR}/libmpfr*.dll")
-file(GLOB LIBWINPTHREAD_DLL_PATH "${SYMENGINE_DLL_DIR}/libwinpthread*.dll")
-file(GLOB LIBMPC_DLL_PATH "${SYMENGINE_DLL_DIR}/libmpc*.dll")
-file(GLOB LIBMPC_DLL_PATH "${SYMENGINE_DLL_DIR}/libmpc*.dll")
-file(GLOB LIBGCC_DLL_PATH "${SYMENGINE_DLL_DIR}/libgcc*.dll")
+    # Find path to dlls required by symengine, which are in the same dir as the symengine dll
+    file(GLOB FLINT_DLL_PATH "${SYMENGINE_DLL_DIR}/flint*.dll")
+    file(GLOB LIBGMP_DLL_PATH "${SYMENGINE_DLL_DIR}/libgmp*.dll")
+    file(GLOB LIBMPFR_DLL_PATH "${SYMENGINE_DLL_DIR}/libmpfr*.dll")
+    file(GLOB LIBWINPTHREAD_DLL_PATH "${SYMENGINE_DLL_DIR}/libwinpthread*.dll")
+    file(GLOB LIBMPC_DLL_PATH "${SYMENGINE_DLL_DIR}/libmpc*.dll")
+    file(GLOB LIBMPC_DLL_PATH "${SYMENGINE_DLL_DIR}/libmpc*.dll")
+    file(GLOB LIBGCC_DLL_PATH "${SYMENGINE_DLL_DIR}/libgcc*.dll")
 
-# Find path to Harmony User Manual
-file(GLOB HARMONY_USER_GUIDE ${CMAKE_SOURCE_DIR}/*.pdf)
+    # Find path to Harmony User Manual
+    file(GLOB HARMONY_USER_GUIDE ${CMAKE_SOURCE_DIR}/*.pdf)
 
-# Print msgs to screen
-message(STATUS "Copying Harmony binary, LICENSE, and dependencies to install/Harmony")
-message(STATUS "Copying Harmony.exe to install/Harmony/bin")
-message(STATUS "Copying LICENSE to install/Harmony")
-message(STATUS "Copying Harmony user guide to install/Harmony/doc")
-message(STATUS "Copying ${SYMENGINE_DLL_PATH} to install/Harmony/bin")
-message(STATUS "Copying symengine dependencies to install/Harmony/bin")
+    # Print msgs to screen
+    message(STATUS "Copying Harmony binary, LICENSE, and dependencies to install/Harmony")
+    message(STATUS "Copying Harmony.exe to install/Harmony/bin")
+    message(STATUS "Copying LICENSE to install/Harmony")
+    message(STATUS "Copying Harmony user guide to install/Harmony/doc")
+    message(STATUS "Copying ${SYMENGINE_DLL_PATH} to install/Harmony/bin")
+    message(STATUS "Copying symengine dependencies to install/Harmony/bin")
 
-# Copy the files to the installation directory
-set(INSTALL_DIR ${CMAKE_SOURCE_DIR}/install/Harmony)
-add_custom_command(TARGET Harmony POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${INSTALL_DIR}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${INSTALL_DIR}/bin
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${INSTALL_DIR}/doc
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/Release/Harmony.exe ${INSTALL_DIR}/bin/Harmony.exe
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${INSTALL_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy ${SYMENGINE_DLL_PATH} ${INSTALL_DIR}/bin/
-    COMMAND ${CMAKE_COMMAND} -E copy ${FLINT_DLL_PATH} ${INSTALL_DIR}/bin
-    COMMAND ${CMAKE_COMMAND} -E copy ${LIBGMP_DLL_PATH} ${INSTALL_DIR}/bin
-    COMMAND ${CMAKE_COMMAND} -E copy ${LIBMPFR_DLL_PATH} ${INSTALL_DIR}/bin
-    COMMAND ${CMAKE_COMMAND} -E copy ${LIBWINPTHREAD_DLL_PATH} ${INSTALL_DIR}/bin
-    COMMAND ${CMAKE_COMMAND} -E copy ${LIBMPC_DLL_PATH} ${INSTALL_DIR}/bin
-    COMMAND ${CMAKE_COMMAND} -E copy ${LIBGCC_DLL_PATH} ${INSTALL_DIR}/bin
-    COMMAND ${CMAKE_COMMAND} -E copy ${HARMONY_USER_GUIDE} ${INSTALL_DIR}/doc
-)
+    # Copy the files to the installation directory
+    set(INSTALL_DIR ${CMAKE_SOURCE_DIR}/install/Harmony)
+    add_custom_command(TARGET Harmony POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${INSTALL_DIR}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${INSTALL_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${INSTALL_DIR}/doc
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/Release/Harmony.exe ${INSTALL_DIR}/bin/Harmony.exe
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${INSTALL_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy ${SYMENGINE_DLL_PATH} ${INSTALL_DIR}/bin/
+        COMMAND ${CMAKE_COMMAND} -E copy ${FLINT_DLL_PATH} ${INSTALL_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy ${LIBGMP_DLL_PATH} ${INSTALL_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy ${LIBMPFR_DLL_PATH} ${INSTALL_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy ${LIBWINPTHREAD_DLL_PATH} ${INSTALL_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy ${LIBMPC_DLL_PATH} ${INSTALL_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy ${LIBGCC_DLL_PATH} ${INSTALL_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy ${HARMONY_USER_GUIDE} ${INSTALL_DIR}/doc
+    )
+endif()

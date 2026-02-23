@@ -17,7 +17,7 @@ public:
 	MatrixXcd multiply(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_in);
 
 	// Discrete state-space solver for dynamic phasors
-	MatrixXcd DQsym::DSSS(const MatrixXcd& Ad, const MatrixXcd& Bd,
+	MatrixXcd DSSS(const MatrixXcd& Ad, const MatrixXcd& Bd,
 		const MatrixXcd& Cd, const MatrixXcd& Dd, const VectorXd& swOnRes, const VectorXd& swOffRes,
 		const VectorXi& swType, const VectorXi& brkVec, const MatrixXcd& u, const VectorXcd& xo,
 		double dt, double f0);

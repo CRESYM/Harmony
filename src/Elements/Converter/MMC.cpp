@@ -701,7 +701,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
  */
 void MMC::computeABCD() {
     const Eigen::VectorXd& x0 = equilibrium_state;
-    Eigen::VectorXd& u0 = VectorXd(3);
+    Eigen::VectorXd u0(3);
     // Define input vector u0 (DC voltage and AC voltages)
     if (controls.count("dc_voltage")) {
         u0 << P_dc / V_dc, V_m* cos(omega_0), V_m* sin(omega_0);
