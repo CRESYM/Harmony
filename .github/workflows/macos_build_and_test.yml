@@ -1,0 +1,86 @@
+name: macOS Build and Test
+
+# Workflow triggers tell GitHub when to run the workflow:
+# a) when there is a new commit on the main or develop branch
+# b) when a new pull request is opened to merge a branch into main or develop
+on:
+  push:
+    branches: [ "main", "develop", "github_actions"]
+  pull_request:
+    branches: [ "main", "develop"]
+
+# This workflow defines one job: build-and-test
+jobs:
+  build-and-test:
+    
+    # Use macos-latest runner.
+    # See https://github.com/actions/runner-images for a list of available runners.
+    runs-on: macos-latest
+    
+    steps:
+
+      # Checkout a copy of this repository on the runner
+      # We use the "checkout" GitHub Action
+      # https://github.com/actions/checkout
+      - uses: actions/checkout@v4
+
+      # Install conda on the runner
+      # We use the "setup-miniconda" GitHub Action
+      # https://github.com/marketplace/actions/setup-miniconda
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+            activate-environment: harmony
+            auto-activate-base: false
+
+      # Update conda environment with dependencies listed in environment.yml 
+      - name: Create conda environment from environment.yml
+        run: conda env update -n harmony -f environment.yml
+
+      # Install Gurobi on the runner
+      - name: Install Gurobi
+        shell: bash -l {0}
+        run: |
+          mkdir dependencies
+          cd dependencies
+          curl -O https://packages.gurobi.com/13.0/gurobi13.0.1_macos_universal2.pkg
+          sudo installer -pkg gurobi13.0.1_macos_universal2.pkg -target /
+
+      # Download Matplot++ and Gnuplot on the runner
+      - name: Download Matplot++
+        shell: bash -l {0}
+        run: |
+          brew update
+          brew install gnuplot matplotplusplus
+
+      # List dependencies
+      - name: List dependencies
+        shell: bash -l {0}
+        run: |
+          echo "List Gurobi"
+          ls /Library/gurobi1301/macos_universal2
+          echo "---"
+          echo "Matplot++ path: $(brew --prefix matplotplusplus)"
+          echo "Gnuplot path: $(brew --prefix gnuplot)"
+          echo "pwd"
+          pwd
+
+      # Configure CMake project
+      - name: Configure CMake and compile Harmony
+        shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+          mkdir build
+          cd build
+          cmake .. -DGUROBI_PATH="/Library/gurobi1301/macos_universal2" -DMATPLOT_PATH="/opt/homebrew/opt/matplotplusplus"
+          cmake --build . --config Release
+
+      # Run Harmony
+      - name: Run Harmony
+        shell: bash -l {0}
+        run: |
+          cd build
+          echo "List build dir"
+          ls
+          echo "run Harmony"
+          ./Harmony 
