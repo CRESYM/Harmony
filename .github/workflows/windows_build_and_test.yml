@@ -1,0 +1,95 @@
+name: Windows Build and Test
+
+# Workflow triggers tell GitHub when to run the workflow:
+# a) when there is a new commit on the main or develop branch
+# b) when a new pull request is opened to merge a branch into main or develop
+on:
+  push:
+    branches: [ "main", "develop", "github_actions"]
+  pull_request:
+    branches: [ "main", "develop"]
+
+# This workflow defines one job: build-and-test
+jobs:
+  build-and-test:
+    
+    # Use windows-latest runner.
+    # See https://github.com/actions/runner-images for a list of available runners.
+    runs-on: windows-latest
+    
+    steps:
+
+      # Checkout a copy of this repository on the runner
+      # We use the "checkout" GitHub Action
+      # https://github.com/actions/checkout
+      - uses: actions/checkout@v4
+
+      # Install conda on the runner
+      # We use the "setup-miniconda" GitHub Action
+      # https://github.com/marketplace/actions/setup-miniconda
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+            activate-environment: harmony
+            auto-activate-base: false
+
+      # Update conda environment with dependencies listed in environment.yml 
+      - name: Create conda environment from environment.yml
+        run: conda env update -n harmony -f environment.yml
+
+      # Install Gurobi on the runner
+      # Use msiexec to run the installer (/qn = quiet (no UI), /norestart = don't reboot the runner)
+      - name: Install Gurobi
+        shell: bash -l {0}
+        run: |
+          mkdir dependencies
+          cd dependencies
+          curl -LO https://packages.gurobi.com/13.0/Gurobi-13.0.1-win64.msi
+          msiexec.exe /i gurobi13.0.1_win64.msi /qn /norestart
+
+      # Install Gnuplot on the runner
+      # We use the choco package manager (equivalent of homebrew and apt)
+      - name: Install Gnuplot
+        shell: bash -l {0}
+        run: |
+          choco install gnuplot -y
+
+      # Install Matplot++ on the runner
+      # /S is the standard NSIS silent flag
+      - name: Install Matplot++
+        shell: bash -l {0}
+        run: |
+          cd dependencies
+          curl -LO https://github.com/alandefreitas/matplotplusplus/releases/download/v1.2.0/Matplot++-1.2.0-win64.exe
+          ./Matplot++-1.2.0-win64.exe /S
+      
+      # List dependencies
+      - name: List dependencies
+        shell: bash -l {0}
+        run: |
+          echo "Checking Gurobi Default Path"
+          ls "C:/gurobi1301/win64" || echo "Check C:/Program Files/gurobi1301/win64 instead"
+          echo "---"
+          which gnuplot || echo "Gnuplot not in PATH yet"
+          echo "---"
+          ls "C:\Program Files\Matplot++ 1.2.0"
+
+      # Configure CMake project
+      - name: Configure CMake and compile Harmony
+        shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+          mkdir build
+          cd build
+          cmake .. -DGUROBI_PATH="C:/gurobi1301/win64" -DMATPLOT_PATH=""C:\Program Files\Matplot++ 1.2.0"
+          cmake --build . --config Release
+
+      # Run Harmony
+      - name: Run Harmony
+        shell: bash -l {0}
+        run: |
+          cd build
+          echo "List build dir"
+          ls
+          echo "run Harmony"
+          ./Harmony 
