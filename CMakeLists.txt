@@ -21,9 +21,6 @@ find_package(SymEngine CONFIG)
 set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
 include_directories(${SYMENGINE_INCLUDE_DIRS})
 
-# Find casadi on local system
-find_package(casadi CONFIG)
-
 # Gurobi and Mathplot++ are configured below
 # They need to be configured after add_executable(Harmony ...)
 
@@ -331,7 +328,6 @@ endif()
 # Note that Eigen doesn't need to be linked because it's a header-only lib
 target_link_libraries(
     Harmony
-    casadi::casadi
     ${SYMENGINE_LIBRARIES}
 )
 
