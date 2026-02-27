@@ -53,6 +53,12 @@ jobs:
           wget https://github.com/alandefreitas/matplotplusplus/releases/download/v1.2.0/Matplot++-1.2.0-Linux.tar.gz
           tar -xzf Matplot++-1.2.0-Linux.tar.gz
 
+      # Download Install gnuplot on the runner
+      - name: Install Gnuplot and other system dependencies
+        shell: bash -l {0}
+        run: |
+          sudo apt-get install gnuplot libjpeg-dev libtiff-dev libpng-dev liblapack-dev libblas-dev
+
       # List dependencies
       - name: List dependencies
         shell: bash -l {0}
@@ -66,7 +72,7 @@ jobs:
           pwd
 
       # Configure CMake project
-      - name: Configure CMake
+      - name: Configure CMake and compile Harmony
         shell: bash -l {0}
         run: |
           conda info
@@ -74,16 +80,10 @@ jobs:
           mkdir build
           cd build
           cmake .. -DGUROBI_PATH="../dependencies/gurobi1301/linux64" -DMATPLOT_PATH="../dependencies/Matplot++-1.2.0-Linux"
-
-      # Compile Harmony
-      - name: Compile Harmony
-        shell: bash -l {0}
-        run: |
-          cd build
           cmake --build . --config Release
 
       # Run Harmony
-      - name: Compile Harmony
+      - name: Run Harmony
         shell: bash -l {0}
         run: |
           cd build
