@@ -1,4 +1,4 @@
-﻿#include "powerflow.h"
+﻿#include "Powerflow.h"
 #include "../Helper_Functions/Helper_Functions.h"
 
 #include "../../network.h"

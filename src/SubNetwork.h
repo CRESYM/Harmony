@@ -1,10 +1,10 @@
 #ifndef SUBNETWORK_H
 #define SUBNETWORK_H
 
-#include "Network.h"
+#include "network.h"
 
 // The SubNetwork class inherits all behavior from Network,
-// but is distinct in identity — useful for modular, hierarchical systems
+// but is distinct in identity ï¿½ useful for modular, hierarchical systems
 class SubNetwork : public Network {
 private:
     std::unordered_map<std::string, Bus*> outputBuses;  // Output buses specific to this subnetwork

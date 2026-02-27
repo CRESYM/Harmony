@@ -1,5 +1,5 @@
 #include "Examples.h"
-#include "../Solver/OPF/powerflow.h"
+#include "../Solver/OPF/Powerflow.h"
 
 void example_OPF_csv_1()
 {
