@@ -4,7 +4,7 @@
 #include "../Bus.h"
 #include "../Include_components.h"
 #include "../Solver/Stability_Estimate/Stability_estimate.h"
-#include "../Solver/OPF/powerflow.h"
+#include "../Solver/OPF/Powerflow.h"
 
 void example_stability_check() {
     ///* ---------- 0 Set Network Object ---------- */

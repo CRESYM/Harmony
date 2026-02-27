@@ -3,7 +3,7 @@
 #include "../network.h"
 #include "../Bus.h"
 #include "../Include_components.h"
-#include "../Solver/OPF/powerflow.h"
+#include "../Solver/OPF/Powerflow.h"
 #include "../Solver/Stability_Estimate/Stability_estimate.h"
 
 

@@ -1,4 +1,4 @@
-#include "powerflow.h"
+#include "Powerflow.h"
 #include "viz_opf.h"
 #include "../../Bus.h"   
 
@@ -742,7 +742,7 @@ void PowerFlow::solve_opf(
             for (int ng = 0; ng < ngrids; ++ng) {
                 int ref_bus = -1;
 
-                // ---- ¦È_ac ----
+                // ---- ï¿½ï¿½_ac ----
                 if (ng >= recRef.size()) continue;
 
                 if (!recRef[ng].empty() && recRef[ng][0] > 0) {
@@ -799,7 +799,7 @@ void PowerFlow::solve_opf(
                 theta_ac_k[ng] = theta;
             }
 
-            // ---- ¦È_s ----
+            // ---- ï¿½ï¿½_s ----
             for (int i = 0; i < nconvs_dc; ++i) {
                 int k = static_cast<int>(conv_dc(i, 2)) - 1;  // AC grid index
                 int j = static_cast<int>(conv_dc(i, 1)) - 1;  // PCC bus number
@@ -814,7 +814,7 @@ void PowerFlow::solve_opf(
 
 
 
-            // ---- ¦È_c ----
+            // ---- ï¿½ï¿½_c ----
             for (int i = 0; i < nconvs_dc; ++i) {
                 double dtheta_sc = std::atan2(Stc_dc_k(i, 0), Ctc_dc_k(i, 0));
                 theta_c_k(i) = theta_s_k(i) - dtheta_sc;
@@ -919,7 +919,7 @@ void PowerFlow::solve_opf(
             double GenCostResUSA = model.get(GRB_DoubleAttr_ObjVal);;
             double GenCostResEURO = GenCostResUSA / 1.08;
             OPF_OUT << "\n The total generation cost is $" << std::fixed << std::setprecision(2)
-                << GenCostResUSA << "/MWh (€" << GenCostResEURO << "/MWh)";
+                << GenCostResUSA << "/MWh (ï¿½" << GenCostResEURO << "/MWh)";
             OPF_OUT << "\n\n";
 
             OPF_OUT << "\n===========================================================================================";

@@ -1,4 +1,4 @@
-#include "powerflow.h"
+#include "Powerflow.h"
 
 Eigen::MatrixXd PowerFlow::readCSVtoCpp(const std::string& filename) {
     std::ifstream file(filename);

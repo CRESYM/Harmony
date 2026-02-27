@@ -346,7 +346,7 @@ if(NOT GUROBI_PATH)
         "Common default paths:\n"
         "  - Windows: C:\gurobi1200\win64\n"
         "  - macOS:   /Library/gurobi1200/macos_universal2\n"
-        "  - Linux:   /opt/gurobi1200/linux64"
+        "  - Linux:   /opt/gurobi1301/linux64"
     )
 elseif(NOT EXISTS "${GUROBI_PATH}")
     # Path was provided but is invalid
@@ -388,10 +388,15 @@ else()
             $<$<CONFIG:Debug>:${GUROBI_CPP_DEBUG_LIB}>
             $<$<CONFIG:Release>:${GUROBI_CPP_RELEASE_LIB}>
         )
-    elseif(APPLE)
+    else()
         # 1. Find the Core Library (Dynamic)
-        # On Mac, this is libgurobi[ver].dylib
-        file(GLOB GUROBI_CORE_LIB "${GUROBI_PATH}/lib/libgurobi[0-9]*.dylib")
+        if (APPLE)
+            # On Mac this is libgurobi[ver].dylib
+            file(GLOB GUROBI_CORE_LIB "${GUROBI_PATH}/lib/libgurobi[0-9]*.dylib")
+        else()
+            # On Linux this is libgurobi[ver].so
+            file(GLOB GUROBI_CORE_LIB "${GUROBI_PATH}/lib/libgurobi[0-9]*.so")
+        endif()
 
         # 2. Find the C++ Wrapper (Static)
         # Usually just libgurobi_c++.a. Unlike Windows, there isn't usually a separate debug version.
@@ -399,7 +404,11 @@ else()
 
         # Fail if either is missing
         if(NOT GUROBI_CORE_LIB)
-            message(FATAL_ERROR "Could not find Gurobi core library (libgurobi*.dylib) in ${GUROBI_PATH}/lib")
+            if (APPLE)
+                message(FATAL_ERROR "Could not find Gurobi core library (libgurobi*.dylib) in ${GUROBI_PATH}/lib")
+            else()
+                message(FATAL_ERROR "Could not find Gurobi core library (libgurobi*.so) in ${GUROBI_PATH}/lib")
+            endif()
         endif()
 
         if(NOT EXISTS "${GUROBI_CPP_LIB}")
@@ -412,10 +421,11 @@ else()
         # Link the libraries
         target_link_libraries(
             Harmony
-            "${GUROBI_CORE_LIB}"
             "${GUROBI_CPP_LIB}"
+            "${GUROBI_CORE_LIB}"
         )
     endif()
+
 
 endif()
 
@@ -450,6 +460,7 @@ else()
     # Link the library
     target_link_libraries(Harmony Matplot++::matplot)
 endif()
+
 
 
 if(MSVC)
