@@ -1,0 +1,83 @@
+name: Linux Build and Test
+
+# Workflow triggers tell GitHub when to run the workflow:
+# a) when there is a new commit on the main or develop branch
+# b) when a new pull request is opened to merge a branch into main or develop
+on:
+  push:
+    branches: [ "main", "develop", "github_actions"]
+  pull_request:
+    branches: [ "main", "develop"]
+
+# This workflow defines one job: build-and-test
+jobs:
+  build-and-test:
+    
+    # Use ubuntu-latest runner.
+    # See https://github.com/actions/runner-images for a list of available runners.
+    runs-on: ubuntu-latest
+    
+    steps:
+
+      # Checkout a copy of this repository on the runner
+      # We use the "checkout" GitHub Action
+      # https://github.com/actions/checkout
+      - uses: actions/checkout@v4
+
+      # Install conda on the runner
+      # We use the "setup-miniconda" GitHub Action
+      # https://github.com/marketplace/actions/setup-miniconda
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+            activate-environment: harmony
+            auto-activate-base: false
+
+      # Update conda environment with dependencies listed in environment.yml 
+      - name: Create conda environment from environment.yml
+        run: conda env update -n harmony -f environment.yml
+
+      # Install Gurobi on the runner
+      - name: Download Gurobi
+        shell: bash -l {0}
+        run: |
+          mkdir dependencies
+          cd dependencies
+          wget https://packages.gurobi.com/13.0/gurobi13.0.1_linux64.tar.gz
+          tar -xzf gurobi13.0.1_linux64.tar.gz
+
+      # Download Matplot++ on the runner
+      - name: Download Matplot++
+        shell: bash -l {0}
+        run: |
+          cd dependencies
+          wget https://github.com/alandefreitas/matplotplusplus/releases/download/v1.2.0/Matplot++-1.2.0-Linux.tar.gz
+          tar -xzf Matplot++-1.2.0-Linux.tar.gz
+
+      # List dependencies
+      - name: Download Matplot++
+        shell: bash -l {0}
+        run: |
+          cd dependencies
+          echo "List Gurobi"
+          ls gurobi1301/linux64
+          echo "List Matplot++"
+          ls Matplot++-1.2.0-Linux/lib
+          echo "pwd"
+          pwd
+
+      # Configure CMake project
+      - name: Configure CMake
+        shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+          mkdir build
+          cd build
+          cmake ..
+
+      # Compile Harmony
+      - name: Compile Harmony
+        shell: bash -l {0}
+        run: |
+          cd build
+          cmake --build . --config Release 
