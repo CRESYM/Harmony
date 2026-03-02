@@ -109,4 +109,4 @@ jobs:
           echo "List build dir"
           ls
           echo "run Harmony"
-          ./Harmony 
+          ./Harmony.exe
