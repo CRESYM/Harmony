@@ -73,9 +73,9 @@ jobs:
       # Install Matplot++ on the runner
       # /S is the standard NSIS silent flag
       - name: Install Matplot++
-        shell: bash -l {0}
         run: |
           cd dependencies
+          ls
           curl -LO https://github.com/alandefreitas/matplotplusplus/releases/download/v1.2.0/Matplot++-1.2.0-win64.exe
           ./Matplot++-1.2.0-win64.exe /S
       
