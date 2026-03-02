@@ -105,7 +105,7 @@ jobs:
       - name: Run Harmony
         shell: bash -l {0}
         run: |
-          cd build
+          cd build/Release
           echo "List build dir"
           ls
           echo "run Harmony"
