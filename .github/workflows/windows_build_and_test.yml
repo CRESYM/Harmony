@@ -105,6 +105,8 @@ jobs:
       - name: Run Harmony
         shell: bash -l {0}
         run: |
+          echo "C:\gurobi1301\win64\bin" >> $GITHUB_PATH
+          echo "C:\Program Files\Matplot++ 1.2.0\lib" >> $GITHUB_PATH
           cd build/Release
           echo "List build dir"
           ls
