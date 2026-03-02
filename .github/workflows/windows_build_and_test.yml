@@ -62,9 +62,12 @@ jobs:
 
       # Verify gnuplot installation
       - name: Verify Gnuplot
-        shell: bash -l {0}
         run: |
-          which gnuplot || echo "Gnuplot not in PATH yet"
+          if (Test-Path "C:\Program Files\gnuplot\bin") {
+              Write-Host "Gurobi found in C:\Program Files\gnuplot\bin"
+          } else {
+              Get-ChildItem -Path C:\ -Filter "gnuplot*" -Recurse -ErrorAction SilentlyContinue
+          }
 
 
       # Install Matplot++ on the runner
