@@ -60,8 +60,13 @@ jobs:
         shell: bash -l {0}
         run: |
           choco install gnuplot -y
-          echo "---"
+
+      # Verify gnuplot installation
+      - name: Verify Gnuplot
+        shell: bash -l {0}
+        run: |
           which gnuplot || echo "Gnuplot not in PATH yet"
+
 
       # Install Matplot++ on the runner
       # /S is the standard NSIS silent flag
