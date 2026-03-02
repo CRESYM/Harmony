@@ -55,6 +55,14 @@ jobs:
       
       # msiexec.exe /i Gurobi-13.0.1_win64.msi /qn /norestart
 
+      - name: Verify Gurobi Path
+        run: |
+          if (Test-Path "C:\gurobi1301\win64") {
+              Write-Host "Gurobi found in C:\gurobi1301\win64"
+          } else {
+              Get-ChildItem -Path C:\ -Filter "gurobi*" -Recurse -ErrorAction SilentlyContinue
+          }
+
       # Install Gnuplot on the runner
       # We use the choco package manager (equivalent of homebrew and apt)
       - name: Install Gnuplot
