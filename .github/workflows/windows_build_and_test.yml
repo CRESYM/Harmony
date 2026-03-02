@@ -44,7 +44,11 @@ jobs:
           mkdir dependencies
           cd dependencies
           curl -LO https://packages.gurobi.com/13.0/Gurobi-13.0.1-win64.msi
-          msiexec.exe /i gurobi13.0.1_win64.msi /qn /norestart
+          echo "---"
+          ls
+          msiexec.exe /a Gurobi-13.0.1-win64.msi /qb TARGETDIR=c:\
+      
+      # msiexec.exe /i Gurobi-13.0.1_win64.msi /qn /norestart
 
       # Install Gnuplot on the runner
       # We use the choco package manager (equivalent of homebrew and apt)
