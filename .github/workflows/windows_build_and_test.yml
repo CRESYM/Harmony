@@ -27,14 +27,14 @@ jobs:
       # Install conda on the runner
       # We use the "setup-miniconda" GitHub Action
       # https://github.com/marketplace/actions/setup-miniconda
-      #- uses: conda-incubator/setup-miniconda@v3
-      #  with:
-      #      activate-environment: harmony
-      #      auto-activate-base: false
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+            activate-environment: harmony
+            auto-activate-base: false
 
       # Update conda environment with dependencies listed in environment.yml 
-      #- name: Create conda environment from environment.yml
-      #  run: conda env update -n harmony -f environment.yml
+      - name: Create conda environment from environment.yml
+        run: conda env update -n harmony -f environment.yml
 
       # Install Gurobi on the runner
       # Use msiexec to run the installer (/qn = quiet (no UI), /norestart = don't reboot the runner)
@@ -98,7 +98,7 @@ jobs:
           conda list
           mkdir build
           cd build
-          cmake .. -DGUROBI_PATH="C:/gurobi1301/win64" -DMATPLOT_PATH=""C:\Program Files\Matplot++ 1.2.0"
+          cmake .. -DGUROBI_PATH="C:\gurobi1301\win64" -DMATPLOT_PATH="C:\Program Files\Matplot++ 1.2.0"
           cmake --build . --config Release
 
       # Run Harmony
