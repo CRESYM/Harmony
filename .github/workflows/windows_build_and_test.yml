@@ -46,15 +46,6 @@ jobs:
           echo "---"          
           Start-Process msiexec.exe -ArgumentList '/i', 'Gurobi-13.0.1-win64.msi', '/qn', '/norestart' -Wait -PassThru
 
-#          if ($installerProcess.ExitCode -ne 0) {
-#              Write-Error "Installer failed with exit code $($installerProcess.ExitCode)"
-#              exit 1
-#          }  
-          
-      # msiexec.exe /a Gurobi-13.0.1-win64.msi /qb TARGETDIR=c:\
-      
-      # msiexec.exe /i Gurobi-13.0.1_win64.msi /qn /norestart
-
       - name: Verify Gurobi Path
         run: |
           if (Test-Path "C:\gurobi1301\win64") {
@@ -69,6 +60,8 @@ jobs:
         shell: bash -l {0}
         run: |
           choco install gnuplot -y
+          echo "---"
+          which gnuplot || echo "Gnuplot not in PATH yet"
 
       # Install Matplot++ on the runner
       # /S is the standard NSIS silent flag
