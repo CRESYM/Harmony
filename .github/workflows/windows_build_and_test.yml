@@ -39,14 +39,19 @@ jobs:
       # Install Gurobi on the runner
       # Use msiexec to run the installer (/qn = quiet (no UI), /norestart = don't reboot the runner)
       - name: Install Gurobi
-        shell: bash -l {0}
         run: |
           mkdir dependencies
           cd dependencies
           curl -LO https://packages.gurobi.com/13.0/Gurobi-13.0.1-win64.msi
-          echo "---"
-          ls
-          msiexec.exe /a Gurobi-13.0.1-win64.msi /qb TARGETDIR=c:\
+          echo "---"          
+          $installerProcess = Start-Process msiexec.exe -ArgumentList '/i', 'Gurobi-13.0.1-win64.msi', '/qn', '/norestart' -Wait -PassThru
+
+          if ($installerProcess.ExitCode -ne 0) {
+              Write-Error "Installer failed with exit code $($installerProcess.ExitCode)"
+              exit 1
+          }  
+          
+      # msiexec.exe /a Gurobi-13.0.1-win64.msi /qb TARGETDIR=c:\
       
       # msiexec.exe /i Gurobi-13.0.1_win64.msi /qn /norestart
 
