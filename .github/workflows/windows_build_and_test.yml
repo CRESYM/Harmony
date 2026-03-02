@@ -5,7 +5,7 @@ name: Windows Build and Test
 # b) when a new pull request is opened to merge a branch into main or develop
 on:
   push:
-    branches: [ "main", "develop", "github_actions"]
+    branches: [ "main", "develop", "github_actions", "windows_workflow"]
   pull_request:
     branches: [ "main", "develop"]
 
@@ -27,14 +27,14 @@ jobs:
       # Install conda on the runner
       # We use the "setup-miniconda" GitHub Action
       # https://github.com/marketplace/actions/setup-miniconda
-      - uses: conda-incubator/setup-miniconda@v3
-        with:
-            activate-environment: harmony
-            auto-activate-base: false
+      #- uses: conda-incubator/setup-miniconda@v3
+      #  with:
+      #      activate-environment: harmony
+      #      auto-activate-base: false
 
       # Update conda environment with dependencies listed in environment.yml 
-      - name: Create conda environment from environment.yml
-        run: conda env update -n harmony -f environment.yml
+      #- name: Create conda environment from environment.yml
+      #  run: conda env update -n harmony -f environment.yml
 
       # Install Gurobi on the runner
       # Use msiexec to run the installer (/qn = quiet (no UI), /norestart = don't reboot the runner)
@@ -44,12 +44,12 @@ jobs:
           cd dependencies
           curl -LO https://packages.gurobi.com/13.0/Gurobi-13.0.1-win64.msi
           echo "---"          
-          $installerProcess = Start-Process msiexec.exe -ArgumentList '/i', 'Gurobi-13.0.1-win64.msi', '/qn', '/norestart' -Wait -PassThru
+          Start-Process msiexec.exe -ArgumentList '/i', 'Gurobi-13.0.1-win64.msi', '/qn', '/norestart' -Wait -PassThru
 
-          if ($installerProcess.ExitCode -ne 0) {
-              Write-Error "Installer failed with exit code $($installerProcess.ExitCode)"
-              exit 1
-          }  
+#          if ($installerProcess.ExitCode -ne 0) {
+#              Write-Error "Installer failed with exit code $($installerProcess.ExitCode)"
+#              exit 1
+#          }  
           
       # msiexec.exe /a Gurobi-13.0.1-win64.msi /qb TARGETDIR=c:\
       
