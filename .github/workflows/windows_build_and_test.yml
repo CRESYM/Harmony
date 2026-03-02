@@ -57,7 +57,6 @@ jobs:
       # Install Gnuplot on the runner
       # We use the choco package manager (equivalent of homebrew and apt)
       - name: Install Gnuplot
-        shell: bash -l {0}
         run: |
           choco install gnuplot -y
 
