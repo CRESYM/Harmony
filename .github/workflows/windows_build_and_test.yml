@@ -102,13 +102,19 @@ jobs:
           cmake --build . --config Release
 
       # Run Harmony
+      # Manually add the bin folders to the PATH for this specific session
       - name: Run Harmony
         shell: bash -l {0}
         run: |
-          echo "C:\gurobi1301\win64\bin" >> $GITHUB_PATH
-          echo "C:\Program Files\Matplot++ 1.2.0\lib" >> $GITHUB_PATH
+          export PATH="/c/gurobi1301/win64/bin:/c/Program Files/Matplot++ 1.2.0/lib:/c/Program Files/gnuplot/bin:$PATH"
           cd build/Release
-          echo "List build dir"
+          echo "List build dir:"
           ls
-          echo "run Harmony"
-          ./Harmony.exe
+          echo "Attempting to run Harmony..."
+          # Running with ./ is correct for Git Bash
+          ./Harmony.exe || {
+            echo "--- Execution Failed ---"
+            echo "Checking for missing DLLs using ldd..."
+            ldd Harmony.exe
+            exit 1
+          }
