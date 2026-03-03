@@ -18,6 +18,25 @@ jobs:
     runs-on: windows-latest
     
     steps:
+      - name: Setup Gurobi License
+        run: |
+          if (!(Test-Path "C:\gurobi")) {
+              New-Item -Path "C:\gurobi" -ItemType Directory -Force
+          }
+
+          $licenseContent = @"
+          WLSACCESSID=${{ secrets.GUROBI_WLSACCESSID }}
+          WLSSECRET=${{ secrets.GUROBI_WLSSECRET }}
+          LICENSEID=${{ secrets.GUROBI_LICENSEID }}
+          "@
+
+          Set-Content -Path "C:\gurobi\gurobi.lic" -Value $licenseContent
+          
+          if (Test-Path "C:\gurobi\gurobi.lic") {
+              Write-Host "Gurobi license file created successfully at C:\gurobi\gurobi.lic"
+              Write-Host "Contents of gurobi.lic:"
+              Get-Content "C:\gurobi\gurobi.lic"
+          }
 
       # Checkout a copy of this repository on the runner
       # We use the "checkout" GitHub Action
