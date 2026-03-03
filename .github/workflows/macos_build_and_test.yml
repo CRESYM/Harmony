@@ -45,6 +45,19 @@ jobs:
           curl -O https://packages.gurobi.com/13.0/gurobi13.0.1_macos_universal2.pkg
           sudo installer -pkg gurobi13.0.1_macos_universal2.pkg -target /
 
+      # Setup the Gurobi WLS license
+      # The actual license is stored as a repository secret
+      - name: Setup Gurobi License
+        run: |
+          sudo mkdir -p /Library/gurobi
+          sudo bash -c "cat <<EOF > /Library/gurobi/gurobi.lic
+          WLSACCESSID=${{ secrets.GUROBI_WLSACCESSID }}
+          WLSSECRET=${{ secrets.GUROBI_WLSSECRET }}
+          LICENSEID=${{ secrets.GUROBI_LICENSEID }}
+          EOF"
+          ls -l /Library/gurobi/gurobi.lic
+          cat /Library/gurobi/gurobi.lic
+
       # Download Matplot++ and Gnuplot on the runner
       - name: Download Matplot++
         shell: bash -l {0}
@@ -52,24 +65,26 @@ jobs:
           brew update
           brew install gnuplot matplotplusplus
 
-      # List dependencies
-      - name: List dependencies
+      # Build the tests
+      - name: Build the tests
         shell: bash -l {0}
         run: |
-          echo "List Gurobi"
-          ls /Library/gurobi1301/macos_universal2
-          echo "---"
-          echo "Matplot++ path: $(brew --prefix matplotplusplus)"
-          echo "Gnuplot path: $(brew --prefix gnuplot)"
-          echo "pwd"
-          pwd
+          mkdir tests/build
+          cd tests/build
+          cmake .. -DGUROBI_PATH="/Library/gurobi1301/macos_universal2" -DMATPLOT_PATH="/opt/homebrew/opt/matplotplusplus"
+          cmake --build . --config Release
+
+      # Run the tests
+      - name: Run the tests
+        shell: bash -l {0}
+        run: |
+          cd tests/build
+          ctest
 
       # Configure CMake project
       - name: Configure CMake and compile Harmony
         shell: bash -l {0}
         run: |
-          conda info
-          conda list
           mkdir build
           cd build
           cmake .. -DGUROBI_PATH="/Library/gurobi1301/macos_universal2" -DMATPLOT_PATH="/opt/homebrew/opt/matplotplusplus"
@@ -79,8 +94,4 @@ jobs:
       - name: Run Harmony
         shell: bash -l {0}
         run: |
-          cd build
-          echo "List build dir"
-          ls
-          echo "run Harmony"
           ./Harmony 

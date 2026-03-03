@@ -5,7 +5,7 @@ name: Windows Build and Test
 # b) when a new pull request is opened to merge a branch into main or develop
 on:
   push:
-    branches: [ "main", "develop", "github_actions", "windows_workflow"]
+    branches: [ "main", "develop", "github_actions"]
   pull_request:
     branches: [ "main", "develop"]
 
@@ -42,8 +42,7 @@ jobs:
         run: |
           mkdir dependencies
           cd dependencies
-          curl -LO https://packages.gurobi.com/13.0/Gurobi-13.0.1-win64.msi
-          echo "---"          
+          curl -LO https://packages.gurobi.com/13.0/Gurobi-13.0.1-win64.msi         
           Start-Process msiexec.exe -ArgumentList '/i', 'Gurobi-13.0.1-win64.msi', '/qn', '/norestart' -Wait -PassThru
 
       # Setup the Gurobi WLS license
