@@ -18,25 +18,6 @@ jobs:
     runs-on: windows-latest
     
     steps:
-      - name: Setup Gurobi License
-        run: |
-          if (!(Test-Path "C:\gurobi")) {
-              New-Item -Path "C:\gurobi" -ItemType Directory -Force
-          }
-
-          $licenseContent = @"
-          WLSACCESSID=${{ secrets.GUROBI_WLSACCESSID }}
-          WLSSECRET=${{ secrets.GUROBI_WLSSECRET }}
-          LICENSEID=${{ secrets.GUROBI_LICENSEID }}
-          "@
-
-          Set-Content -Path "C:\gurobi\gurobi.lic" -Value $licenseContent
-          
-          if (Test-Path "C:\gurobi\gurobi.lic") {
-              Write-Host "Gurobi license file created successfully at C:\gurobi\gurobi.lic"
-              Write-Host "Contents of gurobi.lic:"
-              Get-Content "C:\gurobi\gurobi.lic"
-          }
 
       # Checkout a copy of this repository on the runner
       # We use the "checkout" GitHub Action
@@ -65,29 +46,27 @@ jobs:
           echo "---"          
           Start-Process msiexec.exe -ArgumentList '/i', 'Gurobi-13.0.1-win64.msi', '/qn', '/norestart' -Wait -PassThru
 
-      - name: Verify Gurobi Path
+      # Setup the Gurobi WLS license
+      # The actual license is stored as a repository secret
+      - name: Setup Gurobi License
         run: |
-          if (Test-Path "C:\gurobi1301\win64") {
-              Write-Host "Gurobi found in C:\gurobi1301\win64"
-          } else {
-              Get-ChildItem -Path C:\ -Filter "gurobi*" -Recurse -ErrorAction SilentlyContinue
+          if (!(Test-Path "C:\gurobi")) {
+              New-Item -Path "C:\gurobi" -ItemType Directory -Force
           }
+
+          $licenseContent = @"
+          WLSACCESSID=${{ secrets.GUROBI_WLSACCESSID }}
+          WLSSECRET=${{ secrets.GUROBI_WLSSECRET }}
+          LICENSEID=${{ secrets.GUROBI_LICENSEID }}
+          "@
+
+          Set-Content -Path "C:\gurobi\gurobi.lic" -Value $licenseContent
 
       # Install Gnuplot on the runner
       # We use the choco package manager (equivalent of homebrew and apt)
       - name: Install Gnuplot
         run: |
           choco install gnuplot -y
-
-      # Verify gnuplot installation
-      - name: Verify Gnuplot
-        run: |
-          if (Test-Path "C:\Program Files\gnuplot\bin") {
-              Write-Host "Gurobi found in C:\Program Files\gnuplot\bin"
-          } else {
-              Get-ChildItem -Path C:\ -Filter "gnuplot*" -Recurse -ErrorAction SilentlyContinue
-          }
-
 
       # Install Matplot++ on the runner
       # /S is the standard NSIS silent flag
@@ -98,42 +77,36 @@ jobs:
           curl -LO https://github.com/alandefreitas/matplotplusplus/releases/download/v1.2.0/Matplot++-1.2.0-win64.exe
           ./Matplot++-1.2.0-win64.exe /S
       
-      # List dependencies
-      - name: List dependencies
+      # Build the tests
+      - name: Build the tests
         shell: bash -l {0}
         run: |
-          echo "Checking Gurobi Default Path"
-          ls "C:/gurobi1301/win64" || echo "Check C:/Program Files/gurobi1301/win64 instead"
-          echo "---"
-          which gnuplot || echo "Gnuplot not in PATH yet"
-          echo "---"
-          ls "C:\Program Files\Matplot++ 1.2.0"
+          mkdir tests/build
+          cd tests/build
+          cmake .. -DGUROBI_PATH="C:\gurobi1301\win64" -DMATPLOT_PATH="C:\Program Files\Matplot++ 1.2.0"
+          cmake --build . --config Release
 
-      # Configure CMake project
-      - name: Configure CMake and compile Harmony
+      # Run the tests
+      - name: Run the tests
         shell: bash -l {0}
         run: |
-          conda info
-          conda list
+          export PATH="/c/gurobi1301/win64/bin:/c/Program Files/Matplot++ 1.2.0/lib:/c/Program Files/gnuplot/bin:$PATH"
+          cd tests/build
+          ctest
+
+      # Configure CMake project and compile Harmony
+      - name: Configure CMake and compile
+        shell: bash -l {0}
+        run: |
           mkdir build
           cd build
           cmake .. -DGUROBI_PATH="C:\gurobi1301\win64" -DMATPLOT_PATH="C:\Program Files\Matplot++ 1.2.0"
           cmake --build . --config Release
 
       # Run Harmony
-      # Manually add the bin folders to the PATH for this specific session
-      - name: Run Harmony
+      - name: Run Tests
         shell: bash -l {0}
         run: |
           export PATH="/c/gurobi1301/win64/bin:/c/Program Files/Matplot++ 1.2.0/lib:/c/Program Files/gnuplot/bin:$PATH"
           cd build/Release
-          echo "List build dir:"
-          ls
-          echo "Attempting to run Harmony..."
-          # Running with ./ is correct for Git Bash
-          ./Harmony.exe || {
-            echo "--- Execution Failed ---"
-            echo "Checking for missing DLLs using ldd..."
-            ldd Harmony.exe
-            exit 1
-          }
+          ./Harmony.exe
