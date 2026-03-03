@@ -1,9 +1,9 @@
 ﻿#include <gtest/gtest.h>
-#include "../network.h"
-#include "../Bus.h"
-#include "../Include_components.h"
-#include "../Solver/Stability_Estimate/Stability_estimate.h"
-#include "../Solver/OPF/powerflow.h"
+#include "network.h"
+#include "Bus.h"
+#include "Include_components.h"
+#include "Solver/Stability_Estimate/Stability_estimate.h"
+#include "Solver/OPF/Powerflow.h"
 
 class TestStabilityEstimate : public testing::Test {};
 
