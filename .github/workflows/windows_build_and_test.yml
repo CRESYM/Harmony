@@ -5,7 +5,7 @@ name: Windows Build and Test
 # b) when a new pull request is opened to merge a branch into main or develop
 on:
   push:
-    branches: [ "main", "develop", "github_actions"]
+    branches: [ "main", "develop", "github_actions", "windows_workflow"]
   pull_request:
     branches: [ "main", "develop"]
 
@@ -44,61 +44,69 @@ jobs:
           cd dependencies
           curl -LO https://packages.gurobi.com/13.0/Gurobi-13.0.1-win64.msi
           echo "---"          
-          $installerProcess = Start-Process msiexec.exe -ArgumentList '/i', 'Gurobi-13.0.1-win64.msi', '/qn', '/norestart' -Wait -PassThru
+          Start-Process msiexec.exe -ArgumentList '/i', 'Gurobi-13.0.1-win64.msi', '/qn', '/norestart' -Wait -PassThru
 
-          if ($installerProcess.ExitCode -ne 0) {
-              Write-Error "Installer failed with exit code $($installerProcess.ExitCode)"
-              exit 1
-          }  
-          
-      # msiexec.exe /a Gurobi-13.0.1-win64.msi /qb TARGETDIR=c:\
-      
-      # msiexec.exe /i Gurobi-13.0.1_win64.msi /qn /norestart
+      # Setup the Gurobi WLS license
+      # The actual license is stored as a repository secret
+      - name: Setup Gurobi License
+        run: |
+          if (!(Test-Path "C:\gurobi")) {
+              New-Item -Path "C:\gurobi" -ItemType Directory -Force
+          }
+
+          $licenseContent = @"
+          WLSACCESSID=${{ secrets.GUROBI_WLSACCESSID }}
+          WLSSECRET=${{ secrets.GUROBI_WLSSECRET }}
+          LICENSEID=${{ secrets.GUROBI_LICENSEID }}
+          "@
+
+          Set-Content -Path "C:\gurobi\gurobi.lic" -Value $licenseContent
 
       # Install Gnuplot on the runner
       # We use the choco package manager (equivalent of homebrew and apt)
       - name: Install Gnuplot
-        shell: bash -l {0}
         run: |
           choco install gnuplot -y
 
       # Install Matplot++ on the runner
       # /S is the standard NSIS silent flag
       - name: Install Matplot++
-        shell: bash -l {0}
         run: |
           cd dependencies
+          ls
           curl -LO https://github.com/alandefreitas/matplotplusplus/releases/download/v1.2.0/Matplot++-1.2.0-win64.exe
           ./Matplot++-1.2.0-win64.exe /S
       
-      # List dependencies
-      - name: List dependencies
+      # Build the tests
+      - name: Build the tests
         shell: bash -l {0}
         run: |
-          echo "Checking Gurobi Default Path"
-          ls "C:/gurobi1301/win64" || echo "Check C:/Program Files/gurobi1301/win64 instead"
-          echo "---"
-          which gnuplot || echo "Gnuplot not in PATH yet"
-          echo "---"
-          ls "C:\Program Files\Matplot++ 1.2.0"
+          mkdir tests/build
+          cd tests/build
+          cmake .. -DGUROBI_PATH="C:\gurobi1301\win64" -DMATPLOT_PATH="C:\Program Files\Matplot++ 1.2.0"
+          cmake --build . --config Release
 
-      # Configure CMake project
-      - name: Configure CMake and compile Harmony
+      # Run the tests
+      - name: Run the tests
         shell: bash -l {0}
         run: |
-          conda info
-          conda list
+          export PATH="/c/gurobi1301/win64/bin:/c/Program Files/Matplot++ 1.2.0/lib:/c/Program Files/gnuplot/bin:$PATH"
+          cd tests/build
+          ctest
+
+      # Configure CMake project and compile Harmony
+      - name: Configure CMake and compile
+        shell: bash -l {0}
+        run: |
           mkdir build
           cd build
-          cmake .. -DGUROBI_PATH="C:/gurobi1301/win64" -DMATPLOT_PATH=""C:\Program Files\Matplot++ 1.2.0"
+          cmake .. -DGUROBI_PATH="C:\gurobi1301\win64" -DMATPLOT_PATH="C:\Program Files\Matplot++ 1.2.0"
           cmake --build . --config Release
 
       # Run Harmony
-      - name: Run Harmony
+      - name: Run Tests
         shell: bash -l {0}
         run: |
-          cd build
-          echo "List build dir"
-          ls
-          echo "run Harmony"
-          ./Harmony 
+          export PATH="/c/gurobi1301/win64/bin:/c/Program Files/Matplot++ 1.2.0/lib:/c/Program Files/gnuplot/bin:$PATH"
+          cd build/Release
+          ./Harmony.exe
