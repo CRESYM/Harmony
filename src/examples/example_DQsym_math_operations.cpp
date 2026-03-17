@@ -1,7 +1,6 @@
 #include "Examples.h"
 
 #include "../Solver/DQsym/DQsym.h"
-//#include "../Solver/DQsym/dqn2abc.h"
 #include "../Solver/Helper_Functions/Visualization.h"
 
 void example_DQsym_math_operations()
@@ -111,7 +110,7 @@ void example_DQsym_math_operations()
 	try {
 		const double freq_hz = 50.0;
 		const double t0 = 0.0;
-		const double t1 = 0.04;   // 2 cycles
+		const double t1 = 0.3;   // 2 cycles
 		const double Ts = 2e-4;
 
 		Eigen::MatrixXcd Xdcpnz_c(3, 6);
