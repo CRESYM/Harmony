@@ -26,6 +26,7 @@
 #include <symengine/polys/basic_conversions.h>
 #include <symengine/printers.h>  // Correct header for printing
 #include <symengine/real_mpfr.h>
+
 using SymEngine::RealMPFR;
 
 // Eigen library for linear algebra
@@ -60,6 +61,8 @@ using SymEngine::RealMPFR;
 #include <iomanip>
 #include <filesystem>
 #include <set>
+
+#include <cstdlib>
 
 #include<matplot/matplot.h>
 using namespace matplot;
@@ -100,3 +103,5 @@ Eigen::MatrixXd map2dense(const Table& tbl,
 
 
 #endif // CONSTANTS_H
+
+

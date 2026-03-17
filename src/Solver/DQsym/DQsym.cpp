@@ -10,11 +10,6 @@
 namespace
 {
     constexpr double PI_DQSYM = 3.141592653589793238462643383279502884;
-
-   /* inline int sgn(int x)
-    {
-        return (x > 0) - (x < 0);
-    }*/
 }
 
 /**

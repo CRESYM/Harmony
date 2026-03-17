@@ -1,15 +1,6 @@
 #include "Examples.h"
 #include "../Solver/DQsym/DQsym.h"
-
-#include <Eigen/Dense>
-#include <complex>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <cstdlib>
-
+#include "../Constants.h"
 void example_DQsym_DSSS2()
 {
     using cd = std::complex<double>;
@@ -95,14 +86,17 @@ void example_DQsym_DSSS2()
     const double PI = 3.141592653589793238462643383279502884;
 
     const int N = static_cast<int>((tEnd - t0) / dt) + 1;
+    const int nGroups = static_cast<int>(Cd.rows() / 3);
 
     std::vector<double> time(N);
     Eigen::MatrixXi brkHistory(N, 3);
-    std::vector<Eigen::MatrixXcd> Yhist(N);
+    std::vector<Eigen::MatrixXd> XabcHist(nGroups, Eigen::MatrixXd::Zero(N, 3));
 
-    const int nGroups = static_cast<int>(Cd.rows() / 3);
-    std::vector<Eigen::MatrixXd> XabcHist(
-        nGroups, Eigen::MatrixXd::Zero(N, 3));
+    Eigen::MatrixXcd u(3, 6);
+    u <<
+        cd(0, 0), cd(-245.5, -880.19999999999993), cd(-102.09999999999999, 319.40000000000003), cd(373.90000000000003, 733.79999999999995), cd(255.09999999999999, -885.10000000000002), cd(161.09999999999999, 983.89999999999998),
+        cd(0, 0), cd(-216.5, 514.10000000000002), cd(-400.19999999999999, 211.40000000000001), cd(-82.400000000000006, -141.30000000000001), cd(-536.90000000000009, 212.40000000000001), cd(-515.59999999999991, -399.89999999999998),
+        cd(0, 0), cd(-119.40000000000001, -115.7), cd(-335.69999999999999, -128.80000000000001), cd(-889.59999999999991, -92.899999999999991), cd(3.2000000000000002, -257.60000000000002), cd(242.69999999999999, 301.70000000000005);
 
     for (int k = 0; k < N; ++k)
     {
@@ -111,20 +105,13 @@ void example_DQsym_DSSS2()
         time[k] = t;
 
         Eigen::VectorXi brkVec(3);
-        if (t < 2e-4)
-            brkVec << 0, 0, 0;
-        else if (t < 6e-4)
-            brkVec << 1, 1, 1;
-        else
-            brkVec << 0, 0, 0;
+        brkVec.setZero();
+        if (t >= 2e-4 && t < 6e-4) {
+            brkVec.setOnes();
+        }
 
         brkHistory.row(k) = brkVec.transpose();
 
-        Eigen::MatrixXcd u(3, 6);
-        u <<
-            cd(0, 0), cd(-245.5, -880.19999999999993), cd(-102.09999999999999, 319.40000000000003), cd(373.90000000000003, 733.79999999999995), cd(255.09999999999999, -885.10000000000002), cd(161.09999999999999, 983.89999999999998),
-            cd(0, 0), cd(-216.5, 514.10000000000002), cd(-400.19999999999999, 211.40000000000001), cd(-82.400000000000006, -141.30000000000001), cd(-536.90000000000009, 212.40000000000001), cd(-515.59999999999991, -399.89999999999998),
-            cd(0, 0), cd(-119.40000000000001, -115.7), cd(-335.69999999999999, -128.80000000000001), cd(-889.59999999999991, -92.899999999999991), cd(3.2000000000000002, -257.60000000000002), cd(242.69999999999999, 301.70000000000005);
 
         Eigen::MatrixXcd y = dq.DSSS(
             Ad, Bd, Cd, Dd,
@@ -134,9 +121,7 @@ void example_DQsym_DSSS2()
             dt, f0
         );
 
-        Yhist[k] = y;
-
-        auto abcGroups = dq.dqn2abc_groups_at_time(y, theta);
+        std::vector<Eigen::Vector3d> abcGroups = dq.dqn2abc_groups_at_time(y, theta);
         for (int g = 0; g < nGroups; ++g) {
             XabcHist[g].row(k) = abcGroups[g].transpose();
         }
@@ -152,7 +137,9 @@ void example_DQsym_DSSS2()
         f << std::setprecision(17);
         f << "t,brk1,brk2,brk3";
         for (int g = 0; g < nGroups; ++g) {
-            f << ",xa" << (g + 1) << ",xb" << (g + 1) << ",xc" << (g + 1);
+            f << ",xa" << (g + 1)
+                << ",xb" << (g + 1)
+                << ",xc" << (g + 1);
         }
         f << "\n";
 
@@ -172,35 +159,54 @@ void example_DQsym_DSSS2()
         }
     }
 
+    std::cout << "Wrote dsss2_abc_output.csv\n";
+
+    // Plot 3 groups per figure using CSV directly.
+    // This avoids the gnuplot warning about reading from '-' inside multiplot.
+    const int groupsPerFigure = 3;
+    const int nFigures = (nGroups + groupsPerFigure - 1) / groupsPerFigure;
+
+    for (int fig = 0; fig < nFigures; ++fig)
     {
-        std::ofstream gp("plot_dsss2_abc.gp");
+        const int gStart = fig * groupsPerFigure;
+        const int gEnd = std::min(gStart + groupsPerFigure, nGroups);
+        const int rowsThisFigure = gEnd - gStart;
+
+        std::ostringstream gpName;
+        gpName << "plot_dsss2_abc_fig_" << (fig + 1) << ".gp";
+
+        std::ofstream gp(gpName.str());
         if (!gp) {
-            std::cerr << "ERROR: cannot open plot_dsss2_abc.gp\n";
-            return;
+            std::cerr << "ERROR: cannot open " << gpName.str() << "\n";
+            continue;
         }
 
         gp << "set datafile separator ','\n";
         gp << "set grid\n";
+        gp << "set key outside\n";
         gp << "set xlabel 'Time (s)'\n";
-        gp << "set multiplot layout " << nGroups << ",1 title 'DSSS2 outputs converted to abc'\n";
+        gp << "set multiplot layout " << rowsThisFigure << ",1 title 'DSSS2 outputs converted to abc (Figure " << (fig + 1) << ")'\n";
 
-        for (int g = 0; g < nGroups; ++g) {
+        for (int g = gStart; g < gEnd; ++g)
+        {
             const int colA = 5 + 3 * g;
             const int colB = colA + 1;
             const int colC = colA + 2;
 
-            gp << "set ylabel 'abc set " << (g + 1) << "'\n";
+            gp << "set ylabel 'Group " << (g + 1) << "'\n";
             gp << "plot 'dsss2_abc_output.csv' using 1:" << colA << " with lines title 'xa" << (g + 1) << "',\\\n";
             gp << "     'dsss2_abc_output.csv' using 1:" << colB << " with lines title 'xb" << (g + 1) << "',\\\n";
             gp << "     'dsss2_abc_output.csv' using 1:" << colC << " with lines title 'xc" << (g + 1) << "'\n";
         }
 
         gp << "unset multiplot\n";
+        gp.close();
+
+#ifdef _WIN32
+        std::string cmd = "start \"\" gnuplot -p \"" + gpName.str() + "\"";
+#else
+        std::string cmd = "gnuplot -p \"" + gpName.str() + "\" > /dev/null 2>&1 &";
+#endif
+        std::system(cmd.c_str());
     }
-
-    std::cout << "===== FINAL DSSS2 OUTPUT =====\n";
-    std::cout << "t = " << time.back() << "\n";
-    std::cout << "Done. Wrote dsss2_abc_output.csv\n";
-
-    system("gnuplot -p plot_dsss2_abc.gp");
 }
