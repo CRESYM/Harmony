@@ -1,5 +1,10 @@
 ﻿#include "Visualization.h"
 
+#include <matplot/matplot.h>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+
 
 void bode_plot(const std::vector<double>& freq,
 	const std::vector<std::vector<double>>& mag_dB,
@@ -301,4 +306,70 @@ void plot_participation_factors_normalized(const std::vector<std::vector<double>
     // Restore cerr
     std::cerr.rdbuf(old_cerr);
     null_stream.close();
+
+
+
 }
+
+void plot_abc_waveforms(const std::vector<double>& t,
+    const Eigen::MatrixXd& Xabc,
+    const std::string& title) {
+    using namespace matplot;
+
+    if (Xabc.cols() != 3 || Xabc.rows() != static_cast<int>(t.size())) {
+        throw std::runtime_error("plot_abc_waveforms: size mismatch or Xabc must have 3 columns.");
+    }
+
+    // Silence backend warnings, same pattern as your other plotting functions
+    std::ofstream null_stream;
+#ifdef _WIN32
+    null_stream.open("nul");
+#else
+    null_stream.open("/dev/null");
+#endif
+    std::streambuf* old_cerr = std::cerr.rdbuf(null_stream.rdbuf());
+
+    auto f = figure(true);
+    f->size(1400, 900);
+    f->name(title);
+    hold(on);
+
+    std::vector<double> xa(t.size()), xb(t.size()), xc(t.size());
+    for (size_t i = 0; i < t.size(); ++i) {
+        xa[i] = Xabc(static_cast<int>(i), 0);
+        xb[i] = Xabc(static_cast<int>(i), 1);
+        xc[i] = Xabc(static_cast<int>(i), 2);
+    }
+
+    auto p1 = plot(t, xa);
+    p1->display_name("xa");
+    p1->line_width(2.0);
+
+    auto p2 = plot(t, xb);
+    p2->display_name("xb");
+    p2->line_width(2.0);
+
+    auto p3 = plot(t, xc);
+    p3->display_name("xc");
+    p3->line_width(2.0);
+
+    xlabel("Time (s)");
+    ylabel("Amplitude");
+    matplot::title(title);
+    grid(on);
+    gca()->minor_grid(true);
+
+    /*auto lgd = legend();*/
+    auto lgd = matplot::legend();
+    lgd->location(legend::general_alignment::bottomleft);
+    lgd->box(false);
+
+    show();
+    
+    std::cerr.rdbuf(old_cerr);
+    null_stream.close();
+}
+
+
+
+

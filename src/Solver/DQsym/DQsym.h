@@ -1,7 +1,14 @@
-#ifndef _DQSYM_H_	
+#ifndef _DQSYM_H_
 #define _DQSYM_H_
 
 #include "../../Constants.h"
+#include <vector>
+
+struct ABCResult
+{
+	std::vector<double> t;
+	MatrixXd Xabc;
+};
 
 class DQsym
 {
@@ -31,6 +38,12 @@ public:
 	void convertToPhasor(const MatrixXcd& A, const MatrixXcd& B,
 		const MatrixXcd& C, const MatrixXcd& D, MatrixXcd& Adc, MatrixXcd& Bdc,
 		MatrixXcd& Cdc, MatrixXcd& Ddc);
+
+	// dqn -> abc reconstruction
+	Vector3d dqn2abc_at_time(const MatrixXcd& Xdcpnz_c, double theta);
+
+	ABCResult simulate_dqn2abc(const MatrixXcd& Xdcpnz_c,
+		double freq_hz, double t0, double t1, double Ts);
 
 private:
 	// Persistent variables, obtained using state-space matrices solver

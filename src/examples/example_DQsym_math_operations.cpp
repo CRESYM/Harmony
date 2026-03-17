@@ -1,6 +1,8 @@
 #include "Examples.h"
 
 #include "../Solver/DQsym/DQsym.h"
+//#include "../Solver/DQsym/dqn2abc.h"
+#include "../Solver/Helper_Functions/Visualization.h"
 
 void example_DQsym_math_operations()
 {
@@ -101,4 +103,48 @@ void example_DQsym_math_operations()
 		cout << endl;
 	}
 	
+
+	cout << "\n==========================================\n";
+	cout << "dqn2abc test\n";
+	cout << "==========================================\n";
+
+	try {
+		const double freq_hz = 50.0;
+		const double t0 = 0.0;
+		const double t1 = 0.04;   // 2 cycles
+		const double Ts = 2e-4;
+
+		Eigen::MatrixXcd Xdcpnz_c(3, 6);
+		Xdcpnz_c <<
+			std::complex<double>(0, 0), std::complex<double>(-0.2455, -0.8802), std::complex<double>(-0.1021, 0.3194), std::complex<double>(0.3739, 0.7338), std::complex<double>(0.2551, -0.8851), std::complex<double>(0.1611, 0.9839),
+			std::complex<double>(0, 0), std::complex<double>(-0.2165, 0.5141), std::complex<double>(-0.4002, 0.2114), std::complex<double>(-0.0824, -0.1413), std::complex<double>(-0.5369, 0.2124), std::complex<double>(-0.5156, -0.3999),
+			std::complex<double>(0, 0), std::complex<double>(-0.1194, -0.1157), std::complex<double>(-0.3357, -0.1288), std::complex<double>(-0.8896, -0.0929), std::complex<double>(0.0032, -0.2576), std::complex<double>(0.2427, 0.3017);
+
+		cout << "Running simulate_dqn2abc...\n";
+
+		ABCResult res = dqSym.simulate_dqn2abc(Xdcpnz_c, freq_hz, t0, t1, Ts);
+
+		cout << "Simulation done.\n";
+		cout << "Samples: " << res.t.size() << "\n";
+		cout << "First sample: "
+			<< res.Xabc(0, 0) << ", "
+			<< res.Xabc(0, 1) << ", "
+			<< res.Xabc(0, 2) << "\n";
+
+		cout << "Plotting...\n";
+
+		plot_abc_waveforms(res.t, res.Xabc, "dqn2abc Example");
+
+		cout << "Plot finished.\n";
+
+		// Prevent immediate exit (important!)
+		std::cout << "Press Enter to continue...\n";
+		std::cin.get();
+	}
+	catch (const std::exception& e) {
+		std::cerr << "ERROR in dqn2abc test: " << e.what() << "\n";
+	}
+
+
 }
+

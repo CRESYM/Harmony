@@ -21,4 +21,7 @@ extern void plot_participation_factors_normalized(const std::vector<std::vector<
 	const std::vector<std::string>& mode_labels,
 	const std::string& title);
 
+
+extern void plot_abc_waveforms(const std::vector<double>& t, const Eigen::MatrixXd& Xabc, const std::string& title);
+
 #endif // _VISUALIZATION_H

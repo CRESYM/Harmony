@@ -1,6 +1,10 @@
 ﻿#include "DQsym.h"
 #include "../Helper_Functions/Helper_Functions.h"
+#include <cmath>
+#include <complex>
+#include <stdexcept>
 
+constexpr double PI_DQSYM = 3.141592653589793238462643383279502884;
 /**
  * @brief Adds two complex matrices element-wise, handling different sizes.
  *
@@ -260,10 +264,14 @@ MatrixXcd DQsym::integrate(MatrixXcd& Zpnz_old, MatrixXcd& Xpnz_old, const Matri
 {
 	int N = Xpnz.cols() - 1; // max harmonic order
     int nrSig = Xpnz.rows() / 3;
-    if (Xpnz.cols() != N + 1 || Zpnz_old.rows() != nrSig * 3 || Xpnz_old.rows() != nrSig * 3) {
+    /*if (Xpnz.cols() != N + 1 || Zpnz_old.rows() != nrSig * 3 || Xpnz_old.rows() != nrSig * 3) {
+        throw std::invalid_argument("Dimension mismatch in Int_DQN_Mat");
+    }*/
+
+    if (Zpnz_old.rows() != nrSig * 3 || Xpnz_old.rows() != nrSig * 3 ||
+        Zpnz_old.cols() != N + 1 || Xpnz_old.cols() != N + 1) {
         throw std::invalid_argument("Dimension mismatch in Int_DQN_Mat");
     }
-
     double dt2 = dt / 2.0;
     MatrixXcd Zpnz = MatrixXcd::Zero(nrSig * 3, N + 1);
 
@@ -532,4 +540,133 @@ void DQsym::convertToPhasor(const MatrixXcd& A, const MatrixXcd& B,
     Bdc = transformMatrix(Bd2);
     Cdc = transformMatrix(Cd2);
     Ddc = transformMatrix(Dd2);
+}
+
+
+
+/**
+ * @brief Reconstruct abc instantaneous values from dynamic phasor pnz coefficients at one angle theta.
+ *
+ * Input format:
+ * - rows = 3 : positive, negative, zero sequence
+ * - cols = harmonic orders, where col(0) is DC and col(h) is harmonic h
+ *
+ * @param Xdcpnz_c 3 x Nh complex coefficient matrix
+ * @param theta electrical angle [rad]
+ * @return Vector3d instantaneous abc values at theta
+ */
+Vector3d DQsym::dqn2abc_at_time(const MatrixXcd& Xdcpnz_c, double theta)
+{
+    if (Xdcpnz_c.rows() != 3) {
+        throw std::runtime_error("Xdcpnz_c must have 3 rows.");
+    }
+
+    static bool transform_initialized = false;
+    static Matrix3cd Sas;
+    static Matrix3cd Ssa;
+
+    if (!transform_initialized) {
+        const std::complex<double> a(-0.5, std::sqrt(3.0) / 2.0);
+        const std::complex<double> a2(-0.5, -std::sqrt(3.0) / 2.0);
+
+        Sas <<
+            std::complex<double>(1.0, 0.0), a, a2,
+            std::complex<double>(1.0, 0.0), a2, a,
+            std::complex<double>(1.0, 0.0), std::complex<double>(1.0, 0.0), std::complex<double>(1.0, 0.0);
+
+        Sas /= 3.0;
+        Ssa = Sas.inverse();
+        transform_initialized = true;
+    }
+
+    Vector3d Xabc = Vector3d::Zero();
+    const int ncols = static_cast<int>(Xdcpnz_c.cols());
+
+    for (int i = 0; i < ncols; ++i) {
+        if (i == 0) {
+            // DC term
+            Xabc += (Ssa * Xdcpnz_c.col(0)).real();
+        }
+        else {
+            const int h = i;
+            const double th = h * theta;
+
+            const std::complex<double> Xp = Xdcpnz_c(0, i);
+            const std::complex<double> Xn = Xdcpnz_c(1, i);
+            const std::complex<double> Xz = Xdcpnz_c(2, i);
+
+            const double mag_p = std::abs(Xp);
+            const double ang_p = std::arg(Xp);
+
+            const double mag_n = std::abs(Xn);
+            const double ang_n = std::arg(Xn);
+
+            const double mag_z = std::abs(Xz);
+            const double ang_z = std::arg(Xz);
+
+            Vector3d abc3p;
+            abc3p <<
+                mag_p * std::sin(th + ang_p),
+                mag_p* std::sin(th + ang_p - 2.0 * PI_DQSYM / 3.0),
+                mag_p* std::sin(th + ang_p + 2.0 * PI_DQSYM / 3.0);
+
+            Vector3d abc3n;
+            abc3n <<
+                mag_n * std::sin(th + ang_n),
+                mag_n* std::sin(th + ang_n + 2.0 * PI_DQSYM / 3.0),
+                mag_n* std::sin(th + ang_n - 2.0 * PI_DQSYM / 3.0);
+
+            Vector3d abc3z;
+            abc3z <<
+                mag_z * std::sin(th + ang_z),
+                mag_z* std::sin(th + ang_z),
+                mag_z* std::sin(th + ang_z);
+
+            Xabc += abc3p + abc3n + abc3z;
+        }
+    }
+
+    return Xabc;
+}
+
+/**
+ * @brief Simulate abc waveform reconstruction over a time interval from dynamic phasor coefficients.
+ *
+ * @param Xdcpnz_c 3 x Nh complex coefficient matrix
+ * @param freq_hz base electrical frequency [Hz]
+ * @param t0 start time [s]
+ * @param t1 end time [s]
+ * @param Ts sample time [s]
+ * @return ABCResult containing time vector and Nx3 abc waveform matrix
+ */
+ABCResult DQsym::simulate_dqn2abc(const MatrixXcd& Xdcpnz_c,
+    double freq_hz, double t0, double t1, double Ts)
+{
+    if (Xdcpnz_c.rows() != 3) {
+        throw std::runtime_error("Xdcpnz_c must have 3 rows.");
+    }
+
+    if (Ts <= 0.0) {
+        throw std::runtime_error("Ts must be > 0.");
+    }
+
+    if (t1 < t0) {
+        throw std::runtime_error("t1 must be >= t0.");
+    }
+
+    const int N = static_cast<int>((t1 - t0) / Ts) + 1;
+
+    ABCResult res;
+    res.t.resize(N);
+    res.Xabc = MatrixXd::Zero(N, 3);
+
+    for (int k = 0; k < N; ++k) {
+        const double t = t0 + k * Ts;
+        const double theta = 2.0 * PI_DQSYM * freq_hz * t;
+
+        res.t[k] = t;
+        res.Xabc.row(k) = dqn2abc_at_time(Xdcpnz_c, theta).transpose();
+    }
+
+    return res;
 }
