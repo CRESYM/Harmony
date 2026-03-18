@@ -82,7 +82,7 @@ void example_DQsym_DSSS2()
     const double dt = 2e-5;
     const double f0 = 50.0;
     const double t0 = 0.0;
-    const double tEnd = 0.1;
+    const double tEnd = 1;
     const double PI = 3.141592653589793238462643383279502884;
 
     const int N = static_cast<int>((tEnd - t0) / dt) + 1;

@@ -225,6 +225,7 @@ set(Examples_Source_files
     src/examples/example_admittance_parameters.cpp
     src/examples/example_point2point_case.cpp
     src/examples/example_DQsym_DSSS2.cpp
+    src/examples/example_DQsym_RLC.cpp
 )
 
 # Add source_groups to create file filters (groups) in Visual Studio project

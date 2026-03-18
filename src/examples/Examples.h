@@ -8,6 +8,7 @@ extern void example_OPF_csv_1();
 
 extern void example_DQsym_math_operations();
 extern void  example_DQsym_DSSS2();
+extern void  example_DQsym_RLC();
 
 extern void example_generator();
 
