@@ -45,6 +45,19 @@ jobs:
           wget https://packages.gurobi.com/13.0/gurobi13.0.1_linux64.tar.gz
           tar -xzf gurobi13.0.1_linux64.tar.gz
 
+      # Setup the Gurobi WLS license
+      # The actual license is stored as a repository secret
+      - name: Setup Gurobi License
+        run: |
+          sudo mkdir -p /opt/gurobi
+          sudo bash -c "cat <<EOF > /opt/gurobi/gurobi.lic
+          WLSACCESSID=${{ secrets.GUROBI_WLSACCESSID }}
+          WLSSECRET=${{ secrets.GUROBI_WLSSECRET }}
+          LICENSEID=${{ secrets.GUROBI_LICENSEID }}
+          EOF"
+          ls -l /opt/gurobi/gurobi.lic
+          cat /opt/gurobi/gurobi.lic
+
       # Download Matplot++ on the runner
       - name: Download Matplot++
         shell: bash -l {0}
@@ -71,23 +84,34 @@ jobs:
           echo "pwd"
           pwd
 
+      # Build the tests
+      - name: Build the tests
+        shell: bash -l {0}
+        run: |
+          mkdir tests/build
+          cd tests/build
+          cmake .. -DGUROBI_PATH="../dependencies/gurobi1301/linux64" -DMATPLOT_PATH="../dependencies/Matplot++-1.2.0-Linux"
+          cmake --build . --config Release -j6
+
+      # Run the tests
+      - name: Run the tests
+        shell: bash -l {0}
+        run: |
+          cd tests/build
+          ctest
+
       # Configure CMake project
       - name: Configure CMake and compile Harmony
         shell: bash -l {0}
         run: |
-          conda info
-          conda list
           mkdir build
           cd build
           cmake .. -DGUROBI_PATH="../dependencies/gurobi1301/linux64" -DMATPLOT_PATH="../dependencies/Matplot++-1.2.0-Linux"
-          cmake --build . --config Release
+          cmake --build . --config Release -j6
 
       # Run Harmony
       - name: Run Harmony
         shell: bash -l {0}
         run: |
           cd build
-          echo "List build dir"
-          ls
-          echo "run Harmony"
           ./Harmony 
