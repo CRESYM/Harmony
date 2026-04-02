@@ -55,8 +55,6 @@ jobs:
           WLSSECRET=${{ secrets.GUROBI_WLSSECRET }}
           LICENSEID=${{ secrets.GUROBI_LICENSEID }}
           EOF"
-          ls -l /Library/gurobi/gurobi.lic
-          cat /Library/gurobi/gurobi.lic
 
       # Download Matplot++ and Gnuplot on the runner
       - name: Download Matplot++
@@ -66,33 +64,17 @@ jobs:
           brew install gnuplot matplotplusplus
 
       # Build the tests
-      #- name: Build the tests
-      #  shell: bash -l {0}
-      #  run: |
-      #    mkdir tests/build
-      #    cd tests/build
-      #    cmake .. -DGUROBI_PATH="/Library/gurobi1301/macos_universal2" -DMATPLOT_PATH="/opt/homebrew/opt/matplotplusplus"
-      #    cmake --build . --config Release -j8
-
-      # Run the tests
-      #- name: Run the tests
-      #  shell: bash -l {0}
-      #  run: |
-      #    cd tests/build
-      #    ctest -j8
-
-      # Configure CMake project
-      - name: Configure CMake and compile Harmony
+      - name: Build the tests
         shell: bash -l {0}
         run: |
-          mkdir build
-          cd build
+          mkdir tests/build
+          cd tests/build
           cmake .. -DGUROBI_PATH="/Library/gurobi1301/macos_universal2" -DMATPLOT_PATH="/opt/homebrew/opt/matplotplusplus"
           cmake --build . --config Release -j8
 
-      # Run Harmony
-      - name: Run Harmony
+      # Run the tests
+      - name: Run the tests
         shell: bash -l {0}
         run: |
-          cd build
-          ./Harmony 
+          cd tests/build
+          ctest -j8 
