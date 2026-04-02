@@ -63,7 +63,16 @@ jobs:
         shell: bash -l {0}
         run: |
           brew update
-          brew install gnuplot matplotplusplus
+          brew install gnuplot
+          brew install matplotplusplus
+
+      # List dependencies
+      - name: List dependencies
+        shell: bash -l {0}
+        run: |          
+          echo "--"
+          ls /opt/homebrew/opt/matplotplusplus
+          echo "--"
 
       # Build the tests
       - name: Build the tests
