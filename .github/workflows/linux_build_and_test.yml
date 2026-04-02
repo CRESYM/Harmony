@@ -90,7 +90,7 @@ jobs:
         run: |
           mkdir tests/build
           cd tests/build
-          cmake .. -DGUROBI_PATH="../dependencies/gurobi1301/linux64" -DMATPLOT_PATH="../dependencies/Matplot++-1.2.0-Linux"
+          cmake .. -DGUROBI_PATH="../../dependencies/gurobi1301/linux64" -DMATPLOT_PATH="../../dependencies/Matplot++-1.2.0-Linux"
           cmake --build . --config Release -j8
 
       # Run the tests
@@ -106,7 +106,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DGUROBI_PATH="../dependencies/gurobi1301/linux64" -DMATPLOT_PATH="../dependencies/Matplot++-1.2.0-Linux"
+          cmake .. -DGUROBI_PATH="../../dependencies/gurobi1301/linux64" -DMATPLOT_PATH="../../dependencies/Matplot++-1.2.0-Linux"
           cmake --build . --config Release -j8
 
       # Run Harmony
