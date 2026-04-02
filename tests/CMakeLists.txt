@@ -9,9 +9,8 @@ include(FetchContent)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find Eigen3 library on local system and include directories.
+# Find Eigen3 library on local system
 find_package(Eigen3 REQUIRED)
-include_directories("${EIGEN3_INCLUDE_DIR}")
 
 # Find symengine on local system and include directories.
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)   #symengine requires this
@@ -81,6 +80,7 @@ add_executable(
 target_link_libraries(
     testharmony
     ${SYMENGINE_LIBRARIES}
+    Eigen3::Eigen
     GTest::gtest_main       # GoogleTest library
 )
 
