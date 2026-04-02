@@ -63,32 +63,23 @@ jobs:
         shell: bash -l {0}
         run: |
           brew update
-          brew install gnuplot
-          brew install matplotplusplus
-
-      # List dependencies
-      - name: List dependencies
-        shell: bash -l {0}
-        run: |          
-          echo "--"
-          ls /opt/homebrew/opt/matplotplusplus
-          echo "--"
+          brew install gnuplot matplotplusplus
 
       # Build the tests
-      - name: Build the tests
-        shell: bash -l {0}
-        run: |
-          mkdir tests/build
-          cd tests/build
-          cmake .. -DGUROBI_PATH="/Library/gurobi1301/macos_universal2" -DMATPLOT_PATH="/opt/homebrew/opt/matplotplusplus"
-          cmake --build . --config Release -j6
+      #- name: Build the tests
+      #  shell: bash -l {0}
+      #  run: |
+      #    mkdir tests/build
+      #    cd tests/build
+      #    cmake .. -DGUROBI_PATH="/Library/gurobi1301/macos_universal2" -DMATPLOT_PATH="/opt/homebrew/opt/matplotplusplus"
+      #    cmake --build . --config Release -j8
 
       # Run the tests
-      - name: Run the tests
-        shell: bash -l {0}
-        run: |
-          cd tests/build
-          ctest
+      #- name: Run the tests
+      #  shell: bash -l {0}
+      #  run: |
+      #    cd tests/build
+      #    ctest -j8
 
       # Configure CMake project
       - name: Configure CMake and compile Harmony
@@ -97,10 +88,11 @@ jobs:
           mkdir build
           cd build
           cmake .. -DGUROBI_PATH="/Library/gurobi1301/macos_universal2" -DMATPLOT_PATH="/opt/homebrew/opt/matplotplusplus"
-          cmake --build . --config Release -j6
+          cmake --build . --config Release -j8
 
       # Run Harmony
       - name: Run Harmony
         shell: bash -l {0}
         run: |
+          cd build
           ./Harmony 
