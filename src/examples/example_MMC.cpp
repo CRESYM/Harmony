@@ -99,7 +99,7 @@ void example_MMC() {
 
 	mmc2->printEigenvalues();
 
-	mmc2->plotParticipationFactors();
+	//mmc2->plotParticipationFactors();
 	//mmc2->plotEigenvalues();
-	//mmc2->plotYParameters(1, 1000, 1000);
+	mmc2->plotYParameters(1, 1000, 500);
 }
