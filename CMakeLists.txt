@@ -30,6 +30,7 @@ set(Element_Header_Files src/Elements/Element.h)
 set(Element_Converter_Header_Files
     src/Elements/Converter/Converter.h
     src/Elements/Converter/MMC.h
+    src/Elements/Converter/Simple_MMC.h
 )
 set(Element_Impedance_Header_Files
     src/Elements/Impedance/Impedance_base.h
@@ -122,6 +123,7 @@ set(Element_Source_Files src/Elements/Element.cpp)
 set(Element_Converter_Source_Files
     src/Elements/Converter/Converter.cpp
     src/Elements/Converter/MMC.cpp
+    src/Elements/Converter/Simple_MMC.cpp
 )
 set(Element_Impedance_Source_Files
     src/Elements/Impedance/Impedance_base.cpp
@@ -226,6 +228,7 @@ set(Examples_Source_files
     src/examples/example_point2point_case.cpp
     src/examples/example_DQsym_DSSS2.cpp
     src/examples/example_DQsym_RLC.cpp
+    src/examples/example_DQsym_Simple_MMC.cpp
 )
 
 # Add source_groups to create file filters (groups) in Visual Studio project
