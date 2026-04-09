@@ -31,9 +31,9 @@ int main() {
 	
 
 
-	 //example_DQsym_math_operations();
+	 example_DQsym_math_operations();
 	 //example_DQsym_DSSS2();
-	 example_DQsym_RLC();
+	 //example_DQsym_RLC();
 	 
 	// example_visuals();
 	// example_stability_check();

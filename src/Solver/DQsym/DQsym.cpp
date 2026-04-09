@@ -84,44 +84,191 @@ MatrixXcd DQsym::subtract(const MatrixXcd& a, const MatrixXcd& b)
  * @return A 3x(2N+1) complex matrix containing the dynamic-phasor coefficients
  *         of the product z(t) in the ABC basis, from harmonic 0 to 2N.
  */
+//MatrixXcd DQsym::multiply(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_in)
+//{
+//    if (x_coef1_in.rows() != 3 || y_coef1_in.rows() != 3) {
+//        throw std::invalid_argument("Input coefficient matrices must have 3 rows (phases a,b,c)");
+//    }
+//
+//
+//    Matrix3cd Sas;
+//    const std::complex<double> a(-0.5, 0.8660254037844386);
+//    const std::complex<double> a2 = std::conj(a);
+//    Sas << std::complex<double>(1, 0), a, a2,
+//        std::complex<double>(1, 0), a2, a,
+//        std::complex<double>(1, 0), std::complex<double>(1, 0), std::complex<double>(1, 0);
+//    Sas /= 3.0;
+//    Matrix3cd Ssa = Sas.inverse();
+//
+//    int N = std::max(x_coef1_in.cols() - 1, y_coef1_in.cols() - 1);
+//
+//    const int max_k = 2 * N;
+//    const int outCols = max_k + 1;
+//
+//
+//    int sX = x_coef1_in.cols();
+//    int sY = y_coef1_in.cols();
+//    MatrixXcd x_coef1 = MatrixXcd::Zero(3, std::max(sX, N + 1));
+//    MatrixXcd y_coef1 = MatrixXcd::Zero(3, std::max(sY, N + 1));
+//    x_coef1.block(0, 0, 3, sX) = x_coef1_in;
+//    y_coef1.block(0, 0, 3, sY) = y_coef1_in;
+//
+//
+//
+//    if (x_coef1.cols() < N + 1) x_coef1.conservativeResize(3, N + 1);
+//    if (y_coef1.cols() < N + 1) y_coef1.conservativeResize(3, N + 1);
+//
+//    MatrixXcd X_pnz = Ssa * x_coef1;
+//    MatrixXcd Y_pnz = Ssa * y_coef1;
+//
+//    MatrixXcd Z_pnz = MatrixXcd::Zero(3, outCols);
+//    MatrixXd Cs = MatrixXd::Zero(3, outCols);
+//    MatrixXd Cc = MatrixXd::Zero(3, outCols);
+//    VectorXd C0 = VectorXd::Zero(3);
+//
+//
+//
+//    for (int m = 0; m <= N; ++m) {
+//        VectorXd axs = X_pnz.col(m).real();
+//        VectorXd axc = X_pnz.col(m).imag();
+//
+//        for (int n = 0; n <= N; ++n) {
+//            VectorXd bxs = Y_pnz.col(n).real();
+//            VectorXd bxc = Y_pnz.col(n).imag();
+//
+//
+//            if (m == 0 && n == 0) {
+//                C0 += X_pnz.col(0).real().cwiseProduct(Y_pnz.col(0).real());
+//            }
+//
+//
+//            if (m == n && m > 0) {
+//                C0 += 0.5 * (axs.array() * bxs.array() + axc.array() * bxc.array()).matrix();
+//            }
+//
+//
+//            if (m > 0 && n > 0) {
+//                int k_plus = m + n;
+//                int k_minus = std::abs(m - n);
+//
+//
+//                if (k_plus <= max_k) {
+//                    Cs.col(k_plus) += (0.5 * axs.array() * bxc.array()).matrix();
+//                }
+//                if (k_minus > 0 && k_minus <= max_k) {
+//                    int sign_k = sgn(m - n);
+//                    Cs.col(k_minus) += (0.5 * sign_k * axs.array() * bxc.array()).matrix();
+//                }
+//
+//
+//                if (k_plus <= max_k) {
+//                    Cs.col(k_plus) += (0.5 * axc.array() * bxs.array()).matrix();
+//                }
+//                if (k_minus > 0 && k_minus <= max_k) {
+//                    int sign_k = -sgn(m - n);
+//                    Cs.col(k_minus) += (0.5 * sign_k * axc.array() * bxs.array()).matrix();
+//                }
+//
+//
+//                if (k_plus <= max_k) {
+//                    Cc.col(k_plus) += (0.5 * axc.array() * bxc.array()).matrix();
+//                }
+//                if (k_minus > 0 && k_minus <= max_k) {
+//                    Cc.col(k_minus) += (0.5 * axc.array() * bxc.array()).matrix();
+//                }
+//
+//
+//                if (k_plus <= max_k) {
+//                    Cc.col(k_plus) += (-0.5 * axs.array() * bxs.array()).matrix();
+//                }
+//                if (k_minus > 0 && k_minus <= max_k) {
+//                    Cc.col(k_minus) += (0.5 * axs.array() * bxs.array()).matrix();
+//                }
+//            }
+//
+//
+//            if (m == 0 && n > 0) {
+//                Cs.col(n) += (x_coef1.col(0).real().array() * bxs.array()).matrix();
+//                Cc.col(n) += (x_coef1.col(0).real().array() * bxc.array()).matrix();
+//            }
+//
+//
+//            if (n == 0 && m > 0) {
+//                Cs.col(m) += (y_coef1.col(0).real().array() * axs.array()).matrix();
+//                Cc.col(m) += (y_coef1.col(0).real().array() * axc.array()).matrix();
+//            }
+//        }
+//    }
+//
+//
+//    for (int i = 0; i < 3; ++i) {
+//        Z_pnz(i, 0) = std::complex<double>(C0(i), 0.0);
+//    }
+//    for (int k = 1; k <= max_k; ++k) {
+//        for (int i = 0; i < 3; ++i) {
+//            Z_pnz(i, k) = std::complex<double>(Cs(i, k), Cc(i, k));
+//        }
+//    }
+//
+//    
+//    MatrixXcd Zdcpnz_c = Sas * Z_pnz;
+//
+//    return Zdcpnz_c;
+//}
+
+/**
+ * @brief Three-phase product of two dynamic-phasor series (harmonic convolution).
+ *
+ * C++ translation aligned with MATLAB:
+ *   Zdcpnz_c = SICO_DPs_3ph(x_coef1, y_coef1, N)
+ *
+ * Input convention:
+ * - 3 rows = abc phases
+ * - column 0 = DC term
+ * - column k = harmonic k
+ *
+ * Output:
+ * - 3 x (2N+1) matrix in abc basis, where N = max(input harmonic order)
+ */
 MatrixXcd DQsym::multiply(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_in)
 {
+    
     if (x_coef1_in.rows() != 3 || y_coef1_in.rows() != 3) {
-        throw std::invalid_argument("Input coefficient matrices must have 3 rows (phases a,b,c)");
+        throw std::invalid_argument("Input coefficient matrices must have 3 rows.");
     }
 
 
     Matrix3cd Sas;
     const std::complex<double> a(-0.5, 0.8660254037844386);
-    const std::complex<double> a2 = std::conj(a);
+    const std::complex<double> a2(-0.5, -0.8660254037844386);
+
     Sas << std::complex<double>(1, 0), a, a2,
         std::complex<double>(1, 0), a2, a,
         std::complex<double>(1, 0), std::complex<double>(1, 0), std::complex<double>(1, 0);
     Sas /= 3.0;
+
     Matrix3cd Ssa = Sas.inverse();
 
-    int N = std::max(x_coef1_in.cols() - 1, y_coef1_in.cols() - 1);
+    const int Nx = static_cast<int>(x_coef1_in.cols()) - 1;
+    const int Ny = static_cast<int>(y_coef1_in.cols()) - 1;
+    const int N = std::max(Nx, Ny);
 
+    const int L = N + 1;
     const int max_k = 2 * N;
     const int outCols = max_k + 1;
 
+    MatrixXcd x_coef1 = MatrixXcd::Zero(3, L);
+    MatrixXcd y_coef1 = MatrixXcd::Zero(3, L);
 
-    int sX = x_coef1_in.cols();
-    int sY = y_coef1_in.cols();
-    MatrixXcd x_coef1 = MatrixXcd::Zero(3, std::max(sX, N + 1));
-    MatrixXcd y_coef1 = MatrixXcd::Zero(3, std::max(sY, N + 1));
-    x_coef1.block(0, 0, 3, sX) = x_coef1_in;
-    y_coef1.block(0, 0, 3, sY) = y_coef1_in;
+    const int nx = std::min<int>(x_coef1_in.cols(), L);
+    const int ny = std::min<int>(y_coef1_in.cols(), L);
 
-
-
-    if (x_coef1.cols() < N + 1) x_coef1.conservativeResize(3, N + 1);
-    if (y_coef1.cols() < N + 1) y_coef1.conservativeResize(3, N + 1);
-
+    x_coef1.leftCols(nx) = x_coef1_in.leftCols(nx);
+    y_coef1.leftCols(ny) = y_coef1_in.leftCols(ny);
     MatrixXcd X_pnz = Ssa * x_coef1;
     MatrixXcd Y_pnz = Ssa * y_coef1;
 
-    MatrixXcd Z_pnz = MatrixXcd::Zero(3, outCols);
+
     MatrixXd Cs = MatrixXd::Zero(3, outCols);
     MatrixXd Cc = MatrixXd::Zero(3, outCols);
     VectorXd C0 = VectorXd::Zero(3);
@@ -143,76 +290,54 @@ MatrixXcd DQsym::multiply(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_
 
 
             if (m == n && m > 0) {
-                C0 += 0.5 * (axs.array() * bxs.array() + axc.array() * bxc.array()).matrix();
+                C0 += 0.5 * axs.cwiseProduct(bxs) + 0.5 * axc.cwiseProduct(bxc);
             }
 
 
             if (m > 0 && n > 0) {
-                int k_plus = m + n;
-                int k_minus = std::abs(m - n);
+                const int k_plus = m + n;
+                const int k_minus = std::abs(m - n);
+                const int s = sgn(m - n);
 
+                Cs.col(k_plus) += 0.5 * axs.cwiseProduct(bxc)
+                    + 0.5 * axc.cwiseProduct(bxs);
 
-                if (k_plus <= max_k) {
-                    Cs.col(k_plus) += (0.5 * axs.array() * bxc.array()).matrix();
-                }
-                if (k_minus > 0 && k_minus <= max_k) {
-                    int sign_k = sgn(m - n);
-                    Cs.col(k_minus) += (0.5 * sign_k * axs.array() * bxc.array()).matrix();
-                }
+                Cc.col(k_plus) += 0.5 * axc.cwiseProduct(bxc)
+                    - 0.5 * axs.cwiseProduct(bxs);
 
+                if (k_minus > 0) {
+                    Cs.col(k_minus) += 0.5 * s * axs.cwiseProduct(bxc)
+                        - 0.5 * s * axc.cwiseProduct(bxs);
 
-                if (k_plus <= max_k) {
-                    Cs.col(k_plus) += (0.5 * axc.array() * bxs.array()).matrix();
-                }
-                if (k_minus > 0 && k_minus <= max_k) {
-                    int sign_k = -sgn(m - n);
-                    Cs.col(k_minus) += (0.5 * sign_k * axc.array() * bxs.array()).matrix();
-                }
-
-
-                if (k_plus <= max_k) {
-                    Cc.col(k_plus) += (0.5 * axc.array() * bxc.array()).matrix();
-                }
-                if (k_minus > 0 && k_minus <= max_k) {
-                    Cc.col(k_minus) += (0.5 * axc.array() * bxc.array()).matrix();
-                }
-
-
-                if (k_plus <= max_k) {
-                    Cc.col(k_plus) += (-0.5 * axs.array() * bxs.array()).matrix();
-                }
-                if (k_minus > 0 && k_minus <= max_k) {
-                    Cc.col(k_minus) += (0.5 * axs.array() * bxs.array()).matrix();
+                    Cc.col(k_minus) += 0.5 * axc.cwiseProduct(bxc)
+                        + 0.5 * axs.cwiseProduct(bxs);
                 }
             }
 
 
             if (m == 0 && n > 0) {
-                Cs.col(n) += (x_coef1.col(0).real().array() * bxs.array()).matrix();
-                Cc.col(n) += (x_coef1.col(0).real().array() * bxc.array()).matrix();
+                Cs.col(n) += X_pnz.col(0).real().cwiseProduct(bxs);
+                Cc.col(n) += X_pnz.col(0).real().cwiseProduct(bxc);
             }
 
 
             if (n == 0 && m > 0) {
-                Cs.col(m) += (y_coef1.col(0).real().array() * axs.array()).matrix();
-                Cc.col(m) += (y_coef1.col(0).real().array() * axc.array()).matrix();
+                Cs.col(m) += Y_pnz.col(0).real().cwiseProduct(axs);
+                Cc.col(m) += Y_pnz.col(0).real().cwiseProduct(axc);
             }
         }
     }
 
-
-    for (int i = 0; i < 3; ++i) {
-        Z_pnz(i, 0) = std::complex<double>(C0(i), 0.0);
-    }
+    MatrixXcd xy_phasors = MatrixXcd::Zero(3, outCols);
+    xy_phasors.col(0) = C0.cast<std::complex<double>>();
     for (int k = 1; k <= max_k; ++k) {
         for (int i = 0; i < 3; ++i) {
-            Z_pnz(i, k) = std::complex<double>(Cs(i, k), Cc(i, k));
+            xy_phasors(i, k) = std::complex<double>(Cs(i, k), Cc(i, k));
         }
     }
 
-    
-    MatrixXcd Zdcpnz_c = Sas * Z_pnz;
-
+    MatrixXcd Zdcpnz_c = MatrixXcd::Zero(3, outCols);
+    Zdcpnz_c = Sas * xy_phasors;
     return Zdcpnz_c;
 }
 
