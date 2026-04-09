@@ -1,7 +1,7 @@
 #include "Examples.h"
 
 #include "../Solver/DQsym/DQsym.h"
-#include "../Solver/Helper_Functions/Visualization.h"
+#include "../Solver/Helper_Functions/Helper_Functions.h"
 
 void example_DQsym_math_operations()
 {

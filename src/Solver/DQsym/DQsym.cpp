@@ -1,16 +1,6 @@
 ﻿#include "DQsym.h"
 #include "../Helper_Functions/Helper_Functions.h"
 
-#include <algorithm>
-#include <cmath>
-#include <complex>
-#include <stdexcept>
-#include <vector>
-
-namespace
-{
-    constexpr double PI_DQSYM = 3.141592653589793238462643383279502884;
-}
 
 /**
  * @brief Adds two complex matrices element-wise, handling different sizes.
@@ -60,161 +50,6 @@ MatrixXcd DQsym::subtract(const MatrixXcd& a, const MatrixXcd& b)
     return result;
 }
 
-/**
- * @brief Three-phase product of two dynamic-phasor series (harmonic convolution).
- *
- * Given the dynamic-phasor Fourier coefficients of two 3-phase signals
- * x(t) and y(t), this routine computes the dynamic-phasor coefficients of
- * their pointwise product z(t) = x(t).*y(t) in the original 3-phase basis.
- *
- * @note Signal/Basis Convention:
- * Inputs are 3x(N+1) complex matrices of harmonic coefficients in the ABC basis,
- * where rows correspond to phases a, b, and c. Column k+1 stores the k-th
- * harmonic coefficient (k=0..N), with the convention:
- * - `Re{coef(:,k+1)}` corresponds to the sine component.
- * - `Im{coef(:,k+1)}` corresponds to the cosine component.
- * Internally, the computation is performed in the symmetrical components (pnz)
- * basis and then mapped back to the ABC basis.
- * 
- * @param x_coef1_in A 3x(Nx+1) complex matrix representing the dynamic-phasor
- *                   coefficients of signal x(t) up to harmonic Nx.
- * @param y_coef1_in A 3x(Ny+1) complex matrix representing the dynamic-phasor
- *    
- coefficients of signal y(t) up to harmonic Ny.
- * @return A 3x(2N+1) complex matrix containing the dynamic-phasor coefficients
- *         of the product z(t) in the ABC basis, from harmonic 0 to 2N.
- */
-//MatrixXcd DQsym::multiply(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_in)
-//{
-//    if (x_coef1_in.rows() != 3 || y_coef1_in.rows() != 3) {
-//        throw std::invalid_argument("Input coefficient matrices must have 3 rows (phases a,b,c)");
-//    }
-//
-//
-//    Matrix3cd Sas;
-//    const std::complex<double> a(-0.5, 0.8660254037844386);
-//    const std::complex<double> a2 = std::conj(a);
-//    Sas << std::complex<double>(1, 0), a, a2,
-//        std::complex<double>(1, 0), a2, a,
-//        std::complex<double>(1, 0), std::complex<double>(1, 0), std::complex<double>(1, 0);
-//    Sas /= 3.0;
-//    Matrix3cd Ssa = Sas.inverse();
-//
-//    int N = std::max(x_coef1_in.cols() - 1, y_coef1_in.cols() - 1);
-//
-//    const int max_k = 2 * N;
-//    const int outCols = max_k + 1;
-//
-//
-//    int sX = x_coef1_in.cols();
-//    int sY = y_coef1_in.cols();
-//    MatrixXcd x_coef1 = MatrixXcd::Zero(3, std::max(sX, N + 1));
-//    MatrixXcd y_coef1 = MatrixXcd::Zero(3, std::max(sY, N + 1));
-//    x_coef1.block(0, 0, 3, sX) = x_coef1_in;
-//    y_coef1.block(0, 0, 3, sY) = y_coef1_in;
-//
-//
-//
-//    if (x_coef1.cols() < N + 1) x_coef1.conservativeResize(3, N + 1);
-//    if (y_coef1.cols() < N + 1) y_coef1.conservativeResize(3, N + 1);
-//
-//    MatrixXcd X_pnz = Ssa * x_coef1;
-//    MatrixXcd Y_pnz = Ssa * y_coef1;
-//
-//    MatrixXcd Z_pnz = MatrixXcd::Zero(3, outCols);
-//    MatrixXd Cs = MatrixXd::Zero(3, outCols);
-//    MatrixXd Cc = MatrixXd::Zero(3, outCols);
-//    VectorXd C0 = VectorXd::Zero(3);
-//
-//
-//
-//    for (int m = 0; m <= N; ++m) {
-//        VectorXd axs = X_pnz.col(m).real();
-//        VectorXd axc = X_pnz.col(m).imag();
-//
-//        for (int n = 0; n <= N; ++n) {
-//            VectorXd bxs = Y_pnz.col(n).real();
-//            VectorXd bxc = Y_pnz.col(n).imag();
-//
-//
-//            if (m == 0 && n == 0) {
-//                C0 += X_pnz.col(0).real().cwiseProduct(Y_pnz.col(0).real());
-//            }
-//
-//
-//            if (m == n && m > 0) {
-//                C0 += 0.5 * (axs.array() * bxs.array() + axc.array() * bxc.array()).matrix();
-//            }
-//
-//
-//            if (m > 0 && n > 0) {
-//                int k_plus = m + n;
-//                int k_minus = std::abs(m - n);
-//
-//
-//                if (k_plus <= max_k) {
-//                    Cs.col(k_plus) += (0.5 * axs.array() * bxc.array()).matrix();
-//                }
-//                if (k_minus > 0 && k_minus <= max_k) {
-//                    int sign_k = sgn(m - n);
-//                    Cs.col(k_minus) += (0.5 * sign_k * axs.array() * bxc.array()).matrix();
-//                }
-//
-//
-//                if (k_plus <= max_k) {
-//                    Cs.col(k_plus) += (0.5 * axc.array() * bxs.array()).matrix();
-//                }
-//                if (k_minus > 0 && k_minus <= max_k) {
-//                    int sign_k = -sgn(m - n);
-//                    Cs.col(k_minus) += (0.5 * sign_k * axc.array() * bxs.array()).matrix();
-//                }
-//
-//
-//                if (k_plus <= max_k) {
-//                    Cc.col(k_plus) += (0.5 * axc.array() * bxc.array()).matrix();
-//                }
-//                if (k_minus > 0 && k_minus <= max_k) {
-//                    Cc.col(k_minus) += (0.5 * axc.array() * bxc.array()).matrix();
-//                }
-//
-//
-//                if (k_plus <= max_k) {
-//                    Cc.col(k_plus) += (-0.5 * axs.array() * bxs.array()).matrix();
-//                }
-//                if (k_minus > 0 && k_minus <= max_k) {
-//                    Cc.col(k_minus) += (0.5 * axs.array() * bxs.array()).matrix();
-//                }
-//            }
-//
-//
-//            if (m == 0 && n > 0) {
-//                Cs.col(n) += (x_coef1.col(0).real().array() * bxs.array()).matrix();
-//                Cc.col(n) += (x_coef1.col(0).real().array() * bxc.array()).matrix();
-//            }
-//
-//
-//            if (n == 0 && m > 0) {
-//                Cs.col(m) += (y_coef1.col(0).real().array() * axs.array()).matrix();
-//                Cc.col(m) += (y_coef1.col(0).real().array() * axc.array()).matrix();
-//            }
-//        }
-//    }
-//
-//
-//    for (int i = 0; i < 3; ++i) {
-//        Z_pnz(i, 0) = std::complex<double>(C0(i), 0.0);
-//    }
-//    for (int k = 1; k <= max_k; ++k) {
-//        for (int i = 0; i < 3; ++i) {
-//            Z_pnz(i, k) = std::complex<double>(Cs(i, k), Cc(i, k));
-//        }
-//    }
-//
-//    
-//    MatrixXcd Zdcpnz_c = Sas * Z_pnz;
-//
-//    return Zdcpnz_c;
-//}
 
 /**
  * @brief Three-phase product of two dynamic-phasor series (harmonic convolution).
@@ -489,7 +324,7 @@ MatrixXcd DQsym::DSSS(const MatrixXcd& Ad, const MatrixXcd& Bd,
 
     VectorXcd expVec(T);
     for (int k = 0; k < T; ++k)
-        expVec(k) = std::exp(std::complex<double>(0.0, -2.0 * PI_DQSYM * f0 * dt * k));
+        expVec(k) = std::exp(std::complex<double>(0.0, -2.0 * M_PI * f0 * dt * k));
 
     MatrixXcd rotMat = expVec.asDiagonal();
     MatrixXcd x2 = x * rotMat;
@@ -552,16 +387,8 @@ void DQsym::buildMatricesForState(
         DxCol(s) = temp;
 
         for (int i = 0; i < nStates_local; ++i)
-            BDcol(i) = Bo(i, s) * yswitch_local(s) * static_cast<double>(kSw);
-
-
-
-
-
-        
-        
-        
-        
+            BDcol(i) = Bo(i, s) * yswitch_local(s) * static_cast<double>(kSw);   
+      
         RowVectorXcd rowC = Co.row(s);
         RowVectorXcd rowD = Do.row(s);
         Co.row(s).setZero();
@@ -695,14 +522,14 @@ Vector3d DQsym::dqn2abc_at_time(const MatrixXcd& Xdcpnz_c, double theta)
             Vector3d abc3p;
             abc3p <<
                 mag_p * std::sin(th + ang_p),
-                mag_p* std::sin(th + ang_p - 2.0 * PI_DQSYM / 3.0),
-                mag_p* std::sin(th + ang_p + 2.0 * PI_DQSYM / 3.0);
+                mag_p* std::sin(th + ang_p - 2.0 * M_PI / 3.0),
+                mag_p* std::sin(th + ang_p + 2.0 * M_PI / 3.0);
 
             Vector3d abc3n;
             abc3n <<
                 mag_n * std::sin(th + ang_n),
-                mag_n* std::sin(th + ang_n + 2.0 * PI_DQSYM / 3.0),
-                mag_n* std::sin(th + ang_n - 2.0 * PI_DQSYM / 3.0);
+                mag_n* std::sin(th + ang_n + 2.0 * M_PI / 3.0),
+                mag_n* std::sin(th + ang_n - 2.0 * M_PI / 3.0);
 
             Vector3d abc3z;
             abc3z <<
@@ -787,7 +614,7 @@ ABCResult DQsym::simulate_dqn2abc(const MatrixXcd& Xdcpnz_c,
 
     for (int k = 0; k < N; ++k) {
         const double t = t0 + k * Ts;
-        const double theta = 2.0 * PI_DQSYM * freq_hz * t;
+        const double theta = 2.0 * M_PI * freq_hz * t;
 
         res.t[k] = t;
         res.Xabc.row(k) = dqn2abc_at_time(Xdcpnz_c, theta).transpose();

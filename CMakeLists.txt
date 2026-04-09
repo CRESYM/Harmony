@@ -95,6 +95,7 @@ set(Solver_Helper_Functions_Header_Files
     src/Solver/Helper_Functions/Differential_equations.h
     src/Solver/Helper_Functions/Symbolic_functions.h
     src/Solver/Helper_Functions/Visualization.h
+    src/Solver/Helper_Functions/Writer.h
 )
 set(Control_Header_Files
     src/Control/Control_block.h
@@ -189,6 +190,7 @@ set(Solver_Helper_Functions_Source_Files
     src/Solver/Helper_Functions/Differential_equations.cpp
     src/Solver/Helper_Functions/Symbolic_functions.cpp
     src/Solver/Helper_Functions/Visualization.cpp
+    src/Solver/Helper_Functions/Writer.cpp
 )
 set(Control_Source_Files
     src/Control/Control_block.cpp

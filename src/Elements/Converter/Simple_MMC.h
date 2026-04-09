@@ -2,30 +2,13 @@
 #define SIMPLE_MMC_H
 
 
-#include <Eigen/Dense>
-#include <complex>
 #include "../../Solver/DQsym/DQsym.h"
-#include "../../Constants.h"
-class Simple_MMC
-{
-public:
-    using MatrixXcd = Eigen::MatrixXcd;
-    using MatrixXd = Eigen::MatrixXd;
-    using VectorXd = Eigen::VectorXd;
-    using VectorXi = Eigen::VectorXi;
-    using VectorXcd = Eigen::VectorXcd;
-    using Vector3d = Eigen::Vector3d;
 
-    struct StepResult
-    {
-        MatrixXcd y_mmc;      // raw MMC DSSS output
-        MatrixXcd i_up;       // upper-arm current coefficients
-        MatrixXcd i_low;      // lower-arm current coefficients
-        MatrixXcd vc_up;      // upper capacitor-voltage coefficients
-        MatrixXcd vc_low;     // lower capacitor-voltage coefficients
-        MatrixXcd vout_up;    // upper-arm feedback to MMC
-        MatrixXcd vout_low;   // lower-arm feedback to MMC
-    };
+#include "Converter.h"
+#include "../../Include_control_blocks.h"
+
+class Simple_MMC : public Converter
+{
 
 public:
     Simple_MMC();
@@ -47,36 +30,27 @@ public:
         Eigen::Index nKeepMMC = 5,
         Eigen::Index nArm = 9);
 
-    void setInitialState(const VectorXcd& xo);
+    void setInitialState(const VectorXcd& x0) { initial_state = x0; };
 
-    StepResult step(const MatrixXcd& u1,
+    /*StepResult step(const MatrixXcd& u1,
         const MatrixXcd& u2,
-        const VectorXi& brkVec);
+        const VectorXi& brkVec);*/
 
-    const MatrixXcd& getLastVoutUp() const;
-    const MatrixXcd& getLastVoutLow() const;
+    const MatrixXcd& getLastVoutUp() const { return VoutUpForMMC_;};
+    const MatrixXcd& getLastVoutLow() const { return VoutLowForMMC_; };
 
-    const MatrixXcd& getUpperControlCoeffs() const;
-    const MatrixXcd& getLowerControlCoeffs() const;
+    const MatrixXcd& getUpperControlCoeffs() const { return Uup_; };
+    const MatrixXcd& getLowerControlCoeffs() const { return Ulow_; };
 
 private:
-    MatrixXcd stack_u_4x_3xN(const MatrixXcd& u1,
-        const MatrixXcd& u2,
-        const MatrixXcd& u3,
-        const MatrixXcd& u4) const;
-
+    
     MatrixXcd makeUpperControlCoeffs(Eigen::Index nCols) const;
     MatrixXcd makeLowerControlCoeffs(Eigen::Index nCols) const;
     MatrixXcd truncateHarmonics(const MatrixXcd& X, Eigen::Index nColsToKeep) const;
 
-    void validateConfigured() const;
 
 private:
-    // System matrices
-    MatrixXcd Ad_;
-    MatrixXcd Bd_;
-    MatrixXcd Cd_;
-    MatrixXcd Dd_;
+	// System matrices already defined in Converter class as: A_matrix, B_matrix, C_matrix, D_matrix
 
     // Switch data
     VectorXd swOnRes_;

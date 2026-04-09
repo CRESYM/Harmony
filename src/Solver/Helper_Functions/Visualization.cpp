@@ -1,10 +1,5 @@
 ﻿#include "Visualization.h"
 
-#include <matplot/matplot.h>
-#include <fstream>
-#include <iostream>
-#include <stdexcept>
-
 
 void bode_plot(const std::vector<double>& freq,
 	const std::vector<std::vector<double>>& mag_dB,
@@ -370,6 +365,103 @@ void plot_abc_waveforms(const std::vector<double>& t,
     null_stream.close();
 }
 
+void plot_abc_groups(
+    const std::vector<double>& t,
+    const std::vector<Eigen::MatrixXd>& Xabc_groups,
+    const std::string& title)
+{
+    using namespace matplot;
 
+    if (t.empty())
+        throw std::runtime_error("plot_abc_groups: time vector is empty");
 
+    if (Xabc_groups.empty())
+        throw std::runtime_error("plot_abc_groups: no groups provided");
 
+    // check all matrices
+    for (size_t g = 0; g < Xabc_groups.size(); ++g)
+    {
+        if (Xabc_groups[g].cols() != 3)
+            throw std::runtime_error("plot_abc_groups: each group must have 3 columns");
+
+        if (Xabc_groups[g].rows() != static_cast<int>(t.size()))
+            throw std::runtime_error("plot_abc_groups: row mismatch in group " + std::to_string(g));
+    }
+
+    const int groupsPerFigure = 3;
+    const int nGroups = static_cast<int>(Xabc_groups.size());
+    const int nFigures = (nGroups + groupsPerFigure - 1) / groupsPerFigure;
+
+    // silence backend warnings
+    std::ofstream null_stream;
+#ifdef _WIN32
+    null_stream.open("nul");
+#else
+    null_stream.open("/dev/null");
+#endif
+    std::streambuf* old_cerr = std::cerr.rdbuf(null_stream.rdbuf());
+
+    for (int fig = 0; fig < nFigures; ++fig)
+    {
+        int gStart = fig * groupsPerFigure;
+        int gEnd = std::min(gStart + groupsPerFigure, nGroups);
+        int rowsThisFigure = gEnd - gStart;
+
+        auto f = figure(true);
+        f->size(1400, 900);
+
+        std::string figTitle =
+            title + " (Figure " + std::to_string(fig + 1) + ")";
+
+        f->name(figTitle);
+
+        tiledlayout(rowsThisFigure, 1);
+
+        for (int g = gStart; g < gEnd; ++g)
+        {
+            nexttile();
+            hold(on);
+
+            const auto& X = Xabc_groups[g];
+
+            std::vector<double> xa(t.size());
+            std::vector<double> xb(t.size());
+            std::vector<double> xc(t.size());
+
+            for (size_t i = 0; i < t.size(); ++i)
+            {
+                xa[i] = X(i, 0);
+                xb[i] = X(i, 1);
+                xc[i] = X(i, 2);
+            }
+
+            auto p1 = plot(t, xa);
+            p1->line_width(2);
+            p1->display_name("xa" + std::to_string(g + 1));
+
+            auto p2 = plot(t, xb);
+            p2->line_width(2);
+            p2->display_name("xb" + std::to_string(g + 1));
+
+            auto p3 = plot(t, xc);
+            p3->line_width(2);
+            p3->display_name("xc" + std::to_string(g + 1));
+
+            ylabel("Group " + std::to_string(g + 1));
+            grid(on);
+            gca()->minor_grid(true);
+
+            auto lgd = legend();
+            lgd->location(legend::general_alignment::bottomleft);
+            lgd->box(false);
+        }
+
+        xlabel("Time (s)");
+        matplot::title(figTitle);
+
+        show();
+    }
+
+    std::cerr.rdbuf(old_cerr);
+    null_stream.close();
+}

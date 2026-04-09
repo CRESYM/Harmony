@@ -18,6 +18,9 @@ extern MatrixXd vectorToMatrix(const vector<vector<double>>& vec);
 extern vector<vector<complex<double>>> matrixToVector(const MatrixXcd& mat);
 extern vector<vector<double>> matrixToVector(const MatrixXd& mat);
 
+// Stacking matrices
+extern MatrixXcd stack_u_4x_3xN(const MatrixXcd& u1, const MatrixXcd& u2, const MatrixXcd& u3, const MatrixXcd& u4);
+
 // Functions for matrix operations
 extern vector<vector<complex<double>>> mat_mul(const vector<vector<complex<double>>>& A, const vector<vector<complex<double>>>& B);
 extern vector<vector<complex<double>>> mul_scalar(const vector<vector<complex<double>>>& A, const complex<double>& scalar);
