@@ -79,6 +79,7 @@ jobs:
       - name: Build the tests
         shell: bash -l {0}
         run: |
+          export PATH="/c/gurobi1301/win64/bin:/c/Program Files/Matplot++ 1.2.0/lib:/c/Program Files/gnuplot/bin:$PATH"
           mkdir tests/build
           cd tests/build
           cmake .. -DGUROBI_PATH="C:\gurobi1301\win64" -DMATPLOT_PATH="C:\Program Files\Matplot++ 1.2.0"
