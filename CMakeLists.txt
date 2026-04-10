@@ -29,6 +29,13 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(imgui_source)
 set(IMGUI_BACKEND_DIR "${imgui_source_SOURCE_DIR}/backends")
 include_directories(${IMGUI_BACKEND_DIR})
+if (APPLE)
+    message(STATUS "macOS detected: Adding ImGui backend source files to build")
+    list(APPEND IMGUI_BACKEND_SOURCES 
+        ${IMGUI_BACKEND_DIR}/imgui_impl_glfw.cpp
+        ${IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp
+    )
+endif()
 
 # Gurobi and Mathplot++ are configured below
 # They need to be configured after add_executable(Harmony ...)
@@ -334,14 +341,14 @@ add_executable(
     ${Examples_Source_files}
 
     # Implot
-    ${IMGUI_BACKEND_DIR}/imgui_impl_glfw.cpp
-    ${IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp
+    ${IMGUI_BACKEND_SOURCES}
 
 )
 
 # Set Harmony as a starup project on Visual Studio Solution
 if (MSVC)
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Harmony)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 endif()
 
 # Implot (requires various libraries)
@@ -359,6 +366,10 @@ endif()
 # Tell the ImGui OpenGL backend to use GLEW
 target_compile_definitions(Harmony PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLEW)
 
+# If using Conda GLEW on Windows, link statically
+if(MSVC)
+    target_compile_definitions(Harmony PRIVATE GLEW_STATIC)
+endif()
 
 # Specify libraries that need to be linked to the harmony executable
 # Although Eigen is a header-only lib, this will setup the include directories 

@@ -11,6 +11,13 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <vector>
+
+// [Helper] Error callback for GLFW
+void glfw_error_callback(int error, const char* description) {
+    fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+}
+
+
 /**
  * @brief Main entry point for the circuit simulation program.
  *
@@ -49,7 +56,10 @@ int main() {
 	 //example_stability_check();
 	// example_admittance_parameters();
 
-	// Try1. Call
+
+    // --------- IMPLOT
+
+    // -------- This block prints the version numbers but does not plot -------------
 	// Manually initialize the contexts
     // IMGUI_CHECKVERSION();
     // ImGui::CreateContext();
@@ -63,103 +73,101 @@ int main() {
     // // Clean up
     // ImPlot::DestroyContext();
     // ImGui::DestroyContext();	
+    // -------------------------------------------------------------------------------
 
-	// -----------------------------------------
-	// // Try2. Plot
 
-	// 1. Initialize Contexts
-	// IMGUI_CHECKVERSION();
-	// ImGui::CreateContext();
-	// ImPlot::CreateContext();
 
-	// std::cout << "ImGui/ImPlot Contexts Created Successfully!" << std::endl;
-	// // 2. Define your data (Example: a simple diagonal line)
-	// float x_data[] = { 0, 1, 2, 3, 4, 5 };
-	// float y_data[] = { 0, 1, 4, 9, 16, 25 };
-
-	// // 3. Create the Plot Canvas
-	// // This usually happens inside your main render loop
-	// if (ImPlot::BeginPlot("My First Plot")) {
-	// 	std::cout << "ImGui/ImPlot Contexts Created Successfully!" << std::endl;
-	// 	// Set up axes (optional labels)
-	// 	ImPlot::SetupAxes("X-Axis", "Y-Axis");
-
-	// 	// 4. Draw the actual line
-	// 	// "Line Label" is what shows in the legend
-	// 	ImPlot::PlotLine("Quadratic Growth", x_data, y_data, 6);
-
-	// 	// End the plot
-	// 	ImPlot::EndPlot();
-	// }
-
-	// // 5. Clean up
-	// ImPlot::DestroyContext();
-	// ImGui::DestroyContext();
-
-	// ---------------------------
-	// Try3
-
-	// 1. Initialize GLFW
+    glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) return 1;
 
-    // macOS Compatibility hints
+    // --- PLATFORM SPECIFIC SETUP ---
+    const char* glsl_version;
+#ifdef __APPLE__
+    // macOS requires Core Profile and Forward Compatibility
+    glsl_version = "#version 150";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#else
+    // Windows and Linux
+    glsl_version = "#version 130";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+#endif
 
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Harmony - Grid Simulation Plot", NULL, NULL);
-    if (!window) return 1;
+    // Create window
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Harmony - Electrical Grid Simulator", NULL, NULL);
+    if (!window) {
+        glfwTerminate();
+        return 1;
+    }
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable vsync (60 FPS)
+    glfwSwapInterval(1); // Enable vsync
 
-    // 2. Setup ImGui/ImPlot Contexts
+    // --- INITIALIZE CONTEXTS ---
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImPlot::CreateContext();
 
-    // 3. Initialize Backends
+    // Setup Style
+    ImGui::StyleColorsDark();
+
+    // --- INITIALIZE BACKENDS ---
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 150");
+    ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // Sample data for your electrical grid simulation
-    std::vector<float> x_data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    std::vector<float> y_data = {0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100};
+    // --- DATA FOR PLOTTING ---
+    // Example: A 60Hz Sine Wave for your grid simulation
+    std::vector<float> x_data, y_data;
+    for (int i = 0; i < 1000; ++i) {
+        float t = i * 0.001f;
+        x_data.push_back(t);
+        y_data.push_back(sinf(2.0f * 3.14159f * 60.0f * t)); // 60Hz signal
+    }
 
-    // 4. Main Render Loop
+    // --- MAIN LOOP ---
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
-        // Start the Frame
+        // Start Frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // 5. Create the UI and Plot
-        ImGui::SetNextWindowSize(ImVec2(800, 500), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Simulation Results");
-
-        if (ImPlot::BeginPlot("My First ImPlot Line")) {
-            ImPlot::SetupAxes("Time (s)", "Voltage (V)");
-            ImPlot::PlotLine("Phase A", x_data.data(), y_data.data(), x_data.size());
-            ImPlot::EndPlot();
+        // 1. Show a simple control panel
+        ImGui::Begin("Simulation Controls");
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        if (ImGui::Button("Reset Simulation")) {
+            // Your logic here
         }
-
         ImGui::End();
 
-        // 6. Rendering
+        // 2. Show the Plot
+        ImGui::SetNextWindowSize(ImVec2(800, 500), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Grid Visualization");
+
+        if (ImPlot::BeginPlot("Voltage Phase A", ImVec2(-1, -1))) {
+            ImPlot::SetupAxes("Time (s)", "Voltage (V)");
+            ImPlot::PlotLine("Bus 1", x_data.data(), y_data.data(), (int)x_data.size());
+            ImPlot::EndPlot();
+        }
+        ImGui::End();
+
+        // --- RENDERING ---
         ImGui::Render();
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
-        glClearColor(0.15f, 0.15f, 0.15f, 1.00f); // Dark background
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
     }
 
-    // 7. Cleanup
+    // --- CLEANUP ---
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImPlot::DestroyContext();
