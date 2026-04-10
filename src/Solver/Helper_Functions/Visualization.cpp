@@ -1,28 +1,142 @@
 ﻿#include "Visualization.h"
 
-
 // ============================================================
 // INTERNAL STATE
 // ============================================================
 
 namespace {
+
     struct PlotTab
     {
-        std::string title;
+        std::string           title;
         std::function<void()> draw;
     };
 
-    std::vector<PlotTab> g_tabs;
-    std::mutex g_mutex;
+    std::vector<PlotTab>  g_tabs;
+    std::mutex            g_mutex;
 
-    std::thread g_guiThread;
-    std::atomic<bool> g_running{ false };
-    std::atomic<bool> g_initialized{ false };
-    std::atomic<bool> g_stop{ false };
+    std::thread           g_guiThread;
+    std::atomic<bool>     g_running{ false };
+    std::atomic<bool>     g_initialized{ false };
+    std::atomic<bool>     g_stop{ false };
 
     GLFWwindow* g_window = nullptr;
     const char* glsl_version = "#version 130";
-}
+
+    struct GuiThreadGuard
+    {
+        ~GuiThreadGuard()
+        {
+            g_stop = true;
+            if (g_guiThread.joinable())
+                g_guiThread.join();
+        }
+    } g_guard;
+
+    std::once_flag g_start_flag;  // guarantees ensure_running fires exactly once
+
+    // ----------------------------------------------------------
+    // ORANGES COLORMAP  (shared by viz_opf)
+    // ----------------------------------------------------------
+
+    static const std::vector<float> oranges_stops = {
+        0.0f, 0.125f, 0.25f, 0.375f, 0.5f, 0.625f, 0.75f, 0.875f, 1.0f
+    };
+    static const std::vector<std::array<float, 3>> oranges_colors = {
+        {1.00f,0.96f,0.92f}, {1.00f,0.90f,0.81f},
+        {0.99f,0.82f,0.64f}, {0.99f,0.68f,0.42f},
+        {0.99f,0.55f,0.23f}, {0.95f,0.41f,0.07f},
+        {0.85f,0.28f,0.00f}, {0.65f,0.21f,0.01f},
+        {0.50f,0.15f,0.02f}
+    };
+
+    static std::array<float, 3> oranges_colormap(float t)
+    {
+        constexpr float t_min = 0.05f;
+        t = t_min + t * (1.0f - t_min);
+        if (t <= oranges_stops.front()) return oranges_colors.front();
+        if (t >= oranges_stops.back())  return oranges_colors.back();
+
+        auto it = std::upper_bound(oranges_stops.begin(), oranges_stops.end(), t);
+        int  idx = static_cast<int>(std::distance(oranges_stops.begin(), it));
+
+        float t0 = oranges_stops[idx - 1], t1 = oranges_stops[idx];
+        const auto& c0 = oranges_colors[idx - 1];
+        const auto& c1 = oranges_colors[idx];
+        float a = (t - t0) / (t1 - t0);
+
+        return { c0[0] + a * (c1[0] - c0[0]),
+                 c0[1] + a * (c1[1] - c0[1]),
+                 c0[2] + a * (c1[2] - c0[2]) };
+    }
+
+    // ----------------------------------------------------------
+    // FRUCHTERMAN-REINGOLD spring layout  (shared by viz_opf)
+    // Replaces matplot's kawai layout algorithm.
+    // ----------------------------------------------------------
+
+    static void spring_layout(
+        int                                          N,
+        const std::vector<std::pair<size_t, size_t>>& edges,
+        std::vector<double>& xs,
+        std::vector<double>& ys,
+        int                                          iterations = 250)
+    {
+        xs.assign(N, 0.0);
+        ys.assign(N, 0.0);
+
+        for (int i = 0; i < N; ++i)
+        {
+            xs[i] = std::cos(2.0 * M_PI * i / N);
+            ys[i] = std::sin(2.0 * M_PI * i / N);
+        }
+
+        const double k = std::sqrt(4.0 / std::max(N, 1));
+        double t = 1.0;
+
+        std::vector<double> dx(N), dy(N);
+
+        for (int iter = 0; iter < iterations; ++iter)
+        {
+            std::fill(dx.begin(), dx.end(), 0.0);
+            std::fill(dy.begin(), dy.end(), 0.0);
+
+            for (int u = 0; u < N; ++u)
+                for (int v = u + 1; v < N; ++v)
+                {
+                    double ddx = xs[u] - xs[v];
+                    double ddy = ys[u] - ys[v];
+                    double dist = std::max(std::hypot(ddx, ddy), 1e-6);
+                    double f = k * k / dist;
+                    double fx = ddx / dist * f;
+                    double fy = ddy / dist * f;
+                    dx[u] += fx;  dy[u] += fy;
+                    dx[v] -= fx;  dy[v] -= fy;
+                }
+
+            for (auto& [u, v] : edges)
+            {
+                double ddx = xs[u] - xs[v];
+                double ddy = ys[u] - ys[v];
+                double dist = std::max(std::hypot(ddx, ddy), 1e-6);
+                double f = dist * dist / k;
+                double fx = ddx / dist * f;
+                double fy = ddy / dist * f;
+                dx[u] -= fx;  dy[u] -= fy;
+                dx[v] += fx;  dy[v] += fy;
+            }
+
+            for (int u = 0; u < N; ++u)
+            {
+                double disp = std::max(std::hypot(dx[u], dy[u]), 1e-6);
+                xs[u] += dx[u] / disp * std::min(disp, t);
+                ys[u] += dy[u] / disp * std::min(disp, t);
+            }
+            t *= 0.95;
+        }
+    }
+
+} // namespace
 
 // ============================================================
 // GLFW ERROR
@@ -62,7 +176,6 @@ static void init_gui()
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImPlot::CreateContext();
-
     ImGui::StyleColorsDark();
 
     ImGui_ImplGlfw_InitForOpenGL(g_window, true);
@@ -73,7 +186,7 @@ static void init_gui()
 }
 
 // ============================================================
-// GUI LOOP (BACKGROUND THREAD)
+// GUI LOOP  (runs on background thread)
 // ============================================================
 
 static void gui_loop()
@@ -88,13 +201,28 @@ static void gui_loop()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("Harmony Visualization");
+        // Full-screen host window
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(io.DisplaySize);
+        ImGui::Begin("Harmony Visualization",
+            nullptr,
+            ImGuiWindowFlags_NoTitleBar |
+            ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoBringToFrontOnFocus);
 
         if (ImGui::BeginTabBar("Plots"))
         {
-            std::lock_guard<std::mutex> lock(g_mutex);
+            // Snapshot under lock — draw() runs outside the lock so that
+            // callbacks can safely call add_tab() without deadlocking.
+            std::vector<PlotTab> snapshot;
+            {
+                std::lock_guard<std::mutex> lock(g_mutex);
+                snapshot = g_tabs;
+            }
 
-            for (auto& tab : g_tabs)
+            for (auto& tab : snapshot)
             {
                 if (ImGui::BeginTabItem(tab.title.c_str()))
                 {
@@ -107,54 +235,56 @@ static void gui_loop()
         }
 
         ImGui::End();
-
         ImGui::Render();
 
         int w, h;
         glfwGetFramebufferSize(g_window, &w, &h);
-
         glViewport(0, 0, w, h);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
         glfwSwapBuffers(g_window);
     }
+
+    // ---- cleanup ----
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImPlot::DestroyContext();
+    ImGui::DestroyContext();
+    glfwDestroyWindow(g_window);
+    glfwTerminate();
 
     g_running = false;
 }
 
 // ============================================================
-// START THREAD (AUTO)
+// ENSURE RUNNING  (called automatically by every plot function)
 // ============================================================
 
 static void ensure_running()
 {
-    if (g_initialized)
-        return;
-
-    g_guiThread = std::thread(gui_loop);
-    g_guiThread.detach();
-
-    while (!g_initialized)
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::call_once(g_start_flag, []()
+        {
+            g_guiThread = std::thread(gui_loop);
+            while (!g_initialized)
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        });
 }
 
 // ============================================================
-// REGISTER TAB
+// INTERNAL TAB REGISTRATION
 // ============================================================
 
 static void add_tab(const std::string& title, std::function<void()> fn)
 {
     ensure_running();
-
     std::lock_guard<std::mutex> lock(g_mutex);
     g_tabs.push_back({ title, fn });
 }
 
 // ============================================================
-// PUBLIC CONTROL
+// PUBLIC API
 // ============================================================
 
 void visualization_stop()
@@ -165,6 +295,19 @@ void visualization_stop()
 bool visualization_is_running()
 {
     return g_running;
+}
+
+/// Block until the window is closed by the user.
+void visualization_wait()
+{
+    if (g_guiThread.joinable())
+        g_guiThread.join();
+}
+
+/// Public interface used by external modules (e.g. viz_opf).
+void add_plot_tab(const std::string& title, std::function<void()> fn)
+{
+    add_tab(title, std::move(fn));
 }
 
 // ============================================================
@@ -188,30 +331,20 @@ void bode_plot_implot(
 
             ImGui::BeginChild("BodeLayout");
 
-            // ========================================================
-            // MAGNITUDE PLOT
-            // ========================================================
+            // ---- Magnitude ----
             if (ImPlot::BeginPlot("Magnitude (dB)", ImVec2(-1, 260)))
             {
                 ImPlot::SetupAxes("Frequency (Hz)", "20 log10 |H(jw)|");
                 ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
-
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest);
 
                 for (int j = 0; j < nSignals; ++j)
                 {
                     std::vector<double> y(N);
-
                     for (int i = 0; i < N; ++i)
-                    {
-                        y[i] = mag_dB[i][j];   
-                    }
+                        y[i] = mag_dB[i][j];
 
-                    ImPlot::PlotLine(
-                        labels[j].c_str(),
-                        freq.data(),
-                        y.data(),
-                        N);
+                    ImPlot::PlotLine(labels[j].c_str(), freq.data(), y.data(), N);
                 }
 
                 ImPlot::EndPlot();
@@ -219,30 +352,20 @@ void bode_plot_implot(
 
             ImGui::Dummy(ImVec2(0, 10));
 
-            // ========================================================
-            // PHASE PLOT
-            // ========================================================
+            // ---- Phase ----
             if (ImPlot::BeginPlot("Phase (deg)", ImVec2(-1, 260)))
             {
                 ImPlot::SetupAxes("Frequency (Hz)", "Angle H(jw)");
                 ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
-
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest);
 
                 for (int j = 0; j < nSignals; ++j)
                 {
                     std::vector<double> y(N);
-
                     for (int i = 0; i < N; ++i)
-                    {
-                        y[i] = phase_deg[i][j];  // ✔ CORRECT: same layout
-                    }
+                        y[i] = phase_deg[i][j];
 
-                    ImPlot::PlotLine(
-                        labels[j].c_str(),
-                        freq.data(),
-                        y.data(),
-                        N);
+                    ImPlot::PlotLine(labels[j].c_str(), freq.data(), y.data(), N);
                 }
 
                 ImPlot::EndPlot();
@@ -273,80 +396,54 @@ void nyquist_plot_implot(
 
             if (ImPlot::BeginPlot("Nyquist"))
             {
-                // ========================================================
-                // AXES (MATLAB STYLE)
-                // ========================================================
                 ImPlot::SetupAxes("Re{H(jw)}", "Im{H(jw)}");
 
-                // ========================================================
-                // COMPUTE AUTO LIMITS (NO FIXED UNIT CIRCLE)
-                // ========================================================
+                // Auto-fit limits with equal scaling
                 double min_re = 1e100, max_re = -1e100;
                 double min_im = 1e100, max_im = -1e100;
 
                 for (const auto& row : H_data)
-                {
                     for (const auto& v : row)
                     {
-                        double re = std::real(v);
-                        double im = std::imag(v);
-
-                        min_re = std::min(min_re, re);
-                        max_re = std::max(max_re, re);
-                        min_im = std::min(min_im, im);
-                        max_im = std::max(max_im, im);
+                        min_re = std::min(min_re, std::real(v));
+                        max_re = std::max(max_re, std::real(v));
+                        min_im = std::min(min_im, std::imag(v));
+                        max_im = std::max(max_im, std::imag(v));
                     }
-                }
 
-                // expand slightly (MATLAB-like padding)
                 double pad_re = 0.05 * (max_re - min_re);
                 double pad_im = 0.05 * (max_im - min_im);
-
                 min_re -= pad_re; max_re += pad_re;
                 min_im -= pad_im; max_im += pad_im;
 
-                // equal scaling (critical for Nyquist correctness)
-                double re_range = max_re - min_re;
-                double im_range = max_im - min_im;
-                double range = std::max(re_range, im_range);
-
+                double range = std::max(max_re - min_re, max_im - min_im);
                 double cx = 0.5 * (min_re + max_re);
                 double cy = 0.5 * (min_im + max_im);
-
                 double half = 0.5 * range;
 
-                ImPlot::SetupAxesLimits(
-                    cx - half, cx + half,
+                ImPlot::SetupAxesLimits(cx - half, cx + half,
                     cy - half, cy + half,
-                    ImPlotCond_Always
-                );
+                    ImPlotCond_Once);
 
-                // ========================================================
-                // NYQUIST CURVES
-                // ========================================================
+                // Curves
                 for (int j = 0; j < channels; ++j)
                 {
                     std::vector<double> re(N), im(N);
-
                     for (int i = 0; i < N; ++i)
                     {
                         re[i] = std::real(H_data[i][j]);
                         im[i] = std::imag(H_data[i][j]);
                     }
 
-                    const std::string label =
-                        (j < (int)labels.size())
+                    const std::string lbl = (j < (int)labels.size())
                         ? labels[j]
                         : ("TF_" + std::to_string(j + 1));
 
-                    ImPlot::PlotLine(label.c_str(), re.data(), im.data(), N);
+                    ImPlot::PlotLine(lbl.c_str(), re.data(), im.data(), N);
                 }
 
-                // ========================================================
-                // UNIT CIRCLE (MATPLOTLIB EQUIVALENT)
-                // ========================================================
+                // Unit circle
                 std::vector<double> theta(500), xc(500), yc(500);
-
                 for (int i = 0; i < 500; ++i)
                 {
                     theta[i] = 2.0 * M_PI * (double)i / 499.0;
@@ -367,6 +464,7 @@ void nyquist_plot_implot(
 // ============================================================
 // EIGENVALUES
 // ============================================================
+
 void plot_eigenvalues_implot(
     const std::vector<std::complex<double>>& eigvals,
     const std::string& title)
@@ -376,47 +474,42 @@ void plot_eigenvalues_implot(
             if (eigvals.empty())
                 return;
 
-            std::vector<double> real_part;
-            std::vector<double> imag_part;
+            std::vector<double> re, im;
+            re.reserve(eigvals.size());
+            im.reserve(eigvals.size());
 
-            real_part.reserve(eigvals.size());
-            imag_part.reserve(eigvals.size());
-
-            for (const auto& λ : eigvals)
+            for (const auto& l : eigvals)
             {
-                real_part.push_back(std::real(λ));
-                imag_part.push_back(std::imag(λ));
+                re.push_back(std::real(l));
+                im.push_back(std::imag(l));
             }
 
-            ImGui::BeginChild("BodeLayout");
+            ImGui::BeginChild("EigLayout");
 
             if (ImPlot::BeginPlot("Eigenvalues (s-plane)",
                 ImVec2(-1, 520),
-                ImPlotFlags_Equal))   // ✅ correct "axis equal"
+                ImPlotFlags_Equal))
             {
                 ImPlot::SetupAxes("Re(lambda)", "Im(lambda)");
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest);
 
                 ImPlot::PushStyleVar(ImPlotStyleVar_MarkerSize, 8.0f);
                 ImPlot::PushStyleColor(ImPlotCol_MarkerFill, ImVec4(0.1f, 0.4f, 0.8f, 1.0f));
-                ImPlot::PushStyleColor(ImPlotCol_Line, ImVec4(0, 0, 0, 1));
+                ImPlot::PushStyleColor(ImPlotCol_MarkerOutline, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
 
-                ImPlot::PlotScatter(
-                    "Eigenvalues",
-                    real_part.data(),
-                    imag_part.data(),
-                    (int)real_part.size()
-                );
+                ImPlot::PlotScatter("Eigenvalues",
+                    re.data(), im.data(),
+                    (int)re.size());
 
                 ImPlot::PopStyleColor(2);
                 ImPlot::PopStyleVar();
 
-                // -----------------------------
-                // Origin reference lines (correct way)
-                // -----------------------------
+                // Reference axes — "##" prefix hides them from the legend
                 double zero = 0.0;
-                ImPlot::PlotInfLines("Re = 0", &zero, 1); // vertical line at x=0
-                ImPlot::PlotInfLines("Im = 0", &zero, 1); // horizontal line at y=0
+                ImPlot::SetNextLineStyle(ImVec4(0.5f, 0.5f, 0.5f, 0.6f), 1.0f);
+                ImPlot::PlotInfLines("##re0", &zero, 1);
+                ImPlot::SetNextLineStyle(ImVec4(0.5f, 0.5f, 0.5f, 0.6f), 1.0f);
+                ImPlot::PlotInfLines("##im0", &zero, 1, ImPlotInfLinesFlags_Horizontal);
 
                 ImPlot::EndPlot();
             }
@@ -428,6 +521,7 @@ void plot_eigenvalues_implot(
 // ============================================================
 // PARTICIPATION FACTORS
 // ============================================================
+
 void plot_participation_factors_implot(
     const std::vector<std::vector<double>>& P,
     const std::vector<std::string>& state_labels,
@@ -439,85 +533,137 @@ void plot_participation_factors_implot(
             if (P.empty() || state_labels.empty() || mode_labels.empty())
                 return;
 
-            ImGui::BeginChild("BodeLayout");
+            const int n_states = static_cast<int>(P.size());
+            const int n_modes = static_cast<int>(P[0].size());
 
-            const size_t n_states = P.size();
-            const size_t n_modes = P[0].size();
-
-            // =========================================================
-            // NORMALIZATION (column-wise like your Matplot version)
-            // =========================================================
+            // ----------------------------------------------------------
+            // Column-wise normalisation (each mode sums to 1)
+            // ----------------------------------------------------------
             std::vector<std::vector<double>> P_norm = P;
-
-            for (size_t j = 0; j < n_modes; ++j)
+            for (int j = 0; j < n_modes; ++j)
             {
                 double col_sum = 0.0;
-
-                for (size_t i = 0; i < n_states; ++i)
+                for (int i = 0; i < n_states; ++i)
                     col_sum += std::abs(P[i][j]);
-
-                if (col_sum > 0)
-                {
-                    for (size_t i = 0; i < n_states; ++i)
+                if (col_sum > 1e-12)
+                    for (int i = 0; i < n_states; ++i)
                         P_norm[i][j] /= col_sum;
-                }
             }
 
-            // X positions (state index)
-            std::vector<double> x_positions(n_states);
-            for (size_t i = 0; i < n_states; ++i)
-                x_positions[i] = (double)i;
+            // ----------------------------------------------------------
+            // Distinct 10-color palette (tab10-inspired)
+            // ----------------------------------------------------------
+            static const ImVec4 palette[10] = {
+                {0.122f, 0.467f, 0.706f, 1.f},  // blue
+                {1.000f, 0.498f, 0.055f, 1.f},  // orange
+                {0.173f, 0.627f, 0.173f, 1.f},  // green
+                {0.839f, 0.153f, 0.157f, 1.f},  // red
+                {0.580f, 0.404f, 0.741f, 1.f},  // purple
+                {0.549f, 0.337f, 0.294f, 1.f},  // brown
+                {0.890f, 0.467f, 0.761f, 1.f},  // pink
+                {0.498f, 0.498f, 0.498f, 1.f},  // grey
+                {0.737f, 0.741f, 0.133f, 1.f},  // olive
+                {0.090f, 0.745f, 0.812f, 1.f},  // cyan
+            };
 
-            // =========================================================
-            // PLOT
-            // =========================================================
-            if (ImPlot::BeginPlot("Participation Factors",
-                ImVec2(-1, 600)))
+            constexpr double LABEL_THRESHOLD = 0.05;  // annotate bars >= 5 %
+
+            // ----------------------------------------------------------
+            // Plot
+            // ----------------------------------------------------------
+            ImGui::BeginChild("##pf_child", ImVec2(-1, -1), false);
+
+            const double bar_width = 0.8 / n_modes;
+
+            if (ImPlot::BeginPlot("##pf",
+                ImVec2(-1, -1),
+                ImPlotFlags_NoMouseText))
             {
-                ImPlot::SetupAxes("State Variables", "Normalized Participation Factor");
+                ImPlot::SetupAxes("State Variables",
+                    "Normalised Participation Factor",
+                    ImPlotAxisFlags_None,
+                    ImPlotAxisFlags_None);
 
-                // ---- Custom tick labels (state names) ----
-                std::vector<const char*> x_labels;
-                x_labels.reserve(state_labels.size());
-                for (auto& s : state_labels)
-                    x_labels.push_back(s.c_str());
+                // Y-axis: fixed 0–1.05, grid on
+                ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0, 1.05, ImPlotCond_Always);
 
-                ImPlot::SetupAxisTicks(ImAxis_X1,
-                    0,
-                    (double)(n_states - 1),
-                    (int)n_states,
-                    x_labels.data());
-
-                ImPlot::SetupLegend(ImPlotLocation_NorthEast);
-
-                // =====================================================
-                // BAR GROUPING STRATEGY
-                // We shift each mode slightly in X direction
-                // =====================================================
-                const double bar_width = 0.8 / (double)n_modes;
-
-                for (size_t j = 0; j < n_modes; ++j)
+                // Custom tick labels on X
+                std::vector<double>      x_ticks(n_states);
+                std::vector<const char*> x_lbls(n_states);
+                for (int i = 0; i < n_states; ++i)
                 {
-                    std::vector<double> y(n_states);
-                    std::vector<double> x_shifted(n_states);
+                    x_ticks[i] = static_cast<double>(i);
+                    x_lbls[i] = state_labels[i].c_str();
+                }
+                ImPlot::SetupAxisTicks(ImAxis_X1,
+                    x_ticks.data(), n_states,
+                    x_lbls.data());
 
-                    for (size_t i = 0; i < n_states; ++i)
+                // X limits: half bar-group margin on each side
+                ImPlot::SetupAxisLimits(ImAxis_X1,
+                    -0.6, n_states - 1 + 0.6,
+                    ImPlotCond_Once);
+
+                ImPlot::SetupLegend(ImPlotLocation_NorthEast,
+                    ImPlotLegendFlags_Outside);
+
+                // ---- draw bars ----
+                for (int j = 0; j < n_modes; ++j)
+                {
+                    // Centered grouping: shift so bars are symmetric around tick
+                    // offset = (j + 0.5) * bar_width - 0.4
+                    std::vector<double> x_pos(n_states), y_val(n_states);
+                    for (int i = 0; i < n_states; ++i)
                     {
-                        y[i] = P_norm[i][j];
-
-                        // offset each mode inside the group
-                        x_shifted[i] = x_positions[i]
-                            + (j * bar_width)
-                            - (0.4);
+                        x_pos[i] = i + (j + 0.5) * bar_width - 0.4;
+                        y_val[i] = P_norm[i][j];
                     }
 
-                    ImPlot::PlotBars(
-                        mode_labels[j].c_str(),
-                        x_shifted.data(),
-                        y.data(),
-                        (int)n_states,
-                        bar_width
-                    );
+                    const ImVec4& col = palette[j % 10];
+                    ImPlot::SetNextFillStyle(col, 0.85f);
+                    ImPlot::PlotBars(mode_labels[j].c_str(),
+                        x_pos.data(), y_val.data(),
+                        n_states, bar_width * 0.92); // slight gap between bars
+                }
+
+                // ---- value annotations above significant bars ----
+                for (int j = 0; j < n_modes; ++j)
+                {
+                    for (int i = 0; i < n_states; ++i)
+                    {
+                        double v = P_norm[i][j];
+                        if (v < LABEL_THRESHOLD) continue;
+
+                        double xp = i + (j + 0.5) * bar_width - 0.4;
+                        char buf[8];
+                        snprintf(buf, sizeof(buf), "%.2f", v);
+                        ImPlot::PlotText(buf, xp, v + 0.015, ImVec2(0, 0));
+                    }
+                }
+
+                // ---- hover tooltip ----
+                if (ImPlot::IsPlotHovered())
+                {
+                    ImPlotPoint mouse = ImPlot::GetPlotMousePos();
+                    int nearest_state = static_cast<int>(std::round(mouse.x));
+                    if (nearest_state >= 0 && nearest_state < n_states)
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::TextUnformatted(state_labels[nearest_state].c_str());
+                        ImGui::Separator();
+                        for (int j = 0; j < n_modes; ++j)
+                        {
+                            const ImVec4& c = palette[j % 10];
+                            ImGui::ColorButton("##c", c,
+                                ImGuiColorEditFlags_NoTooltip |
+                                ImGuiColorEditFlags_NoBorder,
+                                ImVec2(10, 10));
+                            ImGui::SameLine();
+                            ImGui::Text("%s: %.3f", mode_labels[j].c_str(),
+                                P_norm[nearest_state][j]);
+                        }
+                        ImGui::EndTooltip();
+                    }
                 }
 
                 ImPlot::EndPlot();
@@ -539,7 +685,6 @@ void plot_abc_waveforms_implot(
     add_tab(title, [=]()
         {
             std::vector<double> xa(t.size()), xb(t.size()), xc(t.size());
-
             for (size_t i = 0; i < t.size(); ++i)
             {
                 xa[i] = Xabc(i, 0);
@@ -547,11 +692,12 @@ void plot_abc_waveforms_implot(
                 xc[i] = Xabc(i, 2);
             }
 
-            if (ImPlot::BeginPlot("ABC"))
+            if (ImPlot::BeginPlot(("ABC")))
             {
-                ImPlot::PlotLine("xa", t.data(), xa.data(), t.size());
-                ImPlot::PlotLine("xb", t.data(), xb.data(), t.size());
-                ImPlot::PlotLine("xc", t.data(), xc.data(), t.size());
+                ImPlot::SetupAxes("t (s)", "Amplitude");
+                ImPlot::PlotLine("xa", t.data(), xa.data(), (int)t.size());
+                ImPlot::PlotLine("xb", t.data(), xb.data(), (int)t.size());
+                ImPlot::PlotLine("xc", t.data(), xc.data(), (int)t.size());
                 ImPlot::EndPlot();
             }
         });
@@ -568,12 +714,17 @@ void plot_abc_groups_implot(
 {
     add_tab(title, [=]()
         {
+            // Each group gets a fixed slice of height; wrap in a scrollable child
+            // so the tab remains usable regardless of group count.
+            constexpr float PLOT_H = 220.0f;
+
+            ImGui::BeginChild("##abc_groups_scroll", ImVec2(-1, -1), false,
+                ImGuiWindowFlags_HorizontalScrollbar);
+
             for (size_t g = 0; g < Xabc_groups.size(); ++g)
             {
                 const auto& X = Xabc_groups[g];
-
                 std::vector<double> xa(t.size()), xb(t.size()), xc(t.size());
-
                 for (size_t i = 0; i < t.size(); ++i)
                 {
                     xa[i] = X(i, 0);
@@ -581,17 +732,527 @@ void plot_abc_groups_implot(
                     xc[i] = X(i, 2);
                 }
 
-                ImGui::PushID((int)g);
-
-                if (ImPlot::BeginPlot(("Group " + std::to_string(g + 1)).c_str()))
+                ImGui::PushID(static_cast<int>(g));
+                if (ImPlot::BeginPlot(("Group " + std::to_string(g + 1)).c_str(),
+                    ImVec2(-1, PLOT_H)))
                 {
-                    ImPlot::PlotLine("xa", t.data(), xa.data(), t.size());
-                    ImPlot::PlotLine("xb", t.data(), xb.data(), t.size());
-                    ImPlot::PlotLine("xc", t.data(), xc.data(), t.size());
+                    ImPlot::SetupAxes("t (s)", "Amplitude");
+                    ImPlot::PlotLine("xa", t.data(), xa.data(), static_cast<int>(t.size()));
+                    ImPlot::PlotLine("xb", t.data(), xb.data(), static_cast<int>(t.size()));
+                    ImPlot::PlotLine("xc", t.data(), xc.data(), static_cast<int>(t.size()));
                     ImPlot::EndPlot();
                 }
-
                 ImGui::PopID();
             }
+
+            ImGui::EndChild();
+        });
+}
+
+// ============================================================
+// VIZ OPF — AC/DC optimal power flow network visualisation
+// ============================================================
+
+void viz_opf(const OPFVisualData& d)
+{
+    // ----------------------------------------------------------
+    // 1.  REINDEX AC DATA
+    // ----------------------------------------------------------
+
+    const int numBuses_ac = d.bus_entire_ac.rows();
+    const int numColsBuses = d.bus_entire_ac.cols();
+    const int numColsBranches_ac = d.branch_entire_ac.cols();
+    const int numBranches_ac = d.branch_entire_ac.rows();
+
+    Eigen::MatrixXd bus_ac_new = d.bus_entire_ac;
+    for (int i = 0; i < numBuses_ac; ++i)
+        bus_ac_new(i, 0) = i + 1;
+
+    std::map<std::pair<int, int>, int> mapping_ac;
+    for (int i = 0; i < numBuses_ac; ++i)
+    {
+        int oldId = static_cast<int>(d.bus_entire_ac(i, 0));
+        int area = static_cast<int>(d.bus_entire_ac(i, numColsBuses - 1));
+        mapping_ac[{oldId, area}] = i + 1;
+    }
+
+    Eigen::MatrixXd branch_ac_new = d.branch_entire_ac;
+    for (int i = 0; i < numBranches_ac; ++i)
+    {
+        int area = static_cast<int>(d.branch_entire_ac(i, numColsBranches_ac - 1));
+        auto itF = mapping_ac.find({ (int)d.branch_entire_ac(i, 0), area });
+        auto itT = mapping_ac.find({ (int)d.branch_entire_ac(i, 1), area });
+        if (itF != mapping_ac.end()) branch_ac_new(i, 0) = itF->second;
+        if (itT != mapping_ac.end()) branch_ac_new(i, 1) = itT->second;
+    }
+
+    // ----------------------------------------------------------
+    // 2.  REINDEX DC DATA
+    // ----------------------------------------------------------
+
+    const int numBuses_dc = d.bus_dc.rows();
+    const int numBranches_dc = d.branch_dc.rows();
+    const int numConvs = d.conv_dc.rows();
+
+    Eigen::MatrixXd bus_dc_new = d.bus_dc;
+    bus_dc_new.col(0).array() += numBuses_ac;
+
+    Eigen::MatrixXd branch_dc_new = d.branch_dc;
+    branch_dc_new.leftCols<2>().array() += numBuses_ac;
+
+    Eigen::MatrixXd conv_dc_new = d.conv_dc;
+    conv_dc_new.col(0).array() += numBuses_ac;
+
+    std::map<std::pair<int, int>, int> mapping_conv;
+    for (int i = 0; i < numBuses_ac; ++i)
+    {
+        int old_ac = static_cast<int>(d.bus_entire_ac(i, 0));
+        int new_ac = static_cast<int>(bus_ac_new(i, 0));
+        int area = static_cast<int>(d.bus_entire_ac(i, numColsBuses - 1));
+        mapping_conv[{old_ac, area}] = new_ac;
+    }
+    for (int i = 0; i < numConvs; ++i)
+    {
+        int old_ac = static_cast<int>(d.conv_dc(i, 1));
+        int area = static_cast<int>(d.conv_dc(i, 2));
+        auto it = mapping_conv.find({ old_ac, area });
+        if (it != mapping_conv.end())
+            conv_dc_new(i, 1) = it->second;
+    }
+
+    // ----------------------------------------------------------
+    // 3.  REINDEX GENERATOR DATA + INJECT SOLUTION VALUES
+    // ----------------------------------------------------------
+
+    Eigen::MatrixXd gen_ac_new = d.gen_entire_ac;
+    const int numGens = d.gen_entire_ac.rows();
+    const int numGenCols = d.gen_entire_ac.cols();
+
+    for (int i = 0; i < numGens; ++i)
+    {
+        int old_bus = static_cast<int>(d.gen_entire_ac(i, 0));
+        int area = static_cast<int>(d.gen_entire_ac(i, numGenCols - 1));
+        auto it = mapping_conv.find({ old_bus, area });
+        if (it != mapping_conv.end())
+            gen_ac_new(i, 0) = it->second;
+    }
+
+    int idxGen = 0;
+    for (int ng = 0; ng < d.ngrids; ++ng)
+        for (int j = 0; j < d.ngens_ac[ng]; ++j)
+        {
+            gen_ac_new(idxGen, 1) = d.pgen_ac_k[ng](j) * d.baseMVA_ac;
+            gen_ac_new(idxGen, 2) = d.qgen_ac_k[ng](j) * d.baseMVA_ac;
+            ++idxGen;
+        }
+
+    // ----------------------------------------------------------
+    // 4.  BUILD EDGE LIST
+    // ----------------------------------------------------------
+
+    const int nFrom = numBranches_ac + numBranches_dc + numConvs;
+
+    Eigen::VectorXi fromNode(nFrom), toNode(nFrom);
+    fromNode.head(numBranches_ac) = branch_ac_new.col(0).cast<int>();
+    fromNode.segment(numBranches_ac, numBranches_dc) = branch_dc_new.col(0).cast<int>();
+    fromNode.tail(numConvs) = conv_dc_new.col(0).cast<int>();
+
+    toNode.head(numBranches_ac) = branch_ac_new.col(1).cast<int>();
+    toNode.segment(numBranches_ac, numBranches_dc) = branch_dc_new.col(1).cast<int>();
+    toNode.tail(numConvs) = conv_dc_new.col(1).cast<int>();
+
+    std::vector<int> allNodes;
+    allNodes.reserve(2 * nFrom);
+    for (int k = 0; k < nFrom; ++k)
+    {
+        allNodes.push_back(fromNode[k]);
+        allNodes.push_back(toNode[k]);
+    }
+    std::sort(allNodes.begin(), allNodes.end());
+    allNodes.erase(std::unique(allNodes.begin(), allNodes.end()), allNodes.end());
+
+    std::vector<std::pair<size_t, size_t>> edges;
+    edges.reserve(nFrom);
+    for (int k = 0; k < nFrom; ++k)
+    {
+        size_t u = static_cast<size_t>(fromNode[k] - 1);
+        size_t v = static_cast<size_t>(toNode[k] - 1);
+        if (u > v) std::swap(u, v);
+        edges.emplace_back(u, v);
+    }
+    std::sort(edges.begin(), edges.end(),
+        [](auto& a, auto& b) {
+            return a.first != b.first ? a.first < b.first
+                : a.second < b.second;
+        });
+
+    // ----------------------------------------------------------
+    // 5.  SPRING LAYOUT
+    // ----------------------------------------------------------
+
+    const int N = static_cast<int>(allNodes.size());
+    std::vector<double> xs, ys;
+    spring_layout(N, edges, xs, ys);
+
+    // ----------------------------------------------------------
+    // 6.  NODE CLASSIFICATION
+    // ----------------------------------------------------------
+
+    Eigen::VectorXi acNodesVec = bus_ac_new.col(0).cast<int>();
+    Eigen::VectorXi dcNodesVec = bus_dc_new.col(0).cast<int>();
+
+    std::vector<size_t> idx_dc, idx_ac;
+    idx_dc.reserve(numBuses_dc);
+    for (int i = 0; i < dcNodesVec.size(); ++i)
+        idx_dc.push_back(static_cast<size_t>(dcNodesVec(i) - 1));
+
+    for (size_t i = 0; i < static_cast<size_t>(N); ++i)
+        if (std::find(idx_dc.begin(), idx_dc.end(), i) == idx_dc.end())
+            idx_ac.push_back(i);
+
+    // ----------------------------------------------------------
+    // 7.  PER-NODE POWER MAGNITUDES
+    // ----------------------------------------------------------
+
+    Eigen::VectorXd loadPower = Eigen::VectorXd::Zero(N);
+    {
+        Eigen::ArrayXd lmag = (bus_ac_new.col(2).array().square()
+            + bus_ac_new.col(3).array().square()).sqrt();
+        for (size_t k = 0; k < idx_ac.size(); ++k)
+            loadPower(idx_ac[k]) = lmag(idx_ac[k]);
+    }
+
+    Eigen::VectorXd genPower = Eigen::VectorXd::Zero(N);
+    {
+        Eigen::ArrayXd gmag = (gen_ac_new.col(1).array().square()
+            + gen_ac_new.col(2).array().square()).sqrt();
+        for (int i = 0; i < numGens; ++i)
+        {
+            size_t idx = static_cast<size_t>(gen_ac_new(i, 0) - 1);
+            genPower(idx) = gmag(i);
+        }
+    }
+
+    // ----------------------------------------------------------
+    // 8.  VOLTAGE LABELS
+    // ----------------------------------------------------------
+
+    std::vector<int> orig_idx_ac(numBuses_ac), orig_idx_dc(numBuses_dc);
+    for (int i = 0; i < numBuses_ac; ++i)
+        orig_idx_ac[i] = static_cast<int>(d.bus_entire_ac(i, 0));
+    for (int i = 0; i < numBuses_dc; ++i)
+        orig_idx_dc[i] = static_cast<int>(d.bus_dc(i, 0));
+
+    std::unordered_map<int, int> acNodeToRow, dcNodeToRow;
+    for (int i = 0; i < acNodesVec.size(); ++i) acNodeToRow[acNodesVec(i)] = i;
+    for (int i = 0; i < dcNodesVec.size(); ++i) dcNodeToRow[dcNodesVec(i)] = i;
+
+    Eigen::VectorXd voltMag_ac = Eigen::VectorXd::Zero(N);
+    {
+        int row = 0;
+        for (int ng = 0; ng < d.ngrids; ++ng)
+            for (int i = 0; i < d.nbuses_ac[ng]; ++i)
+                voltMag_ac(row++) = std::sqrt(d.vn2_ac_k[ng](i));
+    }
+
+    Eigen::VectorXd voltMag_dc = Eigen::VectorXd::Zero(N);
+    for (int i = 0; i < numBuses_dc; ++i)
+    {
+        size_t gi = static_cast<size_t>(dcNodesVec(i) - 1);
+        if (gi < static_cast<size_t>(N))
+            voltMag_dc(gi) = std::sqrt(d.vn2_dc_k(i));
+    }
+
+    std::vector<double> voltLabel(N, 0.0);
+    for (int i = 0; i < N; ++i)
+    {
+        int node = allNodes[i];
+        if (acNodeToRow.count(node))
+            voltLabel[i] = voltMag_ac(acNodeToRow[node]);
+        else if (dcNodeToRow.count(node))
+            voltLabel[i] = voltMag_dc(dcNodeToRow[node]);
+    }
+
+    // ----------------------------------------------------------
+    // 9.  PER-EDGE POWER
+    // ----------------------------------------------------------
+
+    Eigen::Array<bool, Eigen::Dynamic, 1> isAcNode(N), isDcNode(N);
+    isAcNode.setConstant(false);
+    isDcNode.setConstant(false);
+    for (int i = 0; i < acNodesVec.size(); ++i) isAcNode(acNodesVec(i) - 1) = true;
+    for (int i = 0; i < dcNodesVec.size(); ++i) isDcNode(dcNodesVec(i) - 1) = true;
+
+    std::vector<double> edgePower(edges.size(), 0.0);
+
+    for (size_t k = 0; k < edges.size(); ++k)
+    {
+        auto [u, v] = edges[k];
+        int bu = (int)u + 1, bv = (int)v + 1;
+
+        if (isAcNode(u) && isAcNode(v))
+        {
+            for (int row = 0; row < branch_ac_new.rows(); ++row)
+            {
+                int fi = (int)branch_ac_new(row, 0);
+                int ti = (int)branch_ac_new(row, 1);
+                if (!((fi == bu && ti == bv) || (fi == bv && ti == bu))) continue;
+
+                int i = (int)d.branch_entire_ac(row, 0);
+                int j = (int)d.branch_entire_ac(row, 1);
+                int ng = (int)d.branch_entire_ac(row, d.branch_entire_ac.cols() - 1);
+                double P = d.pij_ac_k[ng - 1](i - 1, j - 1);
+                double Q = d.qij_ac_k[ng - 1](i - 1, j - 1);
+                edgePower[k] = std::hypot(P, Q) * d.baseMVA_ac;
+                break;
+            }
+        }
+        else if (isDcNode(u) && isDcNode(v))
+        {
+            for (int row = 0; row < branch_dc_new.rows(); ++row)
+            {
+                int fi = (int)branch_dc_new(row, 0);
+                int ti = (int)branch_dc_new(row, 1);
+                if (!((fi == bu && ti == bv) || (fi == bv && ti == bu))) continue;
+
+                int f = (int)d.branch_dc(row, 0);
+                int h = (int)d.branch_dc(row, 1);
+                edgePower[k] = std::abs(d.pij_dc_k(f - 1, h - 1)
+                    * d.baseMW_dc * d.pol_dc);
+                break;
+            }
+        }
+        else
+        {
+            for (int i = 0; i < d.nconvs_dc; ++i)
+            {
+                int f = (int)conv_dc_new(i, 0);
+                int t = (int)conv_dc_new(i, 1);
+                if (!((f == bu && t == bv) || (f == bv && t == bu))) continue;
+
+                edgePower[k] = std::hypot(d.ps_dc_k[i] * d.baseMW_dc,
+                    d.qs_dc_k[i] * d.baseMW_dc);
+                break;
+            }
+        }
+    }
+
+    const double minPower = *std::min_element(edgePower.begin(), edgePower.end());
+    const double maxPower = *std::max_element(edgePower.begin(), edgePower.end());
+
+    // Convert Eigen vectors to std::vector for clean lambda capture
+    std::vector<double> loadPow_v(loadPower.data(), loadPower.data() + N);
+    std::vector<double> genPow_v(genPower.data(), genPower.data() + N);
+
+    // ----------------------------------------------------------
+    // 10.  REGISTER DRAW TAB  (lambda runs every frame)
+    // ----------------------------------------------------------
+
+    add_tab("AC/DC OPF", [=]()
+        {
+            constexpr float CB_W = 65.0f;
+            constexpr float LG_W = 170.0f;
+            const     float height = ImGui::GetContentRegionAvail().y - 4.0f;
+            const     float netW = ImGui::GetContentRegionAvail().x
+                - CB_W - LG_W - 18.0f;
+
+            // ---- A) COLORBAR ----
+            ImGui::BeginChild("##opf_cb", ImVec2(CB_W, height), false);
+            {
+                ImDrawList* dl = ImGui::GetWindowDrawList();
+                ImVec2      pos = ImGui::GetCursorScreenPos();
+
+                const float STRIP_W = 22.0f;
+                const float STRIP_H = height - 55.0f;
+                constexpr int NSEG = 128;
+
+                for (int i = 0; i < NSEG; ++i)
+                {
+                    float t = 1.0f - static_cast<float>(i) / (NSEG - 1);
+                    auto  rgb = oranges_colormap(t);
+                    ImU32 col = IM_COL32((int)(rgb[0] * 255),
+                        (int)(rgb[1] * 255),
+                        (int)(rgb[2] * 255), 255);
+                    float y0 = pos.y + i * (STRIP_H / NSEG);
+                    float y1 = pos.y + (i + 1) * (STRIP_H / NSEG);
+                    dl->AddRectFilled({ pos.x + 8, y0 },
+                        { pos.x + 8 + STRIP_W, y1 }, col);
+                }
+                dl->AddRect({ pos.x + 8,          pos.y },
+                    { pos.x + 8 + STRIP_W, pos.y + STRIP_H },
+                    IM_COL32(100, 100, 100, 255));
+
+                char lbl[32];
+                snprintf(lbl, 32, "%.1f", maxPower);
+                ImGui::SetCursorScreenPos({ pos.x + 32, pos.y });
+                ImGui::TextUnformatted(lbl);
+
+                snprintf(lbl, 32, "%.1f", (maxPower + minPower) * 0.5);
+                ImGui::SetCursorScreenPos({ pos.x + 32, pos.y + STRIP_H * 0.5f - 7 });
+                ImGui::TextUnformatted(lbl);
+
+                snprintf(lbl, 32, "%.1f", minPower);
+                ImGui::SetCursorScreenPos({ pos.x + 32, pos.y + STRIP_H - 15 });
+                ImGui::TextUnformatted(lbl);
+
+                ImGui::SetCursorScreenPos({ pos.x + 4, pos.y + STRIP_H + 6 });
+                ImGui::TextUnformatted("Branch");
+                ImGui::SetCursorScreenPos({ pos.x + 4, pos.y + STRIP_H + 22 });
+                ImGui::TextUnformatted("(MW)");
+            }
+            ImGui::EndChild();
+
+            ImGui::SameLine(0, 4);
+
+            // ---- B) NETWORK PLOT ----
+            ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(6, 6));
+            if (ImPlot::BeginPlot("##opf_net",
+                ImVec2(netW, height),
+                ImPlotFlags_Equal |
+                ImPlotFlags_NoLegend |
+                ImPlotFlags_NoMenus |
+                ImPlotFlags_NoTitle))
+            {
+                ImPlot::SetupAxes(nullptr, nullptr,
+                    ImPlotAxisFlags_NoDecorations,
+                    ImPlotAxisFlags_NoDecorations);
+
+                // Edges
+                for (size_t k = 0; k < edges.size(); ++k)
+                {
+                    auto [u, v] = edges[k];
+                    float t_n = static_cast<float>(
+                        (edgePower[k] - minPower) / (maxPower - minPower + 1e-6));
+                    auto rgb = oranges_colormap(t_n);
+                    ImPlot::SetNextLineStyle(
+                        ImVec4(rgb[0], rgb[1], rgb[2], 1.0f), 2.0f);
+
+                    double ex[2] = { xs[u], xs[v] };
+                    double ey[2] = { ys[u], ys[v] };
+                    ImPlot::PlotLine("##e", ex, ey, 2);
+                }
+
+                // AC nodes
+                for (size_t idx : idx_ac)
+                {
+                    double px = xs[idx], py = ys[idx];
+
+                    auto sz = [](double mw) -> float {
+                        return static_cast<float>(
+                            std::min(std::max(4.0 + mw * 0.012, 4.0), 18.0));
+                        };
+
+                    float lsz = sz(loadPow_v[idx]);
+                    float gsz = sz(genPow_v[idx]);
+                    bool  hasGen = genPow_v[idx] > 0.0;
+
+                    if (hasGen && gsz >= lsz)
+                    {
+                        ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, gsz,
+                            ImVec4(0.01f, 0.5f, 0.5f, 1.f), IMPLOT_AUTO,
+                            ImVec4(0.01f, 0.5f, 0.5f, 1.f));
+                        ImPlot::PlotScatter("##gen", &px, &py, 1);
+
+                        ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, lsz,
+                            ImVec4(0.9f, 0.01f, 0.01f, 1.f), IMPLOT_AUTO,
+                            ImVec4(0.9f, 0.01f, 0.01f, 1.f));
+                        ImPlot::PlotScatter("##load", &px, &py, 1);
+                    }
+                    else
+                    {
+                        ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, lsz,
+                            ImVec4(0.9f, 0.01f, 0.01f, 1.f), IMPLOT_AUTO,
+                            ImVec4(0.9f, 0.01f, 0.01f, 1.f));
+                        ImPlot::PlotScatter("##load", &px, &py, 1);
+
+                        if (hasGen)
+                        {
+                            ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, gsz,
+                                ImVec4(0.01f, 0.5f, 0.5f, 1.f), IMPLOT_AUTO,
+                                ImVec4(0.01f, 0.5f, 0.5f, 1.f));
+                            ImPlot::PlotScatter("##gen", &px, &py, 1);
+                        }
+                    }
+                }
+
+                // DC nodes
+                for (size_t idx : idx_dc)
+                {
+                    double px = xs[idx], py = ys[idx];
+                    ImPlot::SetNextMarkerStyle(ImPlotMarker_Up, 10.0f,
+                        ImVec4(0.1f, 0.1f, 0.8f, 1.f), IMPLOT_AUTO,
+                        ImVec4(0.1f, 0.1f, 0.8f, 1.f));
+                    ImPlot::PlotScatter("##dc", &px, &py, 1);
+                }
+
+                // Labels
+                for (int i = 0; i < N; ++i)
+                {
+                    int node = allNodes[i];
+
+                    std::string numLbl;
+                    if (acNodeToRow.count(node))
+                        numLbl = "#" + std::to_string(orig_idx_ac[acNodeToRow.at(node)]);
+                    else if (dcNodeToRow.count(node))
+                        numLbl = "#" + std::to_string(orig_idx_dc[dcNodeToRow.at(node)]);
+
+                    ImPlot::PlotText(numLbl.c_str(), xs[i], ys[i], ImVec2(0, -14));
+
+                    std::ostringstream oss;
+                    oss << std::fixed << std::setprecision(3) << voltLabel[i] << "pu";
+                    ImPlot::PlotText(oss.str().c_str(), xs[i], ys[i], ImVec2(0, 10));
+                }
+
+                ImPlot::EndPlot();
+            }
+            ImPlot::PopStyleVar();
+
+            ImGui::SameLine(0, 4);
+
+            // ---- C) LEGEND ----
+            ImGui::BeginChild("##opf_lg", ImVec2(LG_W, height), true);
+            {
+                ImGui::Spacing();
+                ImGui::TextUnformatted("  Legend");
+                ImGui::Separator();
+                ImGui::Spacing();
+
+                ImDrawList* dl = ImGui::GetWindowDrawList();
+
+                auto circle_item = [&](ImVec4 col, const char* label)
+                    {
+                        ImVec2 p = ImGui::GetCursorScreenPos();
+                        dl->AddCircleFilled({ p.x + 10, p.y + 9 }, 8,
+                            IM_COL32((int)(col.x * 255), (int)(col.y * 255),
+                                (int)(col.z * 255), 255));
+                        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 24);
+                        ImGui::TextUnformatted(label);
+                    };
+
+                {
+                    ImVec2 p = ImGui::GetCursorScreenPos();
+                    auto mid = oranges_colormap(0.6f);
+                    dl->AddLine({ p.x + 2,p.y + 9 }, { p.x + 22,p.y + 9 },
+                        IM_COL32((int)(mid[0] * 255), (int)(mid[1] * 255),
+                            (int)(mid[2] * 255), 255), 3.0f);
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 26);
+                    ImGui::TextUnformatted("Branch Lines");
+                }
+                ImGui::Spacing();
+                circle_item({ 0.9f,0.01f,0.01f,1.f }, "AC Loads");
+                ImGui::Spacing();
+                circle_item({ 0.01f,0.5f,0.5f,1.f }, "AC Generators");
+                ImGui::Spacing();
+                {
+                    ImVec2 p = ImGui::GetCursorScreenPos();
+                    dl->AddTriangleFilled({ p.x + 10,p.y + 1 },
+                        { p.x + 2, p.y + 17 },
+                        { p.x + 18,p.y + 17 },
+                        IM_COL32(25, 25, 200, 255));
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 24);
+                    ImGui::TextUnformatted("VSC Converters");
+                }
+            }
+            ImGui::EndChild();
         });
 }

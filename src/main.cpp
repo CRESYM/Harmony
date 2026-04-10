@@ -26,13 +26,13 @@ int main() {
 	//example_PV_plant();
 	//example_MMC();
 	// example_OHL();
-	// example_cable();
+	example_cable();
 	//example_transformer();
 	// example_generator();
 	//example_point2point_case();
 
 	// Solver examples
-	//example_OPF();
+	example_OPF();
 	//example_OPF_1();
 	//example_OPF_csv();
 	//example_OPF_csv_1();
@@ -40,7 +40,7 @@ int main() {
 
 
 	//example_DQsym_math_operations();
-	example_DQsym_DSSS2();
+	//example_DQsym_DSSS2();
     //example_DQsym_RLC();
 	//example_DQsym_Simple_MMC();
 	 
