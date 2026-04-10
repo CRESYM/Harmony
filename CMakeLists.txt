@@ -11,9 +11,8 @@ project(Harmony)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find Eigen3 library on local system and include directories.
+# Find Eigen3 library on local system.
 find_package(Eigen3 REQUIRED)
-include_directories("${EIGEN3_INCLUDE_DIR}")
 
 # Find symengine on local system and include directories.
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)   #symengine requires this
@@ -332,10 +331,11 @@ if (MSVC)
 endif()
 
 # Specify libraries that need to be linked to the harmony executable
-# Note that Eigen doesn't need to be linked because it's a header-only lib
+# Although Eigen is a header-only lib, this will setup the include directories 
 target_link_libraries(
     Harmony
     ${SYMENGINE_LIBRARIES}
+    Eigen3::Eigen
 )
 
 # Configure Gurobi
