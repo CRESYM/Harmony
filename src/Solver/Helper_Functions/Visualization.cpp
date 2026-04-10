@@ -1,5 +1,11 @@
 ﻿#include "Visualization.h"
 
+// stb_image_write — single-header PNG/BMP writer (no external lib required).
+// Drop stb_image_write.h into your source tree from https://github.com/nothings/stb
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+
 // ============================================================
 // INTERNAL STATE
 // ============================================================
@@ -34,6 +40,54 @@ namespace {
     } g_guard;
 
     std::once_flag g_start_flag;  // guarantees ensure_running fires exactly once
+
+    // ----------------------------------------------------------
+    // SAVE STATE
+    // Set g_pending_save to a filename to trigger a PNG capture
+    // on the next rendered frame (before buffer swap).
+    // ----------------------------------------------------------
+    std::string g_pending_save;   // guarded by g_mutex when set externally
+
+    // Sanitise a string for use as a filename (replace problematic chars).
+    static std::string sanitise_filename(const std::string& s)
+    {
+        std::string out = s;
+        for (char& c : out)
+            if (c == ' ' || c == '/' || c == '\\' || c == ':' || c == '*')
+                c = '_';
+        return out;
+    }
+
+    // Capture the current OpenGL back-buffer and write to a PNG file.
+    // Must be called AFTER ImGui render draw data but BEFORE glfwSwapBuffers.
+    static void save_framebuffer(const std::string& path)
+    {
+        int w = 0, h = 0;
+        glfwGetFramebufferSize(g_window, &w, &h);
+        if (w == 0 || h == 0) return;
+
+        std::vector<uint8_t> buf(static_cast<size_t>(w * h * 3));
+        glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, buf.data());
+
+        // OpenGL origin is bottom-left; PNG expects top-left — flip rows.
+        const size_t stride = static_cast<size_t>(w * 3);
+        std::vector<uint8_t> tmp(stride);
+        for (int y = 0; y < h / 2; ++y)
+        {
+            uint8_t* top = buf.data() + y * stride;
+            uint8_t* bot = buf.data() + (h - 1 - y) * stride;
+            std::copy(top, top + stride, tmp.data());
+            std::copy(bot, bot + stride, top);
+            std::copy(tmp.begin(), tmp.end(), bot);
+        }
+
+        const std::string safe = sanitise_filename(path);
+        if (stbi_write_png(safe.c_str(), w, h, 3, buf.data(),
+            static_cast<int>(stride)))
+            std::cout << "[viz] Saved: " << safe << '\n';
+        else
+            std::cerr << "[viz] PNG write failed: " << safe << '\n';
+    }
 
     // ----------------------------------------------------------
     // ORANGES COLORMAP  (shared by viz_opf)
@@ -226,6 +280,32 @@ static void gui_loop()
             {
                 if (ImGui::BeginTabItem(tab.title.c_str()))
                 {
+                    // ---- Save button — right-aligned in the tab's toolbar ----
+                    {
+                        constexpr float BTN_W = 95.0f;
+                        constexpr float BTN_H = 18.0f;
+                        const float     avail = ImGui::GetContentRegionAvail().x;
+                        const float     cursor = ImGui::GetCursorPosX();
+
+                        ImGui::SameLine(cursor + avail - BTN_W);
+                        ImGui::PushStyleColor(ImGuiCol_Button,
+                            ImVec4(0.18f, 0.42f, 0.18f, 1.f));
+                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                            ImVec4(0.25f, 0.58f, 0.25f, 1.f));
+                        ImGui::PushStyleColor(ImGuiCol_ButtonActive,
+                            ImVec4(0.12f, 0.30f, 0.12f, 1.f));
+
+                        if (ImGui::Button((const char*)u8"💾 Save PNG", ImVec2(BTN_W, BTN_H)))
+                        {
+                            // Schedule capture — executed after this frame's
+                            // render call but before SwapBuffers.
+                            std::lock_guard<std::mutex> lk(g_mutex);
+                            g_pending_save = tab.title + ".png";
+                        }
+                        ImGui::PopStyleColor(3);
+                    }
+
+                    ImGui::Separator();
                     tab.draw();
                     ImGui::EndTabItem();
                 }
@@ -244,6 +324,19 @@ static void gui_loop()
         glClear(GL_COLOR_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        // Capture the back-buffer BEFORE the swap so glReadPixels
+        // sees the fully-rendered frame.
+        {
+            std::string pending;
+            {
+                std::lock_guard<std::mutex> lk(g_mutex);
+                std::swap(pending, g_pending_save);
+            }
+            if (!pending.empty())
+                save_framebuffer(pending);
+        }
+
         glfwSwapBuffers(g_window);
     }
 
@@ -302,6 +395,15 @@ void visualization_wait()
 {
     if (g_guiThread.joinable())
         g_guiThread.join();
+}
+
+/// Schedule a PNG capture of the named tab on the next rendered frame.
+/// The file is written as "<tab_title>.png" in the working directory.
+/// Thread-safe: can be called from any thread.
+void visualization_save_tab(const std::string& tab_title)
+{
+    std::lock_guard<std::mutex> lk(g_mutex);
+    g_pending_save = tab_title + ".png";
 }
 
 /// Public interface used by external modules (e.g. viz_opf).

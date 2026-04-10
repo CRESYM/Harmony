@@ -15,6 +15,11 @@ bool visualization_is_running();
 /// exiting while the GUI is still open.
 void visualization_wait();
 
+/// Schedule a PNG capture of the named tab on the next rendered frame.
+/// Written to "<tab_title>.png" in the working directory.
+/// Thread-safe — can be called from any thread at any time.
+void visualization_save_tab(const std::string& tab_title);
+
 // ============================================================
 // EXTEND — register a custom draw tab from external modules
 // ============================================================

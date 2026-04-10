@@ -111,6 +111,7 @@ set(Solver_Helper_Functions_Header_Files
     src/Solver/Helper_Functions/Symbolic_functions.h
     src/Solver/Helper_Functions/Visualization.h
     src/Solver/Helper_Functions/Writer.h
+    src/Solver/Helper_Functions/stb_image_write.h
 )
 set(Control_Header_Files
     src/Control/Control_block.h
