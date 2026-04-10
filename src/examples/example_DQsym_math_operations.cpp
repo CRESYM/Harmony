@@ -139,7 +139,7 @@ void example_DQsym_math_operations()
 
 		cout << "Plotting...\n";
 
-		plot_abc_waveforms(res.t, res.Xabc, "dqn2abc Example");
+		plot_abc_waveforms_implot(res.t, res.Xabc, "dqn2abc Example");
 
 		cout << "Plot finished.\n";
 

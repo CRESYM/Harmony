@@ -127,5 +127,9 @@ void example_DQsym_RLC()
 
     std::cout << "Wrote DQsymRLC_abc_output.csv\n";
 
-    plot_abc_groups(time, XabcHist, "DQsym RLC outputs converted to abc");
+    plot_abc_groups_implot(time, XabcHist, "DQsym RLC outputs converted to abc");
+
+    cout << "Press Enter to continue...\n";
+    cin.get();
+	
 }

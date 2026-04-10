@@ -150,4 +150,7 @@ void example_point2point_case() {
     global_params["Z_base"] = global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"]; // Base impedance, can be adjusted as needed
 
     pf.make_OPF(&net, global_params, false, false, false, true);
+
+    cout << "Press Enter to continue...\n";
+    cin.get();
 }

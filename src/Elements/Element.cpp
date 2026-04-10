@@ -242,5 +242,5 @@ void Element::plotYParameters(double start_frequency, double end_frequency, int 
         }
     }
 
-    bode_plot(frequencies, magnitudes, phases, labels, "Y-Parameters of " + element_symbol);
+    bode_plot_implot(frequencies, magnitudes, phases, labels, "Y-Parameters of " + element_symbol);
 }

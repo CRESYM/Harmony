@@ -6,5 +6,6 @@
 #include "Differential_equations.h"
 #include "Visualization.h"
 #include "Writer.h"
+#include "viz_opf.h"
 
 #endif

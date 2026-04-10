@@ -96,7 +96,6 @@ set(Solver_State_Space_Model_Header_Files
     src/Solver/State_Space_Model/State_Space_Model.h
 )
 set(Solver_OPF_Header_Files
-    src/Solver/OPF/viz_opf.h
     src/Solver/OPF/Powerflow.h
 )
 set(Solver_DQsym_Header_Files
@@ -112,6 +111,7 @@ set(Solver_Helper_Functions_Header_Files
     src/Solver/Helper_Functions/Symbolic_functions.h
     src/Solver/Helper_Functions/Visualization.h
     src/Solver/Helper_Functions/Writer.h
+    src/Solver/Helper_Functions/viz_opf.h
 )
 set(Control_Header_Files
     src/Control/Control_block.h
@@ -193,7 +193,6 @@ set(Solver_Stability_Estimate_Source_Files
     src/Solver/Stability_Estimate/Stability_estimate.cpp
 )
 set(Solver_OPF_Source_Files
-    src/Solver/OPF/viz_opf.cpp
     src/Solver/OPF/Powerflow_data.cpp
     src/Solver/OPF/Powerflow_network_params.cpp
     src/Solver/OPF/Powerflow_solver.cpp
@@ -207,6 +206,7 @@ set(Solver_Helper_Functions_Source_Files
     src/Solver/Helper_Functions/Symbolic_functions.cpp
     src/Solver/Helper_Functions/Visualization.cpp
     src/Solver/Helper_Functions/Writer.cpp
+    src/Solver/Helper_Functions/viz_opf.cpp
 )
 set(Control_Source_Files
     src/Control/Control_block.cpp
