@@ -178,40 +178,6 @@ else()
 
 endif()
 
-
-# Set Matplot++ path 
-set(MATPLOT_PATH "" CACHE PATH "Path to Matplot++ installation")
-if(NOT MATPLOT_PATH)
-    # User did not provide a path for the Matplot installation
-    message(WARNING 
-        "Matplot++ path not specified. The project may fail to link.\n"
-        "To fix this, provide the Matplot++ installation directory via CMake:\n"
-        "  cmake -DMATPLOT_PATH=\"/path/to/matplotplusplus\" ..\n\n"
-        "Common installation hints:\n"
-        "  - Windows (msi): C:\Program Files\Matplot++\n"
-        "  - macOS (brew):    /opt/homebrew/opt/matplotplusplus\n"
-        "  - Linux (manual):  /usr/local/include/matplot"
-    )
-elseif(NOT EXISTS "${MATPLOT_PATH}")
-    # Path was provided but is invalid
-    message(FATAL_ERROR 
-        " Invalid MATPLOT_PATH: \"${MATPLOT_PATH}\"\n"
-        " The directory does not exist. Please check for typos or ensure Matplot++ is correctly installed."
-    )
-else()
-    message(STATUS "Found Matplot++ in: ${MATPLOT_PATH}")
-
-    # Matplot supports CMake. We will use Matplot++Config.cmake contained in MATPLOT_PATH to configure the package
-    list(APPEND CMAKE_PREFIX_PATH "${MATPLOT_PATH}")
-    find_package(Matplot++ REQUIRED)
-    # Add Matplot++ header files (not needed due to cmake)
-    #include_directories("${MATPLOT_PATH}/include")
-    # Link the library
-    target_link_libraries(testharmony Matplot++::matplot)
-endif()
-
-
-
 # Specify the output directory where the test executable will be placed
 set_target_properties(testharmony PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build
