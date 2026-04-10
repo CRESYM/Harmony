@@ -324,10 +324,7 @@ void plot_abc_waveforms(const std::vector<double>& t,
 #endif
     std::streambuf* old_cerr = std::cerr.rdbuf(null_stream.rdbuf());
 
-    auto f = figure(true);
-    f->size(1400, 900);
-    f->name(title);
-    hold(on);
+    
 
     std::vector<double> xa(t.size()), xb(t.size()), xc(t.size());
     for (size_t i = 0; i < t.size(); ++i) {
@@ -335,6 +332,11 @@ void plot_abc_waveforms(const std::vector<double>& t,
         xb[i] = Xabc(static_cast<int>(i), 1);
         xc[i] = Xabc(static_cast<int>(i), 2);
     }
+
+    auto f = figure(true);
+    f->size(1400, 900);
+    f->name(title);
+    hold(on);
 
     auto p1 = plot(t, xa);
     p1->display_name("xa");

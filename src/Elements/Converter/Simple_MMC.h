@@ -11,85 +11,56 @@ class Simple_MMC : public Converter
 {
 
 public:
-    Simple_MMC();
+    // Constructor 
+    Simple_MMC(const std::string& symbol, const std::string& location,
+        double omega, double activePower, double reactivePower,
+        double angle, double acVoltage, double Pdc, double dcVoltage,
+        double armInductance, double armResistance, double armCapacitance,
+        int numSubmodules, double reactorInductance, double reactorResistance);
 
-    void reset();
+    // Constructor to initialize MMC with the converter_params (from init_MMC)
+    Simple_MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params);
 
-    void setSystemMatrices(const MatrixXcd& Ad,
-        const MatrixXcd& Bd,
-        const MatrixXcd& Cd,
-        const MatrixXcd& Dd);
+    //Simple_MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params, const std::vector<double>& controller_params);
 
-    void setSwitchData(const VectorXd& swOnRes,
-        const VectorXd& swOffRes,
-        const VectorXi& swType);
+    //Simple_MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params,
+    //    const std::vector<double>& controller_params, const std::vector<double>& filter_params);
 
-    void setParameters(double dt,
-        double f0,
-        double C,
-        Eigen::Index nKeepMMC = 5,
-        Eigen::Index nArm = 9);
 
-    void setInitialState(const VectorXcd& x0) { initial_state = x0; };
-
-    /*StepResult step(const MatrixXcd& u1,
-        const MatrixXcd& u2,
-        const VectorXi& brkVec);*/
-
-    const MatrixXcd& getLastVoutUp() const { return VoutUpForMMC_;};
-    const MatrixXcd& getLastVoutLow() const { return VoutLowForMMC_; };
-
-    const MatrixXcd& getUpperControlCoeffs() const { return Uup_; };
-    const MatrixXcd& getLowerControlCoeffs() const { return Ulow_; };
-
-private:
-    
-    MatrixXcd makeUpperControlCoeffs(Eigen::Index nCols) const;
-    MatrixXcd makeLowerControlCoeffs(Eigen::Index nCols) const;
-    MatrixXcd truncateHarmonics(const MatrixXcd& X, Eigen::Index nColsToKeep) const;
-
+    virtual VectorXd simulateTimeStep(const Eigen::VectorXd& initial_state, double dt) override;
 
 private:
 	// System matrices already defined in Converter class as: A_matrix, B_matrix, C_matrix, D_matrix
 
-    // Switch data
-    VectorXd swOnRes_;
-    VectorXd swOffRes_;
-    VectorXi swType_;
-
+    
     // Initial state
-    VectorXcd xo_;
+    VectorXcd x0;
 
-    // Solver / model parameters
-    double dt_;
-    double f0_;
-    double w_;
-    double C_;
 
-    Eigen::Index nKeepMMC_;
-    Eigen::Index nArm_;
+    double L_arm;    // Arm inductance [H]
+    double R_arm;    // Arm resistance
+    double C_arm;    // Capacitance per submodule [F]
+    int N;           // Number of submodules per arm
 
-    // DQ solver
-    DQsym dq_;
 
-    // Internal control coefficient matrices
-    MatrixXcd Uup_;
-    MatrixXcd Ulow_;
+    // State variables
+    int number_of_states = 6;
+   
+    //// Internal control coefficient matrices
+    //MatrixXcd Uup_;
+    //MatrixXcd Ulow_;
 
-    // Internal arm integrator memory
-    MatrixXcd ZupOld_;
-    MatrixXcd XupOld_;
-    MatrixXcd ZlowOld_;
-    MatrixXcd XlowOld_;
+    //// Internal arm integrator memory
+    //MatrixXcd ZupOld_;
+    //MatrixXcd XupOld_;
+    //MatrixXcd ZlowOld_;
+    //MatrixXcd XlowOld_;
 
-    // Feedback signals used as next MMC inputs
-    MatrixXcd VoutUpForMMC_;
-    MatrixXcd VoutLowForMMC_;
+    //// Feedback signals used as next MMC inputs
+    //MatrixXcd VoutUpForMMC_;
+    //MatrixXcd VoutLowForMMC_;
 
-    bool matricesConfigured_;
-    bool switchesConfigured_;
-    bool paramsConfigured_;
-    bool stateConfigured_;
+   
 };
 
 #endif // SIMPLE_MMC_H

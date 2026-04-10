@@ -75,6 +75,9 @@ public:
 		return P;
 	}
 
+	// Time-domain simulation
+	virtual VectorXd simulateTimeStep(const Eigen::VectorXd& initial_state, double dt) { VectorXd::Zero(1, 1); }
+
 	// System analysis
 	void checkStability() const;
 	void printEigenvalues() const;
