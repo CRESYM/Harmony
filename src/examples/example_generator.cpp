@@ -9,4 +9,7 @@ void example_generator() {
 	Generator* gen = new Generator("G1", "Bus1", 1, 345e3, values);
 
 	gen->plotYParameters(1.0, 100.0, 500);
+
+	cout << "Press Enter to continue...\n";
+	cin.get();
 }

@@ -346,4 +346,7 @@ void example_OPF_1() {
 
     pf.make_OPF(&net9bus, global_dict, false, false, false, false);
 
+    cout << "Press Enter to continue...\n";
+    cin.get();
+
 }

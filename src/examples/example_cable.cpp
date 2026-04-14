@@ -30,4 +30,7 @@ void example_cable() {
 	cout << "Y-parameters printed in file." << endl;
 	
 	cable->plotYParameters(0.1, 1e6, 1e4);
+
+	cout << "Press Enter to continue...\n";
+	cin.get();
 }

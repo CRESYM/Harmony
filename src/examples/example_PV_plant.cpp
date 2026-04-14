@@ -41,4 +41,8 @@ void example_PV_plant() {
 	//pv->writeFile(1, 1000, 1000);
 
 	pv->plotYParameters(1, 10000, 500);
+
+
+	cout << "Press Enter to continue...\n";
+	cin.get();
 }

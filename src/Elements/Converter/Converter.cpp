@@ -55,7 +55,7 @@ void Converter::plotEigenvalues() {
     for (int i = 0; i < es.eigenvalues().size(); ++i) {
         eigvals.push_back(es.eigenvalues()(i));
     }
-    plot_eigenvalues(eigvals, "Eigenvalues of Converter " + element_symbol);
+    plot_eigenvalues_implot(eigvals, "Eigenvalues of Converter " + element_symbol);
 }
 
 void Converter::plotParticipationFactors() {
@@ -84,14 +84,14 @@ void Converter::plotParticipationFactors() {
             state_labels.push_back("t_d_" + to_string(i + 1));
         }
 	}	
-	state_labels.push_back(u8"iΔ_d"); state_labels.push_back(u8"iΔ_q");
-	state_labels.push_back(u8"iΣ_z"); state_labels.push_back(u8"iΣ_d"); state_labels.push_back(u8"iΣ_q");
-	state_labels.push_back(u8"vΔ_d"); state_labels.push_back(u8"vΔ_q"); state_labels.push_back(u8"vΔ_{Zd}"); state_labels.push_back(u8"vΔ_{Zq}");
-	state_labels.push_back(u8"vΣ_d"); state_labels.push_back(u8"vΣ_q"); state_labels.push_back(u8"vΣ_z");
+	state_labels.push_back(u8"iDelta_d"); state_labels.push_back(u8"iDelta_q");
+	state_labels.push_back(u8"iSigma_z"); state_labels.push_back(u8"iSigma_d"); state_labels.push_back(u8"iSigma_q");
+	state_labels.push_back(u8"vDelta_d"); state_labels.push_back(u8"vDelta_q"); state_labels.push_back(u8"vDelta_{Zd}"); state_labels.push_back(u8"vDelta_{Zq}");
+	state_labels.push_back(u8"vSigma_d"); state_labels.push_back(u8"vSigma_q"); state_labels.push_back(u8"vSigma_z");
 
     std::vector<std::string> mode_labels;
     for (auto eigval : es.eigenvalues()) {
         mode_labels.push_back(std::to_string(eigval.real()) + "+" + std::to_string(eigval.imag()) + "j");
     }
-	plot_participation_factors_normalized(matrixToVector(P), state_labels, mode_labels, "Participation Factors of Converter " + element_symbol);
+	plot_participation_factors_implot(matrixToVector(P), state_labels, mode_labels, "Participation Factors of Converter " + element_symbol);
 }   

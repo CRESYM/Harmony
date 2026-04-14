@@ -1014,7 +1014,7 @@ void StabilityEstimate::bodeplotTF(string converter_name, string location, doubl
         frequency += gap; // increase frequency
     }
 
-    bode_plot(frequencies, magnitudes, phases, labels, "TF of power system cut on " + location + " side of " + converter_name);
+    bode_plot_implot(frequencies, magnitudes, phases, labels, "TF of power system cut on " + location + " side of " + converter_name);
 }
 
 /**
@@ -1062,5 +1062,5 @@ void StabilityEstimate::nyquistplotTF(string converter_name, string location, do
 
         frequency += gap; // increase frequency
     }
-    nyquist_plot(TF, labels, "Nyquist Plot of TF on " + location + " side of " + converter_name);
+    nyquist_plot_implot(TF, labels, "Nyquist Plot of TF on " + location + " side of " + converter_name);
 }

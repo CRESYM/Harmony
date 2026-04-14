@@ -11,4 +11,7 @@ void example_visuals() {
 
 
 	delete transmission_line;
+
+	cout << "Press Enter to continue...\n";
+	cin.get();
 }

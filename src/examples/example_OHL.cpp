@@ -25,4 +25,7 @@ void example_OHL() {
 	cout << "Y-parameters printed in file." << endl;
 
 	ohl->plotYParameters(10, 1e3, 100);
+
+	cout << "Press Enter to continue...\n";
+	cin.get();
 }

@@ -1,7 +1,7 @@
 #include "Examples.h"
 
 #include "../Solver/DQsym/DQsym.h"
-#include "../Solver/Helper_Functions/Visualization.h"
+#include "../Solver/Helper_Functions/Helper_Functions.h"
 
 void example_DQsym_math_operations()
 {
@@ -13,9 +13,17 @@ void example_DQsym_math_operations()
 	X << complex<double>(0,0), complex<double>(-0.5317,-0.3237), complex<double>(0,0), 
 		complex<double>(-0.0657, 0.1971), complex<double>(0,0), complex<double>(0.0576, 0.4674);
 
+	MatrixXcd X1 = MatrixXcd::Zero(3, 2);
+	X1 << complex<double>(0, 0), complex<double>(0, 0), complex<double>(0,0),
+		  complex<double>(0, 0), complex<double>(0.5, 0), complex<double>(0, 0);   //This is the wrong way to do the order of the input but for now it will work
+
+	MatrixXcd X2 = MatrixXcd::Zero(3, 2);
+	X2 << complex<double>(0, 0), complex<double>(10, 0), complex<double>(0, 0),
+		complex<double>(0, 0), complex<double>(0, 0), complex<double>(0, 0);
 	cout << "Input matrix X:" << endl;
 	cout << "X size: " << X.rows() << " x " << X.cols() << std::endl;
-	cout << X << endl;
+	cout << X1 << endl;
+	cout << X2 << endl;
 	cout << endl;
 
 	cout << "Addition test:" << endl;
@@ -31,7 +39,7 @@ void example_DQsym_math_operations()
 	cout << endl;
 
 	cout << "Multiplication test:" << endl;
-	MatrixXcd Z = dqSym.multiply(X, X);
+	MatrixXcd Z = dqSym.multiply(X1, X2);
 	std::cout << "Z size: " << Z.rows() << " x " << Z.cols() << std::endl;
 	std::cout << Z << std::endl;
 	cout << endl;
@@ -102,10 +110,9 @@ void example_DQsym_math_operations()
 		cout << endl;
 	}
 	
-
-	cout << "\n==========================================\n";
-	cout << "dqn2abc test\n";
-	cout << "==========================================\n";
+	//cout << "\n==========================================\n";
+	//cout << "dqn2abc test\n";
+	//cout << "==========================================\n";
 
 	try {
 		const double freq_hz = 50.0;
@@ -132,7 +139,7 @@ void example_DQsym_math_operations()
 
 		cout << "Plotting...\n";
 
-		plot_abc_waveforms(res.t, res.Xabc, "dqn2abc Example");
+		plot_abc_waveforms_implot(res.t, res.Xabc, "dqn2abc Example");
 
 		cout << "Plot finished.\n";
 

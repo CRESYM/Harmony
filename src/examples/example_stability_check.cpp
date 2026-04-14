@@ -160,11 +160,14 @@ void example_stability_check() {
 	cout << "Y1 at 1000 Hz: \n" << setprecision(10) << Y1 << endl;
 	cout << "Y2 at 1000 Hz: \n" << setprecision(10) << Y2 << endl;
 
-    //mmc2->plotYParameters(1, 1000, 1000);
+    mmc2->plotYParameters(1, 1000, 1000);
 
 	//stability->writeFileTF("MMC2", "DC", 10, 2000, 500);
-	//stability->bodeplotTF("MMC2", "DC", 0.1, 10000, 10000);
-	//stability->nyquistplotTF("MMC2", "DC", 10, 2000, 2000);
+	stability->bodeplotTF("MMC2", "DC", 0.1, 10000, 10000);
+	stability->nyquistplotTF("MMC2", "DC", 10, 2000, 2000);
 
     delete stability;
+
+    cout << "Press Enter to continue...\n";
+    cin.get();
 }

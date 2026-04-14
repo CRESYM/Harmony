@@ -61,6 +61,9 @@ using SymEngine::RealMPFR;
 #include <iomanip>
 #include <filesystem>
 #include <set>
+#include <mutex>
+#include <atomic>
+#include <deque>
 
 #include <cstdlib>
 
@@ -101,6 +104,13 @@ Eigen::MatrixXd map2dense(const Table& tbl,
     return M;
 }
 
+
+// Implot testing
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <implot.h>
+#include <GLFW/glfw3.h>
 
 #endif // CONSTANTS_H
 

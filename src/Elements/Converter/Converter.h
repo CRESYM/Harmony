@@ -75,6 +75,9 @@ public:
 		return P;
 	}
 
+	// Time-domain simulation
+	virtual VectorXd simulateTimeStep(const Eigen::VectorXd& initial_state, double dt) { return VectorXd::Zero(1, 1); }
+
 	// System analysis
 	void checkStability() const;
 	void printEigenvalues() const;
@@ -101,12 +104,14 @@ protected:
 	double t_delay;   // Time delay [s]
 
 	// System matrices
-	Eigen::MatrixXd A_matrix, B_matrix, C_matrix, D_matrix;
-	Eigen::MatrixXd Adelay, Bdelay, Cdelay, Ddelay; // Delay system matrices
+	MatrixXd A_matrix, B_matrix, C_matrix, D_matrix;
+	MatrixXd Adelay, Bdelay, Cdelay, Ddelay; // Delay system matrices
 	int pade_order = 2; // Order of Padé approximation for delays
-	Eigen::VectorXd equilibrium_state;
+	VectorXd equilibrium_state;
 	VectorXcd eigenvalues;
 	VectorXcd eigenvectors;
+
+	VectorXcd initial_state; // Initial state for time-domain simulations
 
 
 	std::map<std::string, Controller*> controls; // Map of existing controllers

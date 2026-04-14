@@ -1,6 +1,7 @@
 #include "Examples.h"
+
 #include "../Solver/DQsym/DQsym.h"
-#include "../Constants.h"
+#include "../Solver/Helper_Functions/Helper_Functions.h"
 
 void example_DQsym_RLC()
 {
@@ -60,7 +61,6 @@ void example_DQsym_RLC()
     const double f0 = 50.0;
     const double t0 = 0.0;
     const double tEnd = 0.5;
-    const double PI = 3.141592653589793238462643383279502884;
 
     const int N = static_cast<int>((tEnd - t0) / dt) + 1;
     const int nGroups = static_cast<int>(Cd.rows() / 3);
@@ -78,7 +78,7 @@ void example_DQsym_RLC()
     for (int k = 0; k < N; ++k)
     {
         const double t = t0 + k * dt;
-        const double theta = 2.0 * PI * f0 * t;
+        const double theta = 2.0 * M_PI * f0 * t;
         time[k] = t;
 
         Eigen::VectorXi brkVec(3);
@@ -104,86 +104,32 @@ void example_DQsym_RLC()
         }
     }
 
+    
+    std::vector<Eigen::MatrixXd> values;
+
+    values.push_back(brkHistory.cast<double>());
+
+    for (int g = 0; g < nGroups; ++g)
     {
-        std::ofstream f("DQsymRLC_abc_output.csv");
-        if (!f) {
-            std::cerr << "ERROR: cannot open DQsymRLC_abc_output.csv\n";
-            return;
-        }
-
-        f << std::setprecision(17);
-        f << "t,brk1,brk2,brk3";
-        for (int g = 0; g < nGroups; ++g) {
-            f << ",xa" << (g + 1)
-                << ",xb" << (g + 1)
-                << ",xc" << (g + 1);
-        }
-        f << "\n";
-
-        for (int k = 0; k < N; ++k) {
-            f << time[k] << ","
-                << brkHistory(k, 0) << ","
-                << brkHistory(k, 1) << ","
-                << brkHistory(k, 2);
-
-            for (int g = 0; g < nGroups; ++g) {
-                f << ","
-                    << XabcHist[g](k, 0) << ","
-                    << XabcHist[g](k, 1) << ","
-                    << XabcHist[g](k, 2);
-            }
-            f << "\n";
-        }
+        values.push_back(XabcHist[g]);
     }
+
+    std::vector<std::string> headers;
+    headers.push_back("brk");
+
+    for (int g = 0; g < nGroups; ++g)
+    {
+        headers.push_back("xa" + std::to_string(g + 1));
+    }
+
+    write_file(time, values, headers, "DQsymRLC_abc_output.csv");
+    
 
     std::cout << "Wrote DQsymRLC_abc_output.csv\n";
 
-    // Plot 3 groups per figure using CSV directly.
-    // This avoids the gnuplot warning about reading from '-' inside multiplot.
-    const int groupsPerFigure = 3;
-    const int nFigures = (nGroups + groupsPerFigure - 1) / groupsPerFigure;
+    plot_abc_groups_implot(time, XabcHist, "DQsym RLC outputs converted to abc");
 
-    for (int fig = 0; fig < nFigures; ++fig)
-    {
-        const int gStart = fig * groupsPerFigure;
-        const int gEnd = std::min(gStart + groupsPerFigure, nGroups);
-        const int rowsThisFigure = gEnd - gStart;
-
-        std::ostringstream gpName;
-        gpName << "plot_dsss2_abc_fig_" << (fig + 1) << ".gp";
-
-        std::ofstream gp(gpName.str());
-        if (!gp) {
-            std::cerr << "ERROR: cannot open " << gpName.str() << "\n";
-            continue;
-        }
-
-        gp << "set datafile separator ','\n";
-        gp << "set grid\n";
-        gp << "set key outside\n";
-        gp << "set xlabel 'Time (s)'\n";
-        gp << "set multiplot layout " << rowsThisFigure << ",1 title 'DQsym RLC outputs converted to abc (Figure " << (fig + 1) << ")'\n";
-
-        for (int g = gStart; g < gEnd; ++g)
-        {
-            const int colA = 5 + 3 * g;
-            const int colB = colA + 1;
-            const int colC = colA + 2;
-
-            gp << "set ylabel 'Group " << (g + 1) << "'\n";
-            gp << "plot 'dsss2_abc_output.csv' using 1:" << colA << " with lines title 'xa" << (g + 1) << "',\\\n";
-            gp << "     'dsss2_abc_output.csv' using 1:" << colB << " with lines title 'xb" << (g + 1) << "',\\\n";
-            gp << "     'dsss2_abc_output.csv' using 1:" << colC << " with lines title 'xc" << (g + 1) << "'\n";
-        }
-
-        gp << "unset multiplot\n";
-        gp.close();
-
-#ifdef _WIN32
-        std::string cmd = "start \"\" gnuplot -p \"" + gpName.str() + "\"";
-#else
-        std::string cmd = "gnuplot -p \"" + gpName.str() + "\" > /dev/null 2>&1 &";
-#endif
-        std::system(cmd.c_str());
-    }
+    cout << "Press Enter to continue...\n";
+    cin.get();
+	
 }
