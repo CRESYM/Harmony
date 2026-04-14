@@ -64,11 +64,8 @@ using SymEngine::RealMPFR;
 #include <mutex>
 #include <atomic>
 #include <deque>
-
 #include <cstdlib>
 
-#include<matplot/matplot.h>
-using namespace matplot;
 #include "gurobi_c++.h"
 
 using SymEngine::RCP;

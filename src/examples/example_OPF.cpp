@@ -227,7 +227,7 @@ void example_OPF() {
 	global_dict["DCbaseKV"] = 345.0; // Base voltage for DC, can be adjusted as needed
 	global_dict["Z_base"] = 1.0; // Base impedance, can be adjusted as needed
     
-	pf.make_OPF(&net, global_dict, true, true, true, true);
+	pf.make_OPF(&net, global_dict, true, false, true, false);
 
     cout << "Press Enter to continue...\n";
     cin.get();
