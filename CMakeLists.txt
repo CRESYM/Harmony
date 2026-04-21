@@ -100,6 +100,7 @@ set(Solver_OPF_Header_Files
 )
 set(Solver_DQsym_Header_Files
     src/Solver/DQsym/DQsym.h
+    src/Solver/DQsym/DQsymrun.h
 )
 set(Solver_Stability_Estimate_Header_Files
     src/Solver/Stability_Estimate/Stability_estimate.h
@@ -199,6 +200,7 @@ set(Solver_OPF_Source_Files
 )
 set(Solver_DQsym_Source_Files
     src/Solver/DQsym/DQsym.cpp
+    src/Solver/DQsym/DQsymrun.cpp
 )
 set(Solver_Helper_Functions_Source_Files
     src/Solver/Helper_Functions/Standard_functions.cpp

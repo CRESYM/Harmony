@@ -1,6 +1,5 @@
 #include "Simple_MMC.h"
 
-
 /**
  * @brief MMC constructor with explicit parameters.
  * @param symbol Element symbol/name.
@@ -16,269 +15,231 @@
  * @param numSubmodules Number of submodules.
  * @param reactorInductance Reactor inductance (H).
  * @param reactorResistance Reactor resistance (Ohm).
- * @param timeDelay Modulation time delay (s).
  */
+
+ // First constructor: explicit parameter version
 Simple_MMC::Simple_MMC(const std::string& symbol, const std::string& location,
     double omega, double activePower, double reactivePower,
     double angle, double acVoltage, double Pdc, double dcVoltage,
     double armInductance, double armResistance, double armCapacitance,
     int numSubmodules, double reactorInductance, double reactorResistance)
-    : Converter(symbol, location) // AC side - input pins; DC side - output pins
+    : Converter(symbol, location)
 {
-    omega_0 = omega; P = activePower; Q = reactivePower; theta = angle; V_m = acVoltage; V_dc = dcVoltage; P_dc = Pdc;
-    L_arm = armInductance; R_arm = armResistance; C_arm = armCapacitance;
-    N = numSubmodules; L_reactor = reactorInductance; R_reactor = reactorResistance; 
-    // Initialize active and reactive power limits for power flow calculations
+    omega_0 = omega;
+    P = activePower;
+    Q = reactivePower;
+    theta = angle;
+    V_m = acVoltage;
+    V_dc = dcVoltage;
+    P_dc = Pdc;
+
+    L_arm = armInductance;
+    R_arm = armResistance;
+    C_arm = armCapacitance;
+    N = numSubmodules;
+    L_reactor = reactorInductance;
+    R_reactor = reactorResistance;
+
     P_min = 0.5 * P;
     P_max = 1.5 * P;
     Q_min = -P;
     Q_max = P;
 
-    A_matrix = Eigen::MatrixXd::Zero(6, 6);
-    B_matrix = Eigen::MatrixXd::Zero(6, 12);
-    C_matrix = Eigen::MatrixXd::Zero(12, 6);
-    D_matrix = Eigen::MatrixXd::Zero(12, 12);
-
-
-	// State order: x = [ip_a ip_b ip_c in_a in_b in_c]^T
-	// iu_a, iu_b, iu_c are the currents in the upper arms of phases a, b, c
-	// il_a, il_b, il_c are the currents in the lower arms of phases a, b, c
-    // u = [vdp_a vdp_b vdp_c vdn_a vdn_b vdn_c vsp_a vsp_b vsp_c vsn_a vsn_b vsn_c]
-
-    // Form matrix A
-	double A11 = -(R_arm + R_reactor) / L_arm; // Diagonal entries for upper arm currents
-	double A12 = -(R_arm + R_reactor) / L_arm; // Coupling between upper and lower arm currents
-	double A14 = -R_reactor / L_arm; // Coupling between upper and lower arm currents via reactor
-    
-    A_matrix << A11, 0, 0, A14, 0, 0,
-                0, A11, 0, 0, A14, 0,
-                0, 0, A11, 0, 0, A14,
-                A14, 0, 0, A12, 0, 0,
-                0, A14, 0, 0, A12, 0,
-                0, 0, A14, 0, 0, A12;
-
-	// Form matrix B 
-    MatrixXd I3 = MatrixXd::Identity(3, 3);
-    MatrixXd Z3 = MatrixXd::Zero(3, 3);
-
-    // Each phase now has its own vdp and vdn input
-    MatrixXd bVdp = (1.0 / L_arm) * I3;   // affects ip_a, ip_b, ip_c
-    MatrixXd bVdn = -(1.0 / L_arm) * I3;  // affects in_a, in_b, in_c
-    MatrixXd bVsp = -(1.0 / L_arm) * I3;  // affects ip_a, ip_b, ip_c
-    MatrixXd bVsn = (1.0 / L_arm) * I3;   // affects in_a, in_b, in_c
-
-    B_matrix << bVdp, Z3, bVsp, Z3,
-        Z3, bVdn, Z3, bVsn;
-
-	// Form matrix C
-    MatrixXd C_ipin = MatrixXd::Identity(6, 6);
-    MatrixXd C_im(3, 6);
-    C_im << I3, I3;
-    MatrixXd C_vm = R_reactor * C_im;
-
-    C_matrix << C_ipin, C_im, C_vm;
-
+    equilibrium_state = Eigen::VectorXd::Zero(number_of_states);
     Y_matrix.resize(3, 3);
+
+    computeABCD();
 }
 
-/**
- * @brief Simple MMC constructor with converter parameter vector.
- * @param symbol Element symbol/name.
- * @param converter_params Vector of converter parameters.
- */
-Simple_MMC::Simple_MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params)
-    : Converter(symbol, location) // AC side - input pins; DC side - output pins 
+// Constructor from vector
+Simple_MMC::Simple_MMC(const std::string& symbol, const std::string& location,
+    const std::vector<double>& converter_params)
+    : Converter(symbol, location)
 {
-    omega_0 = converter_params[0]; P = converter_params[1]; Q = converter_params[2]; theta = converter_params[3];
-    V_m = converter_params[4]; P_dc = converter_params[5]; V_dc = converter_params[6];
-    L_arm = converter_params[7]; R_arm = converter_params[8]; C_arm = converter_params[9];
-    N = static_cast<int>(converter_params[10]); L_reactor = converter_params[11];
+    if (converter_params.size() < 13) {
+        throw std::invalid_argument("converter_params must contain at least 13 entries.");
+    }
+
+    omega_0 = converter_params[0];
+    P = converter_params[1];
+    Q = converter_params[2];
+    theta = converter_params[3];
+    V_m = converter_params[4];
+    P_dc = converter_params[5];
+    V_dc = converter_params[6];
+    L_arm = converter_params[7];
+    R_arm = converter_params[8];
+    C_arm = converter_params[9];
+    N = static_cast<int>(converter_params[10]);
+    L_reactor = converter_params[11];
     R_reactor = converter_params[12];
 
-    // Initialize active and reactive power limits for power flow calculations
     P_min = 0.5 * P;
     P_max = 1.5 * P;
     Q_min = -P;
     Q_max = P;
 
-    // Initialize equilibrium state vector
-    equilibrium_state = Eigen::VectorXd::Zero(6); // 6 dynamic states
+    equilibrium_state = Eigen::VectorXd::Zero(number_of_states);
+    Y_matrix.resize(3, 3);
 
+    computeABCD();
+}
+
+void Simple_MMC::computeABCD()
+{
     A_matrix = Eigen::MatrixXd::Zero(6, 6);
     B_matrix = Eigen::MatrixXd::Zero(6, 12);
     C_matrix = Eigen::MatrixXd::Zero(12, 6);
     D_matrix = Eigen::MatrixXd::Zero(12, 12);
 
-
     // State order: x = [ip_a ip_b ip_c in_a in_b in_c]^T
-    // iu_a, iu_b, iu_c are the currents in the upper arms of phases a, b, c
-    // il_a, il_b, il_c are the currents in the lower arms of phases a, b, c
-    // u = [vdp_a vdp_b vdp_c vdn_a vdn_b vdn_c vsp_a vsp_b vsp_c vsn_a vsn_b vsn_c]
+    // Inputs: u = [vdp_a vdp_b vdp_c vdn_a vdn_b vdn_c vsp_a vsp_b vsp_c vsn_a vsn_b vsn_c]
 
-    // Form matrix A
-    double A11 = -(R_arm + R_reactor) / L_arm; // Diagonal entries for upper arm currents
-    double A12 = -(R_arm + R_reactor) / L_arm; // Coupling between upper and lower arm currents
-    double A14 = -R_reactor / L_arm; // Coupling between upper and lower arm currents via reactor
+    const double A11 = -(R_arm + R_reactor) / L_arm;
+    const double A12 = -(R_arm + R_reactor) / L_arm;
+    const double A14 = -R_reactor / L_arm;
 
-    A_matrix << A11, 0, 0, A14, 0, 0,
-        0, A11, 0, 0, A14, 0,
-        0, 0, A11, 0, 0, A14,
-        A14, 0, 0, A12, 0, 0,
-        0, A14, 0, 0, A12, 0,
-        0, 0, A14, 0, 0, A12;
+    A_matrix << A11, 0.0, 0.0, A14, 0.0, 0.0,
+        0.0, A11, 0.0, 0.0, A14, 0.0,
+        0.0, 0.0, A11, 0.0, 0.0, A14,
+        A14, 0.0, 0.0, A12, 0.0, 0.0,
+        0.0, A14, 0.0, 0.0, A12, 0.0,
+        0.0, 0.0, A14, 0.0, 0.0, A12;
 
-    // Form matrix B 
-    MatrixXd I3 = MatrixXd::Identity(3, 3);
-    MatrixXd Z3 = MatrixXd::Zero(3, 3);
+    Eigen::MatrixXd I3 = Eigen::MatrixXd::Identity(3, 3);
+    Eigen::MatrixXd Z3 = Eigen::MatrixXd::Zero(3, 3);
 
-    // Each phase now has its own vdp and vdn input
-    MatrixXd bVdp = (1.0 / L_arm) * I3;   // affects ip_a, ip_b, ip_c
-    MatrixXd bVdn = -(1.0 / L_arm) * I3;  // affects in_a, in_b, in_c
-    MatrixXd bVsp = -(1.0 / L_arm) * I3;  // affects ip_a, ip_b, ip_c
-    MatrixXd bVsn = (1.0 / L_arm) * I3;   // affects in_a, in_b, in_c
+    Eigen::MatrixXd bVdp = (1.0 / L_arm) * I3;
+    Eigen::MatrixXd bVdn = -(1.0 / L_arm) * I3;
+    Eigen::MatrixXd bVsp = -(1.0 / L_arm) * I3;
+    Eigen::MatrixXd bVsn = (1.0 / L_arm) * I3;
 
     B_matrix << bVdp, Z3, bVsp, Z3,
         Z3, bVdn, Z3, bVsn;
 
-    // Form matrix C
-    MatrixXd C_ipin = MatrixXd::Identity(6, 6);
-    MatrixXd C_im(3, 6);
+    Eigen::MatrixXd C_ipin = Eigen::MatrixXd::Identity(6, 6);
+    Eigen::MatrixXd C_im(3, 6);
     C_im << I3, I3;
-    MatrixXd C_vm = R_reactor * C_im;
+    Eigen::MatrixXd C_vm = R_reactor * C_im;
 
-    C_matrix << C_ipin, C_im, C_vm;
+    C_matrix << C_ipin,
+        C_im,
+        C_vm;
 
-    Y_matrix.resize(3, 3);
-    //cout << "MMC initialized with " << number_of_states << " states." << endl;
-};
-
-
-VectorXd Simple_MMC::simulateTimeStep(const Eigen::VectorXd& initial_state, double dt)
-{
-    // Placeholder for the actual simulation logic
-    // This function should implement the time-stepping logic for the MMC based on the state-space model
-    // and the control inputs. The current implementation just returns a zero vector of appropriate size.
-    // In a complete implementation, this function would:
-    // 1. Compute control inputs based on the current state and reference signals.
-    // 2. Use the state-space matrices (A, B, C, D) to compute the next state and output.
-    // 3. Update any internal states or memory as needed for the next time step.
-    return VectorXd::Zero(6); // Return a zero vector of size equal to the number of states
+    D_matrix.setZero();
 }
 
-//MatrixXcd Simple_MMC::makeUpperControlCoeffs(Eigen::Index nCols) const
-//{
-//    if (nCols < 2) {
-//        throw std::invalid_argument("Upper control coefficient matrix needs at least 2 columns.");
-//    }
-//
-//    MatrixXcd A = MatrixXcd::Zero(3, nCols);
-//    MatrixXcd B = MatrixXcd::Zero(3, nCols);
-//
-//    A(0, 1) = complex<double>(-1.0, 0.0);
-//    B(2, 0) = complex<double>(1.0, 0.0);
-//
-//    return 0.5 * (A + B);
-//}
-//
-//MatrixXcd Simple_MMC::makeLowerControlCoeffs(Eigen::Index nCols) const
-//{
-//    if (nCols < 2) {
-//        throw std::invalid_argument("Lower control coefficient matrix needs at least 2 columns.");
-//    }
-//
-//    MatrixXcd A = MatrixXcd::Zero(3, nCols);
-//    MatrixXcd B = MatrixXcd::Zero(3, nCols);
-//
-//    A(0, 1) = complex<double>(1.0, 0.0);
-//    B(2, 0) = complex<double>(1.0, 0.0);
-//
-//    return 0.5 * (A + B);
-//}
-//
-//MatrixXcd Simple_MMC::truncateHarmonics(const MatrixXcd& X,
-//    Eigen::Index nColsToKeep) const
-//{
-//    if (nColsToKeep <= 0) {
-//        throw std::invalid_argument("nColsToKeep must be positive.");
-//    }
-//
-//    MatrixXcd Y = MatrixXcd::Zero(X.rows(), nColsToKeep);
-//    const Eigen::Index colsToCopy = std::min<Eigen::Index>(X.cols(), nColsToKeep);
-//    Y.leftCols(colsToCopy) = X.leftCols(colsToCopy);
-//
-//    return Y;
-//}
+// This function creates the control coefficient matrix U for the MMC arm control
+// based on the number of columns and the arm type (upper or lower).
+MatrixXcd Simple_MMC::makeArmControlCoeffs(int nCols, ArmType armType)
+{
+    if (nCols < 2) {
+        throw std::invalid_argument("Control coefficient matrix needs at least 2 columns.");
+    }
 
-//StepResult Simple_MMC::step(const MatrixXcd& u1,
-//    const MatrixXcd& u2,
-//    const VectorXi& brkVec)
-//{
-//
-//    if (brkVec.size() != swType_.size()) {
-//        throw std::invalid_argument("brkVec size must match switch vector size.");
-//    }
-//
-//    if (u1.rows() != 3 || u2.rows() != 3) {
-//        throw std::invalid_argument("u1 and u2 must have 3 rows.");
-//    }
-//
-//    if (u1.cols() != nKeepMMC_ || u2.cols() != nKeepMMC_) {
-//        throw std::invalid_argument("u1 and u2 column count must match nKeepMMC.");
-//    }
-//
-//    MatrixXcd u3 = VoutUpForMMC_;
-//    MatrixXcd u4 = VoutLowForMMC_;
-//
-//    MatrixXcd u = stack_u_4x_3xN(u1, u2, u3, u4);
-//
-//    MatrixXcd y = dq_.DSSS(
-//        A_matrix, B_matrix, C_matrix, D_matrix,
-//        swOnRes_, swOffRes_,
-//        swType_, brkVec,
-//        u, xo_,
-//        dt_, f0_);
-//
-//    if (y.rows() < 9 || y.cols() < nKeepMMC_) {
-//        throw std::runtime_error("MMC DSSS output has unexpected dimensions.");
-//    }
-//
-//    MatrixXcd Iup = y.block(3, 0, 3, nKeepMMC_);
-//    MatrixXcd Ilow = y.block(6, 0, 3, nKeepMMC_);
-//
-//    MatrixXcd ProdUp = dq_.multiply(Uup_, Iup);
-//    MatrixXcd ProdLow = dq_.multiply(Ulow_, Ilow);
-//
-//    ProdUp = truncateHarmonics(ProdUp, nArm_);
-//    ProdLow = truncateHarmonics(ProdLow, nArm_);
-//
-//    MatrixXcd XinUp = truncateHarmonics(ProdUp * (1.0 / C_), nArm_);
-//    MatrixXcd XinLow = truncateHarmonics(ProdLow * (1.0 / C_), nArm_);
-//
-//    MatrixXcd VcUp = dq_.integrate(ZupOld_, XupOld_, XinUp, dt_, w_);
-//    MatrixXcd VcLow = dq_.integrate(ZlowOld_, XlowOld_, XinLow, dt_, w_);
-//
-//    VcUp = truncateHarmonics(VcUp, nArm_);
-//    VcLow = truncateHarmonics(VcLow, nArm_);
-//
-//    ZupOld_ = VcUp;
-//    XupOld_ = XinUp;
-//    ZlowOld_ = VcLow;
-//    XlowOld_ = XinLow;
-//
-//    MatrixXcd VoutUpFull = dq_.multiply(VcUp, Uup_);
-//    MatrixXcd VoutLowFull = dq_.multiply(VcLow, Ulow_);
-//
-//    VoutUpForMMC_ = truncateHarmonics(VoutUpFull, nKeepMMC_);
-//    VoutLowForMMC_ = truncateHarmonics(VoutLowFull, nKeepMMC_);
-//
-//    StepResult result;
-//    result.y_mmc = y;
-//    result.i_up = Iup;
-//    result.i_low = Ilow;
-//    result.vc_up = VcUp;
-//    result.vc_low = VcLow;
-//    result.vout_up = VoutUpForMMC_;
-//    result.vout_low = VoutLowForMMC_;
-//
-//    return result;
-//}
+    MatrixXcd U = MatrixXcd::Zero(3, nCols);
+
+    U(0, 1) = std::complex<double>(
+        armType == ArmType::Upper ? -0.5 : 0.5, 0.0
+    );
+
+    U(2, 0) = std::complex<double>(0.5, 0.0);
+
+    return U;
+}
+
+
+
+// This function simulates one time step of the MMC dynamics given the time step size, arm capacitance, arm currents, and the number of harmonics to keep.
+// It returns the updated capacitor voltages and output voltages for both upper and lower arms.
+Simple_MMC::StepResult Simple_MMC::simulateTimeStep(  double Ts, double C, const MatrixXcd& Iup, const MatrixXcd& Ilow, int nArm, int nKeep)
+{
+    if (Ts <= 0.0) {
+        throw std::invalid_argument("Ts must be positive.");
+    }
+
+    if (C <= 0.0) {
+        throw std::invalid_argument("C must be positive.");
+    }
+
+    if (nArm <= 0) {
+        throw std::invalid_argument("nArm must be positive.");
+    }
+
+    if (nKeep < 2) {
+        throw std::invalid_argument("nKeep must be at least 2.");
+    }
+
+    if (Iup.rows() != 3 || Iup.cols() != nKeep) {
+        throw std::runtime_error("Iup must be of size 3 x nKeep.");
+    }
+
+    if (Ilow.rows() != 3 || Ilow.cols() != nKeep) {
+        throw std::runtime_error("Ilow must be of size 3 x nKeep.");
+    }
+
+    // Reinitialize harmonic memory if dimensions changed or if first call
+    if (currentNArm_ != nArm || currentNKeep_ != nKeep) {
+        Uup_ = makeArmControlCoeffs(nKeep, ArmType::Upper);
+        Ulow_ = makeArmControlCoeffs(nKeep, ArmType::Lower);
+
+        ZupOld_ = MatrixXcd::Zero(3, nArm);
+        XupOld_ = MatrixXcd::Zero(3, nArm);
+        ZlowOld_ = MatrixXcd::Zero(3, nArm);
+        XlowOld_ = MatrixXcd::Zero(3, nArm);
+
+        lastVcUp_ = MatrixXcd::Zero(3, nKeep);
+        lastVcLow_ = MatrixXcd::Zero(3, nKeep);
+        lastVoutUp_ = MatrixXcd::Zero(3, nKeep);
+        lastVoutLow_ = MatrixXcd::Zero(3, nKeep);
+
+        currentNArm_ = nArm;
+        currentNKeep_ = nKeep;
+    }
+
+    // Multiply arm currents by arm control coefficients
+    MatrixXcd ProdUp = dq_.multiply(Uup_, Iup);
+    MatrixXcd ProdLow = dq_.multiply(Ulow_, Ilow);
+
+    // Keep arm-order harmonics
+    ProdUp = truncateHarmonics(ProdUp, nArm);
+    ProdLow = truncateHarmonics(ProdLow, nArm);
+
+    // Capacitor-voltage derivative inputs
+    MatrixXcd XinUp = truncateHarmonics(ProdUp * (1.0 / C), nArm);
+    MatrixXcd XinLow = truncateHarmonics(ProdLow * (1.0 / C), nArm);
+
+    // Integrate capacitor voltages
+    MatrixXcd VcUpArm = dq_.integrate(ZupOld_, XupOld_, XinUp, Ts, omega_0);
+    MatrixXcd VcLowArm = dq_.integrate(ZlowOld_, XlowOld_, XinLow, Ts, omega_0);
+
+    VcUpArm = truncateHarmonics(VcUpArm, nArm);
+    VcLowArm = truncateHarmonics(VcLowArm, nArm);
+
+    // Update stored integration memory
+    ZupOld_ = VcUpArm;
+    XupOld_ = XinUp;
+    ZlowOld_ = VcLowArm;
+    XlowOld_ = XinLow;
+
+    // Compute output arm voltages
+    MatrixXcd VoutUpFull = dq_.multiply(VcUpArm, Uup_);
+    MatrixXcd VoutLowFull = dq_.multiply(VcLowArm, Ulow_);
+
+    MatrixXcd VoutUp = truncateHarmonics(VoutUpFull, nKeep);
+    MatrixXcd VoutLow = truncateHarmonics(VoutLowFull, nKeep);
+
+    // Store latest reduced states/results
+    lastVcUp_ = truncateHarmonics(VcUpArm, nKeep);
+    lastVcLow_ = truncateHarmonics(VcLowArm, nKeep);
+    lastVoutUp_ = VoutUp;
+    lastVoutLow_ = VoutLow;
+
+    StepResult result;
+   /* result.VcUp = lastVcUp_;
+    result.VcLow = lastVcLow_;*/
+    result.VoutUp = lastVoutUp_;
+    result.VoutLow = lastVoutLow_;
+
+    return result;
+}

@@ -67,4 +67,16 @@ void padeDelaySystem2(double tdelay, MatrixXd& Adelay, MatrixXd& Bdelay, MatrixX
 void padeDelaySystemMulti2(double tdelay, MatrixXd& Adelay, MatrixXd& Bdelay, MatrixXd& Cdelay, MatrixXd& Ddelay, int num_signals);
 
 
+
+void discretizeABCD(
+    const Eigen::MatrixXd& A,
+    const Eigen::MatrixXd& B,
+    const Eigen::MatrixXd& C,
+    const Eigen::MatrixXd& D,
+    double Ts,
+    Eigen::MatrixXd& Ad,
+    Eigen::MatrixXd& Bd,
+    Eigen::MatrixXd& Cd,
+    Eigen::MatrixXd& Dd);
+
 #endif

@@ -32,7 +32,7 @@ int main() {
 	//example_point2point_case();
 
 	// Solver examples
-	example_OPF();
+	//example_OPF();
 	//example_OPF_1();
 	//example_OPF_csv();
 	//example_OPF_csv_1();
@@ -40,7 +40,7 @@ int main() {
 	//example_DQsym_math_operations();
 	//example_DQsym_DSSS2();
     //example_DQsym_RLC();
-	//example_DQsym_Simple_MMC();
+	example_DQsym_Simple_MMC();
 	 
 	//example_visuals();
 	//example_stability_check();

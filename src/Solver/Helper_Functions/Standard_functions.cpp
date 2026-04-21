@@ -248,3 +248,19 @@ extern vector<vector<complex<double>>> get_block(const vector<vector<complex<dou
     }
     return block;
 };
+
+
+MatrixXcd truncateHarmonics(const MatrixXcd& X, int nColsToKeep)
+{
+    if (nColsToKeep <= 0) {
+        throw std::invalid_argument("nColsToKeep must be positive.");
+    }
+
+    MatrixXcd Y = MatrixXcd::Zero(X.rows(), nColsToKeep);
+
+    int colsToCopy = std::min(static_cast<int>(X.cols()), nColsToKeep);
+
+    Y.leftCols(colsToCopy) = X.leftCols(colsToCopy);
+
+    return Y;
+}

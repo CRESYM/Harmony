@@ -433,3 +433,51 @@ void padeDelaySystemMulti2(double tdelay, MatrixXd& Adelay, MatrixXd& Bdelay, Ma
         Ddelay(i, col) = D(0, 0);
     }
 }
+
+
+void discretizeABCD(
+    const Eigen::MatrixXd& A,
+    const Eigen::MatrixXd& B,
+    const Eigen::MatrixXd& C,
+    const Eigen::MatrixXd& D,
+    double Ts,
+    Eigen::MatrixXd& Ad,
+    Eigen::MatrixXd& Bd,
+    Eigen::MatrixXd& Cd,
+    Eigen::MatrixXd& Dd)
+{
+    if (Ts <= 0.0) {
+        throw std::invalid_argument("Sampling time Ts must be positive.");
+    }
+
+    if (A.rows() == 0 || A.cols() == 0) {
+        throw std::runtime_error("A matrix is empty.");
+    }
+
+    if (A.rows() != A.cols()) {
+        throw std::runtime_error("A matrix must be square.");
+    }
+
+    if (B.rows() != A.rows()) {
+        throw std::runtime_error("Dimension mismatch: B rows must match A rows.");
+    }
+
+    if (C.cols() != A.cols()) {
+        throw std::runtime_error("Dimension mismatch: C cols must match A cols.");
+    }
+
+    if (D.rows() != C.rows() || D.cols() != B.cols()) {
+        throw std::runtime_error("Dimension mismatch: D must match C rows and B cols.");
+    }
+
+    const int n = static_cast<int>(A.rows());
+    Eigen::MatrixXd I = Eigen::MatrixXd::Identity(n, n);
+    Eigen::MatrixXd M = I - 0.5 * Ts * A;
+
+    Eigen::PartialPivLU<Eigen::MatrixXd> solver(M);
+
+    Ad = solver.solve(I + 0.5 * Ts * A);
+    Bd = solver.solve(B) * std::sqrt(Ts);
+    Cd = std::sqrt(Ts) * C * solver.solve(I);
+    Dd = D + C * solver.solve(0.5 * Ts * B);
+}
