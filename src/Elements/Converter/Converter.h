@@ -38,7 +38,7 @@ public:
 	virtual void solveEquilibrium() {};
 
 	virtual void computeABCD() {};
-
+	virtual void discretize(double Ts) { discretizeABCD(A_matrix, B_matrix, C_matrix, D_matrix, Ts, Ad_matrix, Bd_matrix, Cd_matrix, Dd_matrix); }
 
 
 	virtual Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u) {
@@ -49,9 +49,6 @@ public:
 		eigenvalues = es.eigenvalues();
 		eigenvectors = es.eigenvectors();
 	}
-
-
-
 
 	// Compute participation factors from the state matrix A
 	// Returns: MatrixXd (n x n) where P(i,j) is participation of state i in mode j
@@ -87,9 +84,7 @@ public:
 	}
 
 	// Time-domain simulation
-	virtual VectorXd simulateTimeStep(const Eigen::VectorXd& initial_state, double dt) { return VectorXd::Zero(1, 1); }
-
-
+	virtual vector<MatrixXcd> simulateTimeStep(const vector<MatrixXcd>& input, double Ts, int nKeep1, int nKeep2) { return vector<MatrixXcd>(1, MatrixXcd::Zero(1, 1)); }
 
 	// System analysis
 	void checkStability() const;

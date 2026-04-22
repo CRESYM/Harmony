@@ -1,4 +1,4 @@
-#include "Simple_MMC.h"
+﻿#include "Simple_MMC.h"
 
 /**
  * @brief MMC constructor with explicit parameters.
@@ -129,117 +129,74 @@ void Simple_MMC::computeABCD()
     D_matrix.setZero();
 }
 
-// This function creates the control coefficient matrix U for the MMC arm control
-// based on the number of columns and the arm type (upper or lower).
-MatrixXcd Simple_MMC::makeArmControlCoeffs(int nCols, ArmType armType)
-{
-    if (nCols < 2) {
-        throw std::invalid_argument("Control coefficient matrix needs at least 2 columns.");
-    }
-
-    MatrixXcd U = MatrixXcd::Zero(3, nCols);
-
-    U(0, 1) = std::complex<double>(
-        armType == ArmType::Upper ? -0.5 : 0.5, 0.0
-    );
-
-    U(2, 0) = std::complex<double>(0.5, 0.0);
-
-    return U;
-}
-
 
 
 // This function simulates one time step of the MMC dynamics given the time step size, arm capacitance, arm currents, and the number of harmonics to keep.
 // It returns the updated capacitor voltages and output voltages for both upper and lower arms.
-Simple_MMC::StepResult Simple_MMC::simulateTimeStep(  double Ts, double C, const MatrixXcd& Iup, const MatrixXcd& Ilow, int nArm, int nKeep)
+// inputMatrices[0] = upper-arm current harmonics 
+// inputMatrices[1] = lower-arm current harmonics 
+// It returns reduced internal state matrices and reduced output matrices as lists: 
+// result.stateMatrices[0] = upper-arm capacitor voltage harmonics 
+// result.stateMatrices[1] = lower-arm capacitor voltage harmonics 
+// result.outputMatrices[0] = upper-arm output voltage harmonics 
+// result.outputMatrices[1] = lower-arm output voltage harmonics
+vector<MatrixXcd> Simple_MMC::simulateTimeStep(const vector<MatrixXcd>& input, double Ts, int nKeep1, int nKeep2)
 {
-    if (Ts <= 0.0) {
-        throw std::invalid_argument("Ts must be positive.");
-    }
+    MatrixXcd Ilow = input[0];
+    MatrixXcd Iup = input[1];
 
-    if (C <= 0.0) {
-        throw std::invalid_argument("C must be positive.");
-    }
+    // -----------------------------
+    // Rebuild control coefficients (no memory needed)
+    // -----------------------------
+    auto makeCoeffs = [&](bool isUpper) {
+        MatrixXcd U = MatrixXcd::Zero(3, nKeep1);
 
-    if (nArm <= 0) {
-        throw std::invalid_argument("nArm must be positive.");
-    }
+        U(0, 1) = std::complex<double>(
+            isUpper ? -0.5 : 0.5, 0.0
+        );
 
-    if (nKeep < 2) {
-        throw std::invalid_argument("nKeep must be at least 2.");
-    }
+        U(2, 0) = std::complex<double>(0.5, 0.0);
 
-    if (Iup.rows() != 3 || Iup.cols() != nKeep) {
-        throw std::runtime_error("Iup must be of size 3 x nKeep.");
-    }
+        return U;
+        };
 
-    if (Ilow.rows() != 3 || Ilow.cols() != nKeep) {
-        throw std::runtime_error("Ilow must be of size 3 x nKeep.");
-    }
+    MatrixXcd Uup = makeCoeffs(true);
+    MatrixXcd Ulow = makeCoeffs(false);
 
-    // Reinitialize harmonic memory if dimensions changed or if first call
-    if (currentNArm_ != nArm || currentNKeep_ != nKeep) {
-        Uup_ = makeArmControlCoeffs(nKeep, ArmType::Upper);
-        Ulow_ = makeArmControlCoeffs(nKeep, ArmType::Lower);
+    // -----------------------------
+    // Harmonic projection of currents
+    // -----------------------------
+    MatrixXcd ProdUp = truncateHarmonics(dq_multiply(Uup, Iup), nKeep2);
+    MatrixXcd ProdLow = truncateHarmonics(dq_multiply(Ulow, Ilow), nKeep2);
 
-        ZupOld_ = MatrixXcd::Zero(3, nArm);
-        XupOld_ = MatrixXcd::Zero(3, nArm);
-        ZlowOld_ = MatrixXcd::Zero(3, nArm);
-        XlowOld_ = MatrixXcd::Zero(3, nArm);
+    // Capacitor current contribution
+    MatrixXcd XinUp = truncateHarmonics(ProdUp / C_arm, nKeep2);
+    MatrixXcd XinLow = truncateHarmonics(ProdLow / C_arm, nKeep2);
 
-        lastVcUp_ = MatrixXcd::Zero(3, nKeep);
-        lastVcLow_ = MatrixXcd::Zero(3, nKeep);
-        lastVoutUp_ = MatrixXcd::Zero(3, nKeep);
-        lastVoutLow_ = MatrixXcd::Zero(3, nKeep);
+    // -----------------------------
+    // ONLY dynamic state update (must persist)
+    // -----------------------------
+    MatrixXcd VcUpArm = dq_integrate(ZupOld_, XupOld_, XinUp, Ts, omega_0);
+    MatrixXcd VcLowArm = dq_integrate(ZlowOld_, XlowOld_, XinLow, Ts, omega_0);
 
-        currentNArm_ = nArm;
-        currentNKeep_ = nKeep;
-    }
+    VcUpArm = truncateHarmonics(VcUpArm, N);
+    VcLowArm = truncateHarmonics(VcLowArm, N);
 
-    // Multiply arm currents by arm control coefficients
-    MatrixXcd ProdUp = dq_.multiply(Uup_, Iup);
-    MatrixXcd ProdLow = dq_.multiply(Ulow_, Ilow);
-
-    // Keep arm-order harmonics
-    ProdUp = truncateHarmonics(ProdUp, nArm);
-    ProdLow = truncateHarmonics(ProdLow, nArm);
-
-    // Capacitor-voltage derivative inputs
-    MatrixXcd XinUp = truncateHarmonics(ProdUp * (1.0 / C), nArm);
-    MatrixXcd XinLow = truncateHarmonics(ProdLow * (1.0 / C), nArm);
-
-    // Integrate capacitor voltages
-    MatrixXcd VcUpArm = dq_.integrate(ZupOld_, XupOld_, XinUp, Ts, omega_0);
-    MatrixXcd VcLowArm = dq_.integrate(ZlowOld_, XlowOld_, XinLow, Ts, omega_0);
-
-    VcUpArm = truncateHarmonics(VcUpArm, nArm);
-    VcLowArm = truncateHarmonics(VcLowArm, nArm);
-
-    // Update stored integration memory
+    // Update ONLY true state
     ZupOld_ = VcUpArm;
-    XupOld_ = XinUp;
     ZlowOld_ = VcLowArm;
+
+    XupOld_ = XinUp;
     XlowOld_ = XinLow;
 
-    // Compute output arm voltages
-    MatrixXcd VoutUpFull = dq_.multiply(VcUpArm, Uup_);
-    MatrixXcd VoutLowFull = dq_.multiply(VcLowArm, Ulow_);
+    // -----------------------------
+    // Output voltages (pure algebra)
+    // -----------------------------
+    MatrixXcd VoutUp = truncateHarmonics(dq_multiply(VcUpArm, Uup), nKeep1);
+    MatrixXcd VoutLow = truncateHarmonics(dq_multiply(VcLowArm, Ulow), nKeep1);
 
-    MatrixXcd VoutUp = truncateHarmonics(VoutUpFull, nKeep);
-    MatrixXcd VoutLow = truncateHarmonics(VoutLowFull, nKeep);
-
-    // Store latest reduced states/results
-    lastVcUp_ = truncateHarmonics(VcUpArm, nKeep);
-    lastVcLow_ = truncateHarmonics(VcLowArm, nKeep);
-    lastVoutUp_ = VoutUp;
-    lastVoutLow_ = VoutLow;
-
-    StepResult result;
-   /* result.VcUp = lastVcUp_;
-    result.VcLow = lastVcLow_;*/
-    result.VoutUp = lastVoutUp_;
-    result.VoutLow = lastVoutLow_;
-
-    return result;
+    // -----------------------------
+    // Return only outputs (no caching)
+    // -----------------------------
+    return { VoutUp, VoutLow };
 }

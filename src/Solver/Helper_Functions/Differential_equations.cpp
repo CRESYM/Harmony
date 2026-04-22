@@ -103,29 +103,6 @@ Eigen::VectorXd findEquilibriumLM(
     double tol,
     int max_iter)
 {
-    //// Wrap into functor
-    //SystemFunctor functor(f, u, static_cast<int>(x0.size()));
-
-    //// Use numerical differentiation to compute Jacobian
-    //Eigen::NumericalDiff<SystemFunctor> numDiff(functor);
-
-    //// Levenberg-Marquardt solver
-    //Eigen::LevenbergMarquardt<Eigen::NumericalDiff<SystemFunctor>, double> lm(numDiff);
-
-    //// Tolerances and max function evaluations
-    //lm.parameters.ftol = tol;       // function tolerance
-    //lm.parameters.xtol = tol;       // parameter tolerance
-    //lm.parameters.maxfev = max_iter;
-
-    //Eigen::VectorXd x = x0;
-    //Eigen::LevenbergMarquardtSpace::Status status = lm.minimize(x);
-
-    //// Print a short summary
-    //std::cout << "LM solver status: " << int(status)
-    //    << " | final residual norm: " << f(x, u).norm() << std::endl;
-
-    //return x;
-
     if (x0.size() == 0 || u.size() == 0)
         throw std::invalid_argument("Initial state and input vectors must be non-empty.");
 

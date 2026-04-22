@@ -1,6 +1,6 @@
-﻿#include "network.h"
-#include "./Elements/Element.h" 
-#include "Bus.h"
+﻿#include "Bus.h"
+#include "SubNetwork.h"
+#include "Include_components.h"
 
 
 Network::Network() : pins(0) {
@@ -131,3 +131,201 @@ void Network::printElements() {
     }
 }
 
+/**
+ * @brief Prints a summary of the detected AC/DC grids and converters.
+ */
+void Network::print_summary() const {
+    std::cout << "\n================= NETWORK SUMMARY =================\n";
+
+    // --- AC Grids ---
+    std::cout << "\n--- AC Grids (" << ac_grids.size() << ") ---\n";
+    if (ac_grids.empty()) {
+        std::cout << "No AC subnetworks found.\n";
+    }
+    else {
+        for (const auto& [name, sub] : ac_grids) {
+            std::cout << "AC Grid: " << name << "\n";
+            std::cout << "  Buses (" << sub->getBuses().size() << "): ";
+            for (const auto& [busName, busPtr] : sub->getBuses())
+                std::cout << busName << " ";
+            std::cout << "\n  Elements (" << sub->getElements().size() << "): ";
+            for (const auto& [elName, elPtr] : sub->getElements())
+                std::cout << elName << " ";
+            std::cout << "\n  Outputs (" << sub->getOutputs().size() << "): ";
+            for (auto& [outName, outBus] : sub->getOutputs())
+                std::cout << outName << " ";
+            std::cout << "\n\n";
+        }
+    }
+
+    // --- DC Grids ---
+    std::cout << "\n--- DC Grids (" << dc_grids.size() << ") ---\n";
+    if (dc_grids.empty()) {
+        std::cout << "No DC subnetworks found.\n";
+    }
+    else {
+        for (const auto& [name, sub] : dc_grids) {
+            std::cout << "DC Grid: " << name << "\n";
+            std::cout << "  Buses (" << sub->getBuses().size() << "): ";
+            for (const auto& [busName, busPtr] : sub->getBuses())
+                std::cout << busName << " ";
+            std::cout << "\n  Elements (" << sub->getElements().size() << "): ";
+            for (const auto& [elName, elPtr] : sub->getElements())
+                std::cout << elName << " ";
+            std::cout << "\n  Outputs (" << sub->getOutputs().size() << "): ";
+            for (auto& [outName, outBus] : sub->getOutputs())
+                std::cout << outName << " ";
+            std::cout << "\n\n";
+        }
+    }
+
+    // --- Converters ---
+    std::cout << "\n--- Converters (" << converters.size() << ") ---\n";
+    if (converters.empty()) {
+        std::cout << "No converters detected.\n";
+    }
+    else {
+        for (const auto& [name, elem] : converters) {
+            std::cout << "Converter: " << name << "\n";
+        }
+    }
+
+    std::cout << "\n===============================================================\n";
+}
+
+
+/**
+ * @brief Populates AC and DC grid subnetworks from the main network.
+ *
+ * This function iterates through all buses in the provided network, categorizes them
+ * into AC or DC areas based on their location string, and groups them into
+ * `SubNetwork` objects. It also identifies and separates MMC converters.
+ *
+ * @param net Pointer to the main Network object.
+ */
+void Network::add_areas() {
+    // This function can be implemented to categorize and add AC and DC grids to the system
+
+    // Iterate over all buses in the network
+    for (const auto& bus_pair : buses) {
+        Bus* bus = bus_pair.second;
+        if (!bus) continue;
+
+        std::string area = bus->getBusLocation(); // Assume Bus has getBusLocation()
+
+        // Skip if location string is invalid
+        if (area.empty()) continue;
+
+        bool is_ac = (area[0] == 'A' || area[0] == 'a') && (area[1] == 'C' || area[1] == 'c');
+        bool is_dc = (area[0] == 'D' || area[0] == 'd') && (area[1] == 'C' || area[1] == 'c');
+
+        // Pointer to selected map
+        auto& grid_map = is_ac ? ac_grids : dc_grids;
+        auto& grid_names = is_ac ? ac_grid_names : dc_grid_names;
+
+        if (!is_ac && !is_dc)
+            continue; // Ignore buses not belonging to AC/DC areas
+
+        // Create subnetwork if not already existing
+        if (grid_map.find(area) == grid_map.end()) {
+            grid_map[area] = new SubNetwork(area);
+            grid_names.push_back(area);
+        }
+
+        // Retrieve the SubNetwork
+        SubNetwork* sub = grid_map[area];
+
+        // Add bus to the SubNetwork
+        sub->addBus(bus);
+
+        // Add connected elements
+        auto conn_it = connections.find(bus);
+        if (conn_it != connections.end()) {
+            for (auto& elem : conn_it->second) {
+                if (!elem) continue;
+
+                // --- Check if element is a Converter dynamically ---
+                Converter* converter = dynamic_cast<Converter*>(elem);
+                if (converter) {
+                    std::string conv_name = elem->getElementSymbol();
+                    if (converters.find(conv_name) == converters.end()) {
+                        converters[conv_name] = elem;
+                        //std::cout << "Detected MMC converter: " << conv_name << "\n";
+                    }
+
+                    std::string loc = converter->getElementLocation();
+                    if (loc.empty()) continue;
+
+                    // Normalize and parse format "ACi_DCj" (case-insensitive)
+                    std::string loc_upper = loc;
+                    std::transform(loc_upper.begin(), loc_upper.end(), loc_upper.begin(), ::toupper);
+
+                    std::regex pattern(R"(AC(\d+)_DC(\d+))", std::regex::icase);
+                    std::smatch match;
+                    if (std::regex_search(loc_upper, match, pattern) && match.size() == 3) {
+                        std::string ac_area = "AC" + match[1].str();
+                        std::string dc_area = "DC" + match[2].str();
+
+                        // Ensure both grids exist
+                        if (ac_grids.find(ac_area) == ac_grids.end()) {
+                            ac_grids[ac_area] = new SubNetwork(ac_area);
+                        }
+                        if (dc_grids.find(dc_area) == dc_grids.end()) {
+                            dc_grids[dc_area] = new SubNetwork(dc_area);
+                        }
+
+                        // Identify converter terminal buses (AC and DC)
+                        auto conns = converter->getConnections();
+                        Bus* ac_bus = nullptr;
+                        Bus* dc_bus = nullptr;
+
+                        for (const auto& [bus, terminal] : conns) {
+                            if (!bus) continue;
+                            std::string bname = bus->getBusLocation();
+                            std::string bname_lower = bname;
+                            std::transform(bname_lower.begin(), bname_lower.end(), bname_lower.begin(), ::tolower);
+
+                            if (bname_lower.rfind("ac", 0) == 0)
+                                ac_bus = bus;
+                            else if (bname_lower.rfind("dc", 0) == 0)
+                                dc_bus = bus;
+                        }
+
+                        // Add buses as outputs for their corresponding grids
+                        if (ac_bus) {
+                            ac_grids[ac_area]->addOutput(ac_bus->getBusName(), ac_bus);
+                        }
+                        if (dc_bus) {
+                            dc_grids[dc_area]->addOutput(dc_bus->getBusName(), dc_bus);
+                        }
+                    }
+                    else {
+                        std::cerr << "[WARN] Converter " << converter->getElementSymbol()
+                            << " has invalid location format: " << loc << "\n";
+                    }
+                }
+                else {
+                    sub->addElement(elem);
+
+                }
+
+                elem->setTransformation(sub->getTransformation()); // Set transformation flag for non-MMC elements
+
+            }
+        }
+    }
+
+    // Optional summary output
+    std::cout << "\n=== Area Summary ===\n";
+    std::cout << "AC Grids Detected: " << ac_grids.size() << "\n";
+    for (const auto& [name, sub] : ac_grids) {
+        std::cout << "  - " << name << " (" << sub->getBuses().size() << " buses, "
+            << sub->getElements().size() << " elements, " << sub->getOutputs().size() << " outputs)\n";
+    }
+
+    std::cout << "DC Grids Detected: " << dc_grids.size() << "\n";
+    for (const auto& [name, sub] : dc_grids) {
+        std::cout << "  - " << name << " (" << sub->getBuses().size() << " buses, "
+            << sub->getElements().size() << " elements, " << sub->getOutputs().size() << " outputs)\n";
+    }
+}

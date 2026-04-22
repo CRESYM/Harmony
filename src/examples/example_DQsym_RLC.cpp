@@ -8,7 +8,7 @@ void example_DQsym_RLC()
     using cd = std::complex<double>;
 
     DQsym dq;
-    dq.reset();
+    //dq.reset();
 
     Eigen::MatrixXcd Ad(6, 6);
     Ad <<
@@ -98,7 +98,7 @@ void example_DQsym_RLC()
             dt, f0
         );
 
-        std::vector<Eigen::Vector3d> abcGroups = dq.dqn2abc_groups_at_time(y, theta);
+        std::vector<Eigen::Vector3d> abcGroups = dqn2abc_groups_at_time(y, theta);
         for (int g = 0; g < nGroups; ++g) {
             XabcHist[g].row(k) = abcGroups[g].transpose();
         }
