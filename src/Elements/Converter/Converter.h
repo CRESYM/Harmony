@@ -21,6 +21,12 @@ public:
 	Eigen::MatrixXd getC() const { return C_matrix; }
 	Eigen::MatrixXd getD() const { return D_matrix; }
 
+	// Discrete-time matrix getters
+	Eigen::MatrixXd getAd() const { return Ad_matrix; }
+	Eigen::MatrixXd getBd() const { return Bd_matrix; }
+	Eigen::MatrixXd getCd() const { return Cd_matrix; }
+	Eigen::MatrixXd getDd() const { return Dd_matrix; }
+
 	Eigen::VectorXd getEquilibriumState() const { return equilibrium_state; }
 	VectorXcd getEigenvalues() { return eigenvalues; }
 	VectorXcd getEigenvectors() { return eigenvectors; }

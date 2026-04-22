@@ -98,6 +98,7 @@ void example_DQsym_math_operations()
 	MatrixXcd y;
 
 	DQsym dqSym; // usage of the class
+	DSSState st; 
 
 	for (int i = 0; i < 3; i++)
 	{
@@ -105,7 +106,7 @@ void example_DQsym_math_operations()
 		cout << u << endl;
 		cout << brkVec << endl;
 		cout << endl;
-		y = dqSym.DSSS(Ad, Bd, Cd, Dd, swOnRes, swOffRes, swType, brkVec, u, xo, 2e-5, 50.0);
+		y = dqSym.DSSS(st, Ad, Bd, Cd, Dd, swOnRes, swOffRes, swType, brkVec, u, xo, 2e-5, 50.0);
 		cout << y << endl;
 		cout << endl;
 	}

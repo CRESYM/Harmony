@@ -14,12 +14,6 @@ void DQsym::initialize(Network* net) {
     ac_grids = net->get_ac_grids();
     dc_grids = net->get_dc_grids();
     converters = net->get_converters();
-
-    for (const auto& [name, c] : converters)
-    {
-        Converter* conv_elem = dynamic_cast<Converter*>(c);
-        conv_elem->computeABCD();
-	}
 }
 
 
@@ -51,367 +45,345 @@ void DQsym::initialize(Network* net) {
  * @param f0 The fundamental frequency of the system.
  * @return A matrix representing the system's output over the simulation time.
  */
-MatrixXcd DQsym::DSSS(const MatrixXcd& Ad, const MatrixXcd& Bd,
+ // ===================================================================
+ //  DSSS — operates directly on the supplied DSSState
+ // ===================================================================
+
+MatrixXcd DQsym::DSSS(
+    DSSState& st,
+    const MatrixXcd& Ad, const MatrixXcd& Bd,
     const MatrixXcd& Cd, const MatrixXcd& Dd,
     const VectorXd& swOnRes, const VectorXd& swOffRes,
     const VectorXi& swType, const VectorXi& brkVec,
-    const MatrixXcd& u, const VectorXcd& xo, double dt, double f0)
+    const MatrixXcd& u, const VectorXcd& xo,
+    double dt, double f0)
 {
     int T = u.cols();
     int nx = Ad.rows();
     int ny = Cd.rows();
-    int nu = Bd.cols();
-
 
     MatrixXcd x = MatrixXcd::Zero(nx, T);
     MatrixXcd y = MatrixXcd::Zero(ny, T);
 
+    // Convert to phasor frame
     MatrixXcd A0, B0, C0, D0;
     convertToPhasor(Ad, Bd, Cd, Dd, A0, B0, C0, D0);
 
-    MatrixXcd Ads, Bds, Cds, Dds;
-
-    if (!initialized)
+    // First call on this state: initialise
+    if (!st.initialized)
     {
-        nStates = nx;
-        nInputs = nu;
-        nOutputs = ny;
-        nSwitches = (swType.array() == 1).count();
+        st.nStates = nx;
+        st.nInputs = Bd.cols();
+        st.nOutputs = ny;
+        st.nSwitches = (swType.array() == 1).count();
 
-        x_old = MatrixXcd::Zero(nx, T);
-        x_old.col(0) = xo;
+        st.x_old = MatrixXcd::Zero(nx, T);
+        st.x_old.col(0) = xo;
 
-        swVec = brkVec;
-        swVecOld = swVec;
+        st.swVec = brkVec;
+        st.swVecOld = st.swVec;
+        st.yswitch = VectorXcd::Zero(st.nSwitches);
 
-        yswitch = VectorXcd::Zero(nSwitches);
-
-        buildMatricesForState(A0, B0, C0, D0, swVec, swType, swOnRes, swOffRes, Ads, Bds, Cds, Dds);
-
-        initialized = true;
+        buildMatricesForState(A0, B0, C0, D0,
+            st.swVec, swType, swOnRes, swOffRes,
+            st.Ads, st.Bds, st.Cds, st.Dds);
+        st.initialized = true;
     }
 
-
+    // Update switch vector
     if ((swType.array() != 0).any())
-        swVec = brkVec;
+        st.swVec = brkVec;
 
-
-    if ((swType.array() != 0).any() && (swVecOld.array() != swVec.array()).any())
+    // Rebuild cached matrices when switch state changes
+    if ((swType.array() != 0).any() &&
+        (st.swVecOld.array() != st.swVec.array()).any())
     {
-        buildMatricesForState(A0, B0, C0, D0, swVec, swType, swOnRes, swOffRes, Ads, Bds, Cds, Dds);
-        swVecOld = swVec;
+        buildMatricesForState(A0, B0, C0, D0,
+            st.swVec, swType, swOnRes, swOffRes,
+            st.Ads, st.Bds, st.Cds, st.Dds);
+        st.swVecOld = st.swVec;
     }
 
+    // Propagate
+    x = st.Ads * st.x_old + st.Bds * u;
 
-    x = Ads * x_old + Bds * u;
-
-
+    // Rotate back to phasor frame
     VectorXcd expVec(T);
     for (int k = 0; k < T; ++k)
         expVec(k) = std::exp(std::complex<double>(0.0, -2.0 * M_PI * f0 * dt * k));
 
-    MatrixXcd rotMat = expVec.asDiagonal();
-    MatrixXcd x2 = x * rotMat;
+    MatrixXcd x2 = x * expVec.asDiagonal();
+    st.x_old = x2;
 
-    x_old = x2;
-    y = Cds * x2 + Dds * u;
-
+    y = st.Cds * x2 + st.Dds * u;
     return y;
 }
 
-/**
- * @brief Build matrices for a given switch state.
- */
-void DQsym::buildMatricesForState(const MatrixXcd& A0, const MatrixXcd& B0, const MatrixXcd& C0, const MatrixXcd& D0,
-    const VectorXi& swVec, const VectorXi& swType, const VectorXd& swOnRes, const VectorXd& swOffRes, MatrixXcd& Ao, MatrixXcd& Bo,  MatrixXcd& Co, MatrixXcd& Do)
+
+// ===================================================================
+//  buildMatricesForState  (stateless — pure input/output)
+// ===================================================================
+
+void DQsym::buildMatricesForState(
+    const MatrixXcd& A0, const MatrixXcd& B0,
+    const MatrixXcd& C0, const MatrixXcd& D0,
+    const VectorXi& swVec_in, const VectorXi& swType,
+    const VectorXd& swOnRes, const VectorXd& swOffRes,
+    MatrixXcd& Ao, MatrixXcd& Bo, MatrixXcd& Co, MatrixXcd& Do)
 {
+    Ao = A0;  Bo = B0;  Co = C0;  Do = D0;
 
-    Ao = A0;
-    Bo = B0;
-    Co = C0;
-    Do = D0;
-
-
-    if (!(swType.array() != 0).any() || (swVec.array() == 0).all())
+    if (!(swType.array() != 0).any() || (swVec_in.array() == 0).all())
         return;
 
-    int nStates_local = A0.rows();
-    int nOutputs_local = C0.rows();
-    int nSwitches_local = (swType.array() == 1).count();
+    int ns = A0.rows();
+    int no = C0.rows();
+    int nsw = (swType.array() == 1).count();
 
-    VectorXcd yswitch_local(nSwitches_local);
-    for (int s = 0; s < nSwitches_local; ++s)
+    VectorXcd ysw(nsw);
+    for (int s = 0; s < nsw; ++s)
+        ysw(s) = (swVec_in(s) == 1)
+        ? std::complex<double>(1.0 / swOnRes(s), 0.0)
+        : std::complex<double>(1.0 / swOffRes(s), 0.0);
+
+    VectorXcd DxCol(no);
+    VectorXcd BDcol(ns);
+
+    for (int s = 0; s < nsw; ++s)
     {
-        if (swVec(s) == 1)
-            yswitch_local(s) = std::complex<double>(1.0 / swOnRes(s), 0.0);
-        else
-            yswitch_local(s) = std::complex<double>(1.0 / swOffRes(s), 0.0);
-    }
+        int kSw = swVec_in(s);
+        if (kSw == 0) continue;
 
-    VectorXcd DxCol(nOutputs_local);
-    VectorXcd BDcol(nStates_local);
-
-    for (int s = 0; s < nSwitches_local; ++s)
-    {
-        int kSw = swVec(s);
-        if (kSw == 0)
-            continue;
-
-        std::complex<double> tmp = Do(s, s) * yswitch_local(s);
+        std::complex<double> tmp = Do(s, s) * ysw(s);
         std::complex<double> temp = 1.0 / (1.0 - tmp * static_cast<double>(kSw));
-        std::complex<double> t2 = yswitch_local(s) * temp * static_cast<double>(kSw);
+        std::complex<double> t2 = ysw(s) * temp * static_cast<double>(kSw);
 
-        for (int i = 0; i < nOutputs_local; ++i)
-            DxCol(i) = Do(i, s) * t2;
+        for (int i = 0; i < no; ++i) DxCol(i) = Do(i, s) * t2;
         DxCol(s) = temp;
 
-        for (int i = 0; i < nStates_local; ++i)
-            BDcol(i) = Bo(i, s) * yswitch_local(s) * static_cast<double>(kSw);   
-      
+        for (int i = 0; i < ns; ++i)
+            BDcol(i) = Bo(i, s) * ysw(s) * static_cast<double>(kSw);
+
         RowVectorXcd rowC = Co.row(s);
         RowVectorXcd rowD = Do.row(s);
         Co.row(s).setZero();
         Do.row(s).setZero();
 
-        for (int i = 0; i < nOutputs_local; ++i)
-        {
+        for (int i = 0; i < no; ++i) {
             Co.row(i) += DxCol(i) * rowC;
             Do.row(i) += DxCol(i) * rowD;
         }
-
-        for (int i = 0; i < nStates_local; ++i)
-        {
+        for (int i = 0; i < ns; ++i) {
             Ao.row(i) += BDcol(i) * Co.row(s);
             Bo.row(i) += BDcol(i) * Do.row(s);
         }
     }
 }
 
+// ===================================================================
+//  run
+// ===================================================================
+
+DQsymResult DQsym::run(Config& cfg)
+{
+    // ------------------------------------------------------------------
+    //  Step 0: compute and discretize every converter
+    // ------------------------------------------------------------------
+    for (auto& [name, elem] : converters)
+    {
+        Converter* conv = dynamic_cast<Converter*>(elem);
+        if (!conv) continue;
+        conv->computeABCD();
+        conv->discretize(cfg.dt);
+    }
+
+    // ------------------------------------------------------------------
+    //  Step 1: count total DSS output groups
+    // ------------------------------------------------------------------
+    int totalGroups = 0;
+    for (const auto& cr : cfg.converterRoutes)
+    {
+        auto it = converters.find(cr.name);
+        if (it == converters.end())
+            throw std::runtime_error("run(): converter '" + cr.name + "' not registered.");
+        Converter* conv = dynamic_cast<Converter*>(it->second);
+        totalGroups += static_cast<int>(conv->getCd().rows()) / 3;
+    }
+
+    // ------------------------------------------------------------------
+    //  Step 2: allocate result, reset state
+    // ------------------------------------------------------------------
+    const int N = static_cast<int>((cfg.t_end - cfg.t_start) / cfg.dt) + 1;
+
+    DQsymResult result;
+    result.time.resize(N);
+    result.DSSabcHist.assign(totalGroups, Eigen::MatrixXd::Zero(N, 3));
+    result.brkHistory = Eigen::MatrixXi::Zero(N, cfg.swType.size());
+
+    dssStates_.clear();                 // fresh state for every converter
+
+    bool mmcHistAllocated = false;
+    int  totalMMCSignals = 0;
+    std::unordered_map<std::string, std::vector<MatrixXcd>> lastOutputs;
+
+    // ------------------------------------------------------------------
+    //  Step 3: main loop
+    // ------------------------------------------------------------------
+    for (int k = 0; k < N; ++k)
+    {
+        const double t = cfg.t_start + k * cfg.dt;
+        const double theta = 2.0 * M_PI * cfg.f * t;
+        result.time[k] = t;
+
+        // ---- breaker ----
+        Eigen::VectorXi brkVec = cfg.breakerFunction
+            ? cfg.breakerFunction(k, t)
+            : Eigen::VectorXi::Zero(cfg.swType.size());
+        result.brkHistory.row(k) = brkVec.transpose();
+
+        // ---- global external inputs ----
+        std::vector<MatrixXcd> uBlocks = cfg.externalInputFunction
+            ? cfg.externalInputFunction(k, t)
+            : std::vector<MatrixXcd>(cfg.nInputBlocks,
+                MatrixXcd::Zero(3, cfg.nKeep));
+
+        // ---- per-converter feedback injection ----
+        for (const auto& cr : cfg.converterRoutes)
+        {
+            auto it = lastOutputs.find(cr.name);
+            if (it == lastOutputs.end()) continue;
+            const auto& outs = it->second;
+
+            for (const auto& fb : cr.feedbacks) {
+                if (fb.signalIndex < 0 || fb.signalIndex >= static_cast<int>(outs.size())) continue;
+                if (fb.targetBlock < 0 || fb.targetBlock >= static_cast<int>(uBlocks.size())) continue;
+
+                MatrixXcd signal = outs[fb.signalIndex];
+                if (fb.invert) signal = -signal;
+                uBlocks[fb.targetBlock] = signal;
+            }
+        }
+
+        // ---- per-converter: DSSS + simulateTimeStep ----
+        int groupOffset = 0;
+
+        for (const auto& cr : cfg.converterRoutes)
+        {
+            Converter* conv = dynamic_cast<Converter*>(converters[cr.name]);
+
+            // This converter's discrete matrices
+            MatrixXcd AdC = conv->getAd().cast<std::complex<double>>();
+            MatrixXcd BdC = conv->getBd().cast<std::complex<double>>();
+            MatrixXcd CdC = conv->getCd().cast<std::complex<double>>();
+            MatrixXcd DdC = conv->getDd().cast<std::complex<double>>();
+
+            VectorXcd xo = VectorXcd::Zero(AdC.rows());
+
+            // Assemble this converter's input from global blocks
+            int nIn = static_cast<int>(cr.inputBlocks.size());
+            MatrixXcd u_conv(3 * nIn, cfg.nKeep);
+            for (int b = 0; b < nIn; ++b)
+                u_conv.block(3 * b, 0, 3, cfg.nKeep) = uBlocks[cr.inputBlocks[b]];
+
+            // DSSS on this converter's own state
+            DSSState& st = dssStates_[cr.name];
+
+            MatrixXcd y = DSSS(st, AdC, BdC, CdC, DdC,
+                cfg.swOnRes, cfg.swOffRes, cfg.swType, brkVec,
+                u_conv, xo, cfg.dt, cfg.f);
+
+            // Extract arm currents (local group indices)
+            MatrixXcd Iup = y.block(3 * cr.upGroupIndex, 0, 3, cfg.nKeep);
+            MatrixXcd Ilow = y.block(3 * cr.lowGroupIndex, 0, 3, cfg.nKeep);
+            if (cr.invertUp)  Iup = -Iup;
+            if (cr.invertLow) Ilow = -Ilow;
+
+            // Converter internal dynamics
+            auto mmcOut = conv->simulateTimeStep({ Ilow, Iup },
+                cfg.dt, cfg.nKeep, cfg.nArm);
+            lastOutputs[cr.name] = mmcOut;
+
+            // Store DSS abc history
+            int nGroupsConv = static_cast<int>(CdC.rows()) / 3;
+            auto abcGroups = dqn2abc_groups_at_time(y, theta);
+            for (int g = 0; g < nGroupsConv; ++g)
+                result.DSSabcHist[groupOffset + g].row(k) = abcGroups[g].transpose();
+            groupOffset += nGroupsConv;
+        }
+
+        // ---- allocate MMC history (once) ----
+        if (!mmcHistAllocated)
+        {
+            totalMMCSignals = 0;
+            for (const auto& cr : cfg.converterRoutes) {
+                auto it = lastOutputs.find(cr.name);
+                if (it != lastOutputs.end())
+                    totalMMCSignals += static_cast<int>(it->second.size());
+            }
+            result.MMCabcHist.assign(totalMMCSignals,
+                Eigen::MatrixXd::Zero(N, 3));
+            mmcHistAllocated = true;
+        }
+
+        // ---- store MMC abc history ----
+        int mmcIdx = 0;
+        for (const auto& cr : cfg.converterRoutes) {
+            auto it = lastOutputs.find(cr.name);
+            if (it == lastOutputs.end()) continue;
+            for (const auto& sig : it->second) {
+                result.MMCabcHist[mmcIdx].row(k) =
+                    dqn2abc_at_time(sig, theta).transpose();
+                ++mmcIdx;
+            }
+        }
+    }
+
+    result_ = result;
+    hasRun_ = true;
+    return result;
+}
 
 
+// ===================================================================
+//  Results
+// ===================================================================
 
 void DQsym::exportCSV(const std::string& filename) const
 {
-    if (!hasRun_) {
+    if (!hasRun_)
         throw std::runtime_error("exportCSV() called before run().");
-    }
 
     std::vector<Eigen::MatrixXd> values;
     values.push_back(result_.brkHistory.cast<double>());
-
-    for (const auto& x : result_.DSSabcHist) {
-        values.push_back(x);
-    }
-
-    int n = result_.MMCabcHist.size();
-    for (int i = 0; i < n; ++i) {
-        values.push_back(result_.MMCabcHist[i]);
-    }
+    for (const auto& m : result_.DSSabcHist) values.push_back(m);
+    for (const auto& m : result_.MMCabcHist) values.push_back(m);
 
     std::vector<std::string> headers;
     headers.push_back("brk");
-
-    for (int g = 0; g < static_cast<int>(result_.DSSabcHist.size()); ++g) {
+    for (int g = 0; g < static_cast<int>(result_.DSSabcHist.size()); ++g)
         headers.push_back("DSS_abc" + std::to_string(g + 1));
-    }
-
-    headers.push_back("Uup_abc");
-    headers.push_back("Ulow_abc");
-    headers.push_back("Iup_abc");
-    headers.push_back("Ilow_abc");
-    headers.push_back("VcUp_abc");
-    headers.push_back("VcLow_abc");
-    headers.push_back("VoutUp_abc");
-    headers.push_back("VoutLow_abc");
+    for (int g = 0; g < static_cast<int>(result_.MMCabcHist.size()); ++g)
+        headers.push_back("MMC_abc" + std::to_string(g + 1));
 
     write_file(result_.time, values, headers, filename);
 }
 
 void DQsym::plot() const
 {
-    if (!hasRun_) {
+    if (!hasRun_)
         throw std::runtime_error("plot() called before run().");
-    }
 
-    plot_abc_groups_implot(
-        result_.time,
-        result_.DSSabcHist,
-        "DSS outputs converted to abc"
-    );
+    plot_abc_groups_implot(result_.time, result_.DSSabcHist,
+        "DSS outputs converted to abc");
 
-    std::vector<Eigen::MatrixXd> mmcWaveforms;
-
-    int n = result_.MMCabcHist.size();
-    for (int i = 0; i < n; ++i) {
-        mmcWaveforms.push_back(result_.MMCabcHist[i]);
-    }
-
-    plot_abc_groups_implot(
-        result_.time,
-        mmcWaveforms,
-        "MMC internal abc waveforms"
-    );
+    if (!result_.MMCabcHist.empty())
+        plot_abc_groups_implot(result_.time, result_.MMCabcHist,
+            "MMC internal abc waveforms");
 }
 
 const DQsymResult& DQsym::getResult() const
 {
-    if (!hasRun_) {
+    if (!hasRun_)
         throw std::runtime_error("getResult() called before run().");
-    }
-
     return result_;
 }
-
-DQsymResult DQsym::run(Config& cfg, MatrixXd Ad, MatrixXd Bd, MatrixXd Cd, MatrixXd Dd)
-{
-    const int N = static_cast<int>((cfg.t_end - cfg.t_start) / cfg.dt) + 1;
-
-    DQsymResult result;
-    result.time.resize(N);
-
-    //const int nGroups = static_cast<int>(Cd.rows() / 3);
-
-    //result.DSSabcHist.assign(nGroups, Eigen::MatrixXd::Zero(N, 3));
-    //result.brkHistory = Eigen::MatrixXi::Zero(N, cfg.swType.size());
-
-    //// -------------------------
-    //// CONVERTER OUTPUT STATE ACCESS
-    //// -------------------------
-    //std::unordered_map<std::string, std::vector<MatrixXcd>> lastOutputs;
-
-    //MatrixXcd VoutUpMMC = MatrixXcd::Zero(3, cfg.nKeep);
-    //MatrixXcd VoutLowMMC = MatrixXcd::Zero(3, cfg.nKeep);
-
-    //// -------------------------
-    //// MAIN LOOP
-    //// -------------------------
-    //for (int k = 0; k < N; ++k)
-    //{
-    //    double t = cfg.t_start + k * cfg.dt;
-    //    double theta = 2.0 * M_PI * cfg.f * t;
-
-    //    result.time[k] = t;
-
-    //    // -------------------------
-    //    // breaker
-    //    // -------------------------
-    //    Eigen::VectorXi brkVec =
-    //        cfg.breakerFunction ?
-    //        cfg.breakerFunction(k, t) :
-    //        VectorXi::Zero(cfg.swType.size());
-
-    //    result.brkHistory.row(k) = brkVec.transpose();
-
-    //    // -------------------------
-    //    // external inputs
-    //    // -------------------------
-    //    std::vector<MatrixXcd> uBlocks =
-    //        cfg.externalInputFunction ?
-    //        cfg.externalInputFunction(k, t) :
-    //        std::vector<MatrixXcd>(cfg.nInputBlocks,
-    //            MatrixXcd::Zero(3, cfg.nKeep));
-
-    //    // -------------------------
-    //    // FEEDBACK ROUTING (NEW SYSTEM)
-    //    // -------------------------
-    //    for (const auto& route : cfg.feedbackRoutes)
-    //    {
-    //        auto it = converters.find(route.sourceConverter);
-    //        if (it == converters.end() || !it->second)
-    //            continue;
-
-    //        const auto& outputs = it->second->getBuses();
-
-    //        if (route.sourceSignalIndex < 0 ||
-    //            route.sourceSignalIndex >= outputs.size())
-    //            continue;
-
-    //        MatrixXcd signal = outputs[route.sourceSignalIndex];
-
-    //        if (route.invert)
-    //            signal = -signal;
-
-    //        if (route.targetBlockIndex >= 0 &&
-    //            route.targetBlockIndex < uBlocks.size())
-    //        {
-    //            uBlocks[route.targetBlockIndex] = signal;
-    //        }
-    //    }
-
-    //    // -------------------------
-    //    // PACK DSSS INPUT
-    //    // -------------------------
-    //    MatrixXcd u(3 * cfg.nInputBlocks, cfg.nKeep);
-    //    for (int b = 0; b < cfg.nInputBlocks; ++b)
-    //        u.block(3 * b, 0, 3, cfg.nKeep) = uBlocks[b];
-
-    //    // -------------------------
-    //    // DSSS SYSTEM
-    //    // -------------------------
-    //    MatrixXcd y = DSSS(Ad, Bd, Cd, Dd, cfg.swOnRes, cfg.swOffRes, cfg.swType, brkVec,
-    //        u, VectorXcd::Zero(Ad.rows()), cfg.dt, cfg.f
-    //    );
-
-    //    MatrixXcd Iup = y.block(3 * cfg.upGroupIndex, 0, 3, cfg.nKeep);
-    //    MatrixXcd Ilow = y.block(3 * cfg.lowGroupIndex, 0, 3, cfg.nKeep);
-
-    //    if (cfg.invertUpFeedback)  Iup = -Iup;
-    //    if (cfg.invertLowFeedback) Ilow = -Ilow;
-
-    //    // -------------------------
-    //    // STORE LAST DSSS OUTPUTS
-    //    // -------------------------
-    //    MatrixXcd VcUpMMC, VcLowMMC;
-
-    //    // -------------------------
-    //    // CONVERTER LOOP (GENERIC)
-    //    // -------------------------
-    //    for (auto& [name, convPtr] : converters)
-    //    {
-    //        if (!convPtr)
-    //            continue;
-
-    //        std::vector<MatrixXcd> mmcIn = { Ilow, Iup };
-
-    //        auto mmcOut = dynamic_cast<Converter*>(convPtr)->simulateTimeStep(mmcIn, cfg.dt, cfg.nKeep);
-
-    //        lastOutputs[name] = mmcOut;
-
-    //        // optional extraction if needed
-    //        if (name == "MMC_UP")
-    //        {
-    //            VoutUpMMC = mmcOut[0];
-    //            VcUpMMC = mmcOut[1];
-    //        }
-    //        else if (name == "MMC_LOW")
-    //        {
-    //            VoutLowMMC = mmcOut[0];
-    //            VcLowMMC = mmcOut[1];
-    //        }
-    //    }
-
-    //    // -------------------------
-    //    // STORE DSSS HISTORY
-    //    // -------------------------
-    //    auto abcGroups = dqn2abc_groups_at_time(y, theta);
-
-    //    for (int g = 0; g < nGroups; ++g)
-    //        result.DSSabcHist[g].row(k) = abcGroups[g].transpose();
-
-    //    // -------------------------
-    //    // UPDATE CONVERTER STATE FEEDBACK CACHE
-    //    // -------------------------
-    //    lastIup = Iup;
-    //    lastIlow = Ilow;
-    //}
-
-    result_ = result;
-    return result;
-}
-
-
-
-
-
-
-

@@ -8,6 +8,7 @@ void example_DQsym_RLC()
     using cd = std::complex<double>;
 
     DQsym dq;
+    DSSState st;
     //dq.reset();
 
     Eigen::MatrixXcd Ad(6, 6);
@@ -90,13 +91,9 @@ void example_DQsym_RLC()
         brkHistory.row(k) = brkVec.transpose();
 
 
-        Eigen::MatrixXcd y = dq.DSSS(
-            Ad, Bd, Cd, Dd,
-            swOnRes, swOffRes,
-            swType, brkVec,
-            u, xo,
-            dt, f0
-        );
+        Eigen::MatrixXcd y = dq.DSSS(st, Ad, Bd, Cd, Dd,
+            swOnRes, swOffRes, swType, brkVec,
+            u, xo, dt, f0);
 
         std::vector<Eigen::Vector3d> abcGroups = dqn2abc_groups_at_time(y, theta);
         for (int g = 0; g < nGroups; ++g) {

@@ -131,72 +131,86 @@ void Simple_MMC::computeABCD()
 
 
 
-// This function simulates one time step of the MMC dynamics given the time step size, arm capacitance, arm currents, and the number of harmonics to keep.
-// It returns the updated capacitor voltages and output voltages for both upper and lower arms.
-// inputMatrices[0] = upper-arm current harmonics 
-// inputMatrices[1] = lower-arm current harmonics 
-// It returns reduced internal state matrices and reduced output matrices as lists: 
-// result.stateMatrices[0] = upper-arm capacitor voltage harmonics 
-// result.stateMatrices[1] = lower-arm capacitor voltage harmonics 
-// result.outputMatrices[0] = upper-arm output voltage harmonics 
-// result.outputMatrices[1] = lower-arm output voltage harmonics
+// ---------------------------------------------------------------------------
+//  simulateTimeStep
+// ---------------------------------------------------------------------------
+//
+//  Pipeline (from MMC_DSS_Pipeline document):
+//
+//    Step 1:  v_mod  = K · i                        (control multiplication)
+//    Step 2:  v_arm  = truncate(v_mod, nArm)         (truncate to arm harmonics)
+//    Step 3:  v_c'   = (1/C) · v_arm                 (capacitor gain)
+//    Step 4:  v_c    = integrate(v_c')               (capacitor dynamics)
+//    Step 5:  v_keep = truncate(v_c, nKeep)          (truncate to DSS harmonics)
+//    Step 6:  v_out  = K · v_keep                    (final control multiplication)
+//
+//  Arguments:
+//    input[0] = Ilow  (3 x nKeep1)   lower-arm current from DSS
+//    input[1] = Iup   (3 x nKeep1)   upper-arm current from DSS
+//    Ts       = time step [s]
+//    nKeep1   = nKeep  (DSS-level harmonics)
+//    nKeep2   = nArm   (arm-level harmonics for internal dynamics)
+//
+//  Returns:
+//    [0] = VoutUp   (3 x nKeep1)
+//    [1] = VoutLow  (3 x nKeep1)
+//
 vector<MatrixXcd> Simple_MMC::simulateTimeStep(const vector<MatrixXcd>& input, double Ts, int nKeep1, int nKeep2)
 {
-    MatrixXcd Ilow = input[0];
-    MatrixXcd Iup = input[1];
+    // ---- lazy-init persistent state ----
+    if (Zold.empty()) {
+        Zold = { MatrixXcd::Zero(3, nKeep2),
+                 MatrixXcd::Zero(3, nKeep2) };
+        Xold = { MatrixXcd::Zero(3, nKeep2),
+                 MatrixXcd::Zero(3, nKeep2) };
+    }
 
-    // -----------------------------
-    // Rebuild control coefficients (no memory needed)
-    // -----------------------------
-    auto makeCoeffs = [&](bool isUpper) {
-        MatrixXcd U = MatrixXcd::Zero(3, nKeep1);
+    // ---- control coefficient matrices ----
+    //   Upper arm:  K(0,1) = -0.5  (fundamental),  K(2,0) = 0.5  (DC)
+    //   Lower arm:  K(0,1) = +0.5  (fundamental),  K(2,0) = 0.5  (DC)
+    MatrixXcd K_up = MatrixXcd::Zero(3, nKeep1);
+    MatrixXcd K_low = MatrixXcd::Zero(3, nKeep1);
 
-        U(0, 1) = std::complex<double>(
-            isUpper ? -0.5 : 0.5, 0.0
-        );
+    K_up(0, 1) = std::complex<double>(-0.5, 0.0);
+    K_up(2, 0) = std::complex<double>(0.5, 0.0);
 
-        U(2, 0) = std::complex<double>(0.5, 0.0);
+    K_low(0, 1) = std::complex<double>(0.5, 0.0);
+    K_low(2, 0) = std::complex<double>(0.5, 0.0);
 
-        return U;
-        };
+    // ---- arm ordering ----
+    //  Index 0 = upper arm  (K_up x Iup),   output[0] = VoutUp
+    //  Index 1 = lower arm  (K_low x Ilow),  output[1] = VoutLow
+    //  input = {Ilow, Iup}  ->  inputIdx maps arm to correct current
+    std::vector<MatrixXcd> K = { K_up, K_low };
+    const int inputIdx[2] = { 1, 0 };   // arm 0(up) -> Iup=input[1]
+    // arm 1(low) -> Ilow=input[0]
 
-    MatrixXcd Uup = makeCoeffs(true);
-    MatrixXcd Ulow = makeCoeffs(false);
+    std::vector<MatrixXcd> Vout(2);
 
-    // -----------------------------
-    // Harmonic projection of currents
-    // -----------------------------
-    MatrixXcd ProdUp = truncateHarmonics(dq_multiply(Uup, Iup), nKeep2);
-    MatrixXcd ProdLow = truncateHarmonics(dq_multiply(Ulow, Ilow), nKeep2);
+    for (int arm = 0; arm < 2; ++arm)
+    {
+        // Step 1: control multiplication
+        MatrixXcd v_mod = dq_multiply(K[arm], input[inputIdx[arm]]);
 
-    // Capacitor current contribution
-    MatrixXcd XinUp = truncateHarmonics(ProdUp / C_arm, nKeep2);
-    MatrixXcd XinLow = truncateHarmonics(ProdLow / C_arm, nKeep2);
+        // Step 2: truncate to nArm
+        MatrixXcd v_arm = truncateHarmonics(v_mod, nKeep2);
 
-    // -----------------------------
-    // ONLY dynamic state update (must persist)
-    // -----------------------------
-    MatrixXcd VcUpArm = dq_integrate(ZupOld_, XupOld_, XinUp, Ts, omega_0);
-    MatrixXcd VcLowArm = dq_integrate(ZlowOld_, XlowOld_, XinLow, Ts, omega_0);
+        // Step 3: capacitor gain
+        MatrixXcd v_c_dot = v_arm / C_arm;
 
-    VcUpArm = truncateHarmonics(VcUpArm, N);
-    VcLowArm = truncateHarmonics(VcLowArm, N);
+        // Step 4: integration (trapezoidal — Xold holds PREVIOUS step's input)
+        MatrixXcd v_c = dq_integrate(Zold[arm], Xold[arm], v_c_dot, Ts, omega_0);
 
-    // Update ONLY true state
-    ZupOld_ = VcUpArm;
-    ZlowOld_ = VcLowArm;
+        // Update persistent state (keep at nArm resolution for next step)
+        Zold[arm] = truncateHarmonics(v_c, nKeep2);
+        Xold[arm] = v_c_dot;
 
-    XupOld_ = XinUp;
-    XlowOld_ = XinLow;
+        // Step 5: truncate to nKeep
+        MatrixXcd v_keep = truncateHarmonics(v_c, nKeep1);
 
-    // -----------------------------
-    // Output voltages (pure algebra)
-    // -----------------------------
-    MatrixXcd VoutUp = truncateHarmonics(dq_multiply(VcUpArm, Uup), nKeep1);
-    MatrixXcd VoutLow = truncateHarmonics(dq_multiply(VcLowArm, Ulow), nKeep1);
+        // Step 6: final control multiplication
+        Vout[arm] = truncateHarmonics(dq_multiply(v_keep, K[arm]), nKeep1);
+    }
 
-    // -----------------------------
-    // Return only outputs (no caching)
-    // -----------------------------
-    return { VoutUp, VoutLow };
+    return Vout;   // {VoutUp, VoutLow}
 }

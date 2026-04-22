@@ -35,10 +35,8 @@ private:
     int N = 0;
 
 
-    MatrixXcd ZupOld_;
-    MatrixXcd XupOld_;
-    MatrixXcd ZlowOld_;
-    MatrixXcd XlowOld_;
+    vector<MatrixXcd> Zold;
+    vector<MatrixXcd> Xold;
 };
 
 #endif // SIMPLE_MMC_H

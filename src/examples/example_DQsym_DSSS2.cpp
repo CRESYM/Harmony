@@ -10,7 +10,7 @@ void example_DQsym_DSSS2()
     using cd = std::complex<double>;
 
     DQsym dq;
-    //dq.reset();
+    DSSState st;
 
     Eigen::MatrixXcd Ad(12, 12);
     Ad <<
@@ -116,12 +116,9 @@ void example_DQsym_DSSS2()
         brkHistory.row(k) = brkVec.transpose();
 
 
-        Eigen::MatrixXcd y = dq.DSSS(
-            Ad, Bd, Cd, Dd,
-            swOnRes, swOffRes,
-            swType, brkVec,
-            u, xo,
-            dt, f0
+        Eigen::MatrixXcd y = dq.DSSS(st,
+            Ad, Bd, Cd, Dd, swOnRes, swOffRes,
+            swType, brkVec, u, xo, dt, f0
         );
 
         std::vector<Eigen::Vector3d> abcGroups = dqn2abc_groups_at_time(y, theta);

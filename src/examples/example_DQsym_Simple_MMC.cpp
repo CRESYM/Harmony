@@ -1,105 +1,97 @@
 ﻿#include "Examples.h"
 
-#include "../Elements/Converter/Simple_MMC.h"
+#include "../network.h"
+#include "../Include_components.h"
 #include "../Solver/DQsym/DQsym.h"
+
+using cd = std::complex<double>;
 
 
 void example_DQsym_Simple_MMC()
 {
-    std::cout << "Entered example_DQsym_Simple_MMC()\n";
-
+    std::cout << "=== example_DQsym_Simple_MMC ===\n";
 
     const double f = 50.0;
     const double omega = 2.0 * M_PI * f;
     const double Vdc = 100.0;
+    const int    nKeep = 5;
 
-    MatrixXd Ad, Bd, Cd, Dd;
-
-    std::vector<double> converter_params = {
+    // ---- create converter ----
+    std::vector<double> params = {
         omega, 0.0, 0.0, 0.0, 0.0, 0.0, Vdc,
         52.9e-3, 166.3e-3, 1.7568e-3, 1, 0.0, 10.0
     };
-    Simple_MMC mmc1("MMC1", "AC1_DC1", converter_params);
 
+    Simple_MMC* mmc1 = new Simple_MMC("MMC1", "AC1_DC1", params);
 
-    // This is an input to the run function
-    const double Ts = 2e-5;
-    const int nKeep = 5;
+    // ---- solver ----
+    DQsym dq;
+	dq.addConverter("MMC1", mmc1);
 
+    // ---- config ----
+    Config cfg;
+    cfg.dt = 2e-5;
+    cfg.t_start = 0.0;
+    cfg.t_end = 1.0;
+    cfg.f = f;
+    cfg.omega = omega;
+    cfg.nKeep = nKeep;
+    cfg.nArm = 5;
+    cfg.nInputBlocks = 4;
 
-    
-    const double t0 = 0.0;
-    const double tEnd = 1.0;
-    
-    //swOnRes = VectorXd(3);
-    //swOnRes << 0.01, 0.01, 0.01;
+    cfg.swOnRes = Eigen::VectorXd::Constant(3, 0.01);
+    cfg.swOffRes = Eigen::VectorXd::Constant(3, 1e6);
+    cfg.swType = Eigen::VectorXi::Zero(3);
 
-    //swOffRes = Eigen::VectorXd(3);
-    //swOffRes << 1e6, 1e6, 1e6;
+    cfg.breakerFunction = [](int, double t) -> Eigen::VectorXi {
+        Eigen::VectorXi v = Eigen::VectorXi::Zero(3);
+        if (t >= 2e-4 && t < 6e-4) v.setOnes();
+        return v;
+        };
 
-    //swType = Eigen::VectorXi(3);
-    //swType << 0, 0, 0; // 0 for no switching, 1 for switching
+    // ---- per-converter routing ----
+    //
+    //  Global input blocks:
+    //    0 = DC voltage upper     (external, constant)
+    //    1 = DC voltage lower     (external, constant)
+    //    2 = MMC1 upper arm Vout  (feedback)
+    //    3 = MMC1 lower arm Vout  (feedback)
+    //
+    //  MMC1's B matrix expects 4 input blocks in that same order,
+    //  so inputBlocks = {0, 1, 2, 3} (identity mapping).
+    //
+    cfg.converterRoutes = {
+        {
+            "MMC1",             // name
+            0, 1,               // upGroupIndex, lowGroupIndex (in THIS converter's DSS output)
+            false, true,        // invertUp, invertLow
+            { 0, 1, 2, 3 },    // inputBlocks: global block i → local input i
+            {                   // feedbacks: converter output → global block
+                { 0, 2, false },    //   VoutUp  → global block 2
+                { 1, 3, false }     //   VoutLow → global block 3
+            }
+        }
+    };
 
-    //breakerFunction = [](int step, double t) -> Eigen::VectorXi
-    //    {
-    //        (void)step;
+    // constant DC sources
+    cfg.externalInputFunction = [nKeep](int, double)
+        -> std::vector<MatrixXcd>
+        {
+            std::vector<MatrixXcd> blocks(4, MatrixXcd::Zero(3, nKeep));
+            blocks[0](2, 0) = cd(100.0, 0.0);   // DC upper
+            blocks[1](2, 0) = cd(100.0, 0.0);   // DC lower
+            return blocks;
+        };
 
-    //        Eigen::VectorXi brkVec(3);
-    //        brkVec.setZero();
+    // ---- run ----
+    std::cout << "Running...\n";
+    DQsymResult result = dq.run(cfg);
+    std::cout << "Done — " << result.time.size() << " steps, "
+        << result.DSSabcHist.size() << " DSS groups, "
+        << result.MMCabcHist.size() << " MMC signals.\n";
 
-    //        if (t >= 2e-4 && t < 6e-4) {
-    //            brkVec.setOnes();
-    //        } // breakers open during this interval
-
-    //        return brkVec;
-    //    };
-
-    //feedbackInjections = {
-    //    {2, DQsymrun::InternalSignal::VoutUp, false},   // {block index, signal to inject, invert sign?}
-    //    {3, DQsymrun::InternalSignal::VoutLow, false}   // {block index, signal to inject, invert sign?}
-    //};
-
-    //externalInputFunction = [nKeepMMC](int step, double t) -> std::vector<MatrixXcd>
-    //    {
-    //        (void)step;
-    //        (void)t;
-
-    //        std::vector<MatrixXcd> blocks(4, MatrixXcd::Zero(3, nKeepMMC));
-
-    //        MatrixXcd u1(3, nKeepMMC);
-    //        u1 <<
-    //            cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0),
-    //            cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0),
-    //            cd(100, 0), cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0);
-
-    //        MatrixXcd u2(3, nKeepMMC);
-    //        u2 <<
-    //            cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0),
-    //            cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0),
-    //            cd(100, 0), cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0);
-
-    //        blocks[0] = u1;
-    //        blocks[1] = u2;
-
-    //        return blocks;
-    //    };
-
-    //std::cout << "Constructing DQsymrun object\n";
-    //DQsymrun sim(Ad, Bd, Cd, Dd, cfg);
-
-    /*std::cout << "Calling sim.run()\n";
-    auto result = sim.run();*/
-
-    //std::cout << "Returned from sim.run()\n";
-
-    //sim.exportCSV("DQsymSimpleMMC_abc_output.csv");
-    //std::cout << "Wrote DQsymSimpleMMC_abc_output.csv\n";
-
-    //std::cout << "Calling plot\n";
-    //sim.plot();
-
-    // optional: use result if you want direct access
-    //std::cout << "Simulation stored " << result.time.size() << " time points.\n";
+    dq.exportCSV("DQsym_SimpleMMC_output.csv");
+    dq.plot();
 
     std::cout << "Press Enter to continue...\n";
     std::cin.get();

@@ -328,4 +328,9 @@ void Network::add_areas() {
         std::cout << "  - " << name << " (" << sub->getBuses().size() << " buses, "
             << sub->getElements().size() << " elements, " << sub->getOutputs().size() << " outputs)\n";
     }
+
+    std::cout << "Converters Detected: " << converters.size() << "\n";
+    for (const auto& [name, elem] : converters) {
+        std::cout << "  - " << name << " (" << elem->getElementSymbol() << ")\n";
+    }
 }
