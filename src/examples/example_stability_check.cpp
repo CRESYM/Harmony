@@ -59,12 +59,12 @@ void example_stability_check() {
     net.connectElementToBus(br2_ac, /*terminal=*/2, bus4_ac);
 
     ///*  ---------- 2.1 Create DC Buses  ---------- */
-    Bus* bus1_dc = new Bus("DCBUS01", "DC1", 1);
-    Bus* bus2_dc = new Bus("DCBUS02", "DC1", 1);
+    Bus* bus1_dc = new Bus("DCBUS01", "DC1", 2);
+    Bus* bus2_dc = new Bus("DCBUS02", "DC1", 2);
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
     double DCR1 = 0.05;
-    Impedance* br1_dc = new Impedance("br1_dc", "DC1", 1, DCR1);
+    Impedance* br1_dc = new Impedance("br1_dc", "DC1", 2, DCR1);
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
 

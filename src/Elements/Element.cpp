@@ -59,6 +59,7 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
 	m2[omega] = real_double(angular_frequency + omega_0);
 
     bool is_ac = (element_location[0] == 'A' || element_location[0] == 'a') && (element_location[1] == 'C' || element_location[1] == 'c');
+	bool is_dc = (element_location[0] == 'D' || element_location[0] == 'd') && (element_location[1] == 'C' || element_location[1] == 'c');
     bool is_mmc = (element_location.find('_') < element_location.length());
 
     if (transformation && is_ac && !is_mmc) {
@@ -79,6 +80,20 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
 		//cout << "Applying transformation to element: " << element_symbol << endl;
 		vector<vector<complex<double>>> Y = apply_transformation(Y_val_exact1, Y_val_exact2);
 		return Y;
+    }
+    else if (is_dc && transformation) {
+        std::vector<std::vector<complex<double>>> Y_val_exact(2);
+        for (int i = 0; i < 2; i++)
+            Y_val_exact[i].resize(2);
+
+        for (int i = 0; i < 2; ++i) {
+            for (int j = 0; j < 2; ++j) {
+                RCP<const Basic> r = subs(Y_matrix.get(2*i, 2*j), m);
+                Y_val_exact[i][j] = eval_complex_double(*r);
+                //cout << "Computing Y[" << i << "][" << j << "] for DC element with transformation: " << element_symbol << " equal to: " << Y_val_exact[i][j] << endl;
+            }
+        }
+        return Y_val_exact;
     }
     else {
         std::vector<std::vector<complex<double>>> Y_val_exact(Y_matrix.nrows());

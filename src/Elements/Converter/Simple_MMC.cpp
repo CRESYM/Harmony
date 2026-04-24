@@ -220,29 +220,29 @@ vector<MatrixXcd> Simple_MMC::simulateTimeStep(const vector<MatrixXcd>& input, d
 void Simple_MMC::writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_map<Bus*, int>& bus_indices, int location,
     std::map<Element*, std::vector<RCP<const Basic>>>& symbols_map)
 {
-    std::vector<Bus*> buses = getBuses();
-    Bus* node1 = buses.size() > 0 ? buses[0] : nullptr;
-    Bus* node2 = buses.size() > 1 ? buses[1] : nullptr;
+    //std::vector<Bus*> buses = getBuses();
+    //Bus* node1 = buses.size() > 0 ? buses[0] : nullptr;
+    //Bus* node2 = buses.size() > 1 ? buses[1] : nullptr;
 
-    if (node1 && (bus_indices.count(node1) != 0)) {
-        int n1 = bus_indices[node1];
-        for (int i = 0; i < input_pins; ++i) {
-            matrix.set(n1 + i, n1 + i, addSym(matrix.get(n1 + i, n1 + i), inv(real_double(R_values[i]))));
-        }
+    //if (node1 && (bus_indices.count(node1) != 0)) {
+    //    int n1 = bus_indices[node1];
+    //    for (int i = 0; i < input_pins; ++i) {
+    //        matrix.set(n1 + i, n1 + i, addSym(matrix.get(n1 + i, n1 + i), inv(real_double(R_values[i]))));
+    //    }
 
-        if (node2 && (bus_indices.count(node2) != 0)) {
-            int n2 = bus_indices[node2];
-            for (int i = 0; i < output_pins; ++i) {
-                matrix.set(n1 + i, n2 + i, subSym(matrix.get(n1 + i, n2 + i), inv(real_double(R_values[i]))));
-                matrix.set(n2 + i, n1 + i, subSym(matrix.get(n2 + i, n1 + i), inv(real_double(R_values[i]))));
-                matrix.set(n2 + i, n2 + i, addSym(matrix.get(n2 + i, n2 + i), inv(real_double(R_values[i]))));
-            }
-        }
-    }
-    else if (node2 && (bus_indices.count(node2) != 0)) {
-        int n2 = bus_indices[node2];
-        for (int i = 0; i < output_pins; ++i) {
-            matrix.set(n2 + i, n2 + i, addSym(matrix.get(n2 + i, n2 + i), inv(real_double(R_values[i]))));
-        }
-    }
+    //    if (node2 && (bus_indices.count(node2) != 0)) {
+    //        int n2 = bus_indices[node2];
+    //        for (int i = 0; i < output_pins; ++i) {
+    //            matrix.set(n1 + i, n2 + i, subSym(matrix.get(n1 + i, n2 + i), inv(real_double(R_values[i]))));
+    //            matrix.set(n2 + i, n1 + i, subSym(matrix.get(n2 + i, n1 + i), inv(real_double(R_values[i]))));
+    //            matrix.set(n2 + i, n2 + i, addSym(matrix.get(n2 + i, n2 + i), inv(real_double(R_values[i]))));
+    //        }
+    //    }
+    //}
+    //else if (node2 && (bus_indices.count(node2) != 0)) {
+    //    int n2 = bus_indices[node2];
+    //    for (int i = 0; i < output_pins; ++i) {
+    //        matrix.set(n2 + i, n2 + i, addSym(matrix.get(n2 + i, n2 + i), inv(real_double(R_values[i]))));
+    //    }
+    //}
 }
