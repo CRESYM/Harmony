@@ -8,8 +8,11 @@
 class Network;
 class SubNetwork;
 class Element;
+// ===================================================================
+//  Supporting structs
+// ===================================================================
 
-/// Complete persistent state of one DSSS instance
+/// Persistent state of one DSSS instance
 struct DSSState
 {
     MatrixXcd Ads, Bds, Cds, Dds;      ///< Cached switch-augmented matrices
@@ -23,18 +26,16 @@ struct DSSState
     bool initialized = false;
 };
 
-/// Per-converter routing specification
+/// Per-converter routing (feedback loop only — DSSS is global)
 struct ConverterRoute
 {
     std::string name;                   ///< Must match key in converters map
 
-    int  upGroupIndex = 0;             ///< DSS output group for upper-arm current (local)
-    int  lowGroupIndex = 1;             ///< DSS output group for lower-arm current (local)
+    /// Which GLOBAL output groups carry this converter's arm currents
+    int  upGroupIndex = 0;
+    int  lowGroupIndex = 1;
     bool invertUp = false;
     bool invertLow = true;
-
-    /// Global input blocks that feed this converter's DSSS (B-matrix column order)
-    std::vector<int> inputBlocks;
 
     /// One feedback path: converter output → global input block
     struct Feedback {
@@ -51,20 +52,25 @@ struct Config
     double dt = 0.0;
     double t_start = 0.0;
     double t_end = 0.0;
-    double f = 0.0;
-    double omega = 0.0;
+    double f = 0.0;              ///< System frequency [Hz]
+    double omega = 0.0;              ///< System angular frequency [rad/s]
 
-    int nKeep = 0;                      ///< DSS-level harmonics
-    int nArm = 0;                       ///< Arm-level harmonics
-    int nInputBlocks = 0;               ///< Total global input blocks
+    int nKeep = 0;              ///< DSS-level harmonics
+    int nArm = 0;              ///< Arm-level harmonics
+    int nInputBlocks = 0;              ///< Total global input blocks (each 3 x nKeep)
 
+    // Switch parameters
     Eigen::VectorXd swOnRes;
     Eigen::VectorXd swOffRes;
     Eigen::VectorXi swType;
 
+    /// Breaker schedule
     std::function<Eigen::VectorXi(int step, double t)> breakerFunction;
+
+    /// External inputs
     std::function<std::vector<MatrixXcd>(int step, double t)> externalInputFunction;
 
+    /// Per-converter feedback routing
     std::vector<ConverterRoute> converterRoutes;
 };
 
@@ -73,8 +79,8 @@ struct DQsymResult
 {
     std::vector<double> time;
     MatrixXi brkHistory;
-    std::vector<MatrixXd> DSSabcHist;   ///< One Nx3 per DSS output group
-    std::vector<MatrixXd> MMCabcHist;   ///< One Nx3 per converter output signal
+    std::vector<MatrixXd> DSSabcHist;  ///< One Nx3 per DSS output group
+    std::vector<MatrixXd> MMCabcHist;  ///< One Nx3 per converter output signal
 };
 
 
@@ -100,7 +106,7 @@ public:
     //  Simulation
     // ---------------------------------------------------------------
     DQsymResult run(Config& cfg);
-    void reset() { dssStates_.clear(); hasRun_ = false; }
+    void reset() { dssState_ = DSSState{}; hasRun_ = false; }
 
     // ---------------------------------------------------------------
     //  Results
@@ -111,7 +117,7 @@ public:
     bool hasRun() const { return hasRun_; }
 
     // ---------------------------------------------------------------
-    //  DSSS solver (state passed explicitly)
+    //  DSSS solver
     // ---------------------------------------------------------------
     MatrixXcd DSSS(DSSState& state,
         const MatrixXcd& Ad, const MatrixXcd& Bd,
@@ -128,10 +134,9 @@ public:
         MatrixXcd& Ao, MatrixXcd& Bo,
         MatrixXcd& Co, MatrixXcd& Do);
 
-
 private:
-    // The single set of per-converter DSSS states
-    std::unordered_map<std::string, DSSState> dssStates_;
+    // Single global DSSS state
+    DSSState dssState_;
 
     // Simulation bookkeeping
     bool        hasRun_ = false;
@@ -144,6 +149,5 @@ private:
     std::unordered_map<std::string, SubNetwork*> dc_grids;
     std::unordered_map<std::string, Element*>    converters;
 };
-
 
 #endif // _DQSYM_H_

@@ -25,6 +25,10 @@ public:
     // One MMC arm-voltage time step
     vector<MatrixXcd> simulateTimeStep(const vector<MatrixXcd>& input, double Ts, int nKeep1, int nKeep2) override;
 
+    // State-space model manipulation - generic MNA stamping 
+    void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
+
+
   
 private:
     int number_of_states = 6;

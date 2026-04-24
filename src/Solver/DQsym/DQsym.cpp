@@ -65,11 +65,9 @@ MatrixXcd DQsym::DSSS(
     MatrixXcd x = MatrixXcd::Zero(nx, T);
     MatrixXcd y = MatrixXcd::Zero(ny, T);
 
-    // Convert to phasor frame
     MatrixXcd A0, B0, C0, D0;
     convertToPhasor(Ad, Bd, Cd, Dd, A0, B0, C0, D0);
 
-    // First call on this state: initialise
     if (!st.initialized)
     {
         st.nStates = nx;
@@ -90,11 +88,9 @@ MatrixXcd DQsym::DSSS(
         st.initialized = true;
     }
 
-    // Update switch vector
     if ((swType.array() != 0).any())
         st.swVec = brkVec;
 
-    // Rebuild cached matrices when switch state changes
     if ((swType.array() != 0).any() &&
         (st.swVecOld.array() != st.swVec.array()).any())
     {
@@ -104,10 +100,8 @@ MatrixXcd DQsym::DSSS(
         st.swVecOld = st.swVec;
     }
 
-    // Propagate
     x = st.Ads * st.x_old + st.Bds * u;
 
-    // Rotate back to phasor frame
     VectorXcd expVec(T);
     for (int k = 0; k < T; ++k)
         expVec(k) = std::exp(std::complex<double>(0.0, -2.0 * M_PI * f0 * dt * k));
@@ -121,7 +115,7 @@ MatrixXcd DQsym::DSSS(
 
 
 // ===================================================================
-//  buildMatricesForState  (stateless — pure input/output)
+//  buildMatricesForState
 // ===================================================================
 
 void DQsym::buildMatricesForState(
@@ -180,6 +174,7 @@ void DQsym::buildMatricesForState(
     }
 }
 
+
 // ===================================================================
 //  run
 // ===================================================================
@@ -198,29 +193,37 @@ DQsymResult DQsym::run(Config& cfg)
     }
 
     // ------------------------------------------------------------------
-    //  Step 1: count total DSS output groups
+    //  Step 1: get global system matrices
+    //  TODO: replace with assembled network state-space once available.
+    //  For now, use the first converter's discrete matrices.
     // ------------------------------------------------------------------
-    int totalGroups = 0;
-    for (const auto& cr : cfg.converterRoutes)
-    {
-        auto it = converters.find(cr.name);
-        if (it == converters.end())
-            throw std::runtime_error("run(): converter '" + cr.name + "' not registered.");
-        Converter* conv = dynamic_cast<Converter*>(it->second);
-        totalGroups += static_cast<int>(conv->getCd().rows()) / 3;
-    }
+    if (converters.empty())
+        throw std::runtime_error("run(): no converters registered.");
+
+    Converter* first = dynamic_cast<Converter*>(converters.begin()->second);
+    if (!first)
+        throw std::runtime_error("run(): first element is not a Converter.");
+
+    MatrixXcd AdC = first->getAd().cast<std::complex<double>>();
+    MatrixXcd BdC = first->getBd().cast<std::complex<double>>();
+    MatrixXcd CdC = first->getCd().cast<std::complex<double>>();
+    MatrixXcd DdC = first->getDd().cast<std::complex<double>>();
+
+    VectorXcd xo = VectorXcd::Zero(AdC.rows());
+
+    const int nGroups = static_cast<int>(CdC.rows()) / 3;
 
     // ------------------------------------------------------------------
-    //  Step 2: allocate result, reset state
+    //  Step 2: allocate result, reset DSSS state
     // ------------------------------------------------------------------
     const int N = static_cast<int>((cfg.t_end - cfg.t_start) / cfg.dt) + 1;
 
     DQsymResult result;
     result.time.resize(N);
-    result.DSSabcHist.assign(totalGroups, Eigen::MatrixXd::Zero(N, 3));
+    result.DSSabcHist.assign(nGroups, Eigen::MatrixXd::Zero(N, 3));
     result.brkHistory = Eigen::MatrixXi::Zero(N, cfg.swType.size());
 
-    dssStates_.clear();                 // fresh state for every converter
+    dssState_ = DSSState{};     // fresh state
 
     bool mmcHistAllocated = false;
     int  totalMMCSignals = 0;
@@ -235,19 +238,19 @@ DQsymResult DQsym::run(Config& cfg)
         const double theta = 2.0 * M_PI * cfg.f * t;
         result.time[k] = t;
 
-        // ---- breaker ----
+        // ---- 3a. breaker ----
         Eigen::VectorXi brkVec = cfg.breakerFunction
             ? cfg.breakerFunction(k, t)
             : Eigen::VectorXi::Zero(cfg.swType.size());
         result.brkHistory.row(k) = brkVec.transpose();
 
-        // ---- global external inputs ----
+        // ---- 3b. global external inputs ----
         std::vector<MatrixXcd> uBlocks = cfg.externalInputFunction
             ? cfg.externalInputFunction(k, t)
             : std::vector<MatrixXcd>(cfg.nInputBlocks,
                 MatrixXcd::Zero(3, cfg.nKeep));
 
-        // ---- per-converter feedback injection ----
+        // ---- 3c. per-converter feedback injection ----
         for (const auto& cr : cfg.converterRoutes)
         {
             auto it = lastOutputs.find(cr.name);
@@ -264,54 +267,36 @@ DQsymResult DQsym::run(Config& cfg)
             }
         }
 
-        // ---- per-converter: DSSS + simulateTimeStep ----
-        int groupOffset = 0;
+        // ---- 3d. pack global input ----
+        MatrixXcd u(3 * cfg.nInputBlocks, cfg.nKeep);
+        for (int b = 0; b < cfg.nInputBlocks; ++b)
+            u.block(3 * b, 0, 3, cfg.nKeep) = uBlocks[b];
 
+        // ---- 3e. ONE global DSSS call ----
+        MatrixXcd y = DSSS(dssState_, AdC, BdC, CdC, DdC,
+            cfg.swOnRes, cfg.swOffRes, cfg.swType, brkVec,
+            u, xo, cfg.dt, cfg.f);
+
+        // ---- 3f. per-converter: extract currents → simulateTimeStep ----
         for (const auto& cr : cfg.converterRoutes)
         {
-            Converter* conv = dynamic_cast<Converter*>(converters[cr.name]);
+            auto it = converters.find(cr.name);
+            if (it == converters.end()) continue;
 
-            // This converter's discrete matrices
-            MatrixXcd AdC = conv->getAd().cast<std::complex<double>>();
-            MatrixXcd BdC = conv->getBd().cast<std::complex<double>>();
-            MatrixXcd CdC = conv->getCd().cast<std::complex<double>>();
-            MatrixXcd DdC = conv->getDd().cast<std::complex<double>>();
+            Converter* conv = dynamic_cast<Converter*>(it->second);
+            if (!conv) continue;
 
-            VectorXcd xo = VectorXcd::Zero(AdC.rows());
-
-            // Assemble this converter's input from global blocks
-            int nIn = static_cast<int>(cr.inputBlocks.size());
-            MatrixXcd u_conv(3 * nIn, cfg.nKeep);
-            for (int b = 0; b < nIn; ++b)
-                u_conv.block(3 * b, 0, 3, cfg.nKeep) = uBlocks[cr.inputBlocks[b]];
-
-            // DSSS on this converter's own state
-            DSSState& st = dssStates_[cr.name];
-
-            MatrixXcd y = DSSS(st, AdC, BdC, CdC, DdC,
-                cfg.swOnRes, cfg.swOffRes, cfg.swType, brkVec,
-                u_conv, xo, cfg.dt, cfg.f);
-
-            // Extract arm currents (local group indices)
             MatrixXcd Iup = y.block(3 * cr.upGroupIndex, 0, 3, cfg.nKeep);
             MatrixXcd Ilow = y.block(3 * cr.lowGroupIndex, 0, 3, cfg.nKeep);
             if (cr.invertUp)  Iup = -Iup;
             if (cr.invertLow) Ilow = -Ilow;
 
-            // Converter internal dynamics
             auto mmcOut = conv->simulateTimeStep({ Ilow, Iup },
                 cfg.dt, cfg.nKeep, cfg.nArm);
             lastOutputs[cr.name] = mmcOut;
-
-            // Store DSS abc history
-            int nGroupsConv = static_cast<int>(CdC.rows()) / 3;
-            auto abcGroups = dqn2abc_groups_at_time(y, theta);
-            for (int g = 0; g < nGroupsConv; ++g)
-                result.DSSabcHist[groupOffset + g].row(k) = abcGroups[g].transpose();
-            groupOffset += nGroupsConv;
         }
 
-        // ---- allocate MMC history (once) ----
+        // ---- 3g. allocate MMC history (once) ----
         if (!mmcHistAllocated)
         {
             totalMMCSignals = 0;
@@ -325,7 +310,12 @@ DQsymResult DQsym::run(Config& cfg)
             mmcHistAllocated = true;
         }
 
-        // ---- store MMC abc history ----
+        // ---- 3h. store DSS abc history ----
+        auto abcGroups = dqn2abc_groups_at_time(y, theta);
+        for (int g = 0; g < nGroups; ++g)
+            result.DSSabcHist[g].row(k) = abcGroups[g].transpose();
+
+        // ---- 3i. store MMC abc history ----
         int mmcIdx = 0;
         for (const auto& cr : cfg.converterRoutes) {
             auto it = lastOutputs.find(cr.name);

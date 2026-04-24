@@ -6,7 +6,6 @@
 
 using cd = std::complex<double>;
 
-
 void example_DQsym_Simple_MMC()
 {
     std::cout << "=== example_DQsym_Simple_MMC ===\n";
@@ -21,12 +20,11 @@ void example_DQsym_Simple_MMC()
         omega, 0.0, 0.0, 0.0, 0.0, 0.0, Vdc,
         52.9e-3, 166.3e-3, 1.7568e-3, 1, 0.0, 10.0
     };
-
-    Simple_MMC* mmc1 = new Simple_MMC("MMC1", "AC1_DC1", params);
+    Simple_MMC mmc1("MMC1", "AC1_DC1", params);
 
     // ---- solver ----
     DQsym dq;
-	dq.addConverter("MMC1", mmc1);
+    dq.addConverter("MMC1", &mmc1);
 
     // ---- config ----
     Config cfg;
@@ -51,24 +49,26 @@ void example_DQsym_Simple_MMC()
 
     // ---- per-converter routing ----
     //
-    //  Global input blocks:
-    //    0 = DC voltage upper     (external, constant)
-    //    1 = DC voltage lower     (external, constant)
+    //  Global input blocks (all go into ONE DSSS):
+    //    0 = DC voltage upper     (external)
+    //    1 = DC voltage lower     (external)
     //    2 = MMC1 upper arm Vout  (feedback)
     //    3 = MMC1 lower arm Vout  (feedback)
     //
-    //  MMC1's B matrix expects 4 input blocks in that same order,
-    //  so inputBlocks = {0, 1, 2, 3} (identity mapping).
+    //  Global output groups (from ONE DSSS):
+    //    0 = upper arm currents
+    //    1 = lower arm currents
+    //    2 = mutual currents
+    //    3 = mutual voltages
     //
     cfg.converterRoutes = {
         {
             "MMC1",             // name
-            0, 1,               // upGroupIndex, lowGroupIndex (in THIS converter's DSS output)
+            0, 1,               // upGroupIndex, lowGroupIndex (global)
             false, true,        // invertUp, invertLow
-            { 0, 1, 2, 3 },    // inputBlocks: global block i → local input i
-            {                   // feedbacks: converter output → global block
-                { 0, 2, false },    //   VoutUp  → global block 2
-                { 1, 3, false }     //   VoutLow → global block 3
+            {                   // feedbacks: converter output → global input block
+                { 0, 2, false },    //   VoutUp  → block 2
+                { 1, 3, false }     //   VoutLow → block 3
             }
         }
     };
