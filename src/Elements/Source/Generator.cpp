@@ -1,8 +1,8 @@
 #include "Generator.h"
 
 // Constructor
-Generator::Generator(const std::string& symbol, const std::string& location, int pins, double V, const std::vector<double>& values)
-    : Source_base(symbol, location, pins, V) {
+Generator::Generator(const std::string& symbol, const std::string& location, int pins, double Vi, const std::vector<double>& values)
+    : Source_base(symbol, location, pins) {
 
     if (values.size() == 3) {
         R_f = values[0];
@@ -40,5 +40,9 @@ Generator::Generator(const std::string& symbol, const std::string& location, int
         Y_matrix.set(pins + i, i, Y21);  // Y21 (symmetrical to Y12)
         Y_matrix.set(pins + i, pins + i, Y22);  // Y22
     }
+	V.push_back(Vi); // Assuming the same voltage for all pins, can be modified for different voltages per pin
+	V.push_back(Vi); // Assuming the same voltage for all pins, can be modified for different voltages per pin
+	V.push_back(Vi); // Assuming the same voltage for all pins, can be modified for different voltages per pin
+	Zsrc.push_back(0); Zsrc.push_back(0); Zsrc.push_back(0); // Assuming zero internal impedance for all pins, can be modified for different impedances per pin
 }
 

@@ -28,16 +28,19 @@ public:
     // State-space model manipulation - generic MNA stamping 
     void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
 
-
+    int getNumberOfInternalStates() const override { return number_of_states; }
+    map_basic_basic getParameterSubstitutions() const override;
   
 private:
-    int number_of_states = 6;
+    int number_of_states = 12;
 
     double L_arm = 0.0;
     double R_arm = 0.0;
     double C_arm = 0.0;
     int N = 0;
 
+    // Helper values
+	double L_eq = 0.0, R_eq = 0.0, m_1 = 1.0;
 
     vector<MatrixXcd> Zold;
     vector<MatrixXcd> Xold;

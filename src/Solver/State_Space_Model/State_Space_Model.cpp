@@ -2,217 +2,228 @@
 #include "../../network.h"      
 #include "../../Include_components.h"
 
+static int getStateCount(Element* e) {
+    int n = e->getNumberOfInternalStates();
+    return (n > 0) ? n : e->getInputPins();
+}
+
 void StateSpaceModel::finalizeCounts(Network* net) {
-	std::unordered_map<std::string, Element*> elements = net->getElements();
-	std::unordered_map<std::string, Bus*> buses = net->getBuses();
-
-    // Clear previous indices
-    bus_indices.clear();
-    element_indices.clear();
-
-	list_independent_sources.clear();
-	list_state_variables.clear();
-	list_switches.clear();
-
-    number_switches = 0;
-    number_independent_sources = 0;
-    number_state_variables = 0;
+    std::unordered_map<std::string, Element*> elements = net->getElements();
+    std::unordered_map<std::string, Bus*> buses = net->getBuses();
+    bus_indices.clear(); element_indices.clear();
+    list_independent_sources.clear(); list_state_variables.clear(); list_switches.clear();
+    number_switches = 0; number_independent_sources = 0; number_state_variables = 0;
     if (number_nodes < 0) number_nodes = 0;
+
     for (const auto& [name, element] : elements) {
         if (dynamic_cast<Inductor*>(element) || dynamic_cast<Capacitor*>(element)) {
             number_state_variables += element->getInputPins();
-			list_state_variables.push_back(element);
+            list_state_variables.push_back(element);
+        }
+        else if (dynamic_cast<Converter*>(element)) {
+            number_state_variables += element->getNumberOfInternalStates();
+            list_state_variables.push_back(element);
         }
         else if (dynamic_cast<Switch*>(element)) {
             number_switches += element->getInputPins();
-			list_switches.push_back(element);
+            list_switches.push_back(element);
         }
         else if (dynamic_cast<AC_source*>(element)) {
-			number_independent_sources += element->getInputPins();
-			list_independent_sources.push_back(element);
+            number_independent_sources += element->getInputPins();
+            list_independent_sources.push_back(element);
         }
-        // Add other cases as needed
     }
 
-    number_outputs = 0; // static_cast<int>(output_indexes.size());
-
-	// Update the locations in the model
-    number_nodes = 0;
-    number_outputs = 0;
-    // Assign indices to buses, excluding the reference bus (assuming "gnd" is ground)
+    number_outputs = 0; number_nodes = 0;
     for (const auto& [name, busPtr] : buses) {
         if (busPtr->getBusName() == "gnd") continue;
-        bus_indices[busPtr] = number_nodes; 
+        bus_indices[busPtr] = number_nodes;
         number_nodes += busPtr->getPinNumber();
     }
-    for (int i = 0; i < output.size(); ++i) {
+    for (size_t i = 0; i < output.size(); ++i) {
         Bus* bus = output[i];
         if (bus->getBusName() == "gnd") continue;
         number_outputs += bus->getPinNumber();
-	}
+    }
 
-	// Assign indices to elements
-	// Assign indices to independent sources
     int location = number_nodes;
     for (const auto& element : list_independent_sources) {
-	    element_indices[element] = location;
-		location += element->getInputPins();
+        element_indices[element] = location;
+        location += element->getInputPins();
     }
-    // Assign indices to switches
     for (const auto& element : list_switches) {
         element_indices[element] = location;
         location += element->getInputPins();
-	}
-	// Assign indices to state variables
+    }
     for (const auto& element : list_state_variables) {
         element_indices[element] = location;
-        location += element->getInputPins();
+        location += getStateCount(element);
     }
 
-	// Calculate total number of equations
-    total_number_equations = number_nodes + number_independent_sources + number_switches + number_state_variables;
+    total_number_equations = number_nodes + number_independent_sources
+        + number_switches + number_state_variables;
 
-    std::cout << "[Network] Nodes: " << number_nodes << std::endl;
-    std::cout << "  Switches: " << number_switches << std::endl;
-    std::cout << "  Independent sources: " << number_independent_sources << std::endl;
-    std::cout << "  State variables: " << number_state_variables << std::endl;
-    std::cout << "  Total equations: " << total_number_equations << std::endl;
-    std::cout << "  Outputs: " << number_outputs << std::endl;
+    std::cout << "[Network] Nodes:" << number_nodes << " Src:" << number_independent_sources
+        << " States:" << number_state_variables << " Total:" << total_number_equations << std::endl;
+}
+
+void StateSpaceModel::substituteParameters(SymEngine::DenseMatrix& matrix) {
+    using namespace SymEngine;
+    for (const auto& element : list_state_variables) {
+        map_basic_basic subs_map = element->getParameterSubstitutions();
+        if (subs_map.empty()) continue;
+        for (int i = 0; i < total_number_equations; ++i) {
+            RCP<const Basic> val = matrix.get(i, total_number_equations);
+            val = subs(val, subs_map);
+            matrix.set(i, total_number_equations, val);
+        }
+    }
 }
 
 
-void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out)
-{
-	output = out;
-
-    finalizeCounts(net); // Ensure counts are up-to-date
+void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out) {
+    output = out;
+    finalizeCounts(net);
     std::unordered_map<std::string, Element*> elements = net->getElements();
 
-    // Initialize MNA matrices with appropriate dimensions
-    SymEngine::DenseMatrix matrix = createZeroMatrix(total_number_equations, total_number_equations+1);
+    SymEngine::DenseMatrix matrix = createZeroMatrix(total_number_equations, total_number_equations + 1);
 
-    // Stamp all elements with full index maps
-    int location = number_nodes;
-    for (const auto& [name,element] : elements)
-    {
-		location = (element_indices.count(element) != 0) ? element_indices[element] : 0;
+    for (const auto& [name, element] : elements) {
+        int location = (element_indices.count(element) != 0) ? element_indices[element] : 0;
         element->writeMNAmatrix(matrix, bus_indices, location, symbols_bank);
-        location += element->getInputPins();
-
     }
 
-    std::cout << "[StateSpaceModel] MNA matrix populated with equations." << std::endl;
-    for (int i = 0; i < total_number_equations; ++i) {
-        for (int j = 0; j < total_number_equations+1; ++j) {
-            std::cout << matrix.get(i, j)->__str__() << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    // reduced_row_echelon_form
+    std::cout << "[StateSpaceModel] MNA populated. Running RREF..." << std::endl;
     vec_uint pivot_cols;
     reduced_row_echelon_form(matrix, matrix, pivot_cols);
 
-    std::cout << "[StateSpaceModel] MNA after RREF." << std::endl;
-    for (int i = 0; i < total_number_equations; ++i) {
-        for (int j = 0; j < total_number_equations + 1; ++j) {
-            std::cout << matrix.get(i, j)->__str__() << " ";
-        }
-        std::cout << std::endl;
-    }
-	//std::cout << "[StateSpaceModel] Pivot columns: ";
- //   for (const auto& col : pivot_cols) {
- //       std::cout << col << " ";
- //   }
- //   std::cout << std::endl;
+    substituteParameters(matrix);
 
-	// Extract A, B, C, D matrices from the MNA matrix
-	A = Eigen::MatrixXd::Zero(number_state_variables, number_state_variables);
-	B = Eigen::MatrixXd::Zero(number_state_variables, number_independent_sources);
-	C = Eigen::MatrixXd::Zero(number_outputs, number_state_variables);
-	D = Eigen::MatrixXd::Zero(number_outputs, number_independent_sources);
+    A = Eigen::MatrixXd::Zero(number_state_variables, number_state_variables);
+    B = Eigen::MatrixXd::Zero(number_state_variables, number_independent_sources);
+    C = Eigen::MatrixXd::Zero(number_outputs, number_state_variables);
+    D = Eigen::MatrixXd::Zero(number_outputs, number_independent_sources);
 
-    for (int i = 0; i < list_state_variables.size(); i++) {
-        int location1 = element_indices[list_state_variables[i]];
-		// Fill A matrix
-        for (int j = 0; j < list_state_variables.size(); j++) {
-			int location2 = element_indices[list_state_variables[j]];
-            for (int k = 0; k < list_state_variables[i]->getInputPins(); ++k) {
-				RCP<const Basic> value = matrix.get(location1 + k, total_number_equations);
-                for (auto& [element, symbols] : symbols_bank) {
-                    if (element != list_state_variables[j]) {
-                        value = substitute_symbols(value, symbols, 0.0);
+    // ---- A: per-symbol extraction ----
+    int row_off = 0;
+    for (int i = 0; i < (int)list_state_variables.size(); i++) {
+        int loc_i = element_indices[list_state_variables[i]];
+        int n_i = getStateCount(list_state_variables[i]);
+        int col_off = 0;
+        for (int j = 0; j < (int)list_state_variables.size(); j++) {
+            int n_j = getStateCount(list_state_variables[j]);
+            for (int ki = 0; ki < n_i; ++ki) {
+                RCP<const Basic> base = matrix.get(loc_i + ki, total_number_equations);
+                for (int kj = 0; kj < n_j; ++kj) {
+                    RCP<const Basic> val = base;
+                    for (auto& [elem, syms] : symbols_bank) {
+                        for (size_t s = 0; s < syms.size(); ++s) {
+                            map_basic_basic sub;
+                            sub[syms[s]] = (elem == list_state_variables[j] && (int)s == kj)
+                                ? real_double(1.0) : real_double(0.0);
+                            val = SymEngine::subs(val, sub);
+                        }
                     }
-                    else {
-                        value = substitute_symbols(value, symbols, 1.0);
-					}
+                    A(row_off + ki, col_off + kj) = eval_basic(val);
                 }
-                A(i + k, j + k) = eval_basic(value);
-			}
-        }
-
-		// Fill B matrix
-        for (int j = 0; j < list_independent_sources.size(); j++) {
-            int location2 = element_indices[list_independent_sources[j]];
-            for (int k = 0; k < list_state_variables[i]->getInputPins(); ++k) {
-                RCP<const Basic> value = matrix.get(location1 + k, total_number_equations);
-                for (auto& [element, symbols] : symbols_bank) {
-                    if (element != list_independent_sources[j]) {
-                        value = substitute_symbols(value, symbols, 0.0);
-                    }
-                    else {
-                        value = substitute_symbols(value, symbols, 1.0);
-                    }
-                }
-                B(i + k,  + k) = eval_basic(value);
             }
+            col_off += n_j;
         }
+        row_off += n_i;
     }
 
-   
-    for (int i = 0; i < output.size(); ++i) {
+    // ---- B ----
+    row_off = 0;
+    for (int i = 0; i < (int)list_state_variables.size(); i++) {
+        int loc_i = element_indices[list_state_variables[i]];
+        int n_i = getStateCount(list_state_variables[i]);
+        int col_off = 0;
+        for (int j = 0; j < (int)list_independent_sources.size(); j++) {
+            int n_j = list_independent_sources[j]->getInputPins();
+            for (int ki = 0; ki < n_i; ++ki) {
+                RCP<const Basic> base = matrix.get(loc_i + ki, total_number_equations);
+                for (int kj = 0; kj < n_j; ++kj) {
+                    RCP<const Basic> val = base;
+                    for (auto& [elem, syms] : symbols_bank) {
+                        for (size_t s = 0; s < syms.size(); ++s) {
+                            map_basic_basic sub;
+                            sub[syms[s]] = (elem == list_independent_sources[j] && (int)s == kj)
+                                ? real_double(1.0) : real_double(0.0);
+                            val = SymEngine::subs(val, sub);
+                        }
+                    }
+                    B(row_off + ki, col_off + kj) = eval_basic(val);
+                }
+            }
+            col_off += n_j;
+        }
+        row_off += n_i;
+    }
+
+    // ---- C ----
+    int out_off = 0;
+    for (int i = 0; i < (int)output.size(); ++i) {
         Bus* bus = output[i];
-        int bus_index = bus_indices[bus];
-
-		// Fill C matrix
-        for (int j = 0; j < list_state_variables.size(); ++j) {
-            int location = element_indices[list_state_variables[j]];
-            for (int k = 0; k < list_state_variables[j]->getInputPins(); ++k) {
-                RCP<const Basic> value = matrix.get(bus_index + k, total_number_equations);
-                for (auto& [element, symbols] : symbols_bank) {
-                    if (element != list_state_variables[j]) {
-                        value = substitute_symbols(value, symbols, 0.0);
+        if (bus->getBusName() == "gnd") continue;
+        int bus_idx = bus_indices[bus];
+        int n_pins = bus->getPinNumber();
+        int col_off = 0;
+        for (int j = 0; j < (int)list_state_variables.size(); ++j) {
+            int n_j = getStateCount(list_state_variables[j]);
+            for (int ki = 0; ki < n_pins; ++ki) {
+                RCP<const Basic> base = matrix.get(bus_idx + ki, total_number_equations);
+                for (int kj = 0; kj < n_j; ++kj) {
+                    RCP<const Basic> val = base;
+                    for (auto& [elem, syms] : symbols_bank) {
+                        for (size_t s = 0; s < syms.size(); ++s) {
+                            map_basic_basic sub;
+                            sub[syms[s]] = (elem == list_state_variables[j] && (int)s == kj)
+                                ? real_double(1.0) : real_double(0.0);
+                            val = SymEngine::subs(val, sub);
+                        }
                     }
-                    else {
-                        value = substitute_symbols(value, symbols, 1.0);
-                    }
+                    C(out_off + ki, col_off + kj) = eval_basic(val);
                 }
-                C(i + k, j + k) = eval_basic(value);
             }
-		}
-
-        for (int j = 0; j < list_independent_sources.size(); ++j) {
-            for (int k = 0; k < list_independent_sources[j]->getInputPins(); ++k) {
-                RCP<const Basic> value = matrix.get(bus_index + k, total_number_equations);
-
-                for (auto& [element, symbols] : symbols_bank) {
-                    if (element != list_independent_sources[j]) {
-                        value = substitute_symbols(value, symbols, 0.0);
-                    }
-                    else {
-                        value = substitute_symbols(value, symbols, 1.0);
-                    }
-                }
-                D(i + k, j + k) = eval_basic(value);
-            }
+            col_off += n_j;
         }
+        out_off += n_pins;
     }
 
-	// Print the resulting matrices
-    std::cout << "[StateSpaceModel] A matrix: \n" << A << std::endl;
-    std::cout << "[StateSpaceModel] B matrix: \n" << B << std::endl;
-    std::cout << "[StateSpaceModel] C matrix: \n" << C << std::endl;
-	std::cout << "[StateSpaceModel] D matrix: \n" << D << std::endl;
+    // ---- D ----
+    out_off = 0;
+    for (int i = 0; i < (int)output.size(); ++i) {
+        Bus* bus = output[i];
+        if (bus->getBusName() == "gnd") continue;
+        int bus_idx = bus_indices[bus];
+        int n_pins = bus->getPinNumber();
+        int col_off = 0;
+        for (int j = 0; j < (int)list_independent_sources.size(); ++j) {
+            int n_j = list_independent_sources[j]->getInputPins();
+            for (int ki = 0; ki < n_pins; ++ki) {
+                RCP<const Basic> base = matrix.get(bus_idx + ki, total_number_equations);
+                for (int kj = 0; kj < n_j; ++kj) {
+                    RCP<const Basic> val = base;
+                    for (auto& [elem, syms] : symbols_bank) {
+                        for (size_t s = 0; s < syms.size(); ++s) {
+                            map_basic_basic sub;
+                            sub[syms[s]] = (elem == list_independent_sources[j] && (int)s == kj)
+                                ? real_double(1.0) : real_double(0.0);
+                            val = SymEngine::subs(val, sub);
+                        }
+                    }
+                    D(out_off + ki, col_off + kj) = eval_basic(val);
+                }
+            }
+            col_off += n_j;
+        }
+        out_off += n_pins;
+    }
+
+    std::cout << "[StateSpaceModel] A(" << A.rows() << "x" << A.cols()
+        << ") B(" << B.rows() << "x" << B.cols()
+        << ") C(" << C.rows() << "x" << C.cols()
+        << ") D(" << D.rows() << "x" << D.cols() << ")" << std::endl;
 }
 
 

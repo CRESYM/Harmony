@@ -103,6 +103,7 @@ private:
 	std::vector<Element*> list_switches; // Switches in the network
 
     void finalizeCounts(Network*);
+    void substituteParameters(DenseMatrix& matrix);
 };
 
 #endif //STATE_SPACE_MODEL

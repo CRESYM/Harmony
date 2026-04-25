@@ -34,6 +34,7 @@
 // Sources
 #include "./Elements/Source/AC_source.h"
 #include "./Elements/Source/Generator.h"
+#include "./Elements/Source/DC_source.h"
 
 // Lines
 #include "./Elements/Transmission_Line/Transmissionline.h"

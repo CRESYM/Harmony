@@ -217,32 +217,169 @@ vector<MatrixXcd> Simple_MMC::simulateTimeStep(const vector<MatrixXcd>& input, d
 
 
 // MNA stamping and other state-space manipulations 
-void Simple_MMC::writeMNAmatrix(SymEngine::DenseMatrix& matrix, std::unordered_map<Bus*, int>& bus_indices, int location,
-    std::map<Element*, std::vector<RCP<const Basic>>>& symbols_map)
+// ===================================================================
+//  writeMNAmatrix — 12-state sigma-delta
+// ===================================================================
+//
+//  Terminal 0 = AC bus (3 pins: phase a,b,c)
+//  Terminal 1 = DC bus (2 pins: pin0=DC+, pin1=DC-)
+//
+//  States at offset+0..11:
+//    0-2:  i^Δ_abc    3-5:  i^Σ_abc    6-8:  v_C^Δ_abc   9-11: v_C^Σ_abc
+//
+//  Equations (per phase k):
+//    di^Δ_k/dt = -(R_eq/L_eq)·i^Δ_k - m^Σ/(2L_eq)·v_C^Δ_k - m^Δ/(2L_eq)·v_C^Σ_k
+//                -(1/L_eq)·V_pcc_k + 1/(2L_eq)·V_dc_p + 1/(2L_eq)·V_dc_n
+//
+//    di^Σ_k/dt = -(R_arm/L_arm)·i^Σ_k - m^Δ/(2L_arm)·v_C^Δ_k - m^Σ/(2L_arm)·v_C^Σ_k
+//                + 1/(2L_arm)·V_dc_p - 1/(2L_arm)·V_dc_n
+//
+//    dv_C^Δ_k/dt = m^Σ/(4C_arm)·i^Δ_k + m^Δ/(2C_arm)·i^Σ_k
+//    dv_C^Σ_k/dt = m^Δ/(4C_arm)·i^Δ_k + m^Σ/(2C_arm)·i^Σ_k
+//
+//  Convention (matching Inductor stamp):
+//    State equation row: diagonal=1, node voltages in coeff cols,
+//                        state coupling via SYMBOLS in LAST COLUMN
+//    KCL rows: state symbols in LAST COLUMN
+//
+
+void Simple_MMC::writeMNAmatrix(
+    SymEngine::DenseMatrix& MNA,
+    std::unordered_map<Bus*, int>& busMap,
+    int offset,
+    std::map<Element*, std::vector<RCP<const Basic>>>& symbol_map)
 {
-    //std::vector<Bus*> buses = getBuses();
-    //Bus* node1 = buses.size() > 0 ? buses[0] : nullptr;
-    //Bus* node2 = buses.size() > 1 ? buses[1] : nullptr;
+    // ---- Terminal buses ----
+    Bus* ac_bus = nullptr;
+    Bus* dc_bus = nullptr;
+    for (auto& [bus, terminal] : connections) {
+        if (terminal == 0) ac_bus = bus;
+        if (terminal == 1) dc_bus = bus;
+    }
 
-    //if (node1 && (bus_indices.count(node1) != 0)) {
-    //    int n1 = bus_indices[node1];
-    //    for (int i = 0; i < input_pins; ++i) {
-    //        matrix.set(n1 + i, n1 + i, addSym(matrix.get(n1 + i, n1 + i), inv(real_double(R_values[i]))));
-    //    }
+    // ---- Symbolic modulation ----
+    RCP<const Basic> md = symbol("m_delta_" + element_symbol);
+    RCP<const Basic> ms = symbol("m_sigma_" + element_symbol);
 
-    //    if (node2 && (bus_indices.count(node2) != 0)) {
-    //        int n2 = bus_indices[node2];
-    //        for (int i = 0; i < output_pins; ++i) {
-    //            matrix.set(n1 + i, n2 + i, subSym(matrix.get(n1 + i, n2 + i), inv(real_double(R_values[i]))));
-    //            matrix.set(n2 + i, n1 + i, subSym(matrix.get(n2 + i, n1 + i), inv(real_double(R_values[i]))));
-    //            matrix.set(n2 + i, n2 + i, addSym(matrix.get(n2 + i, n2 + i), inv(real_double(R_values[i]))));
-    //        }
-    //    }
-    //}
-    //else if (node2 && (bus_indices.count(node2) != 0)) {
-    //    int n2 = bus_indices[node2];
-    //    for (int i = 0; i < output_pins; ++i) {
-    //        matrix.set(n2 + i, n2 + i, addSym(matrix.get(n2 + i, n2 + i), inv(real_double(R_values[i]))));
-    //    }
-    //}
+    // ---- Physical parameters as SymEngine reals ----
+    RCP<const Basic> Leq = real_double(L_eq);
+    RCP<const Basic> Req = real_double(R_eq);
+    RCP<const Basic> La = real_double(L_arm);
+    RCP<const Basic> Ra = real_double(R_arm);
+    RCP<const Basic> Ca = real_double(C_arm);
+
+    int lastCol = MNA.ncols() - 1;
+
+    // ---- 12 state symbols ----
+    std::vector<RCP<const Basic>> syms;
+    for (int i = 0; i < 12; ++i)
+        syms.push_back(symbol("x_" + element_symbol + "_" + std::to_string(i)));
+    symbol_map[this] = syms;
+    // syms[0..2]=i^Δ, syms[3..5]=i^Σ, syms[6..8]=v_C^Δ, syms[9..11]=v_C^Σ
+
+    // ---- DC bus pin indices (2-pin bus: pin0=DC+, pin1=DC-) ----
+    int dcp = -1, dcn = -1;
+    if (dc_bus && busMap.count(dc_bus)) {
+        dcp = busMap[dc_bus];       // DC+ = pin 0
+        dcn = busMap[dc_bus] + 1;   // DC- = pin 1
+    }
+
+    // ---- AC bus pin indices (3-pin) ----
+    int ac0 = -1;
+    if (ac_bus && busMap.count(ac_bus))
+        ac0 = busMap[ac_bus];       // phase a=+0, b=+1, c=+2
+
+    // ---- Per-phase stamp ----
+    for (int ph = 0; ph < 3; ++ph)
+    {
+        int iD = offset + ph;
+        int iS = offset + 3 + ph;
+        int vD = offset + 6 + ph;
+        int vS = offset + 9 + ph;
+
+        // ==== i^Δ equation ====
+        MNA.set(iD, iD, one);
+
+        if (ac0 >= 0)
+            MNA.set(iD, ac0 + ph, div(neg(one), Leq));            // -(1/L_eq)·V_pcc_k
+
+        if (dcp >= 0) {
+            MNA.set(iD, dcp, addSym(MNA.get(iD, dcp),
+                div(one, mul(integer(2), Leq))));                   // +1/(2L_eq)·V_dc+
+            MNA.set(iD, dcn, addSym(MNA.get(iD, dcn),
+                div(one, mul(integer(2), Leq))));                   // +1/(2L_eq)·V_dc-
+        }
+
+        // State coupling → last column
+        RCP<const Basic> rhs = MNA.get(iD, lastCol);
+        rhs = addSym(rhs, mul(div(neg(Req), Leq), syms[ph]));                        // -R_eq/L_eq · x_iD
+        rhs = addSym(rhs, mul(div(neg(ms), mul(integer(2), Leq)), syms[6 + ph]));    // -m^Σ/(2L_eq) · x_vD
+        rhs = addSym(rhs, mul(div(neg(md), mul(integer(2), Leq)), syms[9 + ph]));    // -m^Δ/(2L_eq) · x_vS
+        MNA.set(iD, lastCol, rhs);
+
+        // ==== i^Σ equation ====
+        MNA.set(iS, iS, one);
+
+        if (dcp >= 0) {
+            MNA.set(iS, dcp, addSym(MNA.get(iS, dcp),
+                div(one, mul(integer(2), La))));                    // +1/(2L_arm)·V_dc+
+            MNA.set(iS, dcn, addSym(MNA.get(iS, dcn),
+                div(neg(one), mul(integer(2), La))));               // -1/(2L_arm)·V_dc-
+        }
+
+        rhs = MNA.get(iS, lastCol);
+        rhs = addSym(rhs, mul(div(neg(Ra), La), syms[3 + ph]));                      // -R_arm/L_arm · x_iS
+        rhs = addSym(rhs, mul(div(neg(md), mul(integer(2), La)), syms[6 + ph]));      // -m^Δ/(2L_arm) · x_vD
+        rhs = addSym(rhs, mul(div(neg(ms), mul(integer(2), La)), syms[9 + ph]));      // -m^Σ/(2L_arm) · x_vS
+        MNA.set(iS, lastCol, rhs);
+
+        // ==== v_C^Δ equation (no node voltages) ====
+        MNA.set(vD, vD, one);
+        rhs = MNA.get(vD, lastCol);
+        rhs = addSym(rhs, mul(div(ms, mul(integer(4), Ca)), syms[ph]));               // m^Σ/(4C_arm) · x_iD
+        rhs = addSym(rhs, mul(div(md, mul(integer(2), Ca)), syms[3 + ph]));           // m^Δ/(2C_arm) · x_iS
+        MNA.set(vD, lastCol, rhs);
+
+        // ==== v_C^Σ equation (no node voltages) ====
+        MNA.set(vS, vS, one);
+        rhs = MNA.get(vS, lastCol);
+        rhs = addSym(rhs, mul(div(md, mul(integer(4), Ca)), syms[ph]));               // m^Δ/(4C_arm) · x_iD
+        rhs = addSym(rhs, mul(div(ms, mul(integer(2), Ca)), syms[3 + ph]));           // m^Σ/(2C_arm) · x_iS
+        MNA.set(vS, lastCol, rhs);
+
+        // ==== KCL at AC bus: i^Δ injected ====
+        if (ac0 >= 0)
+            MNA.set(ac0 + ph, lastCol,
+                addSym(MNA.get(ac0 + ph, lastCol), syms[ph]));
+
+        // ==== KCL at DC bus: arm currents ====
+        // DC+ (pin 0): upper arm = i^Δ_k/2 + i^Σ_k per phase
+        // DC- (pin 1): lower arm = -i^Δ_k/2 + i^Σ_k per phase
+        if (dcp >= 0) {
+            // DC+ pin
+            MNA.set(dcp, lastCol, addSym(MNA.get(dcp, lastCol),
+                addSym(div(syms[ph], integer(2)), syms[3 + ph])));
+
+            // DC- pin
+            MNA.set(dcn, lastCol, addSym(MNA.get(dcn, lastCol),
+                addSym(div(neg(syms[ph]), integer(2)), syms[3 + ph])));
+        }
+    }
 }
+
+
+// ===================================================================
+//  Parameter substitutions & simulateTimeStep
+// ===================================================================
+
+map_basic_basic Simple_MMC::getParameterSubstitutions() const {
+    map_basic_basic subs;
+    subs[symbol("m_delta_" + element_symbol)] = real_double(m_1);
+    subs[symbol("m_sigma_" + element_symbol)] = real_double(1.0);
+    return subs;
+}
+
+//vector<MatrixXcd> Simple_MMC::simulateTimeStep(
+//    const vector<MatrixXcd>&, double, int, int) {
+//    return {};
+//}

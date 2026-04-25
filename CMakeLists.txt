@@ -68,6 +68,7 @@ set(Element_Source_Header_Files
     src/Elements/Source/Source_base.h
     src/Elements/Source/AC_source.h
     src/Elements/Source/Generator.h
+    src/Elements/Source/DC_source.h
 )
 set(Element_Transformer_Header_Files
     src/Elements/Transformer/Transformer_base.h
@@ -163,6 +164,7 @@ set(Element_Source_Source_Files
     src/Elements/Source/Source_base.cpp
     src/Elements/Source/AC_source.cpp
     src/Elements/Source/Generator.cpp
+    src/Elements/Source/DC_source.cpp
 )
 set(Element_Transformer_Source_Files
     src/Elements/Transformer/Transformer_base.cpp

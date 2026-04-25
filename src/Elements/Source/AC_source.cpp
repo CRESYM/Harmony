@@ -1,7 +1,7 @@
 #include "AC_source.h"
 
-AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, double V, DenseMatrix Z)
-	: Source_base(symbol, location, pins, V)
+AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, double Vi, DenseMatrix Z)
+	: Source_base(symbol, location, pins)
 {
     if (Z.ncols() != 0)  // if there are entries
     {
@@ -29,11 +29,13 @@ AC_source::AC_source(const std::string& symbol, const std::string& location, int
             Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
         }
 
-	Zsrc = substitute_symbol(Z.get(0, 0), omega, 2 * M_PI * 50.0).real(); // Assuming 50 Hz for AC source
+	V.push_back(Vi); V.push_back(Vi); V.push_back(Vi); // Assuming the same voltage for all pins, can be modified for different voltages per pin
+	auto Z_value = substitute_symbol(Z.get(0, 0), omega, 2 * M_PI * 50.0).real(); // Assuming 50 Hz for AC source
+	Zsrc.push_back(Z_value); // Assuming 50 Hz for AC source
 }
 
-AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, double V, const std::vector<double>& Z)
-    : Source_base(symbol, location, pins, V)
+AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, double Vi, const std::vector<double>& Z)
+    : Source_base(symbol, location, pins)
 {
     if (Z.size() != 0)  // if there are entries
     {
@@ -47,24 +49,26 @@ AC_source::AC_source(const std::string& symbol, const std::string& location, int
                     Y_matrix.set(i, i, div(integer(1), real_double(Z[i])));
             }
             else
-                throw invalid_argument("Invalid number of series impedance vector entries: " + Z.size());
+                throw invalid_argument("Invalid number of series impedance vector entries: " + std::to_string(Z.size()));
         }
     }
     else
         throw invalid_argument("Invalid number of pins, must be greater than 0!");
 
     // Fill in the complete Y parameters
-    for (int i = 0; i < pins; i++)
+    for (int i = 0; i < pins; i++) {
         for (int j = 0; j < pins; j++) {
             Y_matrix.set(pins + i, j, sub(zero, Y_matrix.get(i, j)));
             Y_matrix.set(pins + i, pins + j, Y_matrix.get(i, j));
             Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
         }
-	Zsrc = Z[0];
+		Zsrc.push_back(Z[i]);
+    }
+    V.push_back(Vi); V.push_back(Vi); V.push_back(Vi); // Assuming the same voltage for all pins, can be modified for different voltages per pin
 }
 
-AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, double V, const double Z)
-    : Source_base(symbol, location, pins, V)
+AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, double Vi, const double Z)
+    : Source_base(symbol, location, pins)
 {
     if (pins > 0) { // Check for valid number of pins
         for (int i = 0; i < pins; i++)
@@ -80,7 +84,8 @@ AC_source::AC_source(const std::string& symbol, const std::string& location, int
             Y_matrix.set(pins + i, pins + j, Y_matrix.get(i, j));
             Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
         }
-	Zsrc = Z;
+    V.push_back(Vi); V.push_back(Vi); V.push_back(Vi); // Assuming the same voltage for all pins, can be modified for different voltages per pin
+    Zsrc.push_back(Z); // Assuming 50 Hz for AC source
 }
 
 // Destructor

@@ -12,9 +12,9 @@ void Source_base::computePowerFlow(std::map<std::string, double>& gen,
 
 		gen["grid"] = (int)element_location[2] - '0'; // Example of setting grid based on element_location
 		gen["area"] = (int)element_location[2] - '0'; // Example of setting area based on element_location
-		gen["Vg"] = Vg * 1.0 / 1e3 / globalParams["ACbaseKV"]; // Convert to kV for OPF
-		gen["Zsrc"] = Zsrc;
+		gen["Vg"] = V[0] * 1.0 / 1e3 / globalParams["ACbaseKV"]; // Convert to kV for OPF
+		gen["Zsrc"] = Zsrc[0];
 	}
 	else 
-		throw std::runtime_error("Source element only can be connected to AC networks");
+		throw std::runtime_error("Power flow is defined only for AC networks.");
 }
