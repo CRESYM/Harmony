@@ -194,6 +194,8 @@ DQsymResult DQsym::run(Config& cfg)
     StateSpaceModel ssm;
     ssm.formState(net_, cfg.outputBuses, SSMMode::DQsym);
 
+	cout << "[DQsym] State-space model formed with DQsym mode.\n";
+
     int nx = ssm.getA().rows();
     int nu = ssm.getB().cols();   // B_dqsym columns (all groups of 3)
 
@@ -251,11 +253,14 @@ DQsymResult DQsym::run(Config& cfg)
 
         // 3b. Build u (nu × nKeep) — sources + MMC feedback from previous step
         MatrixXcd u = ssm.buildInputVector(cfg.nKeep, elementStates);
+		//cout << u << "\n";
 
         // 3c. DSSS
         MatrixXcd y = DSSS(dssState_, AdC, BdC, CdC, DdC,
             cfg.swOnRes, cfg.swOffRes, cfg.swType, brkVec,
             u, xo, cfg.dt, cfg.f);
+
+		//cout << y << "\n";
 
         // 3d. Extract state groups, update elementStates for next step
         for (const auto& [name, elem] : converters) {

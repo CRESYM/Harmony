@@ -166,7 +166,7 @@ void StateSpaceModel::formState(Network* net, const vector<Bus*>& out, SSMMode m
     int nu_raw = number_independent_sources + number_virtual_inputs;
     B = Eigen::MatrixXd::Zero(number_state_variables, nu_raw);
     C = Eigen::MatrixXd::Zero(number_outputs, number_state_variables);
-    D = Eigen::MatrixXd::Zero(number_outputs, number_independent_sources);
+    D = Eigen::MatrixXd::Zero(number_outputs, nu_raw);
 
     // ---- A matrix ----
     int row_off = 0;
@@ -181,7 +181,7 @@ void StateSpaceModel::formState(Network* net, const vector<Bus*>& out, SSMMode m
                 for (int kj = 0; kj < n_j; ++kj) {
                     A(row_off + ki, col_off + kj) =
                         extractCoefficient(base, symbols_bank, virtual_input_bank,
-                            list_state_variables[j], kj, true);
+                            list_state_variables[j], kj, false);
                 }
             }
             col_off += n_j;
@@ -239,7 +239,7 @@ void StateSpaceModel::formState(Network* net, const vector<Bus*>& out, SSMMode m
                 RCP<const Basic> base = matrix.get(bus_idx + ki, total_number_equations);
                 for (int kj = 0; kj < n_j; ++kj) {
                     C(out_off + ki, col_off + kj) =
-                        extractCoefficient(base, symbols_bank, virtual_input_bank, list_state_variables[j], kj, true);
+                        extractCoefficient(base, symbols_bank, virtual_input_bank, list_state_variables[j], kj, false);
                 }
             }
             col_off += n_j;
@@ -274,7 +274,7 @@ void StateSpaceModel::formState(Network* net, const vector<Bus*>& out, SSMMode m
             for (int ki = 0; ki < n_pins; ++ki) {
                 RCP<const Basic> base = matrix.get(bus_idx + ki, total_number_equations);
                 for (int kj = 0; kj < n_vi; ++kj)
-                    D(row_off + ki, col_off + kj) =
+                    D(out_off + ki, col_off + kj) =
                     extractCoefficient(base, symbols_bank, virtual_input_bank,
                         list_virtual_input_providers[j], kj, true);
             }

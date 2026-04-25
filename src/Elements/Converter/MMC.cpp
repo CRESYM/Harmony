@@ -1284,10 +1284,10 @@ void MMC::writeMNAmatrix(
 
         // iΔ: linear R/L + sources + virtual input
         MNA.set(iD, iD, one);
-        if (ac0 >= 0) MNA.set(iD, ac0 + ph, div(neg(one), Leq));
+        if (ac0 >= 0) MNA.set(iD, ac0 + ph, div(one, Leq));
         if (dcp >= 0) {
-            MNA.set(iD, dcp, addSym(MNA.get(iD, dcp), div(one, mul(integer(2), Leq))));
-            MNA.set(iD, dcn, addSym(MNA.get(iD, dcn), div(one, mul(integer(2), Leq))));
+            MNA.set(iD, dcp, addSym(MNA.get(iD, dcp), div(minus_one, mul(integer(2), Leq))));
+            MNA.set(iD, dcn, addSym(MNA.get(iD, dcn), div(minus_one, mul(integer(2), Leq))));
         }
         RCP<const Basic> rhs = MNA.get(iD, lastCol);
         rhs = addSym(rhs, mul(div(neg(Req), Leq), state_syms[ph]));
@@ -1297,8 +1297,8 @@ void MMC::writeMNAmatrix(
         // iΣ: linear R/L + sources + virtual input
         MNA.set(iS, iS, one);
         if (dcp >= 0) {
-            MNA.set(iS, dcp, addSym(MNA.get(iS, dcp), div(one, mul(integer(2), La))));
-            MNA.set(iS, dcn, addSym(MNA.get(iS, dcn), div(neg(one), mul(integer(2), La))));
+            MNA.set(iS, dcp, addSym(MNA.get(iS, dcp), div(minus_one, mul(integer(2), La))));
+            MNA.set(iS, dcn, addSym(MNA.get(iS, dcn), div(one, mul(integer(2), La))));
         }
         rhs = MNA.get(iS, lastCol);
         rhs = addSym(rhs, mul(div(neg(Ra), La), state_syms[3 + ph]));

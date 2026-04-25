@@ -47,7 +47,7 @@ void example_DQsym_Simple_MMC()
     net.connectElementToBus(vs_ac, 2, gnd);
 
 	StateSpaceModel ssm;
-	ssm.formState(&net, { ac_bus }, SSMMode::Standard);
+	ssm.formState(&net, { dc_bus }, SSMMode::Standard);
 
     cout << "State-space model formed with Standard mode:\n"
         << "A: " << ssm.getA() << "\n"
@@ -55,37 +55,40 @@ void example_DQsym_Simple_MMC()
         << "C: " << ssm.getC() << "\n"
         << "D: " << ssm.getD() << "\n";
 
-    //// DQsym — no inputFunction, sources/MMC handle u automatically
-    //DQsym dq;
-    //dq.initialize(&net);
+    // DQsym — no inputFunction, sources/MMC handle u automatically
+    DQsym dq;
+    dq.initialize(&net);
 
-    //Config cfg;
-    //cfg.dt = 2e-5;
-    //cfg.t_start = 0.0;
-    //cfg.t_end = 0.5;
-    //cfg.f = f;
-    //cfg.omega = omega;
-    //cfg.nKeep = nKeep;
+    Config cfg;
+    cfg.dt = 2e-5;
+    cfg.t_start = 0.0;
+    cfg.t_end = 0.5;
+    cfg.f = f;
+    cfg.omega = omega;
+    cfg.nKeep = nKeep;
 
-    //cfg.swOnRes = Eigen::VectorXd::Constant(1, 0.01);
-    //cfg.swOffRes = Eigen::VectorXd::Constant(1, 1e6);
-    //cfg.swType = Eigen::VectorXi::Zero(1);
-    //cfg.breakerFunction = nullptr;
-    //cfg.outputBuses = { ac_bus };
+    cfg.swOnRes = Eigen::VectorXd::Constant(1, 0.01);
+    cfg.swOffRes = Eigen::VectorXd::Constant(1, 1e6);
+    cfg.swType = Eigen::VectorXi::Zero(1);
+    cfg.breakerFunction = nullptr;
+    cfg.outputBuses = { ac_bus };
 
-    //// Run — StateSpaceModel uses SSMMode::DQsym internally
-    //// DC source 2-pin → expanded to 6 B columns (2 groups of 3)
-    //// AC source 3-pin → 3 B columns (1 group of 3)
-    //// MMC virtual 12  → 12 B columns (4 groups of 3)
-    //// Total B_dqsym: 12×21 columns, all in groups of 3
+    // Run — StateSpaceModel uses SSMMode::DQsym internally
+    // DC source 2-pin → expanded to 6 B columns (2 groups of 3)
+    // AC source 3-pin → 3 B columns (1 group of 3)
+    // MMC virtual 12  → 12 B columns (4 groups of 3)
+    // Total B_dqsym: 12×21 columns, all in groups of 3
 
-    //DQsymResult result = dq.run(cfg);
+    DQsymResult result = dq.run(cfg);
 
     //std::cout << "Done: " << result.time.size() << " steps, "
     //    << result.DSSabcHist.size() << " groups.\n";
 
     //dq.exportCSV("DQsym_MMC_SigmaDelta.csv");
-    //dq.plot();
+    dq.plot();
+
+	cout << "Example complete. Press any key to exit.\n";
+	std::cin.get();
 
     delete mmc; delete vs_dc; delete vs_ac;
     delete ac_bus; delete dc_bus; delete gnd;
