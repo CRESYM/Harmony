@@ -14,6 +14,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find Eigen3 library on local system.
 find_package(Eigen3 REQUIRED)
 
+# Find Sundials on local system and include directories.
+find_package(SUNDIALS 7.0 REQUIRED)
+
 # Find symengine on local system and include directories.
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)   #symengine requires this
 find_package(SymEngine CONFIG)
@@ -37,16 +40,14 @@ if (APPLE)
     )
 endif()
 
-# Gurobi and Mathplot++ are configured below
+# Gurobi is configured below
 # They need to be configured after add_executable(Harmony ...)
 
 # Group header files
 set(Element_Header_Files src/Elements/Element.h)
-#set(Element_Admittance_Header_Files src/Admittance.h)
 set(Element_Converter_Header_Files
     src/Elements/Converter/Converter.h
     src/Elements/Converter/MMC.h
-    src/Elements/Converter/Simple_MMC.h
 )
 set(Element_Impedance_Header_Files
     src/Elements/Impedance/Impedance_base.h
@@ -142,7 +143,6 @@ set(Element_Source_Files src/Elements/Element.cpp)
 set(Element_Converter_Source_Files
     src/Elements/Converter/Converter.cpp
     src/Elements/Converter/MMC.cpp
-    src/Elements/Converter/Simple_MMC.cpp
 )
 set(Element_Impedance_Source_Files
     src/Elements/Impedance/Impedance_base.cpp
@@ -380,6 +380,11 @@ target_link_libraries(
     Harmony
     ${SYMENGINE_LIBRARIES}
     Eigen3::Eigen
+    SUNDIALS::cvode
+    SUNDIALS::kinsol
+    SUNDIALS::sunmatrixdense
+    SUNDIALS::sunlinsoldense
+    SUNDIALS::nvecserial
     imgui::imgui
     implot::implot
     glfw

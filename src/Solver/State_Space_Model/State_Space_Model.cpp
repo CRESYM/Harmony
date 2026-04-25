@@ -13,7 +13,7 @@ void StateSpaceModel::finalizeCounts(Network* net) {
     bus_indices.clear(); element_indices.clear();
     list_independent_sources.clear(); list_state_variables.clear(); list_switches.clear();
     number_switches = 0; number_independent_sources = 0; number_state_variables = 0;
-    if (number_nodes < 0) number_nodes = 0;
+    number_nodes = 0;
 
     for (const auto& [name, element] : elements) {
         if (dynamic_cast<Inductor*>(element) || dynamic_cast<Capacitor*>(element)) {
@@ -28,15 +28,16 @@ void StateSpaceModel::finalizeCounts(Network* net) {
             number_switches += element->getInputPins();
             list_switches.push_back(element);
         }
-        else if (dynamic_cast<AC_source*>(element)) {
+        // FIX: use Source_base to recognize both AC_source and DC_source
+        else if (dynamic_cast<Source_base*>(element)) {
             number_independent_sources += element->getInputPins();
             list_independent_sources.push_back(element);
         }
     }
 
-    number_outputs = 0; number_nodes = 0;
+    number_outputs = 0;
     for (const auto& [name, busPtr] : buses) {
-        if (busPtr->getBusName() == "gnd") continue;
+        if (busPtr->isGround()) continue;
         bus_indices[busPtr] = number_nodes;
         number_nodes += busPtr->getPinNumber();
     }
@@ -63,8 +64,10 @@ void StateSpaceModel::finalizeCounts(Network* net) {
     total_number_equations = number_nodes + number_independent_sources
         + number_switches + number_state_variables;
 
-    std::cout << "[Network] Nodes:" << number_nodes << " Src:" << number_independent_sources
-        << " States:" << number_state_variables << " Total:" << total_number_equations << std::endl;
+    std::cout << "[StateSpaceModel] Nodes:" << number_nodes
+        << " Sources:" << number_independent_sources
+        << " States:" << number_state_variables
+        << " Total:" << total_number_equations << std::endl;
 }
 
 void StateSpaceModel::substituteParameters(SymEngine::DenseMatrix& matrix) {
@@ -80,20 +83,46 @@ void StateSpaceModel::substituteParameters(SymEngine::DenseMatrix& matrix) {
     }
 }
 
+// ===================================================================
+//  Optimized extraction helper — batch substitution
+// ===================================================================
+//
+//  Instead of substituting symbols one-at-a-time (N_syms calls per entry),
+//  build a full substitution map and do ONE subs() call per (i,j).
+//
+
+static double extractCoefficient(
+    const RCP<const Basic>& expression,
+    const std::map<Element*, std::vector<RCP<const Basic>>>& symbols_bank,
+    Element* target_elem, int target_sym_idx)
+{
+    map_basic_basic sub;
+    for (auto& [elem, syms] : symbols_bank) {
+        for (size_t s = 0; s < syms.size(); ++s) {
+            sub[syms[s]] = (elem == target_elem && (int)s == target_sym_idx)
+                ? real_double(1.0) : real_double(0.0);
+        }
+    }
+    RCP<const Basic> val = SymEngine::subs(expression, sub);
+    return eval_basic(val);
+}
+
 
 void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out) {
     output = out;
     finalizeCounts(net);
     std::unordered_map<std::string, Element*> elements = net->getElements();
 
-    SymEngine::DenseMatrix matrix = createZeroMatrix(total_number_equations, total_number_equations + 1);
+    SymEngine::DenseMatrix matrix = createZeroMatrix(
+        total_number_equations, total_number_equations + 1);
 
     for (const auto& [name, element] : elements) {
-        int location = (element_indices.count(element) != 0) ? element_indices[element] : 0;
+        int location = (element_indices.count(element) != 0)
+            ? element_indices[element] : 0;
         element->writeMNAmatrix(matrix, bus_indices, location, symbols_bank);
     }
 
-    std::cout << "[StateSpaceModel] MNA populated. Running RREF..." << std::endl;
+    std::cout << "[StateSpaceModel] MNA populated. RREF..." << std::endl;
     vec_uint pivot_cols;
     reduced_row_echelon_form(matrix, matrix, pivot_cols);
 
@@ -104,7 +133,7 @@ void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out) {
     C = Eigen::MatrixXd::Zero(number_outputs, number_state_variables);
     D = Eigen::MatrixXd::Zero(number_outputs, number_independent_sources);
 
-    // ---- A: per-symbol extraction ----
+    // ---- A matrix ----
     int row_off = 0;
     for (int i = 0; i < (int)list_state_variables.size(); i++) {
         int loc_i = element_indices[list_state_variables[i]];
@@ -115,16 +144,9 @@ void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out) {
             for (int ki = 0; ki < n_i; ++ki) {
                 RCP<const Basic> base = matrix.get(loc_i + ki, total_number_equations);
                 for (int kj = 0; kj < n_j; ++kj) {
-                    RCP<const Basic> val = base;
-                    for (auto& [elem, syms] : symbols_bank) {
-                        for (size_t s = 0; s < syms.size(); ++s) {
-                            map_basic_basic sub;
-                            sub[syms[s]] = (elem == list_state_variables[j] && (int)s == kj)
-                                ? real_double(1.0) : real_double(0.0);
-                            val = SymEngine::subs(val, sub);
-                        }
-                    }
-                    A(row_off + ki, col_off + kj) = eval_basic(val);
+                    A(row_off + ki, col_off + kj) =
+                        extractCoefficient(base, symbols_bank,
+                            list_state_variables[j], kj);
                 }
             }
             col_off += n_j;
@@ -132,7 +154,7 @@ void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out) {
         row_off += n_i;
     }
 
-    // ---- B ----
+    // ---- B matrix ----
     row_off = 0;
     for (int i = 0; i < (int)list_state_variables.size(); i++) {
         int loc_i = element_indices[list_state_variables[i]];
@@ -143,16 +165,9 @@ void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out) {
             for (int ki = 0; ki < n_i; ++ki) {
                 RCP<const Basic> base = matrix.get(loc_i + ki, total_number_equations);
                 for (int kj = 0; kj < n_j; ++kj) {
-                    RCP<const Basic> val = base;
-                    for (auto& [elem, syms] : symbols_bank) {
-                        for (size_t s = 0; s < syms.size(); ++s) {
-                            map_basic_basic sub;
-                            sub[syms[s]] = (elem == list_independent_sources[j] && (int)s == kj)
-                                ? real_double(1.0) : real_double(0.0);
-                            val = SymEngine::subs(val, sub);
-                        }
-                    }
-                    B(row_off + ki, col_off + kj) = eval_basic(val);
+                    B(row_off + ki, col_off + kj) =
+                        extractCoefficient(base, symbols_bank,
+                            list_independent_sources[j], kj);
                 }
             }
             col_off += n_j;
@@ -160,11 +175,11 @@ void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out) {
         row_off += n_i;
     }
 
-    // ---- C ----
+    // ---- C matrix ----
     int out_off = 0;
     for (int i = 0; i < (int)output.size(); ++i) {
         Bus* bus = output[i];
-        if (bus->getBusName() == "gnd") continue;
+        if (bus->isGround()) continue;
         int bus_idx = bus_indices[bus];
         int n_pins = bus->getPinNumber();
         int col_off = 0;
@@ -173,16 +188,9 @@ void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out) {
             for (int ki = 0; ki < n_pins; ++ki) {
                 RCP<const Basic> base = matrix.get(bus_idx + ki, total_number_equations);
                 for (int kj = 0; kj < n_j; ++kj) {
-                    RCP<const Basic> val = base;
-                    for (auto& [elem, syms] : symbols_bank) {
-                        for (size_t s = 0; s < syms.size(); ++s) {
-                            map_basic_basic sub;
-                            sub[syms[s]] = (elem == list_state_variables[j] && (int)s == kj)
-                                ? real_double(1.0) : real_double(0.0);
-                            val = SymEngine::subs(val, sub);
-                        }
-                    }
-                    C(out_off + ki, col_off + kj) = eval_basic(val);
+                    C(out_off + ki, col_off + kj) =
+                        extractCoefficient(base, symbols_bank,
+                            list_state_variables[j], kj);
                 }
             }
             col_off += n_j;
@@ -190,11 +198,11 @@ void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out) {
         out_off += n_pins;
     }
 
-    // ---- D ----
+    // ---- D matrix ----
     out_off = 0;
     for (int i = 0; i < (int)output.size(); ++i) {
         Bus* bus = output[i];
-        if (bus->getBusName() == "gnd") continue;
+        if (bus->isGround()) continue;
         int bus_idx = bus_indices[bus];
         int n_pins = bus->getPinNumber();
         int col_off = 0;
@@ -203,16 +211,9 @@ void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out) {
             for (int ki = 0; ki < n_pins; ++ki) {
                 RCP<const Basic> base = matrix.get(bus_idx + ki, total_number_equations);
                 for (int kj = 0; kj < n_j; ++kj) {
-                    RCP<const Basic> val = base;
-                    for (auto& [elem, syms] : symbols_bank) {
-                        for (size_t s = 0; s < syms.size(); ++s) {
-                            map_basic_basic sub;
-                            sub[syms[s]] = (elem == list_independent_sources[j] && (int)s == kj)
-                                ? real_double(1.0) : real_double(0.0);
-                            val = SymEngine::subs(val, sub);
-                        }
-                    }
-                    D(out_off + ki, col_off + kj) = eval_basic(val);
+                    D(out_off + ki, col_off + kj) =
+                        extractCoefficient(base, symbols_bank,
+                            list_independent_sources[j], kj);
                 }
             }
             col_off += n_j;
@@ -225,6 +226,7 @@ void StateSpaceModel::formState(Network* net, const std::vector<Bus*>& out) {
         << ") C(" << C.rows() << "x" << C.cols()
         << ") D(" << D.rows() << "x" << D.cols() << ")" << std::endl;
 }
+
 
 
 // LOOPS AND CUTSETS

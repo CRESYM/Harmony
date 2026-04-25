@@ -9,3 +9,4 @@ dependencies:
   - doxygen
   - implot
   - glew # needed by implot
+  - sundials

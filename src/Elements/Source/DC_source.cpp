@@ -115,3 +115,39 @@ DC_source::DC_source(const std::string& symbol, const std::string& location, int
             Y_matrix.set(i, pins + j, sub(zero, Y_matrix.get(i, j)));
         }
 }
+
+void DC_source::writeMNAmatrix(SymEngine::DenseMatrix& matrix,
+    std::unordered_map<Bus*, int>& bus_indices, int location,
+    std::map<Element*, std::vector<RCP<const Basic>>>& symbol_map)
+{
+    Bus* node1 = nullptr;
+    Bus* node2 = nullptr;
+    for (auto& [bus, index] : connections) {
+        if (index == 1) node1 = bus;
+        else if (index == 2) node2 = bus;
+    }
+
+    std::vector<RCP<const Basic>> symbols;
+
+    for (int p = 0; p < input_pins; ++p) {
+        int row = location + p;
+        RCP<const Basic> v_sym = symbol("V_" + getElementSymbol() + std::to_string(p));
+        symbols.push_back(v_sym);
+
+        if (node1 && (bus_indices.count(node1) != 0)) {
+            int r = bus_indices[node1] + p;
+            matrix.set(row, matrix.ncols() - 1,
+                addSym(matrix.get(row, matrix.ncols() - 1), v_sym));
+            matrix.set(row, r, one);
+            matrix.set(r, row, one);
+        }
+        if (node2 && (bus_indices.count(node2) != 0)) {
+            int r = bus_indices[node2] + p;
+            matrix.set(row, matrix.ncols() - 1,
+                addSym(matrix.get(row, matrix.ncols() - 1), mul(minus_one, v_sym)));
+            matrix.set(row, r, mul(integer(-1), one));
+            matrix.set(r, row, mul(integer(-1), one));
+        }
+    }
+    symbol_map[this] = symbols;
+}

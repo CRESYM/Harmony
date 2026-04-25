@@ -24,14 +24,14 @@ Network::~Network() {
 void Network::addBus(Bus* bus) {
     buses[bus->getBusName()] = bus;
     // Increment the total pin count if the bus is not ground
-    if (bus->getBusName() != "gnd")
+    if (!bus->isGround())
         pins += bus->getPinNumber();
 }
 
 // Function to add a bus to the network
 void Network::addBus(const std::string& busName, Bus* bus) {
     buses[busName] = bus;
-    if (busName != "gnd")
+    if (!bus->isGround())
         pins += bus->getPinNumber();
 }
 
@@ -48,41 +48,40 @@ void Network::addElement(const std::string& designator, Element* elem) {
 // Function to connect an element to a bus
 void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
     if (elements.find(elem->getElementSymbol()) == elements.end()) {
-		elements[elem->getElementSymbol()] = elem;  // Add the element if it doesn't exist
-	}
-    if (buses.find(bus->getBusName()) == buses.end()) {
-        buses[bus->getBusName()] = bus;  // Add the bus if it doesn't exist
-	}
-    int pins;
-    if (terminal == 1) {
-        pins = elem->getInputPins();
+        elements[elem->getElementSymbol()] = elem;
     }
-    else if (terminal == 2) {
-        pins = elem->getOutputPins();
+    // Store bus if not already present (use bus name as key only if unique)
+    bool busFound = false;
+    for (auto& [key, b] : buses) {
+        if (b == bus) { busFound = true; break; }
     }
-    else {
-        // Throw an exception if the terminal number is invalid
-        std::cerr << "Invalid terminal number: " << terminal << std::endl;
-        throw invalid_argument("Invalid terminal number.");
-        exit(1);
+    if (!busFound) {
+        buses[bus->getBusName()] = bus;
     }
 
-    // Check if the number of pins matches between the element and the bus
-    if (pins == bus->getPinNumber()) {
-        // Add the element to the connections map for this bus
-        connections[bus].push_back(elem);
-        // Attach the bus to the element at the specified terminal
-        elem->attachBus(bus, terminal);
-        // Attach the element to the bus
-        bus->attachElement(elem);  // Attach the element to the bus
+    // Pin-count validation (skip for ground — ground accepts any pin count)
+    if (bus->getBusName() != "gnd") {
+        int elemPins = 0;
+        // Determine how many pins this terminal represents
+        if (dynamic_cast<Converter*>(elem)) {
+            // Converter: terminal 1 = input_pins (AC), terminal 2 = output_pins (DC)
+            elemPins = (terminal == 1) ? elem->getInputPins() : elem->getOutputPins();
+        }
+        else {
+            elemPins = elem->getInputPins();
+        }
+
+        if (elemPins != bus->getPinNumber()) {
+            std::cerr << "[WARNING] Pin mismatch: " << elem->getElementSymbol()
+                << " terminal " << terminal << " has " << elemPins
+                << " pins, but bus " << bus->getBusName()
+                << " has " << bus->getPinNumber() << " pins.\n";
+        }
     }
-    else {
-        std::cerr << "Connection failed: element pins = " << pins
-            << ", bus pins = " << bus->getPinNumber() << std::endl;
-        // Throw an exception if the number of pins does not match
-        throw invalid_argument("Invalid connection, number of bus and element pins different.");
-        exit(1);
-    }
+
+    elem->attachBus(bus, terminal);
+    bus->attachElement(elem);
+    connections[bus].push_back(elem);
 }
 
 // Function to delete an element from the network

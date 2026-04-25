@@ -39,6 +39,14 @@ public:
     virtual void solveEquilibrium() override;
     virtual Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u) override;
     virtual void computeABCD() override;
+    /// Exact 12×12 plant Jacobian (modulation treated as fixed parameters)
+    Eigen::MatrixXd computePlantJacobian(
+        double w,
+        double mDd, double mDq, double mDZd, double mDZq,
+        double mSd, double mSq, double mSz) const;
+
+    /// computeABCD variant: exact plant block + numerical controller block
+    void computeABCD_analytical();
 
 	// Y-parameter computation
     std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency) override;
@@ -83,12 +91,23 @@ public:
         }
     }
 
+    // One MMC arm-voltage time step
+    //vector<MatrixXcd> simulateTimeStep(const vector<MatrixXcd>& input, double Ts, int nKeep1, int nKeep2) override;
+
+    // State-space model manipulation - generic MNA stamping 
+    void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
+
+    int getNumberOfInternalStates() const override { return number_of_states; }
+    map_basic_basic getParameterSubstitutions() const override;
+
 private:
     double L_arm;    // Arm inductance [H]
     double R_arm;    // Arm resistance
     double C_arm;    // Capacitance per submodule [F]
     int N;           // Number of submodules per arm
-    
+
+    // Helper values
+    double L_eq = 0.0, R_eq = 0.0, m_1 = 1.0;    
     
 	// State variables
     int number_of_states = 12;

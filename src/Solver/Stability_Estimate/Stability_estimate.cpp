@@ -27,17 +27,15 @@ void StabilityEstimate::compute_equivalent_impedance(Network* net, std::vector<B
     if (start_buses.empty())
     {
         throw std::invalid_argument("There is no start buses.");
-        exit(1);
     }
 
     // Erase duplicates in start and end buses, remove gnd from the list of buses
     sort(start_buses.begin(), start_buses.end()); start_buses.erase(unique(start_buses.begin(), start_buses.end()), start_buses.end());
     sort(end_buses.begin(), end_buses.end()); end_buses.erase(unique(end_buses.begin(), end_buses.end()), end_buses.end());
     // Remove the element using erase function and iterators
-    for (int i = 0; i < start_buses.capacity(); i++) {  // Ensure 'gnd' is not in start buses
-        if (start_buses[i]->getBusName() == "gnd") { // leave the function
+    for (int i = 0; i < start_buses.size(); i++) {  // Ensure 'gnd' is not in start buses
+        if (start_buses[i]->isGround()) { // leave the function
             throw std::invalid_argument("Ground cannot be a start bus.");
-            exit(1);
         }
     }
 
@@ -55,7 +53,7 @@ void StabilityEstimate::compute_equivalent_impedance(Network* net, std::vector<B
 
     // Assign positions to end buses
     for (auto& bus : end_buses) {
-        if (bus->getBusName() != "gnd") {
+        if (!bus->isGround()) {
             all_buses[bus] = pos; pos += bus->getPinNumber();
             positions_currents.push_back(pos);
             pos += bus->getPinNumber();
@@ -67,7 +65,7 @@ void StabilityEstimate::compute_equivalent_impedance(Network* net, std::vector<B
     for (const auto& bus : buses) {
         if (std::find(start_buses.begin(), start_buses.end(), bus.second) == start_buses.end()
             && std::find(end_buses.begin(), end_buses.end(), bus.second) == end_buses.end()) {
-            if (bus.second->getBusName() != "gnd") {
+            if (!bus.second->isGround()) {
                 all_buses[bus.second] = pos;
                 pos += bus.second->getPinNumber();
             }
@@ -104,7 +102,7 @@ void StabilityEstimate::compute_equivalent_impedance(Network* net, std::vector<B
                             element_Y_matrix.get(terminal * pins + i, terminal * pins + j)));
                     }
                     for (int j = 0; j < pins_other; j++) {
-                        if (other_bus->getBusName() != "gnd") {
+                        if (!other_bus->isGround()) {
                             Y.set(position + i, position_other + j, add(Y.get(position_other + i, position_other + j),
                                 element_Y_matrix.get(terminal * pins + i, terminal_other * pins_other + j)));
                         }
@@ -116,9 +114,9 @@ void StabilityEstimate::compute_equivalent_impedance(Network* net, std::vector<B
         }
         // check if there is current associated to bus
         int position = bus.second; int pins = bus.first->getPinNumber();
-        if (pos < positions_currents.capacity()) {
+        if (pos < positions_currents.size()) {
             // check it if belongs to start_buses
-            if (pos < start_buses.capacity()) {
+            if (pos < start_buses.size()) {
                 for (int i = 0; i < pins; i++) {
                     Y.set(position + i, positions_currents[pos] + i, integer(-1));
                     Y.set(positions_currents[pos] + i, position + i, integer(1));
@@ -141,14 +139,6 @@ void StabilityEstimate::compute_equivalent_impedance(Network* net, std::vector<B
     // reduced_row_echelon_form
     vec_uint pivot_cols;
     reduced_row_echelon_form(Y, Y, pivot_cols);
-
-    //std::cout << "Reduced row echelon form gives: " << std::endl;
-    //for (int i = 0; i < Y.nrows(); i++) {
-    //    for (int j = 0; j < Y.ncols(); j++)
-    //        std::cout << Y.get(i, j)->__str__() << " ";
-    //    std::cout << endl;
-    //}
-
 
     //Compute the equivalent impedance
     DenseMatrix equivalent_impedance = createZeroMatrix(equivalent_impedance_size, 1);
@@ -185,7 +175,6 @@ MatrixXcd StabilityEstimate::compute_equivalent_impedance_num(Network* net, std:
     if (start_buses.empty())
     {
         throw std::invalid_argument("There is no start buses.");
-        exit(1);
     }
 
     // Erase duplicates in start and end buses, remove 'gnd' from the list of buses
@@ -195,10 +184,9 @@ MatrixXcd StabilityEstimate::compute_equivalent_impedance_num(Network* net, std:
     end_buses.erase(unique(end_buses.begin(), end_buses.end()), end_buses.end());
 
     // Remove the element using erase function and iterators
-    for (int i = 0; i < start_buses.capacity(); i++) {  // Ensure 'gnd' is not in start buses
-        if (start_buses[i]->getBusName() == "gnd") { // leave the function
+    for (int i = 0; i < start_buses.size(); i++) {  // Ensure 'gnd' is not in start buses
+        if (start_buses[i]->isGround()) { // leave the function
             throw std::invalid_argument("Ground cannot be a start bus.");
-            exit(1);
         }
     }
 
@@ -218,7 +206,7 @@ MatrixXcd StabilityEstimate::compute_equivalent_impedance_num(Network* net, std:
 
     // Assign positions to end buses
     for (const auto& bus : end_buses) {
-        if (bus->getBusName() != "gnd") {
+        if (!bus->isGround()) {
             all_buses[bus] = pos;
             pos += bus->getPinNumber();
             positions_currents.push_back(pos);
@@ -231,7 +219,7 @@ MatrixXcd StabilityEstimate::compute_equivalent_impedance_num(Network* net, std:
     for (const auto& bus : buses) {
         if (std::find(start_buses.begin(), start_buses.end(), bus.second) == start_buses.end() &&
             std::find(end_buses.begin(), end_buses.end(), bus.second) == end_buses.end()) {
-            if (bus.second->getBusName() != "gnd") {
+            if (!bus.second->isGround()) {
                 all_buses[bus.second] = pos;
                 pos += bus.second->getPinNumber();
             }
@@ -241,12 +229,14 @@ MatrixXcd StabilityEstimate::compute_equivalent_impedance_num(Network* net, std:
     // Initialize the admittance matrix
     Eigen::MatrixXcd Y = Eigen::MatrixXcd::Zero(pos, pos + 1);
 
+    std::unordered_set<Element*> processed_elements;
 	std::unordered_map<Bus*, std::vector<Element*>> connections = net->getConnections(); // Get connections from the network
     // Populate the admittance matrix
     pos = 0;
     for (auto& bus : all_buses) {
         for (auto& element : connections[bus.first]) {
             // Skip elements that are in the skip_elements list
+            if (processed_elements.count(element)) continue;
             if (std::find(skip_elements.begin(), skip_elements.end(), element) == skip_elements.end()) {
                 // Get the Y-parameter matrix of the element
                 std::vector<std::vector<complex<double>>> element_Y_matrix = element->compute_y_parameters(frequency);  // Use numerical Y
@@ -268,20 +258,21 @@ MatrixXcd StabilityEstimate::compute_equivalent_impedance_num(Network* net, std:
                         Y(position + i, position + j) += element_Y_matrix[terminal * pins + i][terminal* pins + j];
                     }
                     for (int j = 0; j < pins_other; j++) {
-                        if (other_bus->getBusName() != "gnd") {
+                        if (!other_bus->isGround()) {
                             Y(position + i, position_other + j) += element_Y_matrix[terminal * pins + i][terminal_other * pins_other + j];
                         }
                     }
                 }
             }
+            processed_elements.insert(element);  // ADD at end of element block (before closing brace)
         }
 
         // Check if there is current associated with bus
         int position = bus.second;
         int pins = bus.first->getPinNumber();
-        if (pos < positions_currents.capacity()) {
+        if (pos < positions_currents.size()) {
             // Check if it belongs to start_buses
-            if (pos < start_buses.capacity()) {
+            if (pos < start_buses.size()) {
                 for (int i = 0; i < pins; i++) {
                     Y(position + i, positions_currents[pos] + i) = -1;
                     Y(positions_currents[pos] + i, position + i) = 1;
@@ -371,7 +362,7 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
 
     // Add remaining buses from subnet
     for (const auto& [busName, bus] : subnet->getBuses()) {
-        if (bus->getBusName() == "gnd") continue;
+        if (bus->isGround()) continue;
         if (bus_positions.find(bus) == bus_positions.end()) {
             bus_positions[bus] = pos;
             pos += pins;
@@ -397,7 +388,7 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
             }
                      
             const auto& elem_conns = element->getConnections();
-            if (elem_conns.find(bus) == elem_conns.end() || bus->getBusName() == "gnd") {
+            if (elem_conns.find(bus) == elem_conns.end() || bus->isGround()) {
                 continue;
             }
 
@@ -418,7 +409,7 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
                     // Y_bus,bus
                     Y(bus_pos + i, bus_pos + j) += Ye[terminal * pins + i][terminal * pins + j];
                                         
-                    if (other_bus && other_bus->getBusName() != "gnd") {
+                    if (other_bus && !other_bus->isGround()) {
                         int other_pos = bus_positions[other_bus];
                         // Y_bus,other_bus
                         Y(bus_pos + i, other_pos + j) += Ye[terminal * pins + i][terminal_other * pins + j];
@@ -473,7 +464,7 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(SubNet
                     //cout << bus_current_positions[bus_inner] << endl;
 				    Y_params(idx + j, bus_pos + i) = solution(bus_current_positions[bus_inner] + j, 0);
 			    }	
-                idx++;
+                idx += pins;
             }
         
             // Reset voltage source for this bus to 0V for next iteration
@@ -627,25 +618,22 @@ MatrixXcd StabilityEstimate::compute_transfer_function(string converter_name, st
     else {
         // For AC cut - compute the overall admittance looking into the converter from AC side
         // i.e. repeat the same procedure as above but now from AC side
+        // For AC cut
         MatrixXcd Yconv = vectorToMatrix(conv->compute_y_parameters(frequency));
-        MatrixXcd Y_dc = Z_dc.inverse();
-		//cout << "Converter " << converter_name << " Y-parameters:\n" << setprecision(10) << Yconv << "\n";
 
-        // The overall transfer function considering the converter's own admittance and the grid admittances.
-        MatrixXcd Ydq(2, 2);
-        Ydq = Yconv.block(1, 1, 2, 2);
-        MatrixXcd b = Yconv.block(1, 0, 2, 1);
-        MatrixXcd a = Yconv.block(0, 1, 1, 2);
-        MatrixXcd Ydc = Yconv.block(0, 0, 1, 1);
-        Y_conv_matrices[converter_name] = (Y_dc - Ydc).inverse() * a * b + Ydq;
+        MatrixXcd Ydq = Yconv.block(1, 1, 2, 2);
+        MatrixXcd b = Yconv.block(1, 0, 2, 1);      // 2×1
+        MatrixXcd a = Yconv.block(0, 1, 1, 2);       // 1×2
+        MatrixXcd Ydc = Yconv.block(0, 0, 1, 1);     // 1×1
 
-		//cout << "Converter " << converter_name << " admittance matrix from AC side:\n" << Y_conv_matrices[converter_name] << "\n";
+        // Schur complement: Y_from_ac = Ydq - b × (Ydc + Y_dc_ext)^-1 × a
+        // Z_dc is the DC closing impedance (1×1), Y_dc_ext = Z_dc^-1
+        MatrixXcd Y_dc_ext = Z_dc.inverse();     // DC grid + other converters
+        Y_conv_matrices[converter_name] = Ydq - b * (Ydc + Y_dc_ext).inverse() * a;
 
-		MatrixXcd TF = Y_conv_matrices[converter_name] * Y_ac_matrices[ac_area].inverse();
-
-		//cout << "Transfer function matrix for converter " << converter_name << " from AC side:\n" << TF << "\n";
-
-		return TF;
+        // Transfer function: Y_conv_from_ac × Z_ac
+        MatrixXcd TF = Y_conv_matrices[converter_name] * Y_ac_matrices[ac_area].inverse();
+        return TF;
     }
 }
 
@@ -799,8 +787,7 @@ void StabilityEstimate::bodeplotTF(string converter_name, string location, doubl
     std::vector<std::vector<double>> magnitudes(number_of_points, std::vector<double>(num_values, 0.0));
     std::vector<std::vector<double>> phases(number_of_points, std::vector<double>(num_values, 0.0));
     
-    double gap = (end_frequency - start_frequency) * 1.0 / (number_of_points - 1);
-    cout << gap << endl;
+    double gap = pow(10.0, (log10(end_frequency) - log10(start_frequency)) / (number_of_points - 1));
     double frequency = start_frequency;
     for (int p = 0; p < number_of_points; p++) {
         frequencies.push_back(frequency);
@@ -816,8 +803,7 @@ void StabilityEstimate::bodeplotTF(string converter_name, string location, doubl
             }
 		}
 
-        //cout << "Frequency: " << frequency << " Hz" << endl;
-        frequency += gap; // increase frequency
+        frequency *= gap; // increase frequency
     }
 
     bode_plot_implot(frequencies, magnitudes, phases, labels, "TF of power system cut on " + location + " side of " + converter_name);
@@ -854,7 +840,7 @@ void StabilityEstimate::nyquistplotTF(string converter_name, string location, do
     }
 
     std::vector<vector<complex<double>>> TF(number_of_points, std::vector<complex<double>>(num_values, 0.0));
-    double gap = (end_frequency - start_frequency) * 1.0 / (number_of_points - 1);
+    double gap = pow(10.0, (log10(end_frequency) - log10(start_frequency)) / (number_of_points - 1));
     double frequency = start_frequency;
     for (int p = 0; p < number_of_points; p++) {
         MatrixXcd TF_freq = compute_transfer_function(converter_name, location, frequency);
@@ -866,7 +852,7 @@ void StabilityEstimate::nyquistplotTF(string converter_name, string location, do
             }
         }
 
-        frequency += gap; // increase frequency
+        frequency *= gap;
     }
     nyquist_plot_implot(TF, labels, "Nyquist Plot of TF on " + location + " side of " + converter_name);
 }

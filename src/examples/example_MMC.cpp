@@ -9,7 +9,7 @@ void example_MMC() {
 	double f = 50;
 	double omega = 2 * M_PI * f; // Nominal frequency in rad/s
 	double Vdc = 200e3; // DC voltage in Volts
-	std::vector<double> converter_params = { omega, 100.0e6, 0, 0.0, 100.0e3, 100e6, Vdc, 50e-3, 1.07, 0.01, 400, 0.06, 0.535, 0.00 };
+	std::vector<double> converter_params = { omega, 100.0e6, 0, 0.0, 100.0e3, 100e6, Vdc, 50e-3, 1.07, 0.01, 400, 0.06, 0.535, 150e-6 };
 	std::vector<double> controller_params = { 
 		0, //1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
 		0, // 1, 0, 8.0, 272.0, 2, 0, Vdc, // DC voltage controller parameters
@@ -40,11 +40,31 @@ void example_MMC() {
 	const Eigen::VectorXd x_eq = mmc1->getEquilibriumState();
 	std::cout << std::setprecision(6) << "Equilibrium state:\n" << x_eq.transpose() << "\n";
 
+	cout << "\nComputing Jacobian matrices A, B, C using numerical differentiation...\n";
+
 	// Numerical Jacobian
 	mmc1->computeABCD();
-	//std::cout << "\nA:\n" << mmc1->getA() << "\n";
-	//std::cout << "\nB:\n" << mmc1->getB() << "\n";
-	//std::cout << "\nC:\n" << mmc1->getC() << "\n";
+	auto A1 = mmc1->getA(); 
+	auto B1 = mmc1->getB();
+	auto C1 = mmc1->getC();
+
+	cout << "\nComputing Jacobian matrices A, B, C using analytical differentiation...\n";
+
+	mmc1->computeABCD_analytical();
+	auto A2 = mmc1->getA();
+	auto B2 = mmc1->getB();
+	auto C2 = mmc1->getC();
+
+	double err1 = (A1 - A2).norm() / A1.norm();
+	double err2 = (B1 - B2).norm() / B1.norm();
+	double err3 = (C1 - C2).norm() / C1.norm();
+
+	std::cout << "Relative error A: " << err1 << "\n";  // should be < 1e-6
+	std::cout << "Relative error B: " << err2 << "\n";  // should be < 1e-6
+	std::cout << "Relative error C: " << err3 << "\n";  // should be < 1e-6
+
+	cout << "Press enter to continue...\n";
+	cin.get();	
 
 	//mmc1->printElementValues();  // Print MMC parameters, together with the reference values for the controllers
 
@@ -90,9 +110,22 @@ void example_MMC() {
 	std::cout << std::setprecision(6) << "Equilibrium state:\n" << x_eq2.transpose() << "\n";
 
 	mmc2->computeABCD();
-	/*std::cout << "\nA:\n" << mmc2->getA() << "\n";
-	std::cout << "\nB:\n" << mmc2->getB() << "\n";
-	std::cout << "\nC:\n" << mmc2->getC() << "\n";*/
+	auto A3 = mmc2->getA();
+	auto B3 = mmc2->getB();
+	auto C3 = mmc2->getC();
+	
+	mmc2->computeABCD_analytical();
+	auto A4 = mmc2->getA();
+	auto B4 = mmc2->getB();
+	auto C4 = mmc2->getC();
+
+	double err4 = (A3 - A4).norm() / A3.norm();
+	double err5 = (B3 - B4).norm() / B3.norm();
+	double err6 = (C3 - C4).norm() / C3.norm();
+
+	std::cout << "Relative error A: " << err4 << "\n";  // should be < 1e-6
+	std::cout << "Relative error B: " << err5 << "\n";  // should be < 1e-6
+	std::cout << "Relative error C: " << err6 << "\n";  // should be < 1e-6
 
 	MatrixXcd Y2 = vectorToMatrix(mmc2->compute_y_parameters(50));
 	cout << "\nY-parameters at 50 Hz:\n" << std::setprecision(10) << Y2 << "\n";
@@ -101,6 +134,7 @@ void example_MMC() {
 
 	mmc2->plotParticipationFactors();
 	mmc1->plotEigenvalues();
+	mmc2->plotEigenvalues();
 	mmc2->plotYParameters(1, 1000, 500);
 
 	cout << "Press Enter to continue...\n";

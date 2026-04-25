@@ -27,6 +27,13 @@ public:
 		busName = name;
 	}
 
+    /// A bus is ground if its name is "gnd" (case-insensitive)
+    bool isGround() const {
+        std::string lower = busName;
+        std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+        return lower == "gnd";
+    }
+
     // Function to attach an element to the bus
     void attachElement(Element* elem);
 

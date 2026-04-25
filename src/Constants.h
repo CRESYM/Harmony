@@ -109,6 +109,15 @@ Eigen::MatrixXd map2dense(const Table& tbl,
 #include <implot.h>
 #include <GLFW/glfw3.h>
 
+// SUNDIALS v7
+#include <sundials/sundials_types.h>
+#include <sundials/sundials_context.h>
+#include <cvode/cvode.h>
+#include <kinsol/kinsol.h>
+#include <nvector/nvector_serial.h>
+#include <sunmatrix/sunmatrix_dense.h>
+#include <sunlinsol/sunlinsol_dense.h>
+
 #endif // CONSTANTS_H
 
 

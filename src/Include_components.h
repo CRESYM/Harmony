@@ -44,7 +44,7 @@
 // Power Electronics
 #include "./Elements/Converter/Converter.h"
 #include "./Elements/Converter/MMC.h"
-#include "./Elements/Converter/Simple_MMC.h"
+//#include "./Elements/Converter/Simple_MMC.h"
 
 // RES
 #include "./Elements/RES/RES_base.h"

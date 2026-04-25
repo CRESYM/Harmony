@@ -12,6 +12,10 @@ public:
 
 	~DC_source() {}
 
+	/// MNA stamp — identical to AC_source (ideal voltage source with symbol in last column)
+	void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int,
+		std::map<Element*, std::vector<RCP<const Basic>>>&) override;
+
 };
 
 #endif

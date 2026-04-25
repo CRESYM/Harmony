@@ -5,18 +5,6 @@
 #include "../../Include_components.h"
 
 
-void DQsym::initialize(Network* net) {
-    if (net->is_area_empty())
-        net->add_areas();
-
-    ac_grid_names = net->get_ac_grid_names();
-    dc_grid_names = net->get_dc_grid_names();
-    ac_grids = net->get_ac_grids();
-    dc_grids = net->get_dc_grids();
-    converters = net->get_converters();
-}
-
-
 /**
  * @brief Solves the discrete-time state-space system with switch-dependent matrices.
  *
@@ -176,46 +164,41 @@ void DQsym::buildMatricesForState(
 
 
 // ===================================================================
-//  run
+//  run — assembles global state-space, discretizes, DSSS loop
 // ===================================================================
 
 DQsymResult DQsym::run(Config& cfg)
 {
-    // ------------------------------------------------------------------
-    //  Step 0: compute and discretize every converter
-    // ------------------------------------------------------------------
-    for (auto& [name, elem] : converters)
-    {
-        Converter* conv = dynamic_cast<Converter*>(elem);
-        if (!conv) continue;
-        conv->computeABCD();
-        conv->discretize(cfg.dt);
-    }
+    if (!net_)
+        throw std::runtime_error("DQsym::run(): call initialize(Network*) first.");
 
-    // ------------------------------------------------------------------
-    //  Step 1: get global system matrices
-    //  TODO: replace with assembled network state-space once available.
-    //  For now, use the first converter's discrete matrices.
-    // ------------------------------------------------------------------
-    if (converters.empty())
-        throw std::runtime_error("run(): no converters registered.");
+    // ---- Step 0: build global state-space from network MNA ----
+    StateSpaceModel ssm;
+    ssm.formState(net_, cfg.outputBuses);
 
-    Converter* first = dynamic_cast<Converter*>(converters.begin()->second);
-    if (!first)
-        throw std::runtime_error("run(): first element is not a Converter.");
+    int nx = ssm.getA().rows();
+    int nu = ssm.getB().cols();
 
-    MatrixXcd AdC = first->getAd().cast<std::complex<double>>();
-    MatrixXcd BdC = first->getBd().cast<std::complex<double>>();
-    MatrixXcd CdC = first->getCd().cast<std::complex<double>>();
-    MatrixXcd DdC = first->getDd().cast<std::complex<double>>();
+    std::cout << "[DQsym] Global system: A(" << nx << "x" << nx
+        << ") B(" << nx << "x" << nu << ")\n";
 
-    VectorXcd xo = VectorXcd::Zero(AdC.rows());
+    // ---- Step 1: discretize (C=I to get all states as DSSS output) ----
+    MatrixXd Cd_id = Eigen::MatrixXd::Identity(nx, nx);
+    MatrixXd Dd_z = Eigen::MatrixXd::Zero(nx, nu);
+    MatrixXd Ad_r, Bd_r;
+    discretizeABCD(ssm.getA(), ssm.getB(), Cd_id, Dd_z,
+        cfg.dt, Ad_r, Bd_r, Cd_id, Dd_z);
 
-    const int nGroups = static_cast<int>(CdC.rows()) / 3;
+    MatrixXcd AdC = Ad_r.cast<std::complex<double>>();
+    MatrixXcd BdC = Bd_r.cast<std::complex<double>>();
+    MatrixXcd CdC = Cd_id.cast<std::complex<double>>();
+    MatrixXcd DdC = Dd_z.cast<std::complex<double>>();
 
-    // ------------------------------------------------------------------
-    //  Step 2: allocate result, reset DSSS state
-    // ------------------------------------------------------------------
+    int ny = CdC.rows();
+    int nGroups = ny / 3;
+    VectorXcd xo = VectorXcd::Zero(nx);
+
+    // ---- Step 2: allocate result ----
     const int N = static_cast<int>((cfg.t_end - cfg.t_start) / cfg.dt) + 1;
 
     DQsymResult result;
@@ -223,109 +206,35 @@ DQsymResult DQsym::run(Config& cfg)
     result.DSSabcHist.assign(nGroups, Eigen::MatrixXd::Zero(N, 3));
     result.brkHistory = Eigen::MatrixXi::Zero(N, cfg.swType.size());
 
-    dssState_ = DSSState{};     // fresh state
+    dssState_ = DSSState{};
 
-    bool mmcHistAllocated = false;
-    int  totalMMCSignals = 0;
-    std::unordered_map<std::string, std::vector<MatrixXcd>> lastOutputs;
-
-    // ------------------------------------------------------------------
-    //  Step 3: main loop
-    // ------------------------------------------------------------------
+    // ---- Step 3: main loop ----
     for (int k = 0; k < N; ++k)
     {
-        const double t = cfg.t_start + k * cfg.dt;
-        const double theta = 2.0 * M_PI * cfg.f * t;
+        double t = cfg.t_start + k * cfg.dt;
+        double theta = 2.0 * M_PI * cfg.f * t;
         result.time[k] = t;
 
-        // ---- 3a. breaker ----
+        // Breaker
         Eigen::VectorXi brkVec = cfg.breakerFunction
             ? cfg.breakerFunction(k, t)
             : Eigen::VectorXi::Zero(cfg.swType.size());
         result.brkHistory.row(k) = brkVec.transpose();
 
-        // ---- 3b. global external inputs ----
-        std::vector<MatrixXcd> uBlocks = cfg.externalInputFunction
-            ? cfg.externalInputFunction(k, t)
-            : std::vector<MatrixXcd>(cfg.nInputBlocks,
-                MatrixXcd::Zero(3, cfg.nKeep));
+        // Input (nu x nKeep)
+        MatrixXcd u = cfg.inputFunction
+            ? cfg.inputFunction(k, t, nu, cfg.nKeep)
+            : MatrixXcd::Zero(nu, cfg.nKeep);
 
-        // ---- 3c. per-converter feedback injection ----
-        for (const auto& cr : cfg.converterRoutes)
-        {
-            auto it = lastOutputs.find(cr.name);
-            if (it == lastOutputs.end()) continue;
-            const auto& outs = it->second;
-
-            for (const auto& fb : cr.feedbacks) {
-                if (fb.signalIndex < 0 || fb.signalIndex >= static_cast<int>(outs.size())) continue;
-                if (fb.targetBlock < 0 || fb.targetBlock >= static_cast<int>(uBlocks.size())) continue;
-
-                MatrixXcd signal = outs[fb.signalIndex];
-                if (fb.invert) signal = -signal;
-                uBlocks[fb.targetBlock] = signal;
-            }
-        }
-
-        // ---- 3d. pack global input ----
-        MatrixXcd u(3 * cfg.nInputBlocks, cfg.nKeep);
-        for (int b = 0; b < cfg.nInputBlocks; ++b)
-            u.block(3 * b, 0, 3, cfg.nKeep) = uBlocks[b];
-
-        // ---- 3e. ONE global DSSS call ----
+        // DSSS
         MatrixXcd y = DSSS(dssState_, AdC, BdC, CdC, DdC,
             cfg.swOnRes, cfg.swOffRes, cfg.swType, brkVec,
             u, xo, cfg.dt, cfg.f);
 
-        // ---- 3f. per-converter: extract currents → simulateTimeStep ----
-        for (const auto& cr : cfg.converterRoutes)
-        {
-            auto it = converters.find(cr.name);
-            if (it == converters.end()) continue;
-
-            Converter* conv = dynamic_cast<Converter*>(it->second);
-            if (!conv) continue;
-
-            MatrixXcd Iup = y.block(3 * cr.upGroupIndex, 0, 3, cfg.nKeep);
-            MatrixXcd Ilow = y.block(3 * cr.lowGroupIndex, 0, 3, cfg.nKeep);
-            if (cr.invertUp)  Iup = -Iup;
-            if (cr.invertLow) Ilow = -Ilow;
-
-            auto mmcOut = conv->simulateTimeStep({ Ilow, Iup },
-                cfg.dt, cfg.nKeep, cfg.nArm);
-            lastOutputs[cr.name] = mmcOut;
-        }
-
-        // ---- 3g. allocate MMC history (once) ----
-        if (!mmcHistAllocated)
-        {
-            totalMMCSignals = 0;
-            for (const auto& cr : cfg.converterRoutes) {
-                auto it = lastOutputs.find(cr.name);
-                if (it != lastOutputs.end())
-                    totalMMCSignals += static_cast<int>(it->second.size());
-            }
-            result.MMCabcHist.assign(totalMMCSignals,
-                Eigen::MatrixXd::Zero(N, 3));
-            mmcHistAllocated = true;
-        }
-
-        // ---- 3h. store DSS abc history ----
+        // Store abc (state-space order, no converter routes)
         auto abcGroups = dqn2abc_groups_at_time(y, theta);
-        for (int g = 0; g < nGroups; ++g)
+        for (int g = 0; g < nGroups && g < (int)abcGroups.size(); ++g)
             result.DSSabcHist[g].row(k) = abcGroups[g].transpose();
-
-        // ---- 3i. store MMC abc history ----
-        int mmcIdx = 0;
-        for (const auto& cr : cfg.converterRoutes) {
-            auto it = lastOutputs.find(cr.name);
-            if (it == lastOutputs.end()) continue;
-            for (const auto& sig : it->second) {
-                result.MMCabcHist[mmcIdx].row(k) =
-                    dqn2abc_at_time(sig, theta).transpose();
-                ++mmcIdx;
-            }
-        }
     }
 
     result_ = result;
@@ -341,19 +250,17 @@ DQsymResult DQsym::run(Config& cfg)
 void DQsym::exportCSV(const std::string& filename) const
 {
     if (!hasRun_)
-        throw std::runtime_error("exportCSV() called before run().");
+        throw std::runtime_error("exportCSV() before run().");
 
     std::vector<Eigen::MatrixXd> values;
     values.push_back(result_.brkHistory.cast<double>());
-    for (const auto& m : result_.DSSabcHist) values.push_back(m);
-    for (const auto& m : result_.MMCabcHist) values.push_back(m);
+    for (const auto& m : result_.DSSabcHist)
+        values.push_back(m);
 
     std::vector<std::string> headers;
     headers.push_back("brk");
     for (int g = 0; g < static_cast<int>(result_.DSSabcHist.size()); ++g)
-        headers.push_back("DSS_abc" + std::to_string(g + 1));
-    for (int g = 0; g < static_cast<int>(result_.MMCabcHist.size()); ++g)
-        headers.push_back("MMC_abc" + std::to_string(g + 1));
+        headers.push_back("state_abc" + std::to_string(g + 1));
 
     write_file(result_.time, values, headers, filename);
 }
@@ -361,19 +268,15 @@ void DQsym::exportCSV(const std::string& filename) const
 void DQsym::plot() const
 {
     if (!hasRun_)
-        throw std::runtime_error("plot() called before run().");
+        throw std::runtime_error("plot() before run().");
 
     plot_abc_groups_implot(result_.time, result_.DSSabcHist,
-        "DSS outputs converted to abc");
-
-    if (!result_.MMCabcHist.empty())
-        plot_abc_groups_implot(result_.time, result_.MMCabcHist,
-            "MMC internal abc waveforms");
+        "State-space outputs (abc)");
 }
 
 const DQsymResult& DQsym::getResult() const
 {
     if (!hasRun_)
-        throw std::runtime_error("getResult() called before run().");
+        throw std::runtime_error("getResult() before run().");
     return result_;
 }

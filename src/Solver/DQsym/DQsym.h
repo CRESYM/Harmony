@@ -4,121 +4,81 @@
 #include "../../Constants.h"
 #include "../Helper_Functions/Helper_Functions.h"
 
-
 class Network;
 class SubNetwork;
 class Element;
-// ===================================================================
-//  Supporting structs
-// ===================================================================
+class Bus;
 
-/// Persistent state of one DSSS instance
+// ===================================================================
+//  Persistent DSSS state
+// ===================================================================
 struct DSSState
 {
-    MatrixXcd Ads, Bds, Cds, Dds;      ///< Cached switch-augmented matrices
-    MatrixXcd x_old;                    ///< State from previous time step
-    VectorXi  swVec, swVecOld;          ///< Current and previous switch vectors
+    MatrixXcd Ads, Bds, Cds, Dds;
+    MatrixXcd x_old;
+    VectorXi  swVec, swVecOld;
     VectorXcd yswitch;
-    int  nStates = 0;
-    int  nInputs = 0;
-    int  nOutputs = 0;
-    int  nSwitches = 0;
+    int  nStates = 0, nInputs = 0, nOutputs = 0, nSwitches = 0;
     bool initialized = false;
 };
 
-/// Per-converter routing (feedback loop only — DSSS is global)
-struct ConverterRoute
-{
-    std::string name;                   ///< Must match key in converters map
-
-    /// Which GLOBAL output groups carry this converter's arm currents
-    int  upGroupIndex = 0;
-    int  lowGroupIndex = 1;
-    bool invertUp = false;
-    bool invertLow = true;
-
-    /// One feedback path: converter output → global input block
-    struct Feedback {
-        int  signalIndex;               ///< Index in simulateTimeStep return vector
-        int  targetBlock;               ///< Global input block index
-        bool invert = false;
-    };
-    std::vector<Feedback> feedbacks;
-};
-
-/// Simulation configuration
+// ===================================================================
+//  Simulation configuration
+// ===================================================================
 struct Config
 {
-    double dt = 0.0;
-    double t_start = 0.0;
-    double t_end = 0.0;
-    double f = 0.0;              ///< System frequency [Hz]
-    double omega = 0.0;              ///< System angular frequency [rad/s]
-
-    int nKeep = 0;              ///< DSS-level harmonics
-    int nArm = 0;              ///< Arm-level harmonics
-    int nInputBlocks = 0;              ///< Total global input blocks (each 3 x nKeep)
+    double dt = 0.0, t_start = 0.0, t_end = 0.0;
+    double f = 0.0, omega = 0.0;
+    int nKeep = 1;
 
     // Switch parameters
-    Eigen::VectorXd swOnRes;
-    Eigen::VectorXd swOffRes;
+    Eigen::VectorXd swOnRes, swOffRes;
     Eigen::VectorXi swType;
 
-    /// Breaker schedule
     std::function<Eigen::VectorXi(int step, double t)> breakerFunction;
 
-    /// External inputs
-    std::function<std::vector<MatrixXcd>(int step, double t)> externalInputFunction;
+    /// Input function: returns (nu x nKeep) complex matrix per step.
+    /// nu = B.cols() from StateSpaceModel (passed as argument).
+    std::function<MatrixXcd(int step, double t, int nu, int nKeep)> inputFunction;
 
-    /// Per-converter feedback routing
-    std::vector<ConverterRoute> converterRoutes;
+    /// Which buses to observe (for C/D in StateSpaceModel)
+    std::vector<Bus*> outputBuses;
 };
 
-/// Simulation output
+// ===================================================================
+//  Simulation result
+// ===================================================================
 struct DQsymResult
 {
     std::vector<double> time;
     MatrixXi brkHistory;
-    std::vector<MatrixXd> DSSabcHist;  ///< One Nx3 per DSS output group
-    std::vector<MatrixXd> MMCabcHist;  ///< One Nx3 per converter output signal
+    std::vector<MatrixXd> DSSabcHist;   ///< One Nx3 per state group (state-space order)
 };
 
-
 // ===================================================================
-//  DQsym class
+//  DQsym solver
 // ===================================================================
-
 class DQsym
 {
 public:
     DQsym() = default;
     ~DQsym() = default;
 
-    // ---------------------------------------------------------------
-    //  Network setup
-    // ---------------------------------------------------------------
-    void initialize(Network* net);
-    void addConverter(const std::string& name, Element* conv) {
-        converters[name] = conv;
+    void DQsym::initialize(Network* net)
+    {
+        net_ = net;
     }
 
-    // ---------------------------------------------------------------
-    //  Simulation
-    // ---------------------------------------------------------------
+    /// Assembles state-space from MNA, discretizes, runs DSSS loop
     DQsymResult run(Config& cfg);
     void reset() { dssState_ = DSSState{}; hasRun_ = false; }
 
-    // ---------------------------------------------------------------
-    //  Results
-    // ---------------------------------------------------------------
     void exportCSV(const std::string& filename) const;
     void plot() const;
     const DQsymResult& getResult() const;
     bool hasRun() const { return hasRun_; }
 
-    // ---------------------------------------------------------------
-    //  DSSS solver
-    // ---------------------------------------------------------------
+    // DSSS core
     MatrixXcd DSSS(DSSState& state,
         const MatrixXcd& Ad, const MatrixXcd& Bd,
         const MatrixXcd& Cd, const MatrixXcd& Dd,
@@ -131,23 +91,14 @@ public:
         const MatrixXcd& C0, const MatrixXcd& D0,
         const VectorXi& swVec, const VectorXi& swType,
         const VectorXd& swOnRes, const VectorXd& swOffRes,
-        MatrixXcd& Ao, MatrixXcd& Bo,
-        MatrixXcd& Co, MatrixXcd& Do);
+        MatrixXcd& Ao, MatrixXcd& Bo, MatrixXcd& Co, MatrixXcd& Do);
 
 private:
-    // Single global DSSS state
     DSSState dssState_;
-
-    // Simulation bookkeeping
-    bool        hasRun_ = false;
+    bool hasRun_ = false;
     DQsymResult result_;
 
-    // Network references
-    std::vector<std::string> ac_grid_names;
-    std::vector<std::string> dc_grid_names;
-    std::unordered_map<std::string, SubNetwork*> ac_grids;
-    std::unordered_map<std::string, SubNetwork*> dc_grids;
-    std::unordered_map<std::string, Element*>    converters;
+    Network* net_ = nullptr;
 };
 
 #endif // _DQSYM_H_
