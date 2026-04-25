@@ -1244,125 +1244,121 @@ void MMC::printElementValues() {
 //  States at offset+0..11:
 //    0-2:  i^D_abc   3-5:  i^S_abc   6-8:  v_C^D_abc   9-11: v_C^S_abc
 //
+std::vector<RCP<const Basic>> MMC::getVirtualInputSymbols() const
+{
+    std::vector<RCP<const Basic>> syms;
+    for (int i = 0; i < 3; ++i) syms.push_back(symbol("u_vMD_" + element_symbol + "_" + std::to_string(i)));
+    for (int i = 0; i < 3; ++i) syms.push_back(symbol("u_vMS_" + element_symbol + "_" + std::to_string(i)));
+    for (int i = 0; i < 3; ++i) syms.push_back(symbol("u_PD_" + element_symbol + "_" + std::to_string(i)));
+    for (int i = 0; i < 3; ++i) syms.push_back(symbol("u_PS_" + element_symbol + "_" + std::to_string(i)));
+    return syms;
+}
 
 void MMC::writeMNAmatrix(
-    SymEngine::DenseMatrix& MNA,
-    std::unordered_map<Bus*, int>& busMap,
-    int offset,
-    std::map<Element*, std::vector<RCP<const Basic>>>& symbol_map)
+    SymEngine::DenseMatrix& MNA, std::unordered_map<Bus*, int>& busMap,
+    int offset, std::map<Element*, std::vector<RCP<const Basic>>>& symbol_map)
 {
-    // Terminal buses (1-based, matching Inductor/AC_source convention)
-    Bus* ac_bus = nullptr;
-    Bus* dc_bus = nullptr;
+    Bus* ac_bus = nullptr; Bus* dc_bus = nullptr;
     for (auto& [bus, terminal] : connections) {
         if (terminal == 1) ac_bus = bus;
         if (terminal == 2) dc_bus = bus;
     }
 
-    // Symbolic modulation parameters
-    RCP<const Basic> md = symbol("m_delta_" + element_symbol);
-    RCP<const Basic> ms = symbol("m_sigma_" + element_symbol);
-
-    // Physical parameters as SymEngine reals
-    RCP<const Basic> Leq = real_double(L_eq);
-    RCP<const Basic> Req = real_double(R_eq);
-    RCP<const Basic> La = real_double(L_arm);
-    RCP<const Basic> Ra = real_double(R_arm);
-    RCP<const Basic> Ca = real_double(C_arm);
-
+    RCP<const Basic> Leq = real_double(L_eq), Req = real_double(R_eq);
+    RCP<const Basic> La = real_double(L_arm), Ra = real_double(R_arm), Ca = real_double(C_arm);
     int lastCol = MNA.ncols() - 1;
 
-    // 12 state symbols
-    std::vector<RCP<const Basic>> syms;
+    std::vector<RCP<const Basic>> state_syms;
     for (int i = 0; i < 12; ++i)
-        syms.push_back(symbol("x_" + element_symbol + "_" + std::to_string(i)));
-    symbol_map[this] = syms;
+        state_syms.push_back(symbol("x_" + element_symbol + "_" + std::to_string(i)));
+    symbol_map[this] = state_syms;
 
-    // DC bus pin indices (2-pin: pin0=DC+, pin1=DC-)
-    int dcp = -1, dcn = -1;
-    if (dc_bus && busMap.count(dc_bus)) {
-        dcp = busMap[dc_bus];
-        dcn = busMap[dc_bus] + 1;
-    }
+    auto vi = getVirtualInputSymbols();
 
-    // AC bus pin indices (3-pin)
-    int ac0 = -1;
-    if (ac_bus && busMap.count(ac_bus))
-        ac0 = busMap[ac_bus];
+    int dcp = -1, dcn = -1, ac0 = -1;
+    if (dc_bus && busMap.count(dc_bus)) { dcp = busMap[dc_bus]; dcn = busMap[dc_bus] + 1; }
+    if (ac_bus && busMap.count(ac_bus)) ac0 = busMap[ac_bus];
 
-    for (int ph = 0; ph < 3; ++ph)
-    {
-        int iD = offset + ph;
-        int iS = offset + 3 + ph;
-        int vD = offset + 6 + ph;
-        int vS = offset + 9 + ph;
+    for (int ph = 0; ph < 3; ++ph) {
+        int iD = offset + ph, iS = offset + 3 + ph, vD = offset + 6 + ph, vS = offset + 9 + ph;
 
-        // ---- i^D equation ----
+        // iΔ: linear R/L + sources + virtual input
         MNA.set(iD, iD, one);
-
-        if (ac0 >= 0)
-            MNA.set(iD, ac0 + ph, div(neg(one), Leq));
-
+        if (ac0 >= 0) MNA.set(iD, ac0 + ph, div(neg(one), Leq));
         if (dcp >= 0) {
             MNA.set(iD, dcp, addSym(MNA.get(iD, dcp), div(one, mul(integer(2), Leq))));
             MNA.set(iD, dcn, addSym(MNA.get(iD, dcn), div(one, mul(integer(2), Leq))));
         }
-
         RCP<const Basic> rhs = MNA.get(iD, lastCol);
-        rhs = addSym(rhs, mul(div(neg(Req), Leq), syms[ph]));
-        rhs = addSym(rhs, mul(div(neg(ms), mul(integer(2), Leq)), syms[6 + ph]));
-        rhs = addSym(rhs, mul(div(neg(md), mul(integer(2), Leq)), syms[9 + ph]));
+        rhs = addSym(rhs, mul(div(neg(Req), Leq), state_syms[ph]));
+        rhs = addSym(rhs, mul(div(one, Leq), vi[ph]));
         MNA.set(iD, lastCol, rhs);
 
-        // ---- i^S equation ----
+        // iΣ: linear R/L + sources + virtual input
         MNA.set(iS, iS, one);
-
         if (dcp >= 0) {
             MNA.set(iS, dcp, addSym(MNA.get(iS, dcp), div(one, mul(integer(2), La))));
             MNA.set(iS, dcn, addSym(MNA.get(iS, dcn), div(neg(one), mul(integer(2), La))));
         }
-
         rhs = MNA.get(iS, lastCol);
-        rhs = addSym(rhs, mul(div(neg(Ra), La), syms[3 + ph]));
-        rhs = addSym(rhs, mul(div(neg(md), mul(integer(2), La)), syms[6 + ph]));
-        rhs = addSym(rhs, mul(div(neg(ms), mul(integer(2), La)), syms[9 + ph]));
+        rhs = addSym(rhs, mul(div(neg(Ra), La), state_syms[3 + ph]));
+        rhs = addSym(rhs, mul(div(neg(one), La), vi[3 + ph]));
         MNA.set(iS, lastCol, rhs);
 
-        // ---- v_C^D equation ----
+        // vCΔ: pure virtual input
         MNA.set(vD, vD, one);
         rhs = MNA.get(vD, lastCol);
-        rhs = addSym(rhs, mul(div(ms, mul(integer(4), Ca)), syms[ph]));
-        rhs = addSym(rhs, mul(div(md, mul(integer(2), Ca)), syms[3 + ph]));
+        rhs = addSym(rhs, mul(div(one, mul(integer(2), Ca)), vi[6 + ph]));
         MNA.set(vD, lastCol, rhs);
 
-        // ---- v_C^S equation ----
+        // vCΣ: pure virtual input
         MNA.set(vS, vS, one);
         rhs = MNA.get(vS, lastCol);
-        rhs = addSym(rhs, mul(div(md, mul(integer(4), Ca)), syms[ph]));
-        rhs = addSym(rhs, mul(div(ms, mul(integer(2), Ca)), syms[3 + ph]));
+        rhs = addSym(rhs, mul(div(one, mul(integer(2), Ca)), vi[9 + ph]));
         MNA.set(vS, lastCol, rhs);
 
-        // ---- KCL at AC bus ----
-        if (ac0 >= 0)
-            MNA.set(ac0 + ph, lastCol, addSym(MNA.get(ac0 + ph, lastCol), syms[ph]));
-
-        // ---- KCL at DC bus ----
+        // KCL
+        if (ac0 >= 0) MNA.set(ac0 + ph, lastCol, addSym(MNA.get(ac0 + ph, lastCol), state_syms[ph]));
         if (dcp >= 0) {
             MNA.set(dcp, lastCol, addSym(MNA.get(dcp, lastCol),
-                addSym(div(syms[ph], integer(2)), syms[3 + ph])));
+                addSym(div(state_syms[ph], integer(2)), state_syms[3 + ph])));
             MNA.set(dcn, lastCol, addSym(MNA.get(dcn, lastCol),
-                addSym(div(neg(syms[ph]), integer(2)), syms[3 + ph])));
+                addSym(div(neg(state_syms[ph]), integer(2)), state_syms[3 + ph])));
         }
     }
 }
 
-
-// ===================================================================
-//  getParameterSubstitutions
-// ===================================================================
-
-map_basic_basic MMC::getParameterSubstitutions() const
+std::vector<MatrixXcd> MMC::simulateInputStep(
+    const std::vector<MatrixXcd>& states, int nKeep) const
 {
+    if (states.size() < 4)
+        return { MatrixXcd::Zero(3,nKeep), MatrixXcd::Zero(3,nKeep),
+                 MatrixXcd::Zero(3,nKeep), MatrixXcd::Zero(3,nKeep) };
+
+    const MatrixXcd& iD = states[0], & iS = states[1], & vCD = states[2], & vCS = states[3];
+
+    // m^Δ phasor per phase
+    MatrixXcd mD = MatrixXcd::Zero(3, nKeep);
+    if (nKeep > 1) {
+        std::complex<double> j(0, 1);
+        for (int ph = 0; ph < 3; ++ph)
+            mD(ph, 1) = -(m_1 / 2.0) * std::exp(j * (-ph * 2.0 * M_PI / 3.0));
+    }
+    // m^Σ = 1 at DC
+    MatrixXcd mS = MatrixXcd::Zero(3, nKeep);
+    for (int ph = 0; ph < 3; ++ph) mS(ph, 0) = 1.0;
+
+    auto trunc = [nKeep](const MatrixXcd& M) { return truncateHarmonics(M, nKeep); };
+
+    MatrixXcd u_vMD = trunc(-(dq_multiply(mD, vCS) + dq_multiply(mS, vCD)) / 2.0);
+    MatrixXcd u_vMS = trunc((dq_multiply(mS, vCS) + dq_multiply(mD, vCD)) / 2.0);
+    MatrixXcd u_PD = trunc(dq_multiply(mS, iD) / 2.0 + dq_multiply(mD, iS));
+    MatrixXcd u_PS = trunc(dq_multiply(mD, iD) / 2.0 + dq_multiply(mS, iS));
+
+    return { u_vMD, u_vMS, u_PD, u_PS };
+}
+
+map_basic_basic MMC::getParameterSubstitutions() const {
     map_basic_basic subs;
     subs[symbol("m_delta_" + element_symbol)] = real_double(m_1);
     subs[symbol("m_sigma_" + element_symbol)] = real_double(1.0);

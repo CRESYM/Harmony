@@ -95,7 +95,13 @@ public:
     //vector<MatrixXcd> simulateTimeStep(const vector<MatrixXcd>& input, double Ts, int nKeep1, int nKeep2) override;
 
     // State-space model manipulation - generic MNA stamping 
-    void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
+    void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int,
+        std::map<Element*, std::vector<RCP<const Basic>>>&) override;
+
+    std::vector<RCP<const Basic>> getVirtualInputSymbols() const override;
+
+    std::vector<MatrixXcd> simulateInputStep(
+        const std::vector<MatrixXcd>& states, int nKeep) const override;
 
     int getNumberOfInternalStates() const override { return number_of_states; }
     map_basic_basic getParameterSubstitutions() const override;

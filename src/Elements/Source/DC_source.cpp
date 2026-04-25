@@ -151,3 +151,12 @@ void DC_source::writeMNAmatrix(SymEngine::DenseMatrix& matrix,
     }
     symbol_map[this] = symbols;
 }
+
+std::vector<MatrixXcd> DC_source::simulateInputStep(
+    const std::vector<MatrixXcd>& /*states*/, int nKeep) const
+{
+    MatrixXcd Vi = MatrixXcd::Zero(input_pins, nKeep);
+    for (int p = 0; p < input_pins; ++p)
+        Vi(p, 0) = complex<double>(V[p], 0.0);
+    return { Vi };
+}

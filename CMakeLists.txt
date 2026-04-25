@@ -347,6 +347,13 @@ add_executable(
     ${IMGUI_BACKEND_SOURCES}
 
 )
+target_precompile_headers(Harmony PRIVATE
+    <Eigen/Dense>
+    <symengine/basic.h>
+    "./src/Constants.h"
+    "./src/Include_components.h"
+    "./src/Solver/Helper_Functions/Helper_Functions.h"
+)
 
 # Set Harmony as a starup project on Visual Studio Solution
 if (MSVC)

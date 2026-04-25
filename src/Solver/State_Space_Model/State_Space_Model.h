@@ -1,109 +1,156 @@
 ﻿#ifndef STATE_SPACE_MODEL
 #define STATE_SPACE_MODEL
 
-#include "../../Elements/Element.h"  
-#include "../../Bus.h"      
+#include "../../Elements/Element.h"
+#include "../../Bus.h"
 #include "../../network.h"
 
-class Network; // Forward declaration of Network class
-class Element; // Forward declaration of Element class
-class Bus; // Forward declaration of Bus class
+class Network; class Element; class Bus;
+
+enum class SSMMode {
+    Standard,   ///< Raw pin-count columns in B (for eigenvalue/impedance analysis)
+    DQsym       ///< All B columns grouped in 3s (for DSSS phasor domain)
+};
+
+struct InputMapping {
+    std::string elementName;
+    int pinIndex;            ///< Pin within element (0-based)
+    int bColumnIndex;        ///< Column in B (or B_dqsym)
+    bool isVirtualInput;
+    int groupIndex;          ///< Which 3-column group (DQsym mode)
+    int phaseInGroup;        ///< 0,1,2 within the group (DQsym mode)
+};
+
+struct StateMapping {
+    std::string elementName;
+    int stateIndex;
+    int aRowIndex;
+};
+
+struct OutputMapping {
+    std::string busName;
+    int pinIndex;
+    int cRowIndex;
+};
 
 
 class StateSpaceModel {
 public:
-    // Nested Tree class for loop formation
     class Tree {
     private:
-        Bus* root;                          // Starting node of the tree/loop
-        Element* element;                   // Connecting element
-        Bus* current_node;                  // Current node in traversal
-        std::vector<Element*> subelements;  // Elements in this branch
-        std::shared_ptr<Tree> parent;       // Parent node in the tree
+        Bus* root; Element* element; Bus* current_node;
+        std::vector<Element*> subelements; std::shared_ptr<Tree> parent;
     public:
-        Tree(Element* element, Bus* current_node, Bus* root, std::shared_ptr<Tree> parent = nullptr)
-            : element(element), current_node(current_node), root(root), parent(parent) {}
-
-        void addPathElement(Element* element) {
-            subelements.push_back(element);  
+        Tree(Element* e, Bus* cur, Bus* r, std::shared_ptr<Tree> p = nullptr)
+            : element(e), current_node(cur), root(r), parent(p) {
         }
-        //Getters
+        void addPathElement(Element* e) { subelements.push_back(e); }
         Bus* getRoot() const { return root; }
         Element* getElement() const { return element; }
         Bus* getCurrentNode() const { return current_node; }
         const std::vector<Element*>& getSubelements() const { return subelements; }
         std::shared_ptr<Tree> getParent() const { return parent; }
-
-        // Check if a node already exists in this path
         bool containsNode(Bus* node) const;
-
-        // Get the full path of elements from root to current node
         std::vector<Element*> getPath() const;
-
-        // debugging: print the tree nodes
-        std::string toString() const; 
+        std::string toString() const;
     };
 
-    StateSpaceModel() = default; 
-	// StateSpaceModel(Network* net);
+    StateSpaceModel() = default;
 
-    static std::vector<std::vector<Bus*>> form_cutset_nodes(const std::vector<Bus*>& buses,
-        const std::vector<std::pair<Bus*, Bus*>>& connections);
-
+    static std::vector<std::vector<Bus*>> form_cutset_nodes(const std::vector<Bus*>&,
+        const std::vector<std::pair<Bus*, Bus*>>&);
     static std::vector<std::vector<Element*>> form_cutsets(
-        const std::vector<std::vector<Bus*>>& cutset_nodes,
-        const std::map<Bus*, std::vector<Element*>>& busToElementsMap);
-
-    //creates a mapping from each bus to the list of elements connected to it.
+        const std::vector<std::vector<Bus*>>&,
+        const std::map<Bus*, std::vector<Element*>>&);
     static std::map<Bus*, std::vector<Element*>> generateBusToElementsMap(
-        const std::vector<Element*>& elements);
-
+        const std::vector<Element*>&);
     static std::vector<std::vector<Element*>> findLoops(
-        const std::vector<Bus*>& nodes,
-        const std::map<Bus*, std::vector<Element*>>& node_collection);
+        const std::vector<Bus*>&, const std::map<Bus*, std::vector<Element*>>&);
 
-    // build A,B,C,D from a populated Network
-    void formState(Network* net, const std::vector<Bus*>& out);
+    void formState(Network* net, const std::vector<Bus*>& out,
+        SSMMode mode = SSMMode::Standard);
 
-    // Getters for Eigen::MatrixXd
-    const Eigen::MatrixXd& getA() const { return A; } 
-    const Eigen::MatrixXd& getB() const { return B; }
+    /// Raw matrices (Standard mode)
+    const Eigen::MatrixXd& getA() const { return A; }
+    const Eigen::MatrixXd& getB() const { return mode_ == SSMMode::DQsym ? B_dqsym : B; }
     const Eigen::MatrixXd& getC() const { return C; }
-    const Eigen::MatrixXd& getD() const { return D; }
+    const Eigen::MatrixXd& getD() const { return mode_ == SSMMode::DQsym ? D_dqsym : D; }
+
+    /// Raw B (always available regardless of mode)
+    const Eigen::MatrixXd& getBRaw() const { return B; }
+
+    SSMMode getMode() const { return mode_; }
+
+    const std::vector<InputMapping>& getInputMap() const { return input_map; }
+    const std::vector<StateMapping>& getStateMap() const { return state_map; }
+    const std::vector<OutputMapping>& getOutputMap() const { return output_map; }
+
+    int getInputIndex(const std::string& elementName, int pin = 0) const {
+        for (const auto& m : input_map)
+            if (m.elementName == elementName && m.pinIndex == pin)
+                return m.bColumnIndex;
+        return -1;
+    }
+
+    int getStateIndex(const std::string& elementName, int stateIdx = 0) const {
+        for (const auto& m : state_map)
+            if (m.elementName == elementName && m.stateIndex == stateIdx)
+                return m.aRowIndex;
+        return -1;
+    }
+
+    /// Build u (nu × nKeep) from all element contributions.
+    /// In DQsym mode: u rows are grouped in 3s, DC values broadcast to all 3 phases.
+    MatrixXcd buildInputVector(int nKeep,
+        const std::map<std::string, std::vector<MatrixXcd>>& elementStates) const;
+
+    void printMapping() const;
 
 private:
-    static void traverseForLoops(
-        Bus* current_node,
-        Bus* start_node,
-        const std::vector<Bus*>& nodes,
-        std::vector<std::vector<Element*>>& loop_collection,
-        const std::map<Bus*, std::vector<Element*>>& node_collection,
-        std::shared_ptr<Tree> current_branch,
-        const std::map<Bus*, int>& busIndices);
+    static void traverseForLoops(Bus*, Bus*, const std::vector<Bus*>&,
+        std::vector<std::vector<Element*>>&,
+        const std::map<Bus*, std::vector<Element*>>&,
+        std::shared_ptr<Tree>, const std::map<Bus*, int>&);
 
-    // A, B, C, D;  
-    Eigen::MatrixXd A; 
-    Eigen::MatrixXd B; 
-    Eigen::MatrixXd C; 
-    Eigen::MatrixXd D; 
+    Eigen::MatrixXd A, B, C, D;
+    Eigen::MatrixXd B_dqsym, D_dqsym;   ///< Expanded B/D with all columns in groups of 3
 
-    int number_switches;
-    int number_independent_sources;
-    int number_nodes;
-    int total_number_equations;
-    int number_outputs;
-    int number_state_variables;
+    SSMMode mode_ = SSMMode::Standard;
 
-	std::vector<Bus*> output; // Output variable indices
+    int number_switches = 0, number_independent_sources = 0;
+    int number_virtual_inputs = 0;
+    int number_nodes = 0, total_number_equations = 0;
+    int number_outputs = 0, number_state_variables = 0;
+
+    std::vector<Bus*> output;
     std::unordered_map<Bus*, int> bus_indices;
     std::unordered_map<Element*, int> element_indices;
     std::map<Element*, std::vector<RCP<const Basic>>> symbols_bank;
-	std::vector<Element*> list_state_variables; // Elements that are state variables (e.g., inductors, capacitors)
-	std::vector<Element*> list_independent_sources; // Independent sources (e.g., voltage, current sources)
-	std::vector<Element*> list_switches; // Switches in the network
+    std::map<Element*, std::vector<RCP<const Basic>>> virtual_input_bank;
+    std::vector<Element*> list_state_variables;
+    std::vector<Element*> list_independent_sources;
+    std::vector<Element*> list_virtual_input_providers;
+    std::vector<Element*> list_switches;
+
+    std::vector<InputMapping>  input_map;
+    std::vector<StateMapping>  state_map;
+    std::vector<OutputMapping> output_map;
+
+    /// Internal info: for each source/virtual provider, how many raw B columns it has
+    struct InputGroup {
+        Element* element;
+        int rawCols;          ///< Actual pin count (2 for DC, 3 for AC, 12 for MMC virtual)
+        int dqsymCols;        ///< After expansion: ceil to next multiple of 3
+        int rawStartCol;      ///< Start column in raw B
+        int dqsymStartCol;    ///< Start column in B_dqsym
+        bool isVirtual;
+    };
+    std::vector<InputGroup> input_groups;
 
     void finalizeCounts(Network*);
-    void substituteParameters(DenseMatrix& matrix);
+    void substituteParameters(SymEngine::DenseMatrix& matrix);
+    void buildMappings();
+    void expandBForDQsym();   ///< Post-process: raw B → B_dqsym (all groups of 3)
 };
 
-#endif //STATE_SPACE_MODEL
+#endif

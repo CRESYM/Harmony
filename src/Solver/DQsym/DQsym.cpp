@@ -5,6 +5,24 @@
 #include "../../Include_components.h"
 
 
+void DQsym::initialize(Network* net)
+{
+    net_ = net;
+    ac_grid_names.clear();
+    dc_grid_names.clear();
+    ac_grids.clear();
+    dc_grids.clear();
+    converters.clear();
+
+	net->is_area_empty() ? net->add_areas() : void();
+
+	ac_grids = net->get_ac_grids();
+	dc_grids = net->get_dc_grids();
+	ac_grid_names = net->get_ac_grid_names();
+	dc_grid_names = net->get_dc_grid_names();
+	converters = net->get_converters();
+}
+
 /**
  * @brief Solves the discrete-time state-space system with switch-dependent matrices.
  *
@@ -172,17 +190,17 @@ DQsymResult DQsym::run(Config& cfg)
     if (!net_)
         throw std::runtime_error("DQsym::run(): call initialize(Network*) first.");
 
-    // ---- Step 0: build global state-space from network MNA ----
+    // ---- Step 0: state-space with DQsym mode (B columns in groups of 3) ----
     StateSpaceModel ssm;
-    ssm.formState(net_, cfg.outputBuses);
+    ssm.formState(net_, cfg.outputBuses, SSMMode::DQsym);
 
     int nx = ssm.getA().rows();
-    int nu = ssm.getB().cols();
+    int nu = ssm.getB().cols();   // B_dqsym columns (all groups of 3)
 
-    std::cout << "[DQsym] Global system: A(" << nx << "x" << nx
-        << ") B(" << nx << "x" << nu << ")\n";
+    std::cout << "[DQsym] A(" << nx << "x" << nx
+        << ") B_dqsym(" << nx << "x" << nu << ")\n";
 
-    // ---- Step 1: discretize (C=I to get all states as DSSS output) ----
+    // ---- Step 1: discretize ----
     MatrixXd Cd_id = Eigen::MatrixXd::Identity(nx, nx);
     MatrixXd Dd_z = Eigen::MatrixXd::Zero(nx, nu);
     MatrixXd Ad_r, Bd_r;
@@ -198,7 +216,7 @@ DQsymResult DQsym::run(Config& cfg)
     int nGroups = ny / 3;
     VectorXcd xo = VectorXcd::Zero(nx);
 
-    // ---- Step 2: allocate result ----
+    // ---- Step 2: allocate ----
     const int N = static_cast<int>((cfg.t_end - cfg.t_start) / cfg.dt) + 1;
 
     DQsymResult result;
@@ -208,6 +226,16 @@ DQsymResult DQsym::run(Config& cfg)
 
     dssState_ = DSSState{};
 
+    // Per-element states for feedback (initialized to zero)
+    std::map<std::string, std::vector<MatrixXcd>> elementStates;
+    for (const auto& [name, elem] : converters) {
+        int nStates = elem->getNumberOfInternalStates();
+        if (nStates <= 0) continue;
+        int nStateGroups = nStates / 3;
+        elementStates[name] = std::vector<MatrixXcd>(
+            nStateGroups, MatrixXcd::Zero(3, cfg.nKeep));
+    }
+
     // ---- Step 3: main loop ----
     for (int k = 0; k < N; ++k)
     {
@@ -215,23 +243,37 @@ DQsymResult DQsym::run(Config& cfg)
         double theta = 2.0 * M_PI * cfg.f * t;
         result.time[k] = t;
 
-        // Breaker
+        // 3a. Breaker
         Eigen::VectorXi brkVec = cfg.breakerFunction
             ? cfg.breakerFunction(k, t)
             : Eigen::VectorXi::Zero(cfg.swType.size());
         result.brkHistory.row(k) = brkVec.transpose();
 
-        // Input (nu x nKeep)
-        MatrixXcd u = cfg.inputFunction
-            ? cfg.inputFunction(k, t, nu, cfg.nKeep)
-            : MatrixXcd::Zero(nu, cfg.nKeep);
+        // 3b. Build u (nu × nKeep) — sources + MMC feedback from previous step
+        MatrixXcd u = ssm.buildInputVector(cfg.nKeep, elementStates);
 
-        // DSSS
+        // 3c. DSSS
         MatrixXcd y = DSSS(dssState_, AdC, BdC, CdC, DdC,
             cfg.swOnRes, cfg.swOffRes, cfg.swType, brkVec,
             u, xo, cfg.dt, cfg.f);
 
-        // Store abc (state-space order, no converter routes)
+        // 3d. Extract state groups, update elementStates for next step
+        for (const auto& [name, elem] : converters) {
+            int nStates = elem->getNumberOfInternalStates();
+            if (nStates <= 0) continue;
+
+            int startRow = ssm.getStateIndex(name, 0);
+            if (startRow < 0) continue;
+
+            int nStateGroups = nStates / 3;
+            std::vector<MatrixXcd> groups(nStateGroups);
+            for (int g = 0; g < nStateGroups; ++g)
+                groups[g] = y.block(startRow + 3 * g, 0, 3, cfg.nKeep);
+
+            elementStates[name] = groups;
+        }
+
+        // 3e. ABC reconstruction
         auto abcGroups = dqn2abc_groups_at_time(y, theta);
         for (int g = 0; g < nGroups && g < (int)abcGroups.size(); ++g)
             result.DSSabcHist[g].row(k) = abcGroups[g].transpose();
@@ -252,15 +294,19 @@ void DQsym::exportCSV(const std::string& filename) const
     if (!hasRun_)
         throw std::runtime_error("exportCSV() before run().");
 
-    std::vector<Eigen::MatrixXd> values;
+    std::vector<Eigen::MatrixXd> values = {};
     values.push_back(result_.brkHistory.cast<double>());
-    for (const auto& m : result_.DSSabcHist)
+    for (const auto& m : result_.DSSabcHist) {
         values.push_back(m);
+		cout << "DSSabcHist group with shape (" << m.rows() << "x" << m.cols() << ")\n";
+    }
 
     std::vector<std::string> headers;
     headers.push_back("brk");
     for (int g = 0; g < static_cast<int>(result_.DSSabcHist.size()); ++g)
         headers.push_back("state_abc" + std::to_string(g + 1));
+
+	cout << "Exporting CSV with " << values.size() << " matrices and headers: ";
 
     write_file(result_.time, values, headers, filename);
 }
