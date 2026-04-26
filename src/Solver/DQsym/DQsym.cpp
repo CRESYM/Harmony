@@ -199,8 +199,11 @@ DQsymResult DQsym::run(Config& cfg)
     int nx = ssm.getA().rows();
     int nu = ssm.getB().cols();   // B_dqsym columns (all groups of 3)
 
-    std::cout << "[DQsym] A(" << nx << "x" << nx
-        << ") B_dqsym(" << nx << "x" << nu << ")\n";
+    //cout << "State-space model formed with Standard mode:\n"
+    //    << "A: " << ssm.getA() << "\n"
+    //    << "B: " << ssm.getB() << "\n"
+    //    << "C: " << ssm.getC() << "\n"
+    //    << "D: " << ssm.getD() << "\n";
 
     // ---- Step 1: discretize ----
     MatrixXd Cd_id = Eigen::MatrixXd::Identity(nx, nx);
@@ -253,7 +256,7 @@ DQsymResult DQsym::run(Config& cfg)
 
         // 3b. Build u (nu × nKeep) — sources + MMC feedback from previous step
         MatrixXcd u = ssm.buildInputVector(cfg.nKeep, elementStates);
-		//cout << u << "\n";
+		//cout << "Input vector u at step " << k << ":\n" << u << "\n";
 
         // 3c. DSSS
         MatrixXcd y = DSSS(dssState_, AdC, BdC, CdC, DdC,
@@ -283,6 +286,9 @@ DQsymResult DQsym::run(Config& cfg)
         for (int g = 0; g < nGroups && g < (int)abcGroups.size(); ++g)
             result.DSSabcHist[g].row(k) = abcGroups[g].transpose();
     }
+
+    cout << "Simulation completed with " << N << " steps and "
+		<< nGroups << " groups.\n";
 
     result_ = result;
     hasRun_ = true;

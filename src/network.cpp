@@ -315,21 +315,21 @@ void Network::add_areas() {
     }
 
     // Optional summary output
-    std::cout << "\n=== Area Summary ===\n";
-    std::cout << "AC Grids Detected: " << ac_grids.size() << "\n";
-    for (const auto& [name, sub] : ac_grids) {
-        std::cout << "  - " << name << " (" << sub->getBuses().size() << " buses, "
-            << sub->getElements().size() << " elements, " << sub->getOutputs().size() << " outputs)\n";
-    }
+    //std::cout << "\n=== Area Summary ===\n";
+    //std::cout << "AC Grids Detected: " << ac_grids.size() << "\n";
+    //for (const auto& [name, sub] : ac_grids) {
+    //    std::cout << "  - " << name << " (" << sub->getBuses().size() << " buses, "
+    //        << sub->getElements().size() << " elements, " << sub->getOutputs().size() << " outputs)\n";
+    //}
 
-    std::cout << "DC Grids Detected: " << dc_grids.size() << "\n";
-    for (const auto& [name, sub] : dc_grids) {
-        std::cout << "  - " << name << " (" << sub->getBuses().size() << " buses, "
-            << sub->getElements().size() << " elements, " << sub->getOutputs().size() << " outputs)\n";
-    }
+    //std::cout << "DC Grids Detected: " << dc_grids.size() << "\n";
+    //for (const auto& [name, sub] : dc_grids) {
+    //    std::cout << "  - " << name << " (" << sub->getBuses().size() << " buses, "
+    //        << sub->getElements().size() << " elements, " << sub->getOutputs().size() << " outputs)\n";
+    //}
 
-    std::cout << "Converters Detected: " << converters.size() << "\n";
-    for (const auto& [name, elem] : converters) {
-        std::cout << "  - " << name << " (" << elem->getElementSymbol() << ")\n";
-    }
+    //std::cout << "Converters Detected: " << converters.size() << "\n";
+    //for (const auto& [name, elem] : converters) {
+    //    std::cout << "  - " << name << " (" << elem->getElementSymbol() << ")\n";
+    //}
 }

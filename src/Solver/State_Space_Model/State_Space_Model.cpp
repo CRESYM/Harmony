@@ -284,15 +284,15 @@ void StateSpaceModel::formState(Network* net, const vector<Bus*>& out, SSMMode m
         out_off += n_pins;
     }
 
-    std::cout << "[StateSpaceModel] A(" << A.rows() << "x" << A.cols()
-        << ") B(" << B.rows() << "x" << B.cols()
-        << ") C(" << C.rows() << "x" << C.cols()
-        << ") D(" << D.rows() << "x" << D.cols() << ")" << std::endl;
+    //std::cout << "[StateSpaceModel] A(" << A.rows() << "x" << A.cols()
+    //    << ") B(" << B.rows() << "x" << B.cols()
+    //    << ") C(" << C.rows() << "x" << C.cols()
+    //    << ") D(" << D.rows() << "x" << D.cols() << ")" << std::endl;
 
     mode_ = mode;
     buildMappings();
     if (mode_ == SSMMode::DQsym) expandBForDQsym();
-    printMapping();
+    //printMapping();
 }
 
 // ===================================================================
@@ -318,10 +318,17 @@ void StateSpaceModel::expandBForDQsym()
 
     for (const auto& elem : list_independent_sources) {
         int n = elem->getInputPins();
-        int expanded = ((n + 2) / 3) * 3;   // ceil to multiple of 3
+        if (n > 3) {
+            std::cerr << "[StateSpaceModel] Warning: Element " << elem->getElementSymbol()
+                << " has " << n << " pins, which exceeds the expected maximum of 3 for DQsym. "
+                << "Only the first 3 pins will be considered for DQsym expansion.\n";
+            n = 3; // Limit to 3 for DQsym purposes
+		}
+		int expanded = (n % 3 == 0) ? n : 3 * n;   // create multiples of 3 (1→3, 2→6, 3→3)
         input_groups.push_back({ elem, n, expanded, raw_col, 0, false });
         raw_col += n;
     }
+	// Virtual input providers are skipped. They are nonlinear and contribute via simulateTimeStep, not directly through B. If needed, they can be handled with a custom approach.
     for (const auto& elem : list_virtual_input_providers) {
         int n = static_cast<int>(virtual_input_bank[elem].size());
         int expanded = ((n + 2) / 3) * 3;
@@ -347,13 +354,19 @@ void StateSpaceModel::expandBForDQsym()
                 B.block(0, g.rawStartCol, nx, g.rawCols);
         }
         else {
-            // Need expansion: replicate each raw column to fill a 3-group
-            // For 2-pin DC: pin 0 → cols [0,1,2], pin 1 → cols [3,4,5]
+			// Need expansion: replicate as diagonal blocks of 3
             for (int p = 0; p < g.rawCols; ++p) {
                 int group_base = g.dqsymStartCol + p * 3;
-                for (int ph = 0; ph < 3; ++ph) {
-                    if (group_base + ph < nu_dqsym)
-                        B_dqsym.col(group_base + ph) = B.col(g.rawStartCol + p);
+                for (int i = 0; i < nx; ++i) {
+                    if (i % 3 == 0) {
+                        B_dqsym(i, group_base) = B(i, g.rawStartCol + p);
+					}
+                    else if (i % 3 == 1) {
+                        B_dqsym(i, group_base + 1) = B(i - 1, g.rawStartCol + p);
+                    }
+                    else if (i % 3 == 2) {
+                        B_dqsym(i, group_base + 2) = B(i - 2, g.rawStartCol + p);
+                    }
                 }
             }
         }
@@ -371,15 +384,24 @@ void StateSpaceModel::expandBForDQsym()
             else {
                 for (int p = 0; p < g.rawCols; ++p) {
                     int group_base = g.dqsymStartCol + p * 3;
-                    for (int ph = 0; ph < 3; ++ph)
-                        if (group_base + ph < nu_dqsym)
-                            D_dqsym.col(group_base + ph) = D.col(g.rawStartCol + p);
+                    for (int i = 0; i < nu_dqsym; ++i) {
+                        if (i % 3 == 0) {
+                            D_dqsym(i, group_base) = D(i, g.rawStartCol + p);
+                        }
+                        else if (i % 3 == 1) {
+                            D_dqsym(i, group_base + 1) = D(i - 1, g.rawStartCol + p);
+                        }
+                        else if (i % 3 == 2) {
+                            D_dqsym(i, group_base + 2) = D(i - 2, g.rawStartCol + p);
+                        }
+                    }
                 }
             }
+
         }
     }
 
-    std::cout << "[SSM] DQsym B expanded: " << nx << "x" << nu_dqsym
+    std::cout << "[StateSpaceModel] DQsym B expanded: " << nx << "x" << nu_dqsym
         << " (raw was " << nx << "x" << B.cols() << ")\n";
 }
 
@@ -450,31 +472,34 @@ MatrixXcd StateSpaceModel::buildInputVector(
     int nKeep,
     const std::map<std::string, std::vector<MatrixXcd>>& elementStates) const
 {
-    int nu = (mode_ == SSMMode::DQsym) ? B_dqsym.cols() : B.cols();
+    int nu = B_dqsym.cols();
     MatrixXcd u = MatrixXcd::Zero(nu, nKeep);
 
     for (const auto& g : input_groups) {
         std::string name = g.element->getElementSymbol();
-
         if (!g.isVirtual) {
-            // Source element — call simulateInputStep
-            auto vals = g.element->simulateInputStep({}, nKeep);
-            if (vals.empty()) continue;
-            const MatrixXcd& V = vals[0];   // (rawPins × nKeep)
+            for (const auto& g : input_groups) {
+                std::string name = g.element->getElementSymbol();
 
-            if (mode_ == SSMMode::DQsym) {
-                // Expand: each raw pin → 3 identical rows (zero-sequence broadcast)
-                for (int p = 0; p < g.rawCols && p < V.rows(); ++p) {
-                    int base = g.dqsymStartCol + p * 3;
-                    for (int ph = 0; ph < 3; ++ph)
-                        if (base + ph < nu)
-                            u.row(base + ph) = V.row(p);
+                // Source element — call simulateInputStep
+                auto vals = g.element->simulateInputStep({}, nKeep);
+                if (vals.empty()) continue;
+                MatrixXcd V = vals[0];  // Assuming simulateInputStep returns a matrix with rows corresponding to pins
+
+                if (mode_ == SSMMode::DQsym) {
+                    // Expand: each raw pin → 3 identical rows (zero-sequence broadcast)
+                    for (int p = 0; p < g.rawCols && p < V.rows(); ++p) {
+                        int base = g.dqsymStartCol + p * 3;
+                        for (int ph = 0; ph < 3; ++ph)
+                            if (base + ph < nu)
+                                u.row(base + ph) = V.row(3 * p + ph);
+                    }
                 }
-            }
-            else {
-                // Standard: direct placement
-                for (int p = 0; p < g.rawCols && p < V.rows(); ++p)
-                    u.row(g.rawStartCol + p) = V.row(p);
+                else {
+                    // Standard: direct placement
+                    for (int p = 0; p < g.rawCols && p < V.rows(); ++p)
+                        u.row(g.rawStartCol + p) = V.row(p);
+                }
             }
         }
         else {

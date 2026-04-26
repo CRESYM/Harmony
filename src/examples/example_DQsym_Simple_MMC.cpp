@@ -46,15 +46,6 @@ void example_DQsym_Simple_MMC()
     net.connectElementToBus(vs_ac, 1, ac_bus);
     net.connectElementToBus(vs_ac, 2, gnd);
 
-	StateSpaceModel ssm;
-	ssm.formState(&net, { dc_bus }, SSMMode::Standard);
-
-    cout << "State-space model formed with Standard mode:\n"
-        << "A: " << ssm.getA() << "\n"
-		<< "B: " << ssm.getB() << "\n"
-        << "C: " << ssm.getC() << "\n"
-        << "D: " << ssm.getD() << "\n";
-
     // DQsym — no inputFunction, sources/MMC handle u automatically
     DQsym dq;
     dq.initialize(&net);
@@ -81,8 +72,8 @@ void example_DQsym_Simple_MMC()
 
     DQsymResult result = dq.run(cfg);
 
-    //std::cout << "Done: " << result.time.size() << " steps, "
-    //    << result.DSSabcHist.size() << " groups.\n";
+    std::cout << "Done: " << result.time.size() << " steps, "
+        << result.DSSabcHist.size() << " groups.\n";
 
     //dq.exportCSV("DQsym_MMC_SigmaDelta.csv");
     dq.plot();
@@ -90,6 +81,4 @@ void example_DQsym_Simple_MMC()
 	cout << "Example complete. Press any key to exit.\n";
 	std::cin.get();
 
-    delete mmc; delete vs_dc; delete vs_ac;
-    delete ac_bus; delete dc_bus; delete gnd;
 }
