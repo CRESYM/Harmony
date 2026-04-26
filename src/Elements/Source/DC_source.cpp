@@ -156,8 +156,9 @@ std::vector<MatrixXcd> DC_source::simulateInputStep(
     const std::vector<MatrixXcd>& /*states*/, int nKeep) const
 {
     MatrixXcd Vi = MatrixXcd::Zero(input_pins * 3, nKeep);
-	for (int p = 0; p < input_pins; ++p)
+    for (int p = 0; p < input_pins; ++p) {
         Vi(p * 3 + 2, 0) = complex<double>(V[p], 0.0);
+    }        
 
     return { Vi };
 }

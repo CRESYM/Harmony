@@ -318,13 +318,7 @@ void StateSpaceModel::expandBForDQsym()
 
     for (const auto& elem : list_independent_sources) {
         int n = elem->getInputPins();
-        if (n > 3) {
-            std::cerr << "[StateSpaceModel] Warning: Element " << elem->getElementSymbol()
-                << " has " << n << " pins, which exceeds the expected maximum of 3 for DQsym. "
-                << "Only the first 3 pins will be considered for DQsym expansion.\n";
-            n = 3; // Limit to 3 for DQsym purposes
-		}
-		int expanded = (n % 3 == 0) ? n : 3 * n;   // create multiples of 3 (1→3, 2→6, 3→3)
+        int expanded = ((n + 2) / 3) * 3;   // ceil to multiple of 3
         input_groups.push_back({ elem, n, expanded, raw_col, 0, false });
         raw_col += n;
     }
@@ -347,6 +341,7 @@ void StateSpaceModel::expandBForDQsym()
     int nx = B.rows();
     B_dqsym = Eigen::MatrixXd::Zero(nx, nu_dqsym);
 
+    // It might need to be rewritten to become only zero component.
     for (const auto& g : input_groups) {
         if (g.rawCols == g.dqsymCols) {
             // Already multiple of 3 — copy directly
@@ -354,19 +349,13 @@ void StateSpaceModel::expandBForDQsym()
                 B.block(0, g.rawStartCol, nx, g.rawCols);
         }
         else {
-			// Need expansion: replicate as diagonal blocks of 3
+            // Need expansion: replicate each raw column to fill a 3-group
+            // For 2-pin DC: pin 0 → cols [0,1,2], pin 1 → cols [3,4,5]
             for (int p = 0; p < g.rawCols; ++p) {
                 int group_base = g.dqsymStartCol + p * 3;
-                for (int i = 0; i < nx; ++i) {
-                    if (i % 3 == 0) {
-                        B_dqsym(i, group_base) = B(i, g.rawStartCol + p);
-					}
-                    else if (i % 3 == 1) {
-                        B_dqsym(i, group_base + 1) = B(i - 1, g.rawStartCol + p);
-                    }
-                    else if (i % 3 == 2) {
-                        B_dqsym(i, group_base + 2) = B(i - 2, g.rawStartCol + p);
-                    }
+                for (int ph = 0; ph < 3; ++ph) {
+                    if (group_base + ph < nu_dqsym)
+                        B_dqsym.col(group_base + ph) = B.col(g.rawStartCol + p);
                 }
             }
         }
@@ -384,20 +373,11 @@ void StateSpaceModel::expandBForDQsym()
             else {
                 for (int p = 0; p < g.rawCols; ++p) {
                     int group_base = g.dqsymStartCol + p * 3;
-                    for (int i = 0; i < nu_dqsym; ++i) {
-                        if (i % 3 == 0) {
-                            D_dqsym(i, group_base) = D(i, g.rawStartCol + p);
-                        }
-                        else if (i % 3 == 1) {
-                            D_dqsym(i, group_base + 1) = D(i - 1, g.rawStartCol + p);
-                        }
-                        else if (i % 3 == 2) {
-                            D_dqsym(i, group_base + 2) = D(i - 2, g.rawStartCol + p);
-                        }
-                    }
+                    for (int ph = 0; ph < 3; ++ph)
+                        if (group_base + ph < nu_dqsym)
+                            D_dqsym.col(group_base + ph) = D.col(g.rawStartCol + p);
                 }
             }
-
         }
     }
 

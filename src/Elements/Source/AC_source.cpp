@@ -142,6 +142,6 @@ std::vector<MatrixXcd> AC_source::simulateInputStep(
     const std::vector<MatrixXcd>& /*states*/, int nKeep) const
 {
     MatrixXcd Vi = MatrixXcd::Zero(3, nKeep);
-	Vi(1, 0) = std::complex<double>(V[0], 0.0);
+	Vi(0, 1) = std::complex<double>(V[0], 0.0);
     return { Vi };
 }

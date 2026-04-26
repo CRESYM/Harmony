@@ -1339,14 +1339,12 @@ std::vector<MatrixXcd> MMC::simulateInputStep(
 
     // m^Δ phasor per phase
     MatrixXcd mD = MatrixXcd::Zero(3, nKeep);
-    if (nKeep > 1) {
-        std::complex<double> j(0, 1);
-        for (int ph = 0; ph < 3; ++ph)
-            mD(ph, 1) = -(m_1 / 2.0) * std::exp(j * (-ph * 2.0 * M_PI / 3.0));
-    }
+	// The same calculation as for the AC source: m^Δ = -sin(w0*t - 2pi*k/3) 
+	mD(0, 1) = -m_1; 
+
     // m^Σ = 1 at DC
     MatrixXcd mS = MatrixXcd::Zero(3, nKeep);
-    for (int ph = 0; ph < 3; ++ph) mS(ph, 0) = 1.0;
+	mS(2, 0) = 1.0; 
 
     auto trunc = [nKeep](const MatrixXcd& M) { return truncateHarmonics(M, nKeep); };
 

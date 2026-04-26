@@ -53,7 +53,7 @@ void example_DQsym_Simple_MMC()
     Config cfg;
     cfg.dt = 2e-5;
     cfg.t_start = 0.0;
-    cfg.t_end = 0.5;
+    cfg.t_end = 1;
     cfg.f = f;
     cfg.omega = omega;
     cfg.nKeep = nKeep;
