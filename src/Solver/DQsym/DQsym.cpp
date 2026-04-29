@@ -1,407 +1,179 @@
 ﻿#include "DQsym.h"
-#include "../Helper_Functions/Helper_Functions.h"
+#include "../../Constants.h"
+
+#include "../../network.h"      // For access to the Network class and its members
+#include "../../Include_components.h"
 
 
-/**
- * @brief Adds two complex matrices element-wise, handling different sizes.
- *
- * This function computes the sum of two matrices, `a` and `b`. If the matrices
- * have different dimensions, the result matrix is sized to encompass both,
- * effectively zero-padding the smaller matrix before addition.
- *
- * @param a The first matrix operand.
- * @param b The second matrix operand.
- * @return A new matrix representing the sum of `a` and `b`.
- */
-MatrixXcd DQsym::add(const MatrixXcd& a, const MatrixXcd& b)
+void DQsym::initialize(Network* net)
 {
-    long max_rows = std::max(a.rows(), b.rows());
-    long max_cols = std::max(a.cols(), b.cols());
+    net_ = net;
+    ac_grid_names.clear();
+    dc_grid_names.clear();
+    ac_grids.clear();
+    dc_grids.clear();
+    converters.clear();
 
-    MatrixXcd result = MatrixXcd::Zero(max_rows, max_cols);
+	net->is_area_empty() ? net->add_areas() : void();
 
-    result.block(0, 0, a.rows(), a.cols()) += a;
-    result.block(0, 0, b.rows(), b.cols()) += b;
-
-    return result;
+	ac_grids = net->get_ac_grids();
+	dc_grids = net->get_dc_grids();
+	ac_grid_names = net->get_ac_grid_names();
+	dc_grid_names = net->get_dc_grid_names();
+	converters = net->get_converters();
 }
 
 /**
- * @brief Subtracts one complex matrix from another element-wise, handling different sizes.
+ * @brief Solves the discrete-time state-space system with switch-dependent matrices.
  *
- * This function computes the difference of two matrices, `a - b`. If the matrices
- * have different dimensions, the result matrix is sized to encompass both,
- * effectively zero-padding the smaller matrix before subtraction.
+ * This function computes the output of a discrete-time state-space system for a given
+ * sequence of inputs. It supports dynamic changes in the system matrices based on the
+ * state of switches (breakers). The state-space model is updated whenever the switch
+ * configuration changes.
  *
- * @param a The matrix to subtract from (minuend).
- * @param b The matrix to subtract (subtrahend).
- * @return A new matrix representing the difference `a - b`.
- */
-MatrixXcd DQsym::subtract(const MatrixXcd& a, const MatrixXcd& b)
-{
-    long max_rows = std::max(a.rows(), b.rows());
-    long max_cols = std::max(a.cols(), b.cols());
-
-    MatrixXcd result = MatrixXcd::Zero(max_rows, max_cols);
-
-    result.block(0, 0, a.rows(), a.cols()) += a;
-    result.block(0, 0, b.rows(), b.cols()) -= b;
-
-    return result;
-}
-
-
-/**
- * @brief Three-phase product of two dynamic-phasor series (harmonic convolution).
+ * The core calculation is performed in the phasor domain. The state vector is rotated
+ * at each time step to account for the system's fundamental frequency, and the final
+ * output is computed based on the updated state.
  *
- * C++ translation aligned with MATLAB:
- *   Zdcpnz_c = SICO_DPs_3ph(x_coef1, y_coef1, N)
- *
- * Input convention:
- * - 3 rows = abc phases
- * - column 0 = DC term
- * - column k = harmonic k
- *
- * Output:
- * - 3 x (2N+1) matrix in abc basis, where N = max(input harmonic order)
- */
-MatrixXcd DQsym::multiply(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_in)
-{
-    
-    if (x_coef1_in.rows() != 3 || y_coef1_in.rows() != 3) {
-        throw std::invalid_argument("Input coefficient matrices must have 3 rows.");
-    }
-
-
-    Matrix3cd Sas;
-    const std::complex<double> a(-0.5, 0.8660254037844386);
-    const std::complex<double> a2(-0.5, -0.8660254037844386);
-
-    Sas << std::complex<double>(1, 0), a, a2,
-        std::complex<double>(1, 0), a2, a,
-        std::complex<double>(1, 0), std::complex<double>(1, 0), std::complex<double>(1, 0);
-    Sas /= 3.0;
-
-    Matrix3cd Ssa = Sas.inverse();
-
-    const int Nx = static_cast<int>(x_coef1_in.cols()) - 1;
-    const int Ny = static_cast<int>(y_coef1_in.cols()) - 1;
-    const int N = std::max(Nx, Ny);
-
-    const int L = N + 1;
-    const int max_k = 2 * N;
-    const int outCols = max_k + 1;
-
-    MatrixXcd x_coef1 = MatrixXcd::Zero(3, L);
-    MatrixXcd y_coef1 = MatrixXcd::Zero(3, L);
-
-    const int nx = std::min<int>(x_coef1_in.cols(), L);
-    const int ny = std::min<int>(y_coef1_in.cols(), L);
-
-    x_coef1.leftCols(nx) = x_coef1_in.leftCols(nx);
-    y_coef1.leftCols(ny) = y_coef1_in.leftCols(ny);
-    MatrixXcd X_pnz = Ssa * x_coef1;
-    MatrixXcd Y_pnz = Ssa * y_coef1;
-
-
-    MatrixXd Cs = MatrixXd::Zero(3, outCols);
-    MatrixXd Cc = MatrixXd::Zero(3, outCols);
-    VectorXd C0 = VectorXd::Zero(3);
-
-
-
-    for (int m = 0; m <= N; ++m) {
-        VectorXd axs = X_pnz.col(m).real();
-        VectorXd axc = X_pnz.col(m).imag();
-
-        for (int n = 0; n <= N; ++n) {
-            VectorXd bxs = Y_pnz.col(n).real();
-            VectorXd bxc = Y_pnz.col(n).imag();
-
-
-            if (m == 0 && n == 0) {
-                C0 += X_pnz.col(0).real().cwiseProduct(Y_pnz.col(0).real());
-            }
-
-
-            if (m == n && m > 0) {
-                C0 += 0.5 * axs.cwiseProduct(bxs) + 0.5 * axc.cwiseProduct(bxc);
-            }
-
-
-            if (m > 0 && n > 0) {
-                const int k_plus = m + n;
-                const int k_minus = std::abs(m - n);
-                const int s = sgn(m - n);
-
-                Cs.col(k_plus) += 0.5 * axs.cwiseProduct(bxc)
-                    + 0.5 * axc.cwiseProduct(bxs);
-
-                Cc.col(k_plus) += 0.5 * axc.cwiseProduct(bxc)
-                    - 0.5 * axs.cwiseProduct(bxs);
-
-                if (k_minus > 0) {
-                    Cs.col(k_minus) += 0.5 * s * axs.cwiseProduct(bxc)
-                        - 0.5 * s * axc.cwiseProduct(bxs);
-
-                    Cc.col(k_minus) += 0.5 * axc.cwiseProduct(bxc)
-                        + 0.5 * axs.cwiseProduct(bxs);
-                }
-            }
-
-
-            if (m == 0 && n > 0) {
-                Cs.col(n) += X_pnz.col(0).real().cwiseProduct(bxs);
-                Cc.col(n) += X_pnz.col(0).real().cwiseProduct(bxc);
-            }
-
-
-            if (n == 0 && m > 0) {
-                Cs.col(m) += Y_pnz.col(0).real().cwiseProduct(axs);
-                Cc.col(m) += Y_pnz.col(0).real().cwiseProduct(axc);
-            }
-        }
-    }
-
-    MatrixXcd xy_phasors = MatrixXcd::Zero(3, outCols);
-    xy_phasors.col(0) = C0.cast<std::complex<double>>();
-    for (int k = 1; k <= max_k; ++k) {
-        for (int i = 0; i < 3; ++i) {
-            xy_phasors(i, k) = std::complex<double>(Cs(i, k), Cc(i, k));
-        }
-    }
-
-    MatrixXcd Zdcpnz_c = MatrixXcd::Zero(3, outCols);
-    Zdcpnz_c = Sas * xy_phasors;
-    return Zdcpnz_c;
-}
-
-/**
- * @brief Dynamic-phasor (DQ0) integrator per harmonic order.
- */
-
-MatrixXcd DQsym::integrate(MatrixXcd& Zpnz_old, MatrixXcd& Xpnz_old, const MatrixXcd& Xpnz,
-    double dt, double w)
-{
-    int N = Xpnz.cols() - 1;
-    int nrSig = Xpnz.rows() / 3;
-
-
-
-    if (Zpnz_old.rows() != nrSig * 3 || Xpnz_old.rows() != nrSig * 3 ||
-        Zpnz_old.cols() != N + 1 || Xpnz_old.cols() != N + 1) {
-        throw std::invalid_argument("Dimension mismatch in Int_DQN_Mat");
-    }
-
-    double dt2 = dt / 2.0;
-    MatrixXcd Zpnz = MatrixXcd::Zero(nrSig * 3, N + 1);
-
-
-    Zpnz.col(0) = dt2 * (Xpnz.col(0) + Xpnz_old.col(0)) + Zpnz_old.col(0);
-    Xpnz_old.col(0) = Xpnz.col(0);
-    Zpnz_old.col(0) = Zpnz.col(0);
-
-
-    for (int i = 1; i <= N; ++i) {
-        double wn = i * w;
-        double wndt2 = wn * dt2;
-
-        double A = 2.0 * dt2 / (1.0 + wndt2 * wndt2);
-        double B = (1.0 - wndt2 * wndt2) / (1.0 + wndt2 * wndt2);
-
-        const VectorXcd Xin = Xpnz.col(i);
-        const VectorXcd Zin_old = Zpnz_old.col(i);
-
-
-        VectorXd xr = Xin.real();
-        VectorXd xi = Xin.imag();
-        VectorXd zr = Zin_old.real();
-        VectorXd zi = Zin_old.imag();
-
-        VectorXd zr_new = A * (xr + wndt2 * xi) + (B * zr + A * wn * zi);
-        VectorXd zi_new = A * (xi - wndt2 * xr) + (B * zi - A * wn * zr);
-
-        Zpnz.col(i) = zr_new.cast<std::complex<double>>()
-            + std::complex<double>(0, 1) * zi_new.cast<std::complex<double>>();
-
-        Zpnz_old.col(i) = Zpnz.col(i);
-    }
-
-    return Zpnz;
-}
-
-/**
- * @brief Reset internal persistent DSSS state.
- */
-void DQsym::reset()
-{
-    initialized = false;
-    nStates = 0;
-    nInputs = 0;
-    nOutputs = 0;
-    nSwitches = 0;
-
-    x_old.resize(0, 0);
-    Ads.resize(0, 0);
-    Bds.resize(0, 0);
-    Cds.resize(0, 0);
-    Dds.resize(0, 0);
-
-    swVec.resize(0);
-    swVecOld.resize(0);
-    yswitch.resize(0);
-}
-
-/**
-* 
- * @brief Discrete phasor-domain state-space solver with switch-dependent matrix updates.
  * @note This implementation does not include a half-step predictor/corrector.
- * 
- * 
+ *
+ * @param Ad The discrete-time state matrix.
+ * @param Bd The discrete-time input matrix.
+ * @param Cd The discrete-time output matrix.
+ * @param Dd The discrete-time feed-through matrix.
+ * @param swOnRes A vector of ON-resistances for the switches.
+ * @param swOffRes A vector of OFF-resistances for the switches.
+ * @param swType A vector indicating the type of each switch.
+ * @param brkVec A vector representing the current state of the breakers (switches).
+ * @param u The input matrix over the simulation time.
+ * @param xo The initial state vector.
+ * @param dt The time step for the simulation.
+ * @param f0 The fundamental frequency of the system.
+ * @return A matrix representing the system's output over the simulation time.
  */
+ // ===================================================================
+ //  DSSS — operates directly on the supplied DSSState
+ // ===================================================================
 
-MatrixXcd DQsym::DSSS(const MatrixXcd& Ad, const MatrixXcd& Bd,
+MatrixXcd DQsym::DSSS(
+    DSSState& st,
+    const MatrixXcd& Ad, const MatrixXcd& Bd,
     const MatrixXcd& Cd, const MatrixXcd& Dd,
     const VectorXd& swOnRes, const VectorXd& swOffRes,
     const VectorXi& swType, const VectorXi& brkVec,
-    const MatrixXcd& u, const VectorXcd& xo, double dt, double f0)
+    const MatrixXcd& u, const VectorXcd& xo,
+    double dt, double f0)
 {
     int T = u.cols();
     int nx = Ad.rows();
     int ny = Cd.rows();
-    int nu = Bd.cols();
-
 
     MatrixXcd x = MatrixXcd::Zero(nx, T);
     MatrixXcd y = MatrixXcd::Zero(ny, T);
 
-
     MatrixXcd A0, B0, C0, D0;
     convertToPhasor(Ad, Bd, Cd, Dd, A0, B0, C0, D0);
 
-
-    if (!initialized)
+    if (!st.initialized)
     {
-        nStates = nx;
-        nInputs = nu;
-        nOutputs = ny;
-        nSwitches = (swType.array() == 1).count();
+        st.nStates = nx;
+        st.nInputs = Bd.cols();
+        st.nOutputs = ny;
+        st.nSwitches = (swType.array() == 1).count();
 
-        x_old = MatrixXcd::Zero(nx, T);
-        x_old.col(0) = xo;
+        st.x_old = MatrixXcd::Zero(nx, T);
+        st.x_old.col(0) = xo;
 
-        swVec = brkVec;
-        swVecOld = swVec;
-
-        yswitch = VectorXcd::Zero(nSwitches);
-
+        st.swVec = brkVec;
+        st.swVecOld = st.swVec;
+        st.yswitch = VectorXcd::Zero(st.nSwitches);
 
         buildMatricesForState(A0, B0, C0, D0,
-            swVec, swType,
-            swOnRes, swOffRes,
-            Ads, Bds, Cds, Dds);
-
-        initialized = true;
+            st.swVec, swType, swOnRes, swOffRes,
+            st.Ads, st.Bds, st.Cds, st.Dds);
+        st.initialized = true;
     }
-
 
     if ((swType.array() != 0).any())
-        swVec = brkVec;
+        st.swVec = brkVec;
 
-
-    if ((swType.array() != 0).any() && (swVecOld.array() != swVec.array()).any())
+    if ((swType.array() != 0).any() &&
+        (st.swVecOld.array() != st.swVec.array()).any())
     {
         buildMatricesForState(A0, B0, C0, D0,
-            swVec, swType,
-            swOnRes, swOffRes,
-            Ads, Bds, Cds, Dds);
-        swVecOld = swVec;
+            st.swVec, swType, swOnRes, swOffRes,
+            st.Ads, st.Bds, st.Cds, st.Dds);
+        st.swVecOld = st.swVec;
     }
 
-
-    x = Ads * x_old + Bds * u;
-
+    x = st.Ads * st.x_old + st.Bds * u;
 
     VectorXcd expVec(T);
     for (int k = 0; k < T; ++k)
         expVec(k) = std::exp(std::complex<double>(0.0, -2.0 * M_PI * f0 * dt * k));
 
-    MatrixXcd rotMat = expVec.asDiagonal();
-    MatrixXcd x2 = x * rotMat;
+    MatrixXcd x2 = x * expVec.asDiagonal();
+    st.x_old = x2;
 
-    x_old = x2;
-    y = Cds * x2 + Dds * u;
-
+    y = st.Cds * x2 + st.Dds * u;
     return y;
 }
 
-/**
- * @brief Build matrices for a given switch state.
- */
+
+// ===================================================================
+//  buildMatricesForState
+// ===================================================================
+
 void DQsym::buildMatricesForState(
     const MatrixXcd& A0, const MatrixXcd& B0,
     const MatrixXcd& C0, const MatrixXcd& D0,
-    const VectorXi& swVec, const VectorXi& swType,
+    const VectorXi& swVec_in, const VectorXi& swType,
     const VectorXd& swOnRes, const VectorXd& swOffRes,
-    MatrixXcd& Ao, MatrixXcd& Bo,
-    MatrixXcd& Co, MatrixXcd& Do)
+    MatrixXcd& Ao, MatrixXcd& Bo, MatrixXcd& Co, MatrixXcd& Do)
 {
+    Ao = A0;  Bo = B0;  Co = C0;  Do = D0;
 
-    Ao = A0;
-    Bo = B0;
-    Co = C0;
-    Do = D0;
-
-
-    if (!(swType.array() != 0).any() || (swVec.array() == 0).all())
+    if (!(swType.array() != 0).any() || (swVec_in.array() == 0).all())
         return;
 
-    int nStates_local = A0.rows();
-    int nOutputs_local = C0.rows();
-    int nSwitches_local = (swType.array() == 1).count();
+    int ns = A0.rows();
+    int no = C0.rows();
+    int nsw = (swType.array() == 1).count();
 
-    VectorXcd yswitch_local(nSwitches_local);
-    for (int s = 0; s < nSwitches_local; ++s)
+    VectorXcd ysw(nsw);
+    for (int s = 0; s < nsw; ++s)
+        ysw(s) = (swVec_in(s) == 1)
+        ? std::complex<double>(1.0 / swOnRes(s), 0.0)
+        : std::complex<double>(1.0 / swOffRes(s), 0.0);
+
+    VectorXcd DxCol(no);
+    VectorXcd BDcol(ns);
+
+    for (int s = 0; s < nsw; ++s)
     {
-        if (swVec(s) == 1)
-            yswitch_local(s) = std::complex<double>(1.0 / swOnRes(s), 0.0);
-        else
-            yswitch_local(s) = std::complex<double>(1.0 / swOffRes(s), 0.0);
-    }
+        int kSw = swVec_in(s);
+        if (kSw == 0) continue;
 
-    VectorXcd DxCol(nOutputs_local);
-    VectorXcd BDcol(nStates_local);
-
-    for (int s = 0; s < nSwitches_local; ++s)
-    {
-        int kSw = swVec(s);
-        if (kSw == 0)
-            continue;
-
-        std::complex<double> tmp = Do(s, s) * yswitch_local(s);
+        std::complex<double> tmp = Do(s, s) * ysw(s);
         std::complex<double> temp = 1.0 / (1.0 - tmp * static_cast<double>(kSw));
-        std::complex<double> t2 = yswitch_local(s) * temp * static_cast<double>(kSw);
+        std::complex<double> t2 = ysw(s) * temp * static_cast<double>(kSw);
 
-        for (int i = 0; i < nOutputs_local; ++i)
-            DxCol(i) = Do(i, s) * t2;
+        for (int i = 0; i < no; ++i) DxCol(i) = Do(i, s) * t2;
         DxCol(s) = temp;
 
-        for (int i = 0; i < nStates_local; ++i)
-            BDcol(i) = Bo(i, s) * yswitch_local(s) * static_cast<double>(kSw);   
-      
+        for (int i = 0; i < ns; ++i)
+            BDcol(i) = Bo(i, s) * ysw(s) * static_cast<double>(kSw);
+
         RowVectorXcd rowC = Co.row(s);
         RowVectorXcd rowD = Do.row(s);
         Co.row(s).setZero();
         Do.row(s).setZero();
 
-        for (int i = 0; i < nOutputs_local; ++i)
-        {
+        for (int i = 0; i < no; ++i) {
             Co.row(i) += DxCol(i) * rowC;
             Do.row(i) += DxCol(i) * rowD;
         }
-
-        for (int i = 0; i < nStates_local; ++i)
-        {
+        for (int i = 0; i < ns; ++i) {
             Ao.row(i) += BDcol(i) * Co.row(s);
             Bo.row(i) += BDcol(i) * Do.row(s);
         }
@@ -409,216 +181,159 @@ void DQsym::buildMatricesForState(
 }
 
 
-/**
- * @brief Convert state-space matrices into the phasor/DQ0 domain.
+// ===================================================================
+//  run — assembles global state-space, discretizes, DSSS loop
+// ===================================================================
 
- */
-void DQsym::convertToPhasor(const MatrixXcd& A, const MatrixXcd& B,
-    const MatrixXcd& C, const MatrixXcd& D,
-    MatrixXcd& Adc, MatrixXcd& Bdc,
-    MatrixXcd& Cdc, MatrixXcd& Ddc)
+DQsymResult DQsym::run(Config& cfg)
 {
+    if (!net_)
+        throw std::runtime_error("DQsym::run(): call initialize(Network*) first.");
 
-    MatrixXcd Ad2 = A, Bd2 = B, Cd2 = C, Dd2 = D;
+    // ---- Step 0: state-space with DQsym mode (B columns in groups of 3) ----
+    StateSpaceModel ssm;
+    ssm.formState(net_, cfg.outputBuses, SSMMode::DQsym);
 
-    std::complex<double> a(-0.5, 0.866);
-    std::complex<double> a2(-0.5, -0.866);
+	cout << "[DQsym] State-space model formed with DQsym mode.\n";
 
-    Matrix3cd Sas;
-    Sas << 1.0, a, a2,
-        1.0, a2, a,
-        1.0, 1.0, 1.0;
-    Sas /= 3.0;
+    int nx = ssm.getA().rows();
+    int nu = ssm.getB().cols();   // B_dqsym columns (all groups of 3)
 
+    //cout << "State-space model formed with Standard mode:\n"
+    //    << "A: " << ssm.getA() << "\n"
+    //    << "B: " << ssm.getB() << "\n"
+    //    << "C: " << ssm.getC() << "\n"
+    //    << "D: " << ssm.getD() << "\n";
 
-    auto transformMatrix = [&](const MatrixXcd& Md1) {
-        int rows = Md1.rows();
-        int cols = Md1.cols();
-        int nblk_r = rows / 3;
-        int nblk_c = cols / 3;
-        MatrixXcd Mdc = MatrixXcd::Zero(rows, cols);
+    // ---- Step 1: discretize ----
+    MatrixXd Cd_id = Eigen::MatrixXd::Identity(nx, nx);
+    MatrixXd Dd_z = Eigen::MatrixXd::Zero(nx, nu);
+    MatrixXd Ad_r, Bd_r;
+    discretizeABCD(ssm.getA(), ssm.getB(), Cd_id, Dd_z,
+        cfg.dt, Ad_r, Bd_r, Cd_id, Dd_z);
 
-        for (int i = 0; i < nblk_r; i++) {
-            for (int j = 0; j < nblk_c; j++) {
-                int r0 = i * 3;
-                int c0 = j * 3;
-    
-            Matrix3cd sub = Md1.block(r0, c0, 3, 3);
+    MatrixXcd AdC = Ad_r.cast<std::complex<double>>();
+    MatrixXcd BdC = Bd_r.cast<std::complex<double>>();
+    MatrixXcd CdC = Cd_id.cast<std::complex<double>>();
+    MatrixXcd DdC = Dd_z.cast<std::complex<double>>();
 
-            Mdc.block(r0, c0, 3, 3) = Sas * sub * Sas.inverse();
-            }
+    int ny = CdC.rows();
+    int nGroups = ny / 3;
+    VectorXcd xo = VectorXcd::Zero(nx);
+
+    // ---- Step 2: allocate ----
+    const int N = static_cast<int>((cfg.t_end - cfg.t_start) / cfg.dt) + 1;
+
+    DQsymResult result;
+    result.time.resize(N);
+    result.DSSabcHist.assign(nGroups, Eigen::MatrixXd::Zero(N, 3));
+    result.brkHistory = Eigen::MatrixXi::Zero(N, cfg.swType.size());
+
+    dssState_ = DSSState{};
+
+    // Per-element states for feedback (initialized to zero)
+    std::map<std::string, std::vector<MatrixXcd>> elementStates;
+    for (const auto& [name, elem] : converters) {
+        int nStates = elem->getNumberOfInternalStates();
+        if (nStates <= 0) continue;
+        int nStateGroups = nStates / 3;
+        elementStates[name] = std::vector<MatrixXcd>(
+            nStateGroups, MatrixXcd::Zero(3, cfg.nKeep));
+    }
+
+    // ---- Step 3: main loop ----
+    for (int k = 0; k < N; ++k)
+    {
+        double t = cfg.t_start + k * cfg.dt;
+        double theta = 2.0 * M_PI * cfg.f * t;
+        result.time[k] = t;
+
+        // 3a. Breaker
+        Eigen::VectorXi brkVec = cfg.breakerFunction
+            ? cfg.breakerFunction(k, t)
+            : Eigen::VectorXi::Zero(cfg.swType.size());
+        result.brkHistory.row(k) = brkVec.transpose();
+
+        // 3b. Build u (nu × nKeep) — sources + MMC feedback from previous step
+        MatrixXcd u = ssm.buildInputVector(cfg.nKeep, elementStates);
+		//cout << "Input vector u at step " << k << ":\n" << u << "\n";
+
+        // 3c. DSSS
+        MatrixXcd y = DSSS(dssState_, AdC, BdC, CdC, DdC,
+            cfg.swOnRes, cfg.swOffRes, cfg.swType, brkVec,
+            u, xo, cfg.dt, cfg.f);
+
+		//cout << y << "\n";
+
+        // 3d. Extract state groups, update elementStates for next step
+        for (const auto& [name, elem] : converters) {
+            int nStates = elem->getNumberOfInternalStates();
+            if (nStates <= 0) continue;
+
+            int startRow = ssm.getStateIndex(name, 0);
+            if (startRow < 0) continue;
+
+            int nStateGroups = nStates / 3;
+            std::vector<MatrixXcd> groups(nStateGroups);
+            for (int g = 0; g < nStateGroups; ++g)
+                groups[g] = y.block(startRow + 3 * g, 0, 3, cfg.nKeep);
+
+            elementStates[name] = groups;
         }
-        return Mdc;
-        };
 
-    Adc = transformMatrix(Ad2);
-    Bdc = transformMatrix(Bd2);
-    Cdc = transformMatrix(Cd2);
-    Ddc = transformMatrix(Dd2);
+        // 3e. ABC reconstruction
+        auto abcGroups = dqn2abc_groups_at_time(y, theta);
+        for (int g = 0; g < nGroups && g < (int)abcGroups.size(); ++g)
+            result.DSSabcHist[g].row(k) = abcGroups[g].transpose();
+    }
+
+    cout << "Simulation completed with " << N << " steps and "
+		<< nGroups << " groups.\n";
+
+    result_ = result;
+    hasRun_ = true;
+    return result;
 }
 
 
+// ===================================================================
+//  Results
+// ===================================================================
 
-/**
- * @brief Reconstruct abc instantaneous values from dynamic phasor pnz coefficients at one angle theta.
- *
- * Input format:
- * - rows = 3 : positive, negative, zero sequence
- * - cols = harmonic orders, where col(0) is DC and col(h) is harmonic h
- *
- * @param Xdcpnz_c 3 x Nh complex coefficient matrix
- * @param theta electrical angle [rad]
- * @return Vector3d instantaneous abc values at theta
- */
-Vector3d DQsym::dqn2abc_at_time(const MatrixXcd& Xdcpnz_c, double theta)
+void DQsym::exportCSV(const std::string& filename) const
 {
-    if (Xdcpnz_c.rows() != 3) {
-        throw std::runtime_error("Xdcpnz_c must have 3 rows.");
+    if (!hasRun_)
+        throw std::runtime_error("exportCSV() before run().");
+
+    std::vector<Eigen::MatrixXd> values = {};
+    values.push_back(result_.brkHistory.cast<double>());
+    for (const auto& m : result_.DSSabcHist) {
+        values.push_back(m);
+		cout << "DSSabcHist group with shape (" << m.rows() << "x" << m.cols() << ")\n";
     }
 
-    static bool transform_initialized = false;
-    static Matrix3cd Sas;
-    static Matrix3cd Ssa;
+    std::vector<std::string> headers;
+    headers.push_back("brk");
+    for (int g = 0; g < static_cast<int>(result_.DSSabcHist.size()); ++g)
+        headers.push_back("state_abc" + std::to_string(g + 1));
 
-    if (!transform_initialized) {
-        const std::complex<double> a(-0.5, std::sqrt(3.0) / 2.0);
-        const std::complex<double> a2(-0.5, -std::sqrt(3.0) / 2.0);
+	cout << "Exporting CSV with " << values.size() << " matrices and headers: ";
 
-        Sas <<
-            std::complex<double>(1.0, 0.0), a, a2,
-            std::complex<double>(1.0, 0.0), a2, a,
-            std::complex<double>(1.0, 0.0), std::complex<double>(1.0, 0.0), std::complex<double>(1.0, 0.0);
-
-        Sas /= 3.0;
-        Ssa = Sas.inverse();
-        transform_initialized = true;
-    }
-
-    Vector3d Xabc = Vector3d::Zero();
-    const int ncols = static_cast<int>(Xdcpnz_c.cols());
-
-    for (int i = 0; i < ncols; ++i) {
-        if (i == 0) {
-
-            Xabc += (Ssa * Xdcpnz_c.col(0)).real();
-        }
-        else {
-            const int h = i;
-            const double th = h * theta;
-
-            const std::complex<double> Xp = Xdcpnz_c(0, i);
-            const std::complex<double> Xn = Xdcpnz_c(1, i);
-            const std::complex<double> Xz = Xdcpnz_c(2, i);
-
-            const double mag_p = std::abs(Xp);
-            const double ang_p = std::arg(Xp);
-
-            const double mag_n = std::abs(Xn);
-            const double ang_n = std::arg(Xn);
-
-            const double mag_z = std::abs(Xz);
-            const double ang_z = std::arg(Xz);
-
-            Vector3d abc3p;
-            abc3p <<
-                mag_p * std::sin(th + ang_p),
-                mag_p* std::sin(th + ang_p - 2.0 * M_PI / 3.0),
-                mag_p* std::sin(th + ang_p + 2.0 * M_PI / 3.0);
-
-            Vector3d abc3n;
-            abc3n <<
-                mag_n * std::sin(th + ang_n),
-                mag_n* std::sin(th + ang_n + 2.0 * M_PI / 3.0),
-                mag_n* std::sin(th + ang_n - 2.0 * M_PI / 3.0);
-
-            Vector3d abc3z;
-            abc3z <<
-                mag_z * std::sin(th + ang_z),
-                mag_z* std::sin(th + ang_z),
-                mag_z* std::sin(th + ang_z);
-
-            Xabc += abc3p + abc3n + abc3z;
-        }
-    }
-
-    return Xabc;
+    write_file(result_.time, values, headers, filename);
 }
 
-/**
- * @brief Convert all 3-row output groups of Y to abc at a single electrical angle.
- *
- * Y is expected to have rows grouped as:
- * - rows 0..2   : group 1
- * - rows 3..5   : group 2
- * - rows 6..8   : group 3
- * - ...
- *
- * Each 3-row group is interpreted as a 3xH dynamic-phasor sequence matrix and
- * converted to one instantaneous abc vector at the supplied angle theta.
- *
- * @param Y A matrix with row count equal to 3 * number_of_groups.
- * @param theta Electrical angle [rad] at this one instant in time.
- * @return A vector of abc instantaneous vectors, one per 3-row group.
- */
-std::vector<Vector3d> DQsym::dqn2abc_groups_at_time(const MatrixXcd& Y, double theta)
+void DQsym::plot() const
 {
-    if (Y.rows() == 0) {
-        return {};
-    }
+    if (!hasRun_)
+        throw std::runtime_error("plot() before run().");
 
-    if (Y.rows() % 3 != 0) {
-        throw std::runtime_error("Y row count must be a multiple of 3.");
-    }
-
-    const int nGroups = static_cast<int>(Y.rows() / 3);
-    std::vector<Vector3d> out(nGroups);
-
-    for (int g = 0; g < nGroups; ++g) {
-        MatrixXcd block = Y.block(3 * g, 0, 3, Y.cols());
-        out[g] = dqn2abc_at_time(block, theta);
-    }
-
-    return out;
+    plot_abc_groups_implot(result_.time, result_.DSSabcHist,
+        "State-space outputs (abc)");
 }
 
-/**
- * @brief Simulate abc waveform reconstruction over a time interval from dynamic phasor coefficients.
- *
- * @param Xdcpnz_c 3 x Nh complex coefficient matrix
- * @param freq_hz base electrical frequency [Hz]
- * @param t0 start time [s]
- * @param t1 end time [s]
- * @param Ts sample time [s]
- * @return ABCResult containing time vector and Nx3 abc waveform matrix
- */
-ABCResult DQsym::simulate_dqn2abc(const MatrixXcd& Xdcpnz_c,
-    double freq_hz, double t0, double t1, double Ts)
+const DQsymResult& DQsym::getResult() const
 {
-    if (Xdcpnz_c.rows() != 3) {
-        throw std::runtime_error("Xdcpnz_c must have 3 rows.");
-    }
-
-    if (Ts <= 0.0) {
-        throw std::runtime_error("Ts must be > 0.");
-    }
-
-    if (t1 < t0) {
-        throw std::runtime_error("t1 must be >= t0.");
-    }
-
-    const int N = static_cast<int>((t1 - t0) / Ts) + 1;
-
-    ABCResult res;
-    res.t.resize(N);
-    res.Xabc = MatrixXd::Zero(N, 3);
-
-    for (int k = 0; k < N; ++k) {
-        const double t = t0 + k * Ts;
-        const double theta = 2.0 * M_PI * freq_hz * t;
-
-        res.t[k] = t;
-        res.Xabc.row(k) = dqn2abc_at_time(Xdcpnz_c, theta).transpose();
-    }
-
-    return res;
+    if (!hasRun_)
+        throw std::runtime_error("getResult() before run().");
+    return result_;
 }

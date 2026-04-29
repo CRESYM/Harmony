@@ -1,70 +1,122 @@
-#ifndef _DIFFERENTIAL_EQUATIONS_H_
-#define	_DIFFERENTIAL_EQUATIONS_H_
-
+﻿#ifndef _DIFFERENTIAL_EQUATIONS_H_
+#define _DIFFERENTIAL_EQUATIONS_H_
 
 #include "../../Constants.h"
 
-//extern MatrixXd equilibrium(const VectorXd& init_x, const VectorXd& init_u, function<MatrixXd (const VectorXd&, const VectorXd&)> f);
 
-using DerivFunc = std::function<Eigen::VectorXd(const Eigen::VectorXd&, const Eigen::VectorXd&)>;
-extern Eigen::VectorXd findEquilibrium(const Eigen::VectorXd& x0, const Eigen::VectorXd& u, DerivFunc f,
-    double tol = 1e-2, int max_iter = 1e6);
+// ===================================================================
+//  Function signatures
+// ===================================================================
 
-using DerivFunc = std::function<Eigen::VectorXd(const Eigen::VectorXd&, const Eigen::VectorXd&)>;
-extern std::pair<Eigen::MatrixXd, Eigen::MatrixXd> computeJacobians(
-    const Eigen::VectorXd& x, const Eigen::VectorXd& u, DerivFunc f, double eps = 1e-8);
+/// dx/dt = f(t, x, u)
+using RHSFunc = std::function<Eigen::VectorXd(double t,
+    const Eigen::VectorXd& x, const Eigen::VectorXd& u)>;
+
+/// J = df/dx(t, x, u)
+using JacFunc = std::function<Eigen::MatrixXd(double t,
+    const Eigen::VectorXd& x, const Eigen::VectorXd& u)>;
 
 
-// Using Eigen's Levenberg�Marquardt
-using DerivFunc = std::function<Eigen::VectorXd(const Eigen::VectorXd&, const Eigen::VectorXd&)>;
+// ===================================================================
+//  CVODE — stiff BDF integrator
+// ===================================================================
 
-// --- Functor base expected by Eigen's NumericalDiff / LM --------------------
-template <typename _Scalar, int NX = Eigen::Dynamic, int NY = Eigen::Dynamic>
-struct Functor {
-    using Scalar = _Scalar;
-    enum {
-        InputsAtCompileTime = NX,
-        ValuesAtCompileTime = NY
-    };
-    using InputType = Eigen::Matrix<Scalar, InputsAtCompileTime, 1>;
-    using ValueType = Eigen::Matrix<Scalar, ValuesAtCompileTime, 1>;
-    using JacobianType = Eigen::Matrix<Scalar, ValuesAtCompileTime, InputsAtCompileTime>;
-
-    int m_inputs, m_values;
-    Functor(int inputs, int values) : m_inputs(inputs), m_values(values) {}
-    int inputs() const { return m_inputs; }
-    int values() const { return m_values; }
-};
-// ---------------------------------------------------------------------------
-
-// Wrap the user-supplied derivative function f(x,u) into an Eigen functor
-struct SystemFunctor : Functor<double> {
-    DerivFunc f;
-    Eigen::VectorXd u;
-
-    SystemFunctor(DerivFunc f_, const Eigen::VectorXd& u_, int n_inputs)
-        : Functor<double>(n_inputs, n_inputs), f(std::move(f_)), u(u_) {}
-
-    // required call operator: compute residuals fvec = f(x, u)
-    int operator()(const Eigen::VectorXd& x, Eigen::VectorXd& fvec) const {
-        fvec = f(x, u);
-        return 0;
-    }
+struct CVODEConfig {
+    double rtol = 1e-8;
+    double atol = 1e-10;
+    double dt_max = 1e-3;
+    bool use_analytical_jac = false;
 };
 
-// Wrapper around Eigen's Levenberg�Marquardt
-Eigen::VectorXd findEquilibriumLM(
+struct CVODEResult {
+    std::vector<double> time;
+    std::vector<Eigen::VectorXd> states;
+};
+
+CVODEResult integrate(
+    const RHSFunc& rhs,
+    const Eigen::VectorXd& x0,
+    const std::function<Eigen::VectorXd(double t)>& inputFn,
+    double t0, double tEnd, double dt_output,
+    const CVODEConfig& cfg = {},
+    const JacFunc& jac = nullptr);
+
+
+// ===================================================================
+//  KINSOL — nonlinear equilibrium solver
+// ===================================================================
+
+enum class KINSOLStrategy {
+    Newton,
+    LineSearch,
+    Picard,
+    FixedPoint
+};
+
+struct KINSOLConfig {
+    double ftol = 1e-10;
+    double stol = 1e-10;
+    int max_iter = 200;
+    bool use_analytical_jac = false;
+    KINSOLStrategy strategy = KINSOLStrategy::LineSearch;
+    double maa = 0;
+    double damping = 1.0;
+    Eigen::VectorXd x_scale;
+    Eigen::VectorXd f_scale;
+};
+
+/// Single-strategy solve
+Eigen::VectorXd findEquilibrium(
+    const RHSFunc& rhs,
     const Eigen::VectorXd& x0,
     const Eigen::VectorXd& u,
-    DerivFunc f,
-    double tol = 1e-6,
-    int max_iter = 1e5);
+    const KINSOLConfig& cfg = {},
+    const JacFunc& jac = nullptr);
 
-void padeDelaySystem3(double tdelay, MatrixXd& Adelay, MatrixXd& Bdelay, MatrixXd& Cdelay, MatrixXd& Ddelay);
-void padeDelaySystemMulti3(double tdelay, MatrixXd& Adelay, MatrixXd& Bdelay, MatrixXd& Cdelay, MatrixXd& Ddelay, int num_signals);
+/// Robust cascade: LineSearch → Newton → relaxed warmup → Picard + Newton
+Eigen::VectorXd findEquilibriumRobust(
+    const RHSFunc& rhs,
+    const Eigen::VectorXd& x0,
+    const Eigen::VectorXd& u,
+    const JacFunc& jac = nullptr);
 
-void padeDelaySystem2(double tdelay, MatrixXd& Adelay, MatrixXd& Bdelay, MatrixXd& Cdelay, MatrixXd& Ddelay);
-void padeDelaySystemMulti2(double tdelay, MatrixXd& Adelay, MatrixXd& Bdelay, MatrixXd& Cdelay, MatrixXd& Ddelay, int num_signals);
+
+// ===================================================================
+//  Jacobian computation — central differences, adaptive step
+// ===================================================================
+
+std::pair<Eigen::MatrixXd, Eigen::MatrixXd> computeJacobians(
+    const RHSFunc& rhs,
+    const Eigen::VectorXd& x,
+    const Eigen::VectorXd& u,
+    double t = 0.0,
+    double eps = 1e-8);
+
+
+// ===================================================================
+//  Padé delay approximations
+// ===================================================================
+
+void padeDelaySystem3(double tdelay, Eigen::MatrixXd& A, Eigen::MatrixXd& B,
+    Eigen::MatrixXd& C, Eigen::MatrixXd& D);
+void padeDelaySystemMulti3(double tdelay, Eigen::MatrixXd& A, Eigen::MatrixXd& B,
+    Eigen::MatrixXd& C, Eigen::MatrixXd& D, int num_signals);
+void padeDelaySystem2(double tdelay, Eigen::MatrixXd& A, Eigen::MatrixXd& B,
+    Eigen::MatrixXd& C, Eigen::MatrixXd& D);
+void padeDelaySystemMulti2(double tdelay, Eigen::MatrixXd& A, Eigen::MatrixXd& B,
+    Eigen::MatrixXd& C, Eigen::MatrixXd& D, int num_signals);
+
+
+// ===================================================================
+//  Discretization (Tustin / bilinear)
+// ===================================================================
+
+void discretizeABCD(
+    const Eigen::MatrixXd& A, const Eigen::MatrixXd& B,
+    const Eigen::MatrixXd& C, const Eigen::MatrixXd& D,
+    double Ts,
+    Eigen::MatrixXd& Ad, Eigen::MatrixXd& Bd,
+    Eigen::MatrixXd& Cd, Eigen::MatrixXd& Dd);
 
 
 #endif

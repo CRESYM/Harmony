@@ -14,6 +14,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find Eigen3 library on local system.
 find_package(Eigen3 REQUIRED)
 
+# Find Sundials on local system and include directories.
+find_package(SUNDIALS 7.0 REQUIRED)
+
 # Find symengine on local system and include directories.
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)   #symengine requires this
 find_package(SymEngine CONFIG)
@@ -37,16 +40,14 @@ if (APPLE)
     )
 endif()
 
-# Gurobi and Mathplot++ are configured below
+# Gurobi is configured below
 # They need to be configured after add_executable(Harmony ...)
 
 # Group header files
 set(Element_Header_Files src/Elements/Element.h)
-#set(Element_Admittance_Header_Files src/Admittance.h)
 set(Element_Converter_Header_Files
     src/Elements/Converter/Converter.h
     src/Elements/Converter/MMC.h
-    src/Elements/Converter/Simple_MMC.h
 )
 set(Element_Impedance_Header_Files
     src/Elements/Impedance/Impedance_base.h
@@ -68,6 +69,7 @@ set(Element_Source_Header_Files
     src/Elements/Source/Source_base.h
     src/Elements/Source/AC_source.h
     src/Elements/Source/Generator.h
+    src/Elements/Source/DC_source.h
 )
 set(Element_Transformer_Header_Files
     src/Elements/Transformer/Transformer_base.h
@@ -112,6 +114,7 @@ set(Solver_Helper_Functions_Header_Files
     src/Solver/Helper_Functions/Visualization.h
     src/Solver/Helper_Functions/Writer.h
     src/Solver/Helper_Functions/stb_image_write.h
+    src/Solver/Helper_Functions/DQsym_Conversion_Functions.h
 )
 set(Control_Header_Files
     src/Control/Control_block.h
@@ -140,7 +143,6 @@ set(Element_Source_Files src/Elements/Element.cpp)
 set(Element_Converter_Source_Files
     src/Elements/Converter/Converter.cpp
     src/Elements/Converter/MMC.cpp
-    src/Elements/Converter/Simple_MMC.cpp
 )
 set(Element_Impedance_Source_Files
     src/Elements/Impedance/Impedance_base.cpp
@@ -162,6 +164,7 @@ set(Element_Source_Source_Files
     src/Elements/Source/Source_base.cpp
     src/Elements/Source/AC_source.cpp
     src/Elements/Source/Generator.cpp
+    src/Elements/Source/DC_source.cpp
 )
 set(Element_Transformer_Source_Files
     src/Elements/Transformer/Transformer_base.cpp
@@ -206,6 +209,7 @@ set(Solver_Helper_Functions_Source_Files
     src/Solver/Helper_Functions/Symbolic_functions.cpp
     src/Solver/Helper_Functions/Visualization.cpp
     src/Solver/Helper_Functions/Writer.cpp
+    src/Solver/Helper_Functions/DQsym_Conversion_Functions.cpp
 )
 set(Control_Source_Files
     src/Control/Control_block.cpp
@@ -246,6 +250,7 @@ set(Examples_Source_files
     src/examples/example_DQsym_DSSS2.cpp
     src/examples/example_DQsym_RLC.cpp
     src/examples/example_DQsym_Simple_MMC.cpp
+    src/examples/example_state_space.cpp
 )
 
 # Add source_groups to create file filters (groups) in Visual Studio project
@@ -342,6 +347,13 @@ add_executable(
     ${IMGUI_BACKEND_SOURCES}
 
 )
+target_precompile_headers(Harmony PRIVATE
+    <Eigen/Dense>
+    <symengine/basic.h>
+    "./src/Constants.h"
+    "./src/Include_components.h"
+    "./src/Solver/Helper_Functions/Helper_Functions.h"
+)
 
 # Set Harmony as a starup project on Visual Studio Solution
 if (MSVC)
@@ -375,6 +387,11 @@ target_link_libraries(
     Harmony
     ${SYMENGINE_LIBRARIES}
     Eigen3::Eigen
+    SUNDIALS::cvode
+    SUNDIALS::kinsol
+    SUNDIALS::sunmatrixdense
+    SUNDIALS::sunlinsoldense
+    SUNDIALS::nvecserial
     imgui::imgui
     implot::implot
     glfw

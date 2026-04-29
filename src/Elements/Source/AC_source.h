@@ -22,6 +22,9 @@ public:
 
     void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
 
+    std::vector<MatrixXcd> simulateInputStep(
+        const std::vector<MatrixXcd>& states, int nKeep) const override;
+
     // Function to print AC source values
     void printElementValues();
 

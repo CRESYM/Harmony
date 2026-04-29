@@ -5,8 +5,6 @@
 
 void example_DQsym_math_operations()
 {
-	// Example usage of DQsym class for mathematical operations
-	DQsym dqSym;
 
 	// small test: zeros
 	MatrixXcd X = MatrixXcd::Zero(3, 2); // N = 2 -> columns 0..2
@@ -27,19 +25,19 @@ void example_DQsym_math_operations()
 	cout << endl;
 
 	cout << "Addition test:" << endl;
-	MatrixXcd result = dqSym.add(X, X);
+	MatrixXcd result = dq_add(X, X);
 	cout << "Result of addition:" << endl;
 	cout << result << endl;
 	cout << endl;
 
 	cout << "Subtraction test:" << endl;
-	MatrixXcd result2 = dqSym.subtract(X, X);
+	MatrixXcd result2 = dq_subtract(X, X);
 	cout << "Result of subtraction:" << endl;
 	cout << result2 << endl;
 	cout << endl;
 
 	cout << "Multiplication test:" << endl;
-	MatrixXcd Z = dqSym.multiply(X1, X2);
+	MatrixXcd Z = dq_multiply(X1, X2);
 	std::cout << "Z size: " << Z.rows() << " x " << Z.cols() << std::endl;
 	std::cout << Z << std::endl;
 	cout << endl;
@@ -53,7 +51,7 @@ void example_DQsym_math_operations()
 	MatrixXcd Zpnz_old = MatrixXcd::Zero(nrSig * 3, N + 1);
 	MatrixXcd Xpnz_old = MatrixXcd::Zero(nrSig * 3, N + 1);
 
-	MatrixXcd Zpnz = dqSym.integrate(Zpnz_old, Xpnz_old, Xpnz, dt, w);
+	MatrixXcd Zpnz = dq_integrate(Zpnz_old, Xpnz_old, Xpnz, dt, w);
 
 	std::cout << "Zpnz = \n" << Zpnz << std::endl;
 
@@ -99,13 +97,16 @@ void example_DQsym_math_operations()
 
 	MatrixXcd y;
 
+	DQsym dqSym; // usage of the class
+	DSSState st; 
+
 	for (int i = 0; i < 3; i++)
 	{
 		VectorXi brkVec = brkVecs.row(i);
 		cout << u << endl;
 		cout << brkVec << endl;
 		cout << endl;
-		y = dqSym.DSSS(Ad, Bd, Cd, Dd, swOnRes, swOffRes, swType, brkVec, u, xo, 2e-5, 50.0);
+		y = dqSym.DSSS(st, Ad, Bd, Cd, Dd, swOnRes, swOffRes, swType, brkVec, u, xo, 2e-5, 50.0);
 		cout << y << endl;
 		cout << endl;
 	}
@@ -128,7 +129,7 @@ void example_DQsym_math_operations()
 
 		cout << "Running simulate_dqn2abc...\n";
 
-		ABCResult res = dqSym.simulate_dqn2abc(Xdcpnz_c, freq_hz, t0, t1, Ts);
+		ABCResult res = simulate_dqn2abc(Xdcpnz_c, freq_hz, t0, t1, Ts);
 
 		cout << "Simulation done.\n";
 		cout << "Samples: " << res.t.size() << "\n";

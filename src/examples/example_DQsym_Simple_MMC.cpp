@@ -1,117 +1,84 @@
 ﻿#include "Examples.h"
 
-#include "../Elements/Converter/Simple_MMC.h"
+#include "../network.h"
+#include "../Include_components.h"
 #include "../Solver/DQsym/DQsym.h"
-#include "../Constants.h"
-
 
 void example_DQsym_Simple_MMC()
 {
-    double f = 50;
-    double omega = 2 * M_PI * f; // Nominal frequency in rad/s
-    double Vdc = 100; // DC voltage in Volts
-    std::vector<double> converter_params = { omega, 0, 0, 0.0, 0, 0, Vdc, 52.9e-3, 166.3e-3, 1.7568e-3, 1, 0, 10.0};
+    std::cout << "=== example_DQsym_MMC (linear+nonlinear, DQsym mode) ===\n";
 
-    /*Simple_MMC(const std::string & symbol, const std::string & location,
-        double omega, double activePower, double reactivePower,
-        double angle, double acVoltage, double Pdc, double dcVoltage,
-        double armInductance, double armResistance, double armCapacitance,
-        int numSubmodules, double reactorInductance, double reactorResistance);*/
+    const double f = 50.0;
+    const double omega = 2.0 * M_PI * f;
+    const double Vdc = 100.0;
+    const int    nKeep = 5;
 
-    Simple_MMC* mmc1 = new Simple_MMC("MMC1", "AC1_DC1", converter_params); 
+    Network net;
 
-	cout << "MMC system matrices:" << endl;
-    cout << "A matrix:" << endl;
-    cout << mmc1->getA() << endl;
-    cout << "B matrix:" << endl;
-	cout << mmc1->getB() << endl;
-	cout << "C matrix:" << endl;
-	cout << mmc1->getC() << endl;
-	cout << "D matrix:" << endl;
-	cout << mmc1->getD() << endl;
-   
-//    Simple_MMC mmc;
-//    DQsym dqVis;
-//    dqVis.reset();
-// 
-//    VectorXd swOnRes(3);
-//    swOnRes << 0.01, 0.01, 0.01;
-//
-//    VectorXd swOffRes(3);
-//    swOffRes << 1e6, 1e6, 1e6;
-//
-//    VectorXi swType(3);
-//    swType << 0, 0, 0;
-//
-//    VectorXcd xo = VectorXcd::Zero(6);
-//
-//    const double dt = 2e-5;
-//    const double f0 = 50.0;
-//    const double t0 = 0.0;
-//    const double tEnd = 0.2;
-//    const double C = 1.758e-3;
-//
-//    const int N = static_cast<int>((tEnd - t0) / dt) + 1;
-//    const int nGroups = static_cast<int>(Cd.rows() / 3);
-//
-//    mmc.reset();
-//    mmc.setSystemMatrices(Ad, Bd, Cd, Dd);
-//    mmc.setSwitchData(swOnRes, swOffRes, swType);
-//    mmc.setParameters(dt, f0, C, 5, 9);
-//    mmc.setInitialState(xo);
-//
-//    std::vector<double> time(N);
-//    Eigen::MatrixXi brkHistory(N, 3);
-//    std::vector<Eigen::MatrixXd> XabcHist(nGroups, Eigen::MatrixXd::Zero(N, 3));
-//
-//    Eigen::MatrixXd IupAbcHist(N, 3);
-//    Eigen::MatrixXd IlowAbcHist(N, 3);
-//    Eigen::MatrixXd VcUpAbcHist(N, 3);
-//    Eigen::MatrixXd VcLowAbcHist(N, 3);
-//    Eigen::MatrixXd VoutUpAbcHist(N, 3);
-//    Eigen::MatrixXd VoutLowAbcHist(N, 3);
-//
-//    for (int k = 0; k < N; ++k)
-//    {
-//        const double t = t0 + k * dt;
-//        const double theta = 2.0 * M_PI * f0 * t;
-//        time[k] = t;
-//
-//        VectorXi brkVec(3);
-//        brkVec.setZero();
-//        if (t >= 2e-4 && t < 6e-4) {
-//            brkVec.setOnes();
-//        }
-//
-//        brkHistory.row(k) = brkVec.transpose();
-//
-//        MatrixXcd u1(3, 5);
-//        u1 <<
-//            cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0),
-//            cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0),
-//            cd(100, 0), cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0);
-//
-//        MatrixXcd u2(3, 5);
-//        u2 <<
-//            cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0),
-//            cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0),
-//            cd(100, 0), cd(0, 0), cd(0, 0), cd(0, 0), cd(0, 0);
-//
-//        Simple_MMC::StepResult result = mmc.step(u1, u2, brkVec);
-//
-//        for (int g = 0; g < nGroups; ++g)
-//        {
-//            MatrixXcd block = result.y_mmc.block(3 * g, 0, 3, result.y_mmc.cols());
-//            Eigen::Vector3d xabc = dqVis.dqn2abc_at_time(block, theta);
-//            XabcHist[g].row(k) = xabc.transpose();
-//        }
-//
-//        IupAbcHist.row(k) = dqVis.dqn2abc_at_time(result.i_up, theta).transpose();
-//        IlowAbcHist.row(k) = dqVis.dqn2abc_at_time(result.i_low, theta).transpose();
-//        VcUpAbcHist.row(k) = dqVis.dqn2abc_at_time(result.vc_up, theta).transpose();
-//        VcLowAbcHist.row(k) = dqVis.dqn2abc_at_time(result.vc_low, theta).transpose();
-//        VoutUpAbcHist.row(k) = dqVis.dqn2abc_at_time(result.vout_up, theta).transpose();
-//        VoutLowAbcHist.row(k) = dqVis.dqn2abc_at_time(result.vout_low, theta).transpose();
-//    }
+    Bus* gnd = new Bus("gnd", "GND", 1);
+    Bus* ac_bus = new Bus("AC1", "AC1", 3);
+    Bus* dc_bus = new Bus("DC1", "DC1", 2);    // 2-pin DC bus
+
+    net.addBus(gnd);
+    net.addBus(ac_bus);
+    net.addBus(dc_bus);
+
+    // MMC
+    std::vector<double> params = {
+        omega, 0.0, 0.0, 0.0, 0.0, 0.0, Vdc,
+        52.9e-3, 166.3e-3, 1.7568e-3, 1, 0.0, 10.0, 0.0
+    };
+    MMC* mmc = new MMC("MMC1", "AC1_DC1", params);
+    net.addElement(mmc);
+    net.connectElementToBus(mmc, 1, ac_bus);
+    net.connectElementToBus(mmc, 2, dc_bus);
+
+    // DC source (2-pin, values set internally via simulateInputStep)
+    DC_source* vs_dc = new DC_source("Vs_dc", "DC1", 2,
+        std::vector<double>{Vdc / 2.0, -Vdc / 2.0}, 0.0);
+    net.addElement(vs_dc);
+    net.connectElementToBus(vs_dc, 1, dc_bus);
+    net.connectElementToBus(vs_dc, 2, gnd);
+
+    // AC source (3-pin, zero voltage)
+    AC_source* vs_ac = new AC_source("Vs_ac", "AC1", 3, 0.0, 0.0);
+    net.addElement(vs_ac);
+    net.connectElementToBus(vs_ac, 1, ac_bus);
+    net.connectElementToBus(vs_ac, 2, gnd);
+
+    // DQsym — no inputFunction, sources/MMC handle u automatically
+    DQsym dq;
+    dq.initialize(&net);
+
+    Config cfg;
+    cfg.dt = 2e-5;
+    cfg.t_start = 0.0;
+    cfg.t_end = 1;
+    cfg.f = f;
+    cfg.omega = omega;
+    cfg.nKeep = nKeep;
+
+    cfg.swOnRes = Eigen::VectorXd::Constant(1, 0.01);
+    cfg.swOffRes = Eigen::VectorXd::Constant(1, 1e6);
+    cfg.swType = Eigen::VectorXi::Zero(1);
+    cfg.breakerFunction = nullptr;
+    cfg.outputBuses = { ac_bus };
+
+    // Run — StateSpaceModel uses SSMMode::DQsym internally
+    // DC source 2-pin → expanded to 6 B columns (2 groups of 3)
+    // AC source 3-pin → 3 B columns (1 group of 3)
+    // MMC virtual 12  → 12 B columns (4 groups of 3)
+    // Total B_dqsym: 12×21 columns, all in groups of 3
+
+    DQsymResult result = dq.run(cfg);
+
+    std::cout << "Done: " << result.time.size() << " steps, "
+        << result.DSSabcHist.size() << " groups.\n";
+
+    //dq.exportCSV("DQsym_MMC_SigmaDelta.csv");
+    dq.plot();
+
+	cout << "Example complete. Press any key to exit.\n";
+	std::cin.get();
 
 }

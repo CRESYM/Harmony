@@ -918,18 +918,16 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
     auto& elements = net->getElements();
     for (const auto& [element_name, element] : elements)
     {
+		//cout << "[make_OPF] Checking element: " << element_name << endl;
         if (dynamic_cast<Load*>(element) || dynamic_cast<LoadPQ*>(element)) {
-            cout << "[make_OPF] Processing element: " << element_name << endl;
             make_Load(element, global_params, print_info);
         }
         else if (dynamic_cast<Source_base*>(element)) {
-            cout << "[make_OPF] Processing element: " << element_name << endl;
             make_Generator(element, global_params, print_info);
         }
         else if (dynamic_cast<PVplant*>(element) ||
             dynamic_cast<WTtype3*>(element) ||
             dynamic_cast<WTtype4*>(element)) {
-            cout << "[make_OPF] Processing RES element: " << element_name << endl;
             make_RES(element, global_params, print_info);
         }
     }
@@ -937,11 +935,12 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
 	// Process branches: AC and DC branches, i.e., transmission lines, impedances, etc.
     for (const auto& [element_name, element] : elements)
     {
+		//cout << "[make_OPF] Checking element: " << element_name << endl;
         if (dynamic_cast<Impedance*>(element)) {
             if (element->getInputPins() == 3) {
                 make_BranchAC(element, global_params, print_info);
             }
-            else if (element->getInputPins() == 1) {
+            else if (element->getInputPins() == 2) {
                 make_BranchDC(element, global_params, print_info);
             }
             else {
@@ -955,9 +954,6 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
         else {
         }
 	}
-
-
-
 
     extendBusAC(data, net, global_params);
     extendBranchAC(data, net, global_params);

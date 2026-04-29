@@ -1,79 +1,65 @@
-#ifndef _DQSYM_H_
+﻿#ifndef _DQSYM_H_
 #define _DQSYM_H_
 
 #include "../../Constants.h"
-#include <vector>
+#include "../Helper_Functions/Helper_Functions.h"
 
-struct ABCResult
-{
-    std::vector<double> t;
-    MatrixXd Xabc;
-};
+class Network; class SubNetwork; class Element;
 
-class DQsym
-{
-public:
-    DQsym() = default;
-    ~DQsym() = default;
-
-    // Mathematical operations on dynamic phasors
-    MatrixXcd add(const MatrixXcd& a, const MatrixXcd& b);
-    MatrixXcd subtract(const MatrixXcd& a, const MatrixXcd& b);
-    MatrixXcd integrate(MatrixXcd& Zpnz_old, MatrixXcd& Xpnz_old, const MatrixXcd& Xpnz,
-        double dt, double w);
-    MatrixXcd multiply(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_in);
-
-    // Discrete state-space solver for dynamic phasors
-    MatrixXcd DSSS(const MatrixXcd& Ad, const MatrixXcd& Bd,
-        const MatrixXcd& Cd, const MatrixXcd& Dd,
-        const VectorXd& swOnRes, const VectorXd& swOffRes,
-        const VectorXi& swType, const VectorXi& brkVec,
-        const MatrixXcd& u, const VectorXcd& xo,
-        double dt = 2e-5, double f0 = 50.0);
-
-    // Reset internal persistent DSSS state
-    void reset();
-
-    // Build state-space matrices for current switch state
-    void buildMatricesForState(const MatrixXcd& A0, const MatrixXcd& B0,
-        const MatrixXcd& C0, const MatrixXcd& D0,
-        const VectorXi& swVec, const VectorXi& swType,
-        const VectorXd& swOnRes, const VectorXd& swOffRes,
-        MatrixXcd& Ao, MatrixXcd& Bo,
-        MatrixXcd& Co, MatrixXcd& Do);
-
-    // Convert abc-stacked matrices into phasor / sequence domain
-    void convertToPhasor(const MatrixXcd& A, const MatrixXcd& B,
-        const MatrixXcd& C, const MatrixXcd& D,
-        MatrixXcd& Adc, MatrixXcd& Bdc,
-        MatrixXcd& Cdc, MatrixXcd& Ddc);
-
-    // dqn -> abc reconstruction for one 3xH coefficient block at one angle
-    Vector3d dqn2abc_at_time(const MatrixXcd& Xdcpnz_c, double theta);
-
-    // Convert all 3-row output groups of Y at one angle theta
-    std::vector<Vector3d> dqn2abc_groups_at_time(const MatrixXcd& Y, double theta);
-
-    // Simulate abc reconstruction over time for one 3xH coefficient block
-    ABCResult simulate_dqn2abc(const MatrixXcd& Xdcpnz_c,
-        double freq_hz, double t0, double t1, double Ts);
-
-private:
-    // Persistent variables used by DSSS
+struct DSSState {
     MatrixXcd Ads, Bds, Cds, Dds;
     MatrixXcd x_old;
-    VectorXi swVec, swVecOld;
-  
+    VectorXi  swVec, swVecOld;
     VectorXcd yswitch;
-
-
-    int nSwitches = 0;
-    int nStates = 0;
-    int nOutputs = 0;
-    int nInputs = 0;
-
+    int  nStates = 0, nInputs = 0, nOutputs = 0, nSwitches = 0;
     bool initialized = false;
 };
 
+struct Config {
+    double dt = 0.0, t_start = 0.0, t_end = 0.0;
+    double f = 0.0, omega = 0.0;
+    int nKeep = 1;
+    Eigen::VectorXd swOnRes, swOffRes;
+    Eigen::VectorXi swType;
+    std::function<Eigen::VectorXi(int step, double t)> breakerFunction;
+    std::vector<Bus*> outputBuses;
+};
 
-#endif // _DQSYM_H_
+struct DQsymResult {
+    std::vector<double> time;
+    MatrixXi brkHistory;
+    std::vector<MatrixXd> DSSabcHist;
+};
+
+class DQsym {
+public:
+    DQsym() = default;
+    void initialize(Network* net);
+    DQsymResult run(Config& cfg);
+    void reset() { dssState_ = DSSState{}; hasRun_ = false; }
+    void exportCSV(const std::string& filename) const;
+    void plot() const;
+    const DQsymResult& getResult() const;
+    bool hasRun() const { return hasRun_; }
+
+    MatrixXcd DSSS(DSSState&, const MatrixXcd&, const MatrixXcd&,
+        const MatrixXcd&, const MatrixXcd&,
+        const VectorXd&, const VectorXd&, const VectorXi&, const VectorXi&,
+        const MatrixXcd&, const VectorXcd&, double dt = 2e-5, double f0 = 50.0);
+
+    void buildMatricesForState(const MatrixXcd&, const MatrixXcd&,
+        const MatrixXcd&, const MatrixXcd&,
+        const VectorXi&, const VectorXi&, const VectorXd&, const VectorXd&,
+        MatrixXcd&, MatrixXcd&, MatrixXcd&, MatrixXcd&);
+
+private:
+    DSSState dssState_;
+    bool hasRun_ = false;
+    DQsymResult result_;
+    Network* net_ = nullptr;
+    std::vector<std::string> ac_grid_names, dc_grid_names;
+    std::unordered_map<std::string, SubNetwork*> ac_grids, dc_grids;
+    std::unordered_map<std::string, Element*> converters;
+};
+
+#endif

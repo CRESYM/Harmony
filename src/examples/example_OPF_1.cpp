@@ -233,23 +233,23 @@ void example_OPF_1() {
     net9bus.connectElementToBus(br9_ac, /*terminal=*/2, bus4_ac);
 
     ///*  ---------- 2.1 Create DC Buses  ---------- */
-    Bus* bus1_dc = new Bus("DCBUS01", "DC1", 1);
-    Bus* bus2_dc = new Bus("DCBUS02", "DC1", 1);
-    Bus* bus3_dc = new Bus("DCBUS03", "DC1", 1);
+    Bus* bus1_dc = new Bus("DCBUS01", "DC1", 2);
+    Bus* bus2_dc = new Bus("DCBUS02", "DC1", 2);
+    Bus* bus3_dc = new Bus("DCBUS03", "DC1", 2);
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
     double DCR1 = 0.052;
-    Impedance* br1_dc = new Impedance("br1_dc", "DC1", 1, DCR1);
+    Impedance* br1_dc = new Impedance("br1_dc", "DC1", 2, DCR1);
     net9bus.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net9bus.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
 
     double DCR2 = 0.073;
-    Impedance* br2_dc = new Impedance("br2_dc", "DC1", 1, DCR2);
+    Impedance* br2_dc = new Impedance("br2_dc", "DC1", 2, DCR2);
     net9bus.connectElementToBus(br2_dc, /*terminal=*/1, bus1_dc);
     net9bus.connectElementToBus(br2_dc, /*terminal=*/2, bus3_dc);
 
     double DCR3 = 0.052;
-    Impedance* br3_dc = new Impedance("br3_dc", "DC1", 1, DCR3);
+    Impedance* br3_dc = new Impedance("br3_dc", "DC1", 2, DCR3);
     net9bus.connectElementToBus(br3_dc, /*terminal=*/1, bus2_dc);
     net9bus.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
 
