@@ -101,6 +101,11 @@ add_executable(
     ${IMGUI_BACKEND_SOURCES}
 )
 
+# Add the MP compiler flag for parallel compilation
+if (MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+endif()
+
 # Implot (requires various libraries)
 find_package(imgui REQUIRED)
 find_package(implot REQUIRED)

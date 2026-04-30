@@ -356,6 +356,7 @@ target_precompile_headers(Harmony PRIVATE
 )
 
 # Set Harmony as a starup project on Visual Studio Solution
+# Add the MP compiler flag for parallel compilation
 if (MSVC)
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Harmony)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
