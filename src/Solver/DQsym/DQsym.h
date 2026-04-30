@@ -2,6 +2,7 @@
 #define _DQSYM_H_
 
 #include "../../Constants.h"
+#include "../../Bus.h"
 #include "../Helper_Functions/Helper_Functions.h"
 
 class Network; class SubNetwork; class Element;

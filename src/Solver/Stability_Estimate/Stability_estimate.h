@@ -35,6 +35,13 @@ public:
 
 	// Print summary of areas
 	void print_summary() const;
+
+	//std::vector<std::string> get_ac_grid_names() { return ac_grid_names; };
+	//std::vector<std::string> get_dc_grid_names() { return dc_grid_names; };
+	std::unordered_map<std::string, SubNetwork*>& get_ac_grids() { return ac_grids; }
+	std::unordered_map<std::string, SubNetwork*>& get_dc_grids() { return dc_grids; }
+	//std::unordered_map<std::string, Element*>& get_converters() { return converters; }
+
 private:
 	// Names for identification
 	std::vector<std::string> ac_grid_names;
