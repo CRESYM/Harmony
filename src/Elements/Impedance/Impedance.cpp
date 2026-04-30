@@ -28,7 +28,7 @@ Impedance::Impedance(const std::string& symbol, const std::string& location, int
             }
             // Error: The number of impedance values provided doesn't match the number of phases
             else
-                throw invalid_argument("Invalid number of admittance vector entries: " + values.ncols());
+                throw invalid_argument("Invalid number of admittance vector entries: " + std::to_string(values.ncols()));
         }
     }
     else
@@ -58,7 +58,7 @@ Impedance::Impedance(const std::string& symbol, const std::string& location, int
             }
             // Error: The number of impedance values provided doesn't match the number of phases
             else
-                throw invalid_argument("Invalid number of admittance vector entries: " + values.size());
+                throw invalid_argument("Invalid number of admittance vector entries: " + std::to_string(values.size()));
         }
     }
     else
@@ -116,7 +116,7 @@ Impedance::Impedance(const std::string& symbol, const std::string& location, int
             }
             // Error: The number of impedance values provided doesn't match the number of phases
             else
-                throw invalid_argument("Invalid number of admittance vector entries: " + values.size());
+                throw invalid_argument("Invalid number of admittance vector entries: " + std::to_string(values.size()));
         }
     }
     else

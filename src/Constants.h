@@ -27,8 +27,6 @@
 #include <symengine/printers.h>  // Correct header for printing
 #include <symengine/real_mpfr.h>
 
-using SymEngine::RealMPFR;
-
 // Eigen library for linear algebra
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
@@ -76,9 +74,19 @@ using SymEngine::mul;
 using SymEngine::symbol;
 using SymEngine::one;
 using SymEngine::ComplexDouble;
+using SymEngine::map_basic_basic;
+using SymEngine::real_double;
+using SymEngine::minus_one;
+using SymEngine::zero;
+using SymEngine::I;
+using SymEngine::complex_double;
+using SymEngine::vec_uint;
+using SymEngine::Symbol;
+using SymEngine::SymEngineException;
+using SymEngine::RealMPFR;
+
 using namespace std;
 using namespace std::complex_literals;
-using namespace SymEngine; // Use the SymEngine namespace
 using namespace Eigen;
 
 template<typename Table>
@@ -102,12 +110,18 @@ Eigen::MatrixXd map2dense(const Table& tbl,
 }
 
 
-// Implot testing
+// Cross-platform OpenGL headers configuration (for Implot)
+#ifdef __APPLE__
+    #define GLFW_INCLUDE_GLCOREARB
+#endif
+
+// Implot
+#include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <implot.h>
-#include <GLFW/glfw3.h>
+
 
 // SUNDIALS v7
 #include <sundials/sundials_types.h>

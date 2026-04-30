@@ -18,7 +18,7 @@ void example_state_space() {
 	myNetwork->addBus(bus2->getBusName(), bus2); // Add bus2 for capacitor
 
 	// Create and add elements
-	AC_source* ac = new AC_source("AC1", "AC1", 1, 345e3, { 0.0 });
+	AC_source* ac = new AC_source("AC1", "AC1", 1, 345e3, 0.0);
 	myNetwork->addElement(ac);
 	myNetwork->connectElementToBus(ac, 1, bus1); // Connect AC source to bus1
 	myNetwork->connectElementToBus(ac, 2, bus0); // Connect AC source to ground bus 
