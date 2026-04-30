@@ -15,7 +15,7 @@ AC_source::AC_source(const std::string& symbol, const std::string& location, int
                     Y_matrix.set(i, i, div(integer(1), Z.get(0, i)));
             }
             else
-                throw invalid_argument("Invalid number of series impedance vector entries: " + Z.ncols());
+                throw invalid_argument("Invalid number of series impedance vector entries: " + std::to_string(Z.ncols()));
         }
     }
     else

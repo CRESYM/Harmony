@@ -34,7 +34,7 @@ Impedance_base(symbol, location, pins, pins) {
             }
             // Error: The number of values doesn't match any expected configuration
             else
-                throw invalid_argument("Invalid number of admittance vector entries: " + values.ncols());
+                throw invalid_argument("Invalid number of admittance vector entries: " + std::to_string(values.ncols()));
         }
     }
     else
