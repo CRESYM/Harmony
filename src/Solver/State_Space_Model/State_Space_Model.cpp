@@ -521,7 +521,7 @@ void StateSpaceModel::printMapping() const
         std::cout << "  " << g.element->getElementSymbol()
         << ": raw=" << g.rawCols << " cols"
         << (mode_ == SSMMode::DQsym ?
-            " → dqsym=" + std::to_string(g.dqsymCols) + " cols (start=" +
+            " -> dqsym=" + std::to_string(g.dqsymCols) + " cols (start=" +
             std::to_string(g.dqsymStartCol) + ")" :
             " (start=" + std::to_string(g.rawStartCol) + ")")
         << (g.isVirtual ? " [virtual]" : " [source]") << "\n";
