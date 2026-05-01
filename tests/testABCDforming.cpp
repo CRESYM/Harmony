@@ -21,7 +21,7 @@ TEST_F(TestABCDmatrices, TestSimpleSinglePhase) {
 	myNetwork->addBus(bus2->getBusName(), bus2); // Add bus2 for capacitor
 
 	// Create and add elements
-	AC_source* ac = new AC_source("AC1", "AC1", 1, 345e3, { 0.0 });
+	AC_source* ac = new AC_source("AC1", "AC1", 1, 345e3, 0.0);
 	myNetwork->addElement(ac);
 	myNetwork->connectElementToBus(ac, 1, bus1); // Connect AC source to bus1
 	myNetwork->connectElementToBus(ac, 2, bus0); // Connect AC source to ground bus 
@@ -74,7 +74,7 @@ TEST_F(TestABCDmatrices, TestSimpleThreePhase) {
 	myNetwork->addBus(bus2->getBusName(), bus2); // Add bus2 for capacitor
 
 	// Create and add elements
-	AC_source* ac = new AC_source("AC1", "AC1", 3, 345e3, { 0.0 });
+	AC_source* ac = new AC_source("AC1", "AC1", 3, 345e3, 0.0);
 	myNetwork->addElement(ac);
 	myNetwork->connectElementToBus(ac, 1, bus1); // Connect AC source to bus1
 	myNetwork->connectElementToBus(ac, 2, bus0); // Connect AC source to ground bus 
@@ -125,7 +125,7 @@ TEST_F(TestABCDmatrices, TestThreePhaseInductor) {
 	myNetwork->addBus(bus2->getBusName(), bus2); // Add bus2 for capacitor
 
 	// Create and add elements
-	AC_source* ac = new AC_source("AC1", "AC1", 3, 345e3, { 0.0 });
+	AC_source* ac = new AC_source("AC1", "AC1", 3, 345e3, 0.0);
 	myNetwork->addElement(ac);
 	myNetwork->connectElementToBus(ac, 1, bus1); // Connect AC source to bus1
 	myNetwork->connectElementToBus(ac, 2, bus0); // Connect AC source to ground bus 
@@ -180,7 +180,7 @@ TEST_F(TestABCDmatrices, TestThreePhaseSwitch) {
 	myNetwork->addBus(bus3->getBusName(), bus3); // Add bus3 for additional testing
 
 	// Create and add elements
-	AC_source* ac = new AC_source("AC1", "AC1", 3, 345e3, { 0.0 });
+	AC_source* ac = new AC_source("AC1", "AC1", 3, 345e3, 0.0);
 	myNetwork->addElement(ac);
 	myNetwork->connectElementToBus(ac, 1, bus1); // Connect AC source to bus1
 	myNetwork->connectElementToBus(ac, 2, bus0); // Connect AC source to ground bus 
