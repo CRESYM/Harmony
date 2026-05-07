@@ -350,37 +350,55 @@ void StateSpaceModel::expandBForDQsym()
     B_dqsym = Eigen::MatrixXd::Zero(nx, nu_dqsym);
 
     // It might need to be rewritten to become only zero component.
+    // B_dqsym
     for (const auto& g : input_groups) {
         if (g.rawCols == g.dqsymCols) {
-            // Already multiple of 3 — copy directly
+            // AC or MMC virtual — already multiple of 3, copy directly
             B_dqsym.block(0, g.dqsymStartCol, nx, g.rawCols) =
                 B.block(0, g.rawStartCol, nx, g.rawCols);
         }
-        else {
-            // DC: pin p maps only to column (group_base + p), zeros elsewhere → diagonal
+        else if (g.rawCols == 2) {
             for (int p = 0; p < g.rawCols; ++p) {
                 int group_base = g.dqsymStartCol + p * 3;
-                if (group_base + p < nu_dqsym)
-                    B_dqsym.col(group_base + p) = B.col(g.rawStartCol + p);
-                // other two columns in the group remain zero (already initialised to 0)
+                Eigen::VectorXd raw_col = B.col(g.rawStartCol + p);
+                int nx = B.rows();
+                for (int ph = 0; ph < 3; ++ph) {
+                    if (group_base + ph < nu_dqsym) {
+                        Eigen::VectorXd diag_col = Eigen::VectorXd::Zero(nx);
+                        // Fill diagonal entries across all row-groups of 3
+                        for (int row_group = 0; row_group * 3 + ph < nx; ++row_group)
+                            diag_col(row_group * 3 + ph) = raw_col(row_group * 3 + ph);
+                        B_dqsym.col(group_base + ph) = diag_col;
+                    }
+                }
             }
         }
     }
 
+    // D_dqsym: same expansion pattern applied to D
     // D_dqsym: same expansion pattern applied to D
     if (D.cols() > 0) {
         int ny = D.rows();
         D_dqsym = Eigen::MatrixXd::Zero(ny, nu_dqsym);
         for (const auto& g : input_groups) {
             if (g.rawCols == g.dqsymCols) {
+                // AC or MMC virtual — already multiple of 3, copy directly
                 D_dqsym.block(0, g.dqsymStartCol, ny, g.rawCols) =
                     D.block(0, g.rawStartCol, ny, g.rawCols);
             }
-            else {
+            else if (g.rawCols == 2) {
+                // DC source — diagonal expansion per pin, extended across all row-groups of 3
                 for (int p = 0; p < g.rawCols; ++p) {
                     int group_base = g.dqsymStartCol + p * 3;
-                    if (group_base + p < nu_dqsym)
-                        D_dqsym.col(group_base + p) = D.col(g.rawStartCol + p);
+                    Eigen::VectorXd raw_col = D.col(g.rawStartCol + p);
+                    for (int ph = 0; ph < 3; ++ph) {
+                        if (group_base + ph < nu_dqsym) {
+                            Eigen::VectorXd diag_col = Eigen::VectorXd::Zero(ny);
+                            for (int row_group = 0; row_group * 3 + ph < ny; ++row_group)
+                                diag_col(row_group * 3 + ph) = raw_col(row_group * 3 + ph);
+                            D_dqsym.col(group_base + ph) = diag_col;
+                        }
+                    }
                 }
             }
         }
