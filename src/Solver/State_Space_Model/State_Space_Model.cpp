@@ -47,10 +47,18 @@ void StateSpaceModel::finalizeCounts(Network* net) {
     auto byName = [](Element* a, Element* b) {
         return a->getElementSymbol() < b->getElementSymbol();
         };
-    std::sort(list_independent_sources.begin(), list_independent_sources.end(), byName);
+    //std::sort(list_independent_sources.begin(), list_independent_sources.end(), byName);
     std::sort(list_switches.begin(), list_switches.end(), byName);
     std::sort(list_state_variables.begin(), list_state_variables.end(), byName);
     std::sort(list_virtual_input_providers.begin(), list_virtual_input_providers.end(), byName);
+
+    std::sort(list_independent_sources.begin(), list_independent_sources.end(),
+        [](Element* a, Element* b) {
+            // 2-pin → DC, 3-pin → AC; ties broken by name for determinism
+            if (a->getInputPins() != b->getInputPins())
+                return a->getInputPins() < b->getInputPins();
+            return a->getElementSymbol() < b->getElementSymbol();
+        });
 
     for (const auto& [name, busPtr] : buses) {
         if (busPtr->isGround()) continue;
@@ -318,14 +326,14 @@ void StateSpaceModel::expandBForDQsym()
 
     for (const auto& elem : list_independent_sources) {
         int n = elem->getInputPins();
-        int expanded = ((n + 2) / 3) * 3;   // ceil to multiple of 3
+        int expanded = (n % 3 == 0) ? n : n * 3;  // ceil to multiple of 3
         input_groups.push_back({ elem, n, expanded, raw_col, 0, false });
         raw_col += n;
     }
 	// Virtual input providers are skipped. They are nonlinear and contribute via simulateTimeStep, not directly through B. If needed, they can be handled with a custom approach.
     for (const auto& elem : list_virtual_input_providers) {
         int n = static_cast<int>(virtual_input_bank[elem].size());
-        int expanded = ((n + 2) / 3) * 3;
+        int expanded = (n % 3 == 0) ? n : n * 3;
         input_groups.push_back({ elem, n, expanded, raw_col, 0, true });
         raw_col += n;
     }
