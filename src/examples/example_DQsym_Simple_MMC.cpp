@@ -10,7 +10,7 @@ void example_DQsym_Simple_MMC()
 
     const double f = 50.0;
     const double omega = 2.0 * M_PI * f;
-    const double Vdc = 100.0;
+    const double Vdc = 200.0;
     const int    nKeep = 5;
 
     Network net;

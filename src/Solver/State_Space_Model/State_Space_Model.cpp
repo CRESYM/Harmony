@@ -357,14 +357,12 @@ void StateSpaceModel::expandBForDQsym()
                 B.block(0, g.rawStartCol, nx, g.rawCols);
         }
         else {
-            // Need expansion: replicate each raw column to fill a 3-group
-            // For 2-pin DC: pin 0 → cols [0,1,2], pin 1 → cols [3,4,5]
+            // DC: pin p maps only to column (group_base + p), zeros elsewhere → diagonal
             for (int p = 0; p < g.rawCols; ++p) {
                 int group_base = g.dqsymStartCol + p * 3;
-                for (int ph = 0; ph < 3; ++ph) {
-                    if (group_base + ph < nu_dqsym)
-                        B_dqsym.col(group_base + ph) = B.col(g.rawStartCol + p);
-                }
+                if (group_base + p < nu_dqsym)
+                    B_dqsym.col(group_base + p) = B.col(g.rawStartCol + p);
+                // other two columns in the group remain zero (already initialised to 0)
             }
         }
     }
@@ -381,9 +379,8 @@ void StateSpaceModel::expandBForDQsym()
             else {
                 for (int p = 0; p < g.rawCols; ++p) {
                     int group_base = g.dqsymStartCol + p * 3;
-                    for (int ph = 0; ph < 3; ++ph)
-                        if (group_base + ph < nu_dqsym)
-                            D_dqsym.col(group_base + ph) = D.col(g.rawStartCol + p);
+                    if (group_base + p < nu_dqsym)
+                        D_dqsym.col(group_base + p) = D.col(g.rawStartCol + p);
                 }
             }
         }
