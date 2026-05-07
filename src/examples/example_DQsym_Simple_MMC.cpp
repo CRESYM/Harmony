@@ -75,8 +75,9 @@ void example_DQsym_Simple_MMC()
     std::cout << "Done: " << result.time.size() << " steps, "
         << result.DSSabcHist.size() << " groups.\n";
 
-    //ldq.exportCSV("DQsym_MMC_SigmaDelta.csv");
+    
     dq.plot();
+    dq.exportCSV("DQsym_MMC_SigmaDelta.csv");
 
 	cout << "Example complete. Press any key to exit.\n";
 	std::cin.get();

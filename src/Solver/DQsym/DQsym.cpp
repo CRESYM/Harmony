@@ -300,26 +300,42 @@ DQsymResult DQsym::run(Config& cfg)
 //  Results
 // ===================================================================
 
+//void DQsym::exportCSV(const std::string& filename) const
+//{
+//    if (!hasRun_)
+//        throw std::runtime_error("exportCSV() before run().");
+//
+//    std::vector<Eigen::MatrixXd> values = {};
+//    values.push_back(result_.brkHistory.cast<double>());
+//    for (const auto& m : result_.DSSabcHist) {
+//        values.push_back(m);
+//		cout << "DSSabcHist group with shape (" << m.rows() << "x" << m.cols() << ")\n";
+//    }
+//
+//    std::vector<std::string> headers;
+//    headers.push_back("brk");
+//    for (int g = 0; g < static_cast<int>(result_.DSSabcHist.size()); ++g)
+//        headers.push_back("state_abc" + std::to_string(g + 1));
+//
+//	cout << "Exporting CSV with " << values.size() << " matrices and headers: ";
+//
+//    write_file(result_.time, values, headers, filename);
+//}
 void DQsym::exportCSV(const std::string& filename) const
 {
     if (!hasRun_)
         throw std::runtime_error("exportCSV() before run().");
 
     std::vector<Eigen::MatrixXd> values = {};
-    values.push_back(result_.brkHistory.cast<double>());
-    for (const auto& m : result_.DSSabcHist) {
+    for (const auto& m : result_.DSSabcHist)
         values.push_back(m);
-		cout << "DSSabcHist group with shape (" << m.rows() << "x" << m.cols() << ")\n";
-    }
 
     std::vector<std::string> headers;
-    headers.push_back("brk");
     for (int g = 0; g < static_cast<int>(result_.DSSabcHist.size()); ++g)
         headers.push_back("state_abc" + std::to_string(g + 1));
 
-	cout << "Exporting CSV with " << values.size() << " matrices and headers: ";
-
     write_file(result_.time, values, headers, filename);
+    cout << "CSV file saved" << "\n";
 }
 
 void DQsym::plot() const
