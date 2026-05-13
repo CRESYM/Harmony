@@ -69,11 +69,17 @@ public:
     virtual std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency);
     virtual DenseMatrix get_y_parameters() { return Y_matrix; }; 
     virtual std::vector<std::vector<complex<double>>> apply_transformation(std::vector<std::vector<complex<double>>>& Y1, std::vector<std::vector<complex<double>>>& Y2);
-    // virtual Eigen::MatrixXcd compute_y_parameters_num(double omega_num) { return substitute_symbol(Y_matrix, omega, omega_num); }; 
-        
+
     // Generic MNA stamping 
     virtual void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) {};
-    
+    virtual int getNumberOfInternalStates() const { return 0; }
+    virtual std::vector<MatrixXcd> simulateInputStep(
+        const std::vector<MatrixXcd>& states, int nKeep) const {
+        return {};
+    }
+
+    virtual std::vector<RCP<const Basic>> getVirtualInputSymbols() const { return {}; }
+    virtual map_basic_basic getParameterSubstitutions() const {return {}; }
 
     // Virtual power flow computation methods (override in subclasses)
     virtual void computePowerFlow(std::map<std::string, double>& branchData,

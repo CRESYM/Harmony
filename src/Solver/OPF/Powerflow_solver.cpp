@@ -1,5 +1,5 @@
 #include "Powerflow.h"
-#include "viz_opf.h"
+#include "../Helper_Functions/Helper_Functions.h"
 #include "../../Bus.h"   
 
 using namespace std;

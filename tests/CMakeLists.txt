@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 4.0)
 project(testharmony)
 
-# CMake module needed to download Google Test
+# CMake module needed to download Implot and Google Test
 include(FetchContent)
+
+# Enable testing in CMake
+enable_testing()
 
 # Set the C++ Standard (GoogleTest requires >= 14)
 # std::variant included in Constants.h requires >= 17)
@@ -12,14 +15,31 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find Eigen3 library on local system
 find_package(Eigen3 REQUIRED)
 
+# Find Sundials on local system
+find_package(SUNDIALS 7.0 REQUIRED)
+
 # Find symengine on local system and include directories.
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)   #symengine requires this
 find_package(SymEngine CONFIG)
 set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
 include_directories(${SYMENGINE_INCLUDE_DIRS})
 
-# Gurobi and Mathplot++ are configured below
-# They need to be configured after add_executable(Harmony ...)
+# 1. ImGui (needed by Implot)
+include(FetchContent)
+FetchContent_Declare(
+    imgui_source
+    URL      https://github.com/ocornut/imgui/archive/refs/tags/v1.92.3.zip
+)
+FetchContent_MakeAvailable(imgui_source)
+set(IMGUI_BACKEND_DIR "${imgui_source_SOURCE_DIR}/backends")
+include_directories(${IMGUI_BACKEND_DIR})
+if (APPLE)
+    message(STATUS "macOS detected: Adding ImGui backend source files to build")
+    list(APPEND IMGUI_BACKEND_SOURCES 
+        ${IMGUI_BACKEND_DIR}/imgui_impl_glfw.cpp
+        ${IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp
+    )
+endif()
 
 # Fetch and download Google Test library
 FetchContent_Declare(
@@ -31,16 +51,18 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-# Enable testing in CMake
-enable_testing()
+# Gurobi is configured below
+# It needs to be configured after add_executable(testharmony ...)
 
 # Define HARMONY_SOURCE_FILES variable (all of Harmony's' *.cpp files except main.cpp)
 file(GLOB_RECURSE HARMONY_SOURCE_FILES "${CMAKE_SOURCE_DIR}/../src/*.cpp")
 list(REMOVE_ITEM HARMONY_SOURCE_FILES "${CMAKE_SOURCE_DIR}/../src/main.cpp")
+list(REMOVE_ITEM HARMONY_SOURCE_FILES "${CMAKE_SOURCE_DIR}/../src/Solver/Helper_Functions/viz_opf.cpp")
 
 # Specify directories from which to import Harmony header files
 # Recursively find all directories containing header files in ../src
 file(GLOB_RECURSE HEADER_FILES "${CMAKE_SOURCE_DIR}/../src/*.h" "${CMAKE_SOURCE_DIR}/../src/*.hpp")
+list(REMOVE_ITEM HEADER_FILES "${CMAKE_SOURCE_DIR}/../src/Solver/Helper_Functions/viz_opf.h")
 
 # Extract unique directories from the header files
 set(HEADER_DIRS "")
@@ -73,14 +95,53 @@ add_executable(
     testStabilityEstimate.cpp
     utils.cpp
     ${HARMONY_SOURCE_FILES}
+    ${HARMONY_HEADER_FILES}
+
+    # Implot
+    ${IMGUI_BACKEND_SOURCES}
 )
 
+# Add the MP compiler flag for parallel compilation
+if (MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+endif()
+
+# Implot (requires various libraries)
+find_package(imgui REQUIRED)
+find_package(implot REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(GLEW) # Optional on Mac, but good for Win/Linux
+
+# macOS specific framework linking
+if(APPLE)
+    target_link_libraries(testharmony "-framework Cocoa" "-framework IOKit" "-framework CoreFoundation")
+endif()
+
+# Tell the ImGui OpenGL backend to use GLEW
+target_compile_definitions(testharmony PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLEW)
+
+# If using Conda GLEW on Windows, link statically
+if(MSVC)
+    target_compile_definitions(testharmony PRIVATE GLEW_STATIC)
+endif()
+
 # Specify libraries that need to be linked to the testharmony executable
-# Note that Eigen doesn't need to be linked because it's a header-only lib
+# Although Eigen is a header-only lib, this will setup the include directories 
 target_link_libraries(
     testharmony
     ${SYMENGINE_LIBRARIES}
     Eigen3::Eigen
+    SUNDIALS::cvode
+    SUNDIALS::kinsol
+    SUNDIALS::sunmatrixdense
+    SUNDIALS::sunlinsoldense
+    SUNDIALS::nvecserial
+    imgui::imgui
+    implot::implot
+    glfw
+    ${OPENGL_LIBRARIES}
+    GLEW::GLEW
     GTest::gtest_main       # GoogleTest library
 )
 
@@ -177,40 +238,6 @@ else()
 
 
 endif()
-
-
-# Set Matplot++ path 
-set(MATPLOT_PATH "" CACHE PATH "Path to Matplot++ installation")
-if(NOT MATPLOT_PATH)
-    # User did not provide a path for the Matplot installation
-    message(WARNING 
-        "Matplot++ path not specified. The project may fail to link.\n"
-        "To fix this, provide the Matplot++ installation directory via CMake:\n"
-        "  cmake -DMATPLOT_PATH=\"/path/to/matplotplusplus\" ..\n\n"
-        "Common installation hints:\n"
-        "  - Windows (msi): C:\Program Files\Matplot++\n"
-        "  - macOS (brew):    /opt/homebrew/opt/matplotplusplus\n"
-        "  - Linux (manual):  /usr/local/include/matplot"
-    )
-elseif(NOT EXISTS "${MATPLOT_PATH}")
-    # Path was provided but is invalid
-    message(FATAL_ERROR 
-        " Invalid MATPLOT_PATH: \"${MATPLOT_PATH}\"\n"
-        " The directory does not exist. Please check for typos or ensure Matplot++ is correctly installed."
-    )
-else()
-    message(STATUS "Found Matplot++ in: ${MATPLOT_PATH}")
-
-    # Matplot supports CMake. We will use Matplot++Config.cmake contained in MATPLOT_PATH to configure the package
-    list(APPEND CMAKE_PREFIX_PATH "${MATPLOT_PATH}")
-    find_package(Matplot++ REQUIRED)
-    # Add Matplot++ header files (not needed due to cmake)
-    #include_directories("${MATPLOT_PATH}/include")
-    # Link the library
-    target_link_libraries(testharmony Matplot++::matplot)
-endif()
-
-
 
 # Specify the output directory where the test executable will be placed
 set_target_properties(testharmony PROPERTIES

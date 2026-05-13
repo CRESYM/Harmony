@@ -5,6 +5,7 @@
 
 class Bus;
 class Element;
+class SubNetwork;
 
 // Type alias for a pair of element designator and pin name, used to map buses to connected elements in the network
 using Net = std::unordered_map<Bus*, std::vector<Element*>>;
@@ -17,7 +18,15 @@ protected:
     std::unordered_map<Bus*, std::vector<Element*>> connections; // Connections between buses and elements
 
     int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation
-    
+
+    // Names for identification
+    std::vector<std::string> ac_grid_names;
+    std::vector<std::string> dc_grid_names;
+
+    // Core hierarchical system representation
+    std::unordered_map<std::string, SubNetwork*> ac_grids;  // AC grids as subnetworks
+    std::unordered_map<std::string, SubNetwork*> dc_grids;  // DC grids as subnetworks
+    std::unordered_map<std::string, Element*> converters; // Converter subnetworks
     
 public:
 
@@ -26,12 +35,6 @@ public:
 
     // Destructor to handle resource cleanup
     ~Network();
-
-    // Function to connect two elements in the network
-    //void connect(const std::string& source, const std::string& destination);
-
-    // Overloaded function to connect multiple elements to a single destination
-    //void connect(const std::vector<std::string>& sources, const std::string& destination);
 
     // Function to add a bus to the network using a bus object
     void addBus(Bus* bus);
@@ -58,6 +61,7 @@ public:
     void printConnections();
 	void printBuses();
     void printElements();
+    void print_summary() const;
 
     // Getters for private members variables for buses, elements, and connections
     const std::unordered_map<std::string, Bus*>& getBuses() const { return buses; }
@@ -65,6 +69,28 @@ public:
     std::unordered_map<std::string, Element*>& getElements() { return elements; }
     const std::unordered_map<Bus*, std::vector<Element*>>& getConnections() const { return connections; }
     std::unordered_map<Bus*, std::vector<Element*>>& getConnections() { return connections; }
+
+    // Add AC and DC grids to the system
+    void add_areas();
+    void empty_areas() {
+        for (auto& [name, sub] : ac_grids) {
+            delete sub;
+        }
+        ac_grids.clear();
+        ac_grid_names.clear();
+        for (auto& [name, sub] : dc_grids) {
+            delete sub;
+        }
+        dc_grids.clear();
+        dc_grid_names.clear();
+	}
+    bool is_area_empty() {return ac_grids.empty() && dc_grids.empty(); }
+
+    vector<string> get_ac_grid_names() { return ac_grid_names; };
+    vector<string> get_dc_grid_names() { return dc_grid_names; };
+    std::unordered_map<std::string, SubNetwork*>& get_ac_grids() { return ac_grids; }
+    std::unordered_map<std::string, SubNetwork*>& get_dc_grids() { return dc_grids; }
+    std::unordered_map<std::string, Element*>& get_converters() { return converters; }
 
 };
 

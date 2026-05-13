@@ -8,23 +8,23 @@ void example_PV_plant() {
 	vector<double> pv_parameters = {
 		2.8e6,		// P_pv: Rated power of the PV plant in watts
 		6570,		// I_pv: Rated current of the PV plant in amperes
-		2760,		// N_s: Number of series-connected modules
-		720,		// N_p: Number of parallel-connected strings
+		720,		// N_s: Number of series-connected modules
+		2760,		// N_p: Number of parallel-connected strings
 		1.5,		// n: ideally factor of the diode
 		2.5,		// I_sc: Short-circuit current of a single module at STC
-		1e-10,		// I0: Reverse saturation current of the diode
+		1e-9,		// I0: Reverse saturation current of the diode
 		7.2e-3,     // C_pv: Capacitance of the PV array in farads
 		900.0,		// V_dc: DC link voltage in volts
 		16e-6,      // L_boost: Inductance of the boost converter in henries
 		70e-3,      // C_dc: Capacitance of the DC link in farads
-		4.9809e-06,	// kp_boost: Proportional gain for the boost converter voltage control loop
-		4.9809e-09,	// ki_boost: Integral gain for the boost converter voltage control loop
+		-0.0202,	// kp_boost: Proportional gain for the boost converter voltage control loop
+		-0.00202,	// ki_boost: Integral gain for the boost converter voltage control loop
 		103e-6,		// L_1: Inductance of the filter in henries
 		0,			// R_1: Resistance of the filter in ohms
-		220e-6,		// C_f: Capacitance of the filter in farads
-		0.1,		// R_c: Resistance of the filter in ohms
-		125e-6,		// L_2: Grid-side inductance in henries
-		690.0,		// V_g: Grid voltage in volts
+		120e-6,		// C_f: Capacitance of the filter in farads
+		0.08,		// R_c: Resistance of the filter in ohms
+		55e-6,		// L_2: Grid-side inductance in henries
+		380.0,		// V_g: Grid voltage in volts
 		50.0,	    // f_g: Grid frequency in hertz
 		1.0,		// K_p_dc: Proportional gain of the DC voltage controller
 		500.0,		// K_i_dc: Integral gain of the DC voltage controller
@@ -40,5 +40,9 @@ void example_PV_plant() {
 
 	//pv->writeFile(1, 1000, 1000);
 
-	pv->plotYParameters(1, 10000, 1000);
+	pv->plotYParameters(1, 10000, 500);
+
+
+	cout << "Press Enter to continue...\n";
+	cin.get();
 }

@@ -26,7 +26,6 @@
 #include <symengine/polys/basic_conversions.h>
 #include <symengine/printers.h>  // Correct header for printing
 #include <symengine/real_mpfr.h>
-using SymEngine::RealMPFR;
 
 // Eigen library for linear algebra
 #include <Eigen/Dense>
@@ -60,9 +59,11 @@ using SymEngine::RealMPFR;
 #include <iomanip>
 #include <filesystem>
 #include <set>
+#include <mutex>
+#include <atomic>
+#include <deque>
+#include <cstdlib>
 
-#include<matplot/matplot.h>
-using namespace matplot;
 #include "gurobi_c++.h"
 
 using SymEngine::RCP;
@@ -73,9 +74,19 @@ using SymEngine::mul;
 using SymEngine::symbol;
 using SymEngine::one;
 using SymEngine::ComplexDouble;
+using SymEngine::map_basic_basic;
+using SymEngine::real_double;
+using SymEngine::minus_one;
+using SymEngine::zero;
+using SymEngine::I;
+using SymEngine::complex_double;
+using SymEngine::vec_uint;
+using SymEngine::Symbol;
+using SymEngine::SymEngineException;
+using SymEngine::RealMPFR;
+
 using namespace std;
 using namespace std::complex_literals;
-using namespace SymEngine; // Use the SymEngine namespace
 using namespace Eigen;
 
 template<typename Table>
@@ -99,4 +110,28 @@ Eigen::MatrixXd map2dense(const Table& tbl,
 }
 
 
+// Cross-platform OpenGL headers configuration (for Implot)
+#ifdef __APPLE__
+    #define GLFW_INCLUDE_GLCOREARB
+#endif
+
+// Implot
+#include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <implot.h>
+
+
+// SUNDIALS v7
+#include <sundials/sundials_types.h>
+#include <sundials/sundials_context.h>
+#include <cvode/cvode.h>
+#include <kinsol/kinsol.h>
+#include <nvector/nvector_serial.h>
+#include <sunmatrix/sunmatrix_dense.h>
+#include <sunlinsol/sunlinsol_dense.h>
+
 #endif // CONSTANTS_H
+
+

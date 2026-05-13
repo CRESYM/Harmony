@@ -59,12 +59,12 @@ void example_stability_check() {
     net.connectElementToBus(br2_ac, /*terminal=*/2, bus4_ac);
 
     ///*  ---------- 2.1 Create DC Buses  ---------- */
-    Bus* bus1_dc = new Bus("DCBUS01", "DC1", 1);
-    Bus* bus2_dc = new Bus("DCBUS02", "DC1", 1);
+    Bus* bus1_dc = new Bus("DCBUS01", "DC1", 2);
+    Bus* bus2_dc = new Bus("DCBUS02", "DC1", 2);
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
     double DCR1 = 0.05;
-    Impedance* br1_dc = new Impedance("br1_dc", "DC1", 1, DCR1);
+    Impedance* br1_dc = new Impedance("br1_dc", "DC1", 2, DCR1);
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
 
@@ -160,11 +160,14 @@ void example_stability_check() {
 	cout << "Y1 at 1000 Hz: \n" << setprecision(10) << Y1 << endl;
 	cout << "Y2 at 1000 Hz: \n" << setprecision(10) << Y2 << endl;
 
-    //mmc2->plotYParameters(1, 1000, 1000);
+    mmc2->plotYParameters(1, 1000, 1000);
 
 	//stability->writeFileTF("MMC2", "DC", 10, 2000, 500);
-	//stability->bodeplotTF("MMC2", "DC", 0.1, 10000, 10000);
-	//stability->nyquistplotTF("MMC2", "DC", 10, 2000, 2000);
+	stability->bodeplotTF("MMC2", "DC", 0.1, 10000, 10000);
+	stability->nyquistplotTF("MMC2", "DC", 10, 2000, 2000);
 
     delete stability;
+
+    cout << "Press Enter to continue...\n";
+    cin.get();
 }

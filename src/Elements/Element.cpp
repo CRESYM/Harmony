@@ -59,6 +59,7 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
 	m2[omega] = real_double(angular_frequency + omega_0);
 
     bool is_ac = (element_location[0] == 'A' || element_location[0] == 'a') && (element_location[1] == 'C' || element_location[1] == 'c');
+	bool is_dc = (element_location[0] == 'D' || element_location[0] == 'd') && (element_location[1] == 'C' || element_location[1] == 'c');
     bool is_mmc = (element_location.find('_') < element_location.length());
 
     if (transformation && is_ac && !is_mmc) {
@@ -79,6 +80,20 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
 		//cout << "Applying transformation to element: " << element_symbol << endl;
 		vector<vector<complex<double>>> Y = apply_transformation(Y_val_exact1, Y_val_exact2);
 		return Y;
+    }
+    else if (is_dc && transformation) {
+        std::vector<std::vector<complex<double>>> Y_val_exact(2);
+        for (int i = 0; i < 2; i++)
+            Y_val_exact[i].resize(2);
+
+        for (int i = 0; i < 2; ++i) {
+            for (int j = 0; j < 2; ++j) {
+                RCP<const Basic> r = subs(Y_matrix.get(2*i, 2*j), m);
+                Y_val_exact[i][j] = eval_complex_double(*r);
+                //cout << "Computing Y[" << i << "][" << j << "] for DC element with transformation: " << element_symbol << " equal to: " << Y_val_exact[i][j] << endl;
+            }
+        }
+        return Y_val_exact;
     }
     else {
         std::vector<std::vector<complex<double>>> Y_val_exact(Y_matrix.nrows());
@@ -181,7 +196,8 @@ void Element::writeFile(double start_frequency, double end_frequency, int number
     myfile.open("./files/" + element_symbol + ".csv");
 
     // Print the Y-parameters in file
-    double gap = (end_frequency - start_frequency) * 1.0 / (number_of_points - 1);
+    double gap = (log10(end_frequency) - log10(start_frequency)) * 1.0 / (number_of_points);
+	gap = pow(10, gap);
     double frequency = start_frequency;
     for (int p = 0; p < number_of_points; p++) {
         std::vector<std::vector<complex<double>>> Y = compute_y_parameters(frequency);
@@ -196,7 +212,7 @@ void Element::writeFile(double start_frequency, double end_frequency, int number
         }
         myfile << "\n";
 
-        frequency = frequency + gap; // increase frequency
+        frequency = frequency * gap; // increase frequency
     }
     
     myfile.close();
@@ -213,8 +229,9 @@ void Element::plotYParameters(double start_frequency, double end_frequency, int 
     std::vector<std::vector<double>> magnitudes(number_of_points, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));
     std::vector<std::vector<double>> phases(number_of_points, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));
     std::vector<std::string> labels;
-    double gap = (end_frequency - start_frequency) * 1.0 / (number_of_points - 1);
-	cout << gap << endl;
+    double gap = (log10(end_frequency) - log10(start_frequency)) * 1.0 / (number_of_points);
+	gap = pow(10, gap);
+	// cout << gap << endl;
     double frequency = start_frequency;
     for (int p = 0; p < number_of_points; p++) {
         frequencies.push_back(frequency);
@@ -229,8 +246,8 @@ void Element::plotYParameters(double start_frequency, double end_frequency, int 
                 phases[p][Y_matrix.ncols() * i + j] = phase;
             }
         }
-        cout << "Frequency: " << frequency << " Hz" << endl;
-        frequency += gap; // increase frequency
+        // cout << "Frequency: " << frequency << " Hz" << endl;
+        frequency *= gap; // increase frequency
     }
 
     // Making labels
@@ -240,5 +257,5 @@ void Element::plotYParameters(double start_frequency, double end_frequency, int 
         }
     }
 
-    bode_plot(frequencies, magnitudes, phases, labels, "Y-Parameters of " + element_symbol);
+    bode_plot_implot(frequencies, magnitudes, phases, labels, "Y-Parameters of " + element_symbol);
 }

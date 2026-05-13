@@ -11,8 +11,11 @@ project(Harmony)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find Eigen3 library on local system
+# Find Eigen3 library on local system.
 find_package(Eigen3 REQUIRED)
+
+# Find Sundials on local system and include directories.
+find_package(SUNDIALS 7.0 REQUIRED)
 
 # Find symengine on local system and include directories.
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)   #symengine requires this
@@ -20,12 +23,28 @@ find_package(SymEngine CONFIG)
 set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
 include_directories(${SYMENGINE_INCLUDE_DIRS})
 
-# Gurobi and Mathplot++ are configured below
+# 1. ImGui (needed by Implot)
+include(FetchContent)
+FetchContent_Declare(
+    imgui_source
+    URL      https://github.com/ocornut/imgui/archive/refs/tags/v1.92.3.zip
+)
+FetchContent_MakeAvailable(imgui_source)
+set(IMGUI_BACKEND_DIR "${imgui_source_SOURCE_DIR}/backends")
+include_directories(${IMGUI_BACKEND_DIR})
+if (APPLE)
+    message(STATUS "macOS detected: Adding ImGui backend source files to build")
+    list(APPEND IMGUI_BACKEND_SOURCES 
+        ${IMGUI_BACKEND_DIR}/imgui_impl_glfw.cpp
+        ${IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp
+    )
+endif()
+
+# Gurobi is configured below
 # They need to be configured after add_executable(Harmony ...)
 
 # Group header files
 set(Element_Header_Files src/Elements/Element.h)
-#set(Element_Admittance_Header_Files src/Admittance.h)
 set(Element_Converter_Header_Files
     src/Elements/Converter/Converter.h
     src/Elements/Converter/MMC.h
@@ -50,6 +69,7 @@ set(Element_Source_Header_Files
     src/Elements/Source/Source_base.h
     src/Elements/Source/AC_source.h
     src/Elements/Source/Generator.h
+    src/Elements/Source/DC_source.h
 )
 set(Element_Transformer_Header_Files
     src/Elements/Transformer/Transformer_base.h
@@ -78,7 +98,6 @@ set(Solver_State_Space_Model_Header_Files
     src/Solver/State_Space_Model/State_Space_Model.h
 )
 set(Solver_OPF_Header_Files
-    src/Solver/OPF/viz_opf.h
     src/Solver/OPF/Powerflow.h
 )
 set(Solver_DQsym_Header_Files
@@ -93,6 +112,9 @@ set(Solver_Helper_Functions_Header_Files
     src/Solver/Helper_Functions/Differential_equations.h
     src/Solver/Helper_Functions/Symbolic_functions.h
     src/Solver/Helper_Functions/Visualization.h
+    src/Solver/Helper_Functions/Writer.h
+    src/Solver/Helper_Functions/stb_image_write.h
+    src/Solver/Helper_Functions/DQsym_Conversion_Functions.h
 )
 set(Control_Header_Files
     src/Control/Control_block.h
@@ -142,6 +164,7 @@ set(Element_Source_Source_Files
     src/Elements/Source/Source_base.cpp
     src/Elements/Source/AC_source.cpp
     src/Elements/Source/Generator.cpp
+    src/Elements/Source/DC_source.cpp
 )
 set(Element_Transformer_Source_Files
     src/Elements/Transformer/Transformer_base.cpp
@@ -173,7 +196,6 @@ set(Solver_Stability_Estimate_Source_Files
     src/Solver/Stability_Estimate/Stability_estimate.cpp
 )
 set(Solver_OPF_Source_Files
-    src/Solver/OPF/viz_opf.cpp
     src/Solver/OPF/Powerflow_data.cpp
     src/Solver/OPF/Powerflow_network_params.cpp
     src/Solver/OPF/Powerflow_solver.cpp
@@ -186,6 +208,8 @@ set(Solver_Helper_Functions_Source_Files
     src/Solver/Helper_Functions/Differential_equations.cpp
     src/Solver/Helper_Functions/Symbolic_functions.cpp
     src/Solver/Helper_Functions/Visualization.cpp
+    src/Solver/Helper_Functions/Writer.cpp
+    src/Solver/Helper_Functions/DQsym_Conversion_Functions.cpp
 )
 set(Control_Source_Files
     src/Control/Control_block.cpp
@@ -223,13 +247,16 @@ set(Examples_Source_files
     src/examples/example_stability_check.cpp
     src/examples/example_admittance_parameters.cpp
     src/examples/example_point2point_case.cpp
+    src/examples/example_DQsym_DSSS2.cpp
+    src/examples/example_DQsym_RLC.cpp
+    src/examples/example_DQsym_Simple_MMC.cpp
+    src/examples/example_state_space.cpp
 )
 
 # Add source_groups to create file filters (groups) in Visual Studio project
 if(MSVC)
     source_group("Header Files" FILES ${Header_Files})
     source_group("Header Files\\Elements" FILES ${Element_Header_Files})
-    #source_group("Header Files\\Elements\\Admittance" FILES ${Element_Admittance_Header_Files})
     source_group("Header Files\\Elements\\Converter" FILES ${Element_Converter_Header_Files})
     source_group("Header Files\\Elements\\Generator" FILES ${Element_Generator_Header_Files})
     source_group("Header Files\\Elements\\Impedance" FILES ${Element_Impedance_Header_Files})
@@ -316,19 +343,61 @@ add_executable(
     ${Solver_State_Space_Model_Source_Files}
     ${Examples_Source_files}
 
+    # Implot
+    ${IMGUI_BACKEND_SOURCES}
+
+)
+target_precompile_headers(Harmony PRIVATE
+    <Eigen/Dense>
+    <symengine/basic.h>
+    "./src/Constants.h"
+    "./src/Include_components.h"
+    "./src/Solver/Helper_Functions/Helper_Functions.h"
 )
 
 # Set Harmony as a starup project on Visual Studio Solution
+# Add the MP compiler flag for parallel compilation
 if (MSVC)
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Harmony)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+endif()
+
+# Implot (requires various libraries)
+find_package(imgui REQUIRED)
+find_package(implot REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(GLEW) # Optional on Mac, but good for Win/Linux
+
+# macOS specific framework linking
+if(APPLE)
+    target_link_libraries(Harmony "-framework Cocoa" "-framework IOKit" "-framework CoreFoundation")
+endif()
+
+# Tell the ImGui OpenGL backend to use GLEW
+target_compile_definitions(Harmony PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLEW)
+
+# If using Conda GLEW on Windows, link statically
+if(MSVC)
+    target_compile_definitions(Harmony PRIVATE GLEW_STATIC)
 endif()
 
 # Specify libraries that need to be linked to the harmony executable
-# Note that Eigen doesn't need to be linked because it's a header-only lib
+# Although Eigen is a header-only lib, this will setup the include directories 
 target_link_libraries(
     Harmony
     ${SYMENGINE_LIBRARIES}
     Eigen3::Eigen
+    SUNDIALS::cvode
+    SUNDIALS::kinsol
+    SUNDIALS::sunmatrixdense
+    SUNDIALS::sunlinsoldense
+    SUNDIALS::nvecserial
+    imgui::imgui
+    implot::implot
+    glfw
+    ${OPENGL_LIBRARIES}
+    GLEW::GLEW
 )
 
 # Configure Gurobi
@@ -424,39 +493,6 @@ else()
 
 
 endif()
-
-
-# Set Matplot++ path 
-set(MATPLOT_PATH "" CACHE PATH "Path to Matplot++ installation")
-if(NOT MATPLOT_PATH)
-    # User did not provide a path for the Matplot installation
-    message(WARNING 
-        "Matplot++ path not specified. The project may fail to link.\n"
-        "To fix this, provide the Matplot++ installation directory via CMake:\n"
-        "  cmake -DMATPLOT_PATH=\"/path/to/matplotplusplus\" ..\n\n"
-        "Common installation hints:\n"
-        "  - Windows (msi): C:\Program Files\Matplot++\n"
-        "  - macOS (brew):    /opt/homebrew/opt/matplotplusplus\n"
-        "  - Linux (manual):  /usr/local/include/matplot"
-    )
-elseif(NOT EXISTS "${MATPLOT_PATH}")
-    # Path was provided but is invalid
-    message(FATAL_ERROR 
-        " Invalid MATPLOT_PATH: \"${MATPLOT_PATH}\"\n"
-        " The directory does not exist. Please check for typos or ensure Matplot++ is correctly installed."
-    )
-else()
-    message(STATUS "Found Matplot++ in: ${MATPLOT_PATH}")
-
-    # Matplot supports CMake. We will use Matplot++Config.cmake contained in MATPLOT_PATH to configure the package
-    list(APPEND CMAKE_PREFIX_PATH "${MATPLOT_PATH}")
-    find_package(Matplot++ REQUIRED)
-    # Add Matplot++ header files (not needed due to cmake)
-    #include_directories("${MATPLOT_PATH}/include")
-    # Link the library
-    target_link_libraries(Harmony Matplot++::matplot)
-endif()
-
 
 
 if(MSVC)

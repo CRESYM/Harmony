@@ -26,5 +26,5 @@ void example_WT_type_4() {
 
 	//wt->printElementValues();
 
-	wt->plotYParameters(1, 100000, 10000);
+	wt->plotYParameters(1, 100000, 500);
 }

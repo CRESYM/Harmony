@@ -54,7 +54,7 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 		cerr << "Error: Calculated duty cycle D is out of bounds (0 < D < 1)." << endl;
 		exit(EXIT_FAILURE);
 	}
-	double I_l = I_dc / (1.0 - D); // Inductor current in the boost converter
+	double I_l = I_pv; // Inductor current in the boost converter
 
 	// Further initialization and state variable setup can be done here
 	double V_pccd = V_g * sqrt(2.0/3.0); // Peak grid voltage
@@ -79,14 +79,13 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 
 	double Md0 = 2.0 * V_sd / V_dc;
 	double Mq0 = 2.0 * V_sq / V_dc;
-	//cout << V_sd << " " << V_sq << " " << Md0 << " " << Mq0 << endl;
+	// cout << V_sd << " " << V_sq << " " << Md0 << " " << Mq0 << endl;
 
 	// Setting up the controllers
 	// PI controller for the DC voltage control loop
 	RCP<const Basic> gdc = add(real_double(K_p_dc), div(real_double(K_i_dc), s));
 	DenseMatrix Gdc = createZeroMatrix(2, 2);
 	Gdc.set(0, 0, gdc);
-	//cout << Gdc.__str__() << endl;
 
 	// PI controller for the current control loop
 	RCP<const Basic> gi = add(real_double(K_p_i), div(real_double(K_i_i), s));
@@ -118,7 +117,7 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 	// PV coefficient
 	double Tn = 298.18; // nominal temperature
 	double k = 1.380625e-23; // Boltzmann's constant
-	double q = 1.60217e-23; // unit electric charge
+	double q = 1.60217e-19; // unit electric charge
 	double k_pv = -q * (N_p * I0 + N_p * I_sc - I_pv) / (N_s * n * k * Tn);
 	double k_mp = pow(N_s * n * k * Tn / q, 2) / (N_p * I0 * V_pv * exp(q * V_pv / (N_s * n * k * Tn)) + I_pv / V_pv * pow(N_s * n * k * Tn / q, 2));
 	double lambda = k_pv * k_mp;
@@ -197,12 +196,12 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 	inverse_LU(M1, M1_inv); // M1_inv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1
 
 	DenseMatrix M3 = createZeroMatrix(2, 2);
-	mul_dense_dense(Zrl1, Yc, M3);
-	add_dense_dense(M3, identity, M3); // M3 = I + Zrl1*Yc
+	mul_dense_dense(Zrc, Yc, M3);
+	add_dense_dense(M3, identity, M3); // M3 = I + Zrc*Yc
 	DenseMatrix M3_inv = createZeroMatrix(2, 2);
-	inverse_LU(M3, M3_inv); // M3_inv = (I + Zrl1*Yc)^-1
-	mul_dense_dense(Yc, M3_inv, M3); // M3 = Yc*(I + Zrl1*Yc)^-1
-	mul_dense_dense(Nm, M3, M3); // M3 = Nm*Yc*(I + Zrl1*Yc)^-1
+	inverse_LU(M3, M3_inv); // M3_inv = (I + Zrc*Yc)^-1
+	mul_dense_dense(Yc, M3_inv, M3); // M3 = Yc*(I + Zrc*Yc)^-1
+	mul_dense_dense(Nm, M3, M3); // M3 = Nm*Yc*(I + Zrc*Yc)^-1
 
 	// Matrices for calculation of the transfer function from m_dq, i_2dq, v_dc to v_pccdq
 	DenseMatrix Gvv = createZeroMatrix(2, 2);
@@ -218,10 +217,10 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 	// Matrices for calculation of the transfer function from m_dq, i_2dq, v_dc to i_dc
 	DenseMatrix Gmi = Ni;
 	DenseMatrix Gii = createZeroMatrix(2, 2);
-	mul_dense_dense(M3, Zl2, Gii); // Gii = Nm*Yc*(I + Zrl1*Yc)^-1*Zl2
-	add_dense_dense(Gii, Nm, Gii); // Gii = Nm + Nm*Yc*(I + Zrl1*Yc)^-1*Zl2
-	DenseMatrix Gvi = M3;
-	//cout << Gmi.__str__() << endl;
+	mul_dense_dense(M3, Zl2, Gii); // Gii = Nm * Yc * (I + Zrc*Yc)^-1 * Zl2
+	add_dense_dense(Gii, Nm, Gii); // Gii = Nm + Nm * Yc * (I + Zrc*Yc)^-1 * Zl2
+	DenseMatrix Gvi = M3; // Gvi = Nm * Yc * (I + Zrc*Yc)^-1
+	// cout << Gvi.__str__() << endl;
 
 	// Overall admittance matrix of the PV plant
 	DenseMatrix Ja = createZeroMatrix(2, 2);
@@ -230,7 +229,7 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 	mul_dense_dense(Gv, Ja, Ja); // Ja = Gv*Gi*Gdc
 	mul_dense_dense(Gmi, Ja, Fa); // Fa = Gmi*Gv*Gi*Gdc
 	mul_dense_dense(Gmv, Ja, Ja); // Ja = Gmv*Gv*Gi*Gdc
-	add_dense_dense(Gvv, Ja, Ja); // Ja = Gvv + Gmv*Gv*Gi*Gc
+	add_dense_dense(Gvv, Ja, Ja); // Ja = Gvv + Gmv*Gv*Gi*Gdc
 	mul_dense_dense(Zdc, Fa, Fa); // Fa = Zdc*Gmi*Gv*Gi*Gdc
 	mul_dense_scalar(Fa, minus_one, Fa); // Fa = -Zdc*Gmi*Gv*Gi*Gdc
 	add_dense_dense(identity, Fa, Fa); // Fa = I - Zdc*Gmi*Gv*Gi*Gdc
@@ -268,15 +267,17 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 	mul_dense_dense(Ja, H4, H4); // H4 = Ja*Fa^-1
 	mul_dense_dense(H4, Fb, H4); // H4 = Ja*Fa^-1*Fb
 	add_dense_dense(H4, Jb, H4); // H4 = Ja*Fa^-1*Fb + Jb
-	inverse_LU(H4, H4); // H4 = (Ja*Fa^-1*Fb + Jb)^-1
+	//inverse_LU(H4, H4); // H4 = (Ja*Fa^-1*Fb + Jb)^-1
 	DenseMatrix H5 = createZeroMatrix(2, 2);
-	inverse_LU(Fa, H5);
+	inverse_LU(Fa, H5); 
 	mul_dense_dense(Ja, H5, H5); // H5 = Ja*Fa^-1
 	mul_dense_dense(H5, Fc, H5); // H5 = Ja*Fa^-1*Fc
 	mul_dense_scalar(H5, minus_one, H5); // H5 = -Ja*Fa^-1*Fc
 	add_dense_dense(H5, Jc, H5); // H5 = Jc - Ja*Fa^-1*Fc
 
 	Y_matrix.resize(2, 2);
-	mul_dense_scalar(H4, minus_one, Y_matrix); // Y_matrix = -(Ja*Fa^-1*Fb + Jb)^-1
-	mul_dense_dense(H5, Y_matrix, Y_matrix); // Y_matrix = -(Jc - Ja*Fa^-1*Fc)*(Ja*Fa^-1*Fb + Jb)^-1
+	inverse_LU(H5, H5); // H5 = (Jc - Ja*Fa^-1*Fc)^-1
+	mul_dense_scalar(H5, minus_one, Y_matrix); // Y_matrix = -(Jc - Ja*Fa^-1*Fc)^-1
+	mul_dense_dense(Y_matrix, H4, Y_matrix); // Y_matrix = -(Jc - Ja*Fa^-1*Fc)^-1 * (Ja*Fa^-1*Fb + Jb)
+	inverse_LU(Y_matrix, Y_matrix); // Y_matrix = [-(Jc - Ja*Fa^-1*Fc)^-1 * (Ja*Fa^-1*Fb + Jb)]^-1
 }

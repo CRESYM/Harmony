@@ -106,6 +106,27 @@ vector<vector<double>> matrixToVector(const MatrixXd& mat) {
     return vec;
 }
 
+MatrixXcd stack_u_4x_3xN(const MatrixXcd& u1, const MatrixXcd& u2, const MatrixXcd& u3, const MatrixXcd& u4)
+{
+    if (u1.rows() != 3 || u2.rows() != 3 || u3.rows() != 3 || u4.rows() != 3) {
+        throw std::invalid_argument("All MMC input groups must have 3 rows.");
+    }
+
+    const Eigen::Index nCols = u1.cols();
+
+    if (u2.cols() != nCols || u3.cols() != nCols || u4.cols() != nCols) {
+        throw std::invalid_argument("All MMC input groups must have the same number of columns.");
+    }
+
+    MatrixXcd u(12, nCols);
+    u.block(0, 0, 3, nCols) = u1;
+    u.block(3, 0, 3, nCols) = u2;
+    u.block(6, 0, 3, nCols) = u3;
+    u.block(9, 0, 3, nCols) = u4;
+
+    return u;
+}
+
 /**
  * @brief Multiplies two matrices represented as 2D vectors.
  * @param A The left-hand side matrix.
@@ -227,3 +248,5 @@ extern vector<vector<complex<double>>> get_block(const vector<vector<complex<dou
     }
     return block;
 };
+
+

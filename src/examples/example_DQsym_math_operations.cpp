@@ -1,36 +1,43 @@
 #include "Examples.h"
 
 #include "../Solver/DQsym/DQsym.h"
+#include "../Solver/Helper_Functions/Helper_Functions.h"
 
 void example_DQsym_math_operations()
 {
-	// Example usage of DQsym class for mathematical operations
-	DQsym dqSym;
 
 	// small test: zeros
 	MatrixXcd X = MatrixXcd::Zero(3, 2); // N = 2 -> columns 0..2
 	X << complex<double>(0,0), complex<double>(-0.5317,-0.3237), complex<double>(0,0), 
 		complex<double>(-0.0657, 0.1971), complex<double>(0,0), complex<double>(0.0576, 0.4674);
 
+	MatrixXcd X1 = MatrixXcd::Zero(3, 2);
+	X1 << complex<double>(0, 0), complex<double>(0, 0), complex<double>(0,0),
+		  complex<double>(0, 0), complex<double>(0.5, 0), complex<double>(0, 0);   //This is the wrong way to do the order of the input but for now it will work
+
+	MatrixXcd X2 = MatrixXcd::Zero(3, 2);
+	X2 << complex<double>(0, 0), complex<double>(10, 0), complex<double>(0, 0),
+		complex<double>(0, 0), complex<double>(0, 0), complex<double>(0, 0);
 	cout << "Input matrix X:" << endl;
 	cout << "X size: " << X.rows() << " x " << X.cols() << std::endl;
-	cout << X << endl;
+	cout << X1 << endl;
+	cout << X2 << endl;
 	cout << endl;
 
 	cout << "Addition test:" << endl;
-	MatrixXcd result = dqSym.add(X, X);
+	MatrixXcd result = dq_add(X, X);
 	cout << "Result of addition:" << endl;
 	cout << result << endl;
 	cout << endl;
 
 	cout << "Subtraction test:" << endl;
-	MatrixXcd result2 = dqSym.subtract(X, X);
+	MatrixXcd result2 = dq_subtract(X, X);
 	cout << "Result of subtraction:" << endl;
 	cout << result2 << endl;
 	cout << endl;
 
 	cout << "Multiplication test:" << endl;
-	MatrixXcd Z = dqSym.multiply(X, X);
+	MatrixXcd Z = dq_multiply(X1, X2);
 	std::cout << "Z size: " << Z.rows() << " x " << Z.cols() << std::endl;
 	std::cout << Z << std::endl;
 	cout << endl;
@@ -44,7 +51,7 @@ void example_DQsym_math_operations()
 	MatrixXcd Zpnz_old = MatrixXcd::Zero(nrSig * 3, N + 1);
 	MatrixXcd Xpnz_old = MatrixXcd::Zero(nrSig * 3, N + 1);
 
-	MatrixXcd Zpnz = dqSym.integrate(Zpnz_old, Xpnz_old, Xpnz, dt, w);
+	MatrixXcd Zpnz = dq_integrate(Zpnz_old, Xpnz_old, Xpnz, dt, w);
 
 	std::cout << "Zpnz = \n" << Zpnz << std::endl;
 
@@ -90,15 +97,61 @@ void example_DQsym_math_operations()
 
 	MatrixXcd y;
 
+	DQsym dqSym; // usage of the class
+	DSSState st; 
+
 	for (int i = 0; i < 3; i++)
 	{
 		VectorXi brkVec = brkVecs.row(i);
 		cout << u << endl;
 		cout << brkVec << endl;
 		cout << endl;
-		y = dqSym.DSSS(Ad, Bd, Cd, Dd, swOnRes, swOffRes, swType, brkVec, u, xo, 2e-5, 50.0);
+		y = dqSym.DSSS(st, Ad, Bd, Cd, Dd, swOnRes, swOffRes, swType, brkVec, u, xo, 2e-5, 50.0);
 		cout << y << endl;
 		cout << endl;
 	}
 	
+	//cout << "\n==========================================\n";
+	//cout << "dqn2abc test\n";
+	//cout << "==========================================\n";
+
+	try {
+		const double freq_hz = 50.0;
+		const double t0 = 0.0;
+		const double t1 = 0.3;   // 2 cycles
+		const double Ts = 2e-4;
+
+		Eigen::MatrixXcd Xdcpnz_c(3, 6);
+		Xdcpnz_c <<
+			std::complex<double>(0, 0), std::complex<double>(-0.2455, -0.8802), std::complex<double>(-0.1021, 0.3194), std::complex<double>(0.3739, 0.7338), std::complex<double>(0.2551, -0.8851), std::complex<double>(0.1611, 0.9839),
+			std::complex<double>(0, 0), std::complex<double>(-0.2165, 0.5141), std::complex<double>(-0.4002, 0.2114), std::complex<double>(-0.0824, -0.1413), std::complex<double>(-0.5369, 0.2124), std::complex<double>(-0.5156, -0.3999),
+			std::complex<double>(0, 0), std::complex<double>(-0.1194, -0.1157), std::complex<double>(-0.3357, -0.1288), std::complex<double>(-0.8896, -0.0929), std::complex<double>(0.0032, -0.2576), std::complex<double>(0.2427, 0.3017);
+
+		cout << "Running simulate_dqn2abc...\n";
+
+		ABCResult res = simulate_dqn2abc(Xdcpnz_c, freq_hz, t0, t1, Ts);
+
+		cout << "Simulation done.\n";
+		cout << "Samples: " << res.t.size() << "\n";
+		cout << "First sample: "
+			<< res.Xabc(0, 0) << ", "
+			<< res.Xabc(0, 1) << ", "
+			<< res.Xabc(0, 2) << "\n";
+
+		cout << "Plotting...\n";
+
+		plot_abc_waveforms_implot(res.t, res.Xabc, "dqn2abc Example");
+
+		cout << "Plot finished.\n";
+
+		// Prevent immediate exit (important!)
+		std::cout << "Press Enter to continue...\n";
+		std::cin.get();
+	}
+	catch (const std::exception& e) {
+		std::cerr << "ERROR in dqn2abc test: " << e.what() << "\n";
+	}
+
+
 }
+

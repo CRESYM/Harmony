@@ -21,10 +21,6 @@ void example_OPF() {
      LoadPQ* load1 = new LoadPQ("LOAD01", "AC1", 3, {0.0, 0.0});
      net.connectElementToBus(load1, 1, bus1_ac);
 
-    //std::vector<double> load_params1 = { 0, 0 };
-    //LoadPQ* load1 = new LoadPQ("LOAD01", "AC1", 3, load_params1);
-    //net.connectElementToBus(load1, 1, bus1_ac);
-
     std::vector<double> load_params2 = { 4761, 7.58, 0 };
     Load* load2 = new Load("LOAD02", "AC1", 3, load_params2);
     net.connectElementToBus(load2, 1, bus2_ac);
@@ -113,25 +109,25 @@ void example_OPF() {
     net.connectElementToBus(br7_ac, /*terminal=*/2, bus5_ac); 
 
     ///*  ---------- 2.1 Create DC Buses  ---------- */
-    Bus* bus1_dc = new Bus("DCBUS01", "DC1", 1);
-    Bus* bus2_dc = new Bus("DCBUS02", "DC1", 1);
-    Bus* bus3_dc = new Bus("DCBUS03", "DC1", 1);
+    Bus* bus1_dc = new Bus("DCBUS01", "DC1", 2);
+    Bus* bus2_dc = new Bus("DCBUS02", "DC1", 2);
+    Bus* bus3_dc = new Bus("DCBUS03", "DC1", 2);
     
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
 
     double DCR1 = 0.052;
-    Impedance* br1_dc = new Impedance("br1_dc", "DC1", 1, DCR1);
+    Impedance* br1_dc = new Impedance("br1_dc", "DC1", 2, DCR1);
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
 
     double DCR2 = 0.073;
-    Impedance* br2_dc = new Impedance("br2_dc", "DC1", 1, DCR2);
+    Impedance* br2_dc = new Impedance("br2_dc", "DC1", 2, DCR2);
     net.connectElementToBus(br2_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br2_dc, /*terminal=*/2, bus3_dc);
 
     double DCR3 = 0.052;
-    Impedance* br3_dc = new Impedance("br3_dc", "DC1", 1, DCR3);
+    Impedance* br3_dc = new Impedance("br3_dc", "DC1", 2, DCR3);
     net.connectElementToBus(br3_dc, /*terminal=*/1, bus2_dc);
     net.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
 
@@ -214,6 +210,8 @@ void example_OPF() {
     };
     mmc3->setOPFInfo(mmc3_info);
 
+	net.add_areas();
+	net.print_summary();
 
 	///*----- 3 OPF Implementatiopn ----- */
 	PowerFlow pf;
@@ -227,6 +225,9 @@ void example_OPF() {
 	global_dict["DCbaseKV"] = 345.0; // Base voltage for DC, can be adjusted as needed
 	global_dict["Z_base"] = 1.0; // Base impedance, can be adjusted as needed
     
-	pf.make_OPF(&net, global_dict, true, false, false, true);
+	pf.make_OPF(&net, global_dict, true, false, true, false);
+
+    cout << "Press Enter to continue...\n";
+    cin.get();
 
 }
