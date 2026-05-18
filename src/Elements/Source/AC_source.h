@@ -26,7 +26,7 @@ public:
         const std::vector<MatrixXcd>& states, int nKeep) const override;
 
     // Function to print AC source values
-    void printElementValues();
+    void printElementValues() override;
 
 private:
     // Properties
