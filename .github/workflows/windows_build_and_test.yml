@@ -5,7 +5,7 @@ name: Windows Build and Test
 # b) when a new pull request is opened to merge a branch into main or develop
 on:
   push:
-    branches: [ "main", "develop", "github_actions"]
+    branches: [ "main", "develop"]
   pull_request:
     branches: [ "main", "develop"]
 
