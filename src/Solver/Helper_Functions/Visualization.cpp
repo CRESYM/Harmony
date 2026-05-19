@@ -553,8 +553,10 @@ void nyquist_plot_implot(
                     yc[i] = std::sin(theta[i]);
                 }
 
-                ImPlot::SetNextLineStyle(ImVec4(0.3f, 0.3f, 0.3f, 1.0f), 1.5f);
-                ImPlot::PlotLine("Unit Circle", xc.data(), yc.data(), 500);
+                ImPlotSpec spec;
+                spec.LineColor = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
+                spec.LineWeight = 1.5f;
+                ImPlot::PlotLine("Unit Circle", xc.data(), yc.data(), 500, spec);
 
                 ImPlot::EndPlot();
             }
@@ -595,23 +597,25 @@ void plot_eigenvalues_implot(
                 ImPlot::SetupAxes("Re(lambda)", "Im(lambda)");
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest);
 
-                ImPlot::PushStyleVar(ImPlotStyleVar_MarkerSize, 8.0f);
-                ImPlot::PushStyleColor(ImPlotCol_MarkerFill, ImVec4(0.1f, 0.4f, 0.8f, 1.0f));
-                ImPlot::PushStyleColor(ImPlotCol_MarkerOutline, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-
+                ImPlotSpec scatterSpec; // style for scatter plot
+                scatterSpec.Marker = ImPlotMarker_Circle;
+                scatterSpec.MarkerSize = 8.0f;
+                scatterSpec.MarkerFillColor = ImVec4(0.1f, 0.4f, 0.8f, 1.0f);
+                scatterSpec.MarkerLineColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+      
                 ImPlot::PlotScatter("Eigenvalues",
                     re.data(), im.data(),
-                    (int)re.size());
+                    (int)re.size(), scatterSpec);
 
-                ImPlot::PopStyleColor(2);
-                ImPlot::PopStyleVar();
-
+                ImPlotSpec lineSpec; // style for reference axes
+                lineSpec.LineColor = ImVec4(0.5f, 0.5f, 0.5f, 0.6f);
+                lineSpec.LineWeight = 1.0f;
+                
                 // Reference axes — "##" prefix hides them from the legend
                 double zero = 0.0;
-                ImPlot::SetNextLineStyle(ImVec4(0.5f, 0.5f, 0.5f, 0.6f), 1.0f);
-                ImPlot::PlotInfLines("##re0", &zero, 1);
-                ImPlot::SetNextLineStyle(ImVec4(0.5f, 0.5f, 0.5f, 0.6f), 1.0f);
-                ImPlot::PlotInfLines("##im0", &zero, 1, ImPlotInfLinesFlags_Horizontal);
+                ImPlot::PlotInfLines("##re0", &zero, 1, lineSpec);
+                lineSpec.Flags = ImPlotInfLinesFlags_Horizontal;
+                ImPlot::PlotInfLines("##im0", &zero, 1, lineSpec);
 
                 ImPlot::EndPlot();
             }
@@ -722,10 +726,13 @@ void plot_participation_factors_implot(
                     }
 
                     const ImVec4& col = palette[j % 10];
-                    ImPlot::SetNextFillStyle(col, 0.85f);
+                    ImPlotSpec barSpec;
+                    barSpec.FillColor = ImVec4(col.x, col.y, col.z, 0.85f);
+                    barSpec.LineColor = ImVec4(col.x, col.y, col.z, 0.85f);
+                    
                     ImPlot::PlotBars(mode_labels[j].c_str(),
                         x_pos.data(), y_val.data(),
-                        n_states, bar_width * 0.92); // slight gap between bars
+                        n_states, bar_width * 0.92, barSpec); // slight gap between bars
                 }
 
                 // ---- value annotations above significant bars ----
@@ -867,8 +874,9 @@ void viz_opf(const OPFVisualData& d)
     const int numBranches_ac = d.branch_entire_ac.rows();
 
     Eigen::MatrixXd bus_ac_new = d.bus_entire_ac;
-    for (int i = 0; i < numBuses_ac; ++i)
+    for (int i = 0; i < numBuses_ac; ++i) {
         bus_ac_new(i, 0) = i + 1;
+    }
 
     std::map<std::pair<int, int>, int> mapping_ac;
     for (int i = 0; i < numBuses_ac; ++i)
@@ -1005,12 +1013,15 @@ void viz_opf(const OPFVisualData& d)
 
     std::vector<size_t> idx_dc, idx_ac;
     idx_dc.reserve(numBuses_dc);
-    for (int i = 0; i < dcNodesVec.size(); ++i)
+    for (int i = 0; i < dcNodesVec.size(); ++i) {
         idx_dc.push_back(static_cast<size_t>(dcNodesVec(i) - 1));
+    }
 
-    for (size_t i = 0; i < static_cast<size_t>(N); ++i)
-        if (std::find(idx_dc.begin(), idx_dc.end(), i) == idx_dc.end())
+    for (size_t i = 0; i < static_cast<size_t>(N); ++i) {
+        if (std::find(idx_dc.begin(), idx_dc.end(), i) == idx_dc.end()) {
             idx_ac.push_back(i);
+        }
+    }
 
     // ----------------------------------------------------------
     // 7.  PER-NODE POWER MAGNITUDES
@@ -1226,12 +1237,12 @@ void viz_opf(const OPFVisualData& d)
                     float t_n = static_cast<float>(
                         (edgePower[k] - minPower) / (maxPower - minPower + 1e-6));
                     auto rgb = oranges_colormap(t_n);
-                    ImPlot::SetNextLineStyle(
-                        ImVec4(rgb[0], rgb[1], rgb[2], 1.0f), 2.0f);
-
+                    ImPlotSpec edgeSpec;
+                    edgeSpec.LineColor = ImVec4(rgb[0], rgb[1], rgb[2], 1.0f);
+                    edgeSpec.LineWeight = 2.0f;
                     double ex[2] = { xs[u], xs[v] };
                     double ey[2] = { ys[u], ys[v] };
-                    ImPlot::PlotLine("##e", ex, ey, 2);
+                    ImPlot::PlotLine("##e", ex, ey, 2, edgeSpec);
                 }
 
                 // AC nodes
@@ -1250,29 +1261,37 @@ void viz_opf(const OPFVisualData& d)
 
                     if (hasGen && gsz >= lsz)
                     {
-                        ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, gsz,
-                            ImVec4(0.01f, 0.5f, 0.5f, 1.f), IMPLOT_AUTO,
-                            ImVec4(0.01f, 0.5f, 0.5f, 1.f));
-                        ImPlot::PlotScatter("##gen", &px, &py, 1);
+                        ImPlotSpec genSpec;
+                        genSpec.Marker = ImPlotMarker_Circle;
+                        genSpec.MarkerSize = gsz;
+                        genSpec.MarkerFillColor = ImVec4(0.01f, 0.5f, 0.5f, 1.f);
+                        genSpec.MarkerLineColor = ImVec4(0.01f, 0.5f, 0.5f, 1.f);
+                        ImPlot::PlotScatter("##gen", &px, &py, 1, genSpec);
 
-                        ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, lsz,
-                            ImVec4(0.9f, 0.01f, 0.01f, 1.f), IMPLOT_AUTO,
-                            ImVec4(0.9f, 0.01f, 0.01f, 1.f));
-                        ImPlot::PlotScatter("##load", &px, &py, 1);
+                        ImPlotSpec loadSpec;
+                        loadSpec.Marker = ImPlotMarker_Circle;
+                        loadSpec.MarkerSize = lsz;
+                        loadSpec.MarkerFillColor = ImVec4(0.9f, 0.01f, 0.01f, 1.f);
+                        loadSpec.MarkerLineColor = ImVec4(0.9f, 0.01f, 0.01f, 1.f);
+                        ImPlot::PlotScatter("##load", &px, &py, 1, loadSpec);
                     }
                     else
                     {
-                        ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, lsz,
-                            ImVec4(0.9f, 0.01f, 0.01f, 1.f), IMPLOT_AUTO,
-                            ImVec4(0.9f, 0.01f, 0.01f, 1.f));
-                        ImPlot::PlotScatter("##load", &px, &py, 1);
+                        ImPlotSpec loadSpec;
+                        loadSpec.Marker = ImPlotMarker_Circle;
+                        loadSpec.MarkerSize = lsz;
+                        loadSpec.MarkerFillColor = ImVec4(0.9f, 0.01f, 0.01f, 1.f);
+                        loadSpec.MarkerLineColor = ImVec4(0.9f, 0.01f, 0.01f, 1.f);
+                        ImPlot::PlotScatter("##load", &px, &py, 1, loadSpec);
 
                         if (hasGen)
                         {
-                            ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, gsz,
-                                ImVec4(0.01f, 0.5f, 0.5f, 1.f), IMPLOT_AUTO,
-                                ImVec4(0.01f, 0.5f, 0.5f, 1.f));
-                            ImPlot::PlotScatter("##gen", &px, &py, 1);
+                            ImPlotSpec genSpec;
+                            genSpec.Marker = ImPlotMarker_Circle;
+                            genSpec.MarkerSize = gsz;
+                            genSpec.MarkerFillColor = ImVec4(0.01f, 0.5f, 0.5f, 1.f);
+                            genSpec.MarkerLineColor = ImVec4(0.01f, 0.5f, 0.5f, 1.f);
+                            ImPlot::PlotScatter("##gen", &px, &py, 1, genSpec);
                         }
                     }
                 }
@@ -1281,10 +1300,12 @@ void viz_opf(const OPFVisualData& d)
                 for (size_t idx : idx_dc)
                 {
                     double px = xs[idx], py = ys[idx];
-                    ImPlot::SetNextMarkerStyle(ImPlotMarker_Up, 10.0f,
-                        ImVec4(0.1f, 0.1f, 0.8f, 1.f), IMPLOT_AUTO,
-                        ImVec4(0.1f, 0.1f, 0.8f, 1.f));
-                    ImPlot::PlotScatter("##dc", &px, &py, 1);
+                    ImPlotSpec dcSpec;
+                    dcSpec.Marker = ImPlotMarker_Up;
+                    dcSpec.MarkerSize = 10.0f;
+                    dcSpec.MarkerFillColor = ImVec4(0.1f, 0.1f, 0.8f, 1.f);
+                    dcSpec.MarkerLineColor = ImVec4(0.1f, 0.1f, 0.8f, 1.f);
+                    ImPlot::PlotScatter("##dc", &px, &py, 1, dcSpec);
                 }
 
                 // Labels
