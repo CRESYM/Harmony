@@ -24,10 +24,11 @@ TEST_F(TestTransformerClassic, TestYMatrix) {
 	MatrixXcd y(2,2);
 	y << ytmp[0][0], ytmp[0][1], ytmp[1][0], ytmp[1][1];
 	MatrixXcd yexpected(2,2);
-	std::complex<double> Zp = 1.0 + std::complex<double>(0, 1.0e-3 * 1500);
-	std::complex<double> Zs = 2.0 + std::complex<double>(0, 2.0e-3 * 1500);
-	std::complex<double> Zm = std::complex<double>(0, 0.5e-3 * 1500);
-	std::complex<double> D = Zp*Zs - pow(M_PI,2);
+	std::complex<double> w = 2 * M_PI * 1500 * std::complex<double>(0, 1);
+	std::complex<double> Zp = 1.0 + 1.0e-3 * w;
+	std::complex<double> Zs = 2.0 + 2.0e-3 * w;
+	std::complex<double> Zm = 0.5e-3 * w;
+	std::complex<double> D = Zp*Zs - pow(Zm,2);
 	yexpected << Zs/D, -Zm/D, -Zm/D, Zp/D;
 	EXPECT_TRUE(y.isApprox(yexpected, 1e-9));
 }

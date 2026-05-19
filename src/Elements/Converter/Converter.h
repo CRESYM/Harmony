@@ -100,7 +100,6 @@ public:
 	virtual void plotParticipationFactors() override;
 
 
-
 protected:
 	double omega_0;  // Nominal frequency
 	double P;        // Active power [W]

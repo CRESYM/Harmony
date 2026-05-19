@@ -234,7 +234,7 @@ DQsymResult DQsym::run(Config& cfg)
     // Per-element states for feedback (initialized to zero)
     std::map<std::string, std::vector<MatrixXcd>> elementStates;
     for (const auto& [name, elem] : converters) {
-        int nStates = elem->getNumberOfInternalStates();
+        int nStates = elem->getNumberOfPlantStates();
         if (nStates <= 0) continue;
         int nStateGroups = nStates / 3;
         elementStates[name] = std::vector<MatrixXcd>(
@@ -254,6 +254,25 @@ DQsymResult DQsym::run(Config& cfg)
             : Eigen::VectorXi::Zero(cfg.swType.size());
         result.brkHistory.row(k) = brkVec.transpose();
 
+        //add18/5[
+
+        // === BEGIN DQsym closed-loop control: step controllers ===
+        for (const auto& [name, elem] : converters) {
+            MMC* mmc = dynamic_cast<MMC*>(elem);
+            if (!mmc) continue;
+
+            // Grid voltage feedback. For now, use the AC source's nominal value.
+            // (Refine later: extract from bus state if AC source exposes it.)
+            Eigen::Vector2d Vg_dq(200, 0.0);  // matches your AC_source amplitude
+
+            if (elementStates.count(name)) {
+                mmc->stepControllers(cfg.dt, elementStates.at(name), Vg_dq);
+            }
+        }
+        // === END DQsym closed-loop control: step controllers ===
+        
+        //add18/5]
+
         // 3b. Build u (nu × nKeep) — sources + MMC feedback from previous step
         MatrixXcd u = ssm.buildInputVector(cfg.nKeep, elementStates);
 		//cout << "Input vector u at step " << k << ":\n" << u << "\n";
@@ -267,7 +286,7 @@ DQsymResult DQsym::run(Config& cfg)
 
         // 3d. Extract state groups, update elementStates for next step
         for (const auto& [name, elem] : converters) {
-            int nStates = elem->getNumberOfInternalStates();
+            int nStates = elem->getNumberOfPlantStates();
             if (nStates <= 0) continue;
 
             int startRow = ssm.getStateIndex(name, 0);
@@ -294,6 +313,7 @@ DQsymResult DQsym::run(Config& cfg)
     hasRun_ = true;
     return result;
 }
+
 
 
 // ===================================================================

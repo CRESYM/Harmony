@@ -3,7 +3,7 @@
 #include "../../Include_components.h"
 
 static int getStateCount(Element* e) {
-    int n = e->getNumberOfInternalStates();
+    int n = e->getNumberOfPlantStates();
     return (n > 0) ? n : e->getInputPins();
 }
 
@@ -24,7 +24,7 @@ void StateSpaceModel::finalizeCounts(Network* net) {
             list_state_variables.push_back(element);
         }
         else if (dynamic_cast<Converter*>(element)) {
-            number_state_variables += element->getNumberOfInternalStates();
+            number_state_variables += element->getNumberOfPlantStates();
             list_state_variables.push_back(element);
             auto vi = element->getVirtualInputSymbols();
             if (!vi.empty()) {
@@ -83,7 +83,7 @@ void StateSpaceModel::finalizeCounts(Network* net) {
     }
     for (const auto& element : list_state_variables) {
         element_indices[element] = location;
-        int n = element->getNumberOfInternalStates();
+        int n = element->getNumberOfPlantStates();
         location += (n > 0) ? n : element->getInputPins();
     }
 

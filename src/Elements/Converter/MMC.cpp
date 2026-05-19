@@ -622,6 +622,17 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         i += 2;
     }
 
+
+    //add18/5 === BEGIN DQsym side-channel: expose modulation refs ===
+    last_vMDelta_d_ref_ = vMDelta_d_ref;
+    last_vMDelta_q_ref_ = vMDelta_q_ref;
+    last_vMSigma_d_ref_ = vMSigma_d_ref;
+    last_vMSigma_q_ref_ = vMSigma_q_ref;
+    last_vMSigma_z_ref_ = vMSigma_z_ref;
+    //add18/5 === END DQsym side-channel ===
+    
+
+
     // Compute un-delayed modulation signals
     Eigen::VectorXd m_input(7);
     m_input << -2 * vMDelta_d_ref / Vdc, -2 * vMDelta_q_ref / Vdc, -2 * vMDelta_Zd_ref / Vdc, -2 * vMDelta_Zq_ref / Vdc,
@@ -1328,6 +1339,37 @@ void MMC::writeMNAmatrix(
     }
 }
 
+//disabled on the 18/5
+
+//std::vector<MatrixXcd> MMC::simulateInputStep(
+//    const std::vector<MatrixXcd>& states, int nKeep) const
+//{
+//    if (states.size() < 4)
+//        return { MatrixXcd::Zero(3,nKeep), MatrixXcd::Zero(3,nKeep),
+//                 MatrixXcd::Zero(3,nKeep), MatrixXcd::Zero(3,nKeep) };
+//
+//    const MatrixXcd& iD = states[0], & iS = states[1], & vCD = states[2], & vCS = states[3];
+//
+//    // m^Δ phasor per phase
+//    MatrixXcd mD = MatrixXcd::Zero(3, nKeep);
+//	// The same calculation as for the AC source: m^Δ = -sin(w0*t - 2pi*k/3) 
+//	mD(0, 1) = -m_1; 
+//
+//    // m^Σ = 1 at DC
+//    MatrixXcd mS = MatrixXcd::Zero(3, nKeep);
+//	mS(2, 0) = 1.0; 
+//
+//    auto trunc = [nKeep](const MatrixXcd& M) { return truncateHarmonics(M, nKeep); };
+//
+//    MatrixXcd u_vMD = trunc(-(dq_multiply(mD, vCS) + dq_multiply(mS, vCD)) / 2.0);
+//    MatrixXcd u_vMS = trunc((dq_multiply(mS, vCS) + dq_multiply(mD, vCD)) / 2.0);
+//    MatrixXcd u_PD = trunc(dq_multiply(mS, iD) / 2.0 + dq_multiply(mD, iS));
+//    MatrixXcd u_PS = trunc(dq_multiply(mD, iD) / 2.0 + dq_multiply(mS, iS));
+//
+//    return { u_vMD, u_vMS, u_PD, u_PS };
+//}
+
+//add18/5
 std::vector<MatrixXcd> MMC::simulateInputStep(
     const std::vector<MatrixXcd>& states, int nKeep) const
 {
@@ -1337,14 +1379,21 @@ std::vector<MatrixXcd> MMC::simulateInputStep(
 
     const MatrixXcd& iD = states[0], & iS = states[1], & vCD = states[2], & vCS = states[3];
 
-    // m^Δ phasor per phase
-    MatrixXcd mD = MatrixXcd::Zero(3, nKeep);
-	// The same calculation as for the AC source: m^Δ = -sin(w0*t - 2pi*k/3) 
-	mD(0, 1) = -m_1; 
-
-    // m^Σ = 1 at DC
-    MatrixXcd mS = MatrixXcd::Zero(3, nKeep);
-	mS(2, 0) = 1.0; 
+    // === BEGIN modulation source selection ===
+    MatrixXcd mD, mS;
+    if (dqsym_initialized_) {
+        // Closed-loop: use latest modulation from stepControllers
+        mD = mD_dqsym_;
+        mS = mS_dqsym_;
+    }
+    else {
+        // Open-loop fallback (no controllers stepped)
+        mD = MatrixXcd::Zero(3, nKeep);
+        mS = MatrixXcd::Zero(3, nKeep);
+        mD(0, 1) = -m_1;
+        mS(2, 0) = 1.0;
+    }
+    // === END modulation source selection ===
 
     auto trunc = [nKeep](const MatrixXcd& M) { return truncateHarmonics(M, nKeep); };
 
@@ -1356,9 +1405,163 @@ std::vector<MatrixXcd> MMC::simulateInputStep(
     return { u_vMD, u_vMS, u_PD, u_PS };
 }
 
+
+//add18/5
+
 map_basic_basic MMC::getParameterSubstitutions() const {
     map_basic_basic subs;
     subs[symbol("m_delta_" + element_symbol)] = real_double(m_1);
     subs[symbol("m_sigma_" + element_symbol)] = real_double(1.0);
     return subs;
 }
+
+//add18/5[
+// =====================================================================
+// stepControllers — advances controller integrators each DQsym timestep
+//                   and updates mD_dqsym_, mS_dqsym_ for simulateInputStep.
+//
+// Reuses computeStateDerivatives by building a "fake" full state vector
+// where the plant slots are populated from harmonic-state measurements.
+// computeStateDerivatives writes the modulation refs to the last_*_
+// mutable members as a side channel, which we then convert to mD/mS.
+// =====================================================================
+
+
+void MMC::stepControllers(double dt,
+    const std::vector<Eigen::MatrixXcd>& states,
+    const Eigen::Vector2d& Vg_dq)
+{
+    if (states.size() < 4) return;
+    const int nKeep = static_cast<int>(states[0].cols());
+
+    // ----- One-time init -----
+    if (!dqsym_initialized_) {
+        int n_ctrl = number_of_states - 12;
+        if (n_ctrl < 0) n_ctrl = 0;
+        x_ctrl_dqsym_ = Eigen::VectorXd::Zero(n_ctrl);
+        mD_dqsym_ = Eigen::MatrixXcd::Zero(3, nKeep);
+        mS_dqsym_ = Eigen::MatrixXcd::Zero(3, nKeep);
+        // Bumpless start: open-loop modulation
+        mD_dqsym_(0, 1) = -m_1;
+        mS_dqsym_(2, 0) = 1.0;
+        dqsym_initialized_ = true;
+    }
+
+    // ----- Build x_fake -----
+    Eigen::VectorXd x_fake = Eigen::VectorXd::Zero(number_of_states);
+    int n_ctrl = number_of_states - 12;
+    if (n_ctrl > 0) x_fake.head(n_ctrl) = x_ctrl_dqsym_;
+
+    const Eigen::MatrixXcd& iD = states[0];
+    const Eigen::MatrixXcd& iS = states[1];
+    const Eigen::MatrixXcd& vCD = states[2];
+    const Eigen::MatrixXcd& vCS = states[3];
+
+    int ip = n_ctrl;  // plant block start
+
+    // Plant state extraction — verify these slots match your DQsym convention!
+    x_fake(ip + 0) = iD(0, 1).real();   // iDelta_d
+    x_fake(ip + 1) = iD(0, 1).imag();   // iDelta_q
+    x_fake(ip + 2) = iS(2, 0).real();   // iSigma_z
+    x_fake(ip + 3) = iS(0, 1).real();   // iSigma_d
+    x_fake(ip + 4) = iS(0, 1).imag();   // iSigma_q
+    x_fake(ip + 5) = vCD(0, 1).real();  // vCDelta_d
+    x_fake(ip + 6) = vCD(0, 1).imag();  // vCDelta_q
+    x_fake(ip + 7) = 0.0;               // vCDelta_Zd (zero-seq, often 0 balanced)
+    x_fake(ip + 8) = 0.0;               // vCDelta_Zq
+    x_fake(ip + 9) = vCS(0, 1).real();  // vCSigma_d
+    x_fake(ip + 10) = vCS(0, 1).imag();  // vCSigma_q
+    x_fake(ip + 11) = vCS(2, 0).real();  // vCSigma_z
+
+    // ----- Build u_fake -----
+    Eigen::VectorXd u_fake(3);
+    // Vdc measurement: half-bus * 2 (approximation; refine later if needed)
+    double Vdc_meas = 2.0 * vCS(2, 0).real();
+    if (std::abs(Vdc_meas) < 1.0) Vdc_meas = V_dc;  // fallback at startup
+    u_fake << Vdc_meas, Vg_dq(0), Vg_dq(1);
+
+    // ----- Call shared controller cascade (fills last_*_ side-channel) -----
+    Eigen::VectorXd F = computeStateDerivatives(x_fake, u_fake);
+
+
+    // Diagnostic: print what active power controller saw
+    if (controls.count("active_power")) {
+        double Pac_measured = 1.5 * (Vg_dq(0) * x_fake(ip + 0) + Vg_dq(1) * x_fake(ip + 1));
+        static int diag_p = 0;
+        if (diag_p % 5000 == 0) {
+            std::cout << "[P-ctrl diag] Pac_meas=" << Pac_measured
+                << " P_ref=" << controls["active_power"]->getReference()[0]
+                << " err=" << (controls["active_power"]->getReference()[0] - Pac_measured)
+                << " x_ctrl[0]=" << x_ctrl_dqsym_(0)
+                << "\n";
+        }
+        diag_p++;
+    }
+
+    // ----- Forward-Euler integrate controller states -----
+    if (n_ctrl > 0) {
+        x_ctrl_dqsym_ += F.head(n_ctrl) * dt;
+    }
+
+    // ----- Translate modulation refs → mD/mS harmonic matrices -----
+    mD_dqsym_.setZero();
+    mS_dqsym_.setZero();
+    double Vdc_use = (std::abs(Vdc_meas) > 1.0) ? Vdc_meas : V_dc;
+
+    // AC modulation: from OCC if enabled, else open-loop value
+    if (controls.count("occ")) {
+        mD_dqsym_(0, 1) = std::complex<double>(-2.0 * last_vMDelta_d_ref_ / Vdc_use,
+            -2.0 * last_vMDelta_q_ref_ / Vdc_use);
+    }
+    else {
+        mD_dqsym_(0, 1) = -m_1;  // open-loop fallback
+    }
+
+    // DC modulation: from ZCC if enabled, else 1.0 (unity DC bus passthrough)
+    if (controls.count("zcc")) {
+        mS_dqsym_(2, 0) = 2.0 * last_vMSigma_z_ref_ / Vdc_use;
+    }
+    else {
+        mS_dqsym_(2, 0) = 1.0;  // open-loop fallback
+    }
+
+    if (controls.count("zcc")) {
+        double iSz_meas = x_fake(ip + 2);
+        static int diag_z = 0;
+        if (diag_z % 5000 == 0) {
+            std::cout << "[ZCC diag] iSz_meas=" << iSz_meas
+                << " iSz_ref=" << controls["zcc"]->getReference()[0]
+                << " err=" << (controls["zcc"]->getReference()[0] - iSz_meas)
+                << " x_ctrl[zcc_idx]=" << x_ctrl_dqsym_(1)  // adjust index
+                << " vMSz_ref=" << last_vMSigma_z_ref_
+                << "\n";
+        }
+        diag_z++;
+    }
+
+    //temp. for diagnostics
+    /*static int diag_count = 0;
+    if (diag_count < 20) {
+        std::cout << "[step " << diag_count << "] "
+            << "iD(0,1)=" << iD(0, 1)
+            << " vMDd_ref=" << last_vMDelta_d_ref_
+            << " vMDq_ref=" << last_vMDelta_q_ref_
+            << " mD(0,1)=" << mD_dqsym_(0, 1)
+            << "\n";
+        diag_count++;
+    }*/
+
+    //temp. for diagnostics
+    static int diag_count = 0;
+    if (diag_count % 5000 == 0) {
+        std::cout << "[step " << diag_count << "] "
+            << "iD(0,1)=" << iD(0, 1)
+            << " x_ctrl=[" << x_ctrl_dqsym_.transpose() << "]"
+            << " vMDd=" << last_vMDelta_d_ref_
+            << " vMDq=" << last_vMDelta_q_ref_
+            << "\n";
+    }
+    diag_count++;
+}
+
+//add18/5]
