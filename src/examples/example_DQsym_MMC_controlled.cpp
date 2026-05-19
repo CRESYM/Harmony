@@ -4,14 +4,13 @@
 #include "../Include_components.h"
 #include "../Solver/DQsym/DQsym.h"
 
-void example_DQsym_Simple_MMC()
+void example_DQsym_MMC_controlled()
 {
-
     std::cout << "=== example_DQsym_MMC (linear+nonlinear, DQsym mode) ===\n";
 
     const double f = 50.0;
     const double omega = 2.0 * M_PI * f;
-    const double Vdc = 400.0;
+    const double Vdc = 200.0;
     const int    nKeep = 5;
 
     Network net;
@@ -25,20 +24,14 @@ void example_DQsym_Simple_MMC()
     net.addBus(dc_bus);
 
     std::vector<double> controller_params = {
-        0, //1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
+        1, 0, 180, 3200, 1, 0.0, //1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
         0, // 1, 0, 8.0, 272.0, 2, 0, Vdc, // DC voltage controller parameters
-
-        1, 0, 6.6667e-04, 3.3333e-01, 1, 750,  // active power
+        0, // active power
         0, // AC voltage
         0, //1, 0, 6.6667e-07, 3.3333e-04, 1, 0, // reactive power
-        0,                 // energy controller: PI, Kp=120, Ki=400, ref=0
-        0,//1, 0, 19.93, 4500, 1, 1.25,             // ZCC: PI, Kp=19.93, Ki=4500, ref=0 (set dynamically)
-       
-         //The OCC d-axis reference at runtime is approximately 5 (set by active power), not 0. 
-        // The 0 in controller_params is just the initial value, which gets immediately overwritten.
-
-
-        1, 0, 117.93, 8.5e4, 2, 0, 0, // occ controller parameters  
+        0, // energy controller parameters 
+        0, // zcc controller parameters 
+        0, // occ controller parameters
         0, // ccc controller parameters
         0 //1, 1, -0.0001, 2, Vdc, 100e6 // droop control
     };
@@ -46,7 +39,7 @@ void example_DQsym_Simple_MMC()
 
     // MMC
     std::vector<double> params = {
-        omega, 0, 0.0, 0.0, 200, 0, Vdc,
+        omega, 0.0, 0.0, 0.0, 0.0, 0.0, Vdc,
         52.9e-3, 166.3e-3, 1.7568e-3, 1, 0.0, 10.0, 0.0
     };
     MMC* mmc = new MMC("MMC1", "AC1_DC1", params, controller_params);
@@ -62,7 +55,7 @@ void example_DQsym_Simple_MMC()
     net.connectElementToBus(vs_dc, 2, gnd);
 
     // AC source (3-pin, zero voltage)
-    AC_source* vs_ac = new AC_source("Vs_ac", "AC1", 3, 0.0, 0.0);
+    AC_source* vs_ac = new AC_source("Vs_ac", "AC1", 3, 200, 0.0);
     net.addElement(vs_ac);
     net.connectElementToBus(vs_ac, 1, ac_bus);
     net.connectElementToBus(vs_ac, 2, gnd);
@@ -74,7 +67,8 @@ void example_DQsym_Simple_MMC()
     Config cfg;
     cfg.dt = 2e-5;
     cfg.t_start = 0.0;
-    cfg.t_end = 2;
+    cfg.t_end = 5;
+
     cfg.f = f;
     cfg.omega = omega;
     cfg.nKeep = nKeep;
@@ -91,37 +85,16 @@ void example_DQsym_Simple_MMC()
     // MMC virtual 12  → 12 B columns (4 groups of 3)
     // Total B_dqsym: 12×21 columns, all in groups of 3
 
-    //add18/5[
-
-    try {
-        DQsymResult result = dq.run(cfg);
-        std::cout << "Done: " << result.time.size() << " steps, "
-            << result.DSSabcHist.size() << " groups.\n";
-
-        dq.plot();
-        dq.exportCSV("DQsym_MMC_SigmaDelta.csv");
-    }
-    catch (const std::exception& e) {
-        std::cout << "EXCEPTION CAUGHT: " << e.what() << "\n";
-    }
-    catch (...) {
-        std::cout << "UNKNOWN EXCEPTION\n";
-    }
-    //add18/5]
-
-
-	//disabled 18/5 to adding the try-catch block above, which is needed to catch exceptions thrown by DQsym when the system becomes unstable
-
-    /*DQsymResult result = dq.run(cfg);
+    DQsymResult result = dq.run(cfg);
 
     std::cout << "Done: " << result.time.size() << " steps, "
         << result.DSSabcHist.size() << " groups.\n";
 
-    
-    dq.plot();
-    dq.exportCSV("DQsym_MMC_SigmaDelta.csv");*/
 
-	cout << "Example complete. Press any key to exit.\n";
-	std::cin.get();
+    dq.plot();
+    dq.exportCSV("DQsym_MMC_SigmaDelta.csv");
+
+    cout << "Example complete. Press any key to exit.\n";
+    std::cin.get();
 
 }

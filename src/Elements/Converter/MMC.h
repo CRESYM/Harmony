@@ -104,6 +104,40 @@ public:
         const std::vector<MatrixXcd>& states, int nKeep) const override;
 
     int getNumberOfInternalStates() const override { return number_of_states; }
+
+    //add18/5
+    // 
+    // // === BEGIN DQsym: expose plant-only state count ===
+    int getNumberOfPlantStates() const override {
+        /*std::cout << "[MMC::getNumberOfPlantStates] returning " << n_plant_states_ << "\n"; */
+        return n_plant_states_; }
+    // === END DQsym: expose plant-only state count ===
+
+    //add18/5[
+
+    // added18/5=== BEGIN DQsym closed-loop control (public interface) ===
+    void stepControllers(double dt,
+        const std::vector<Eigen::MatrixXcd>& states,
+        const Eigen::Vector2d& Vg_dq);
+    // added18/5]=== END DQsym closed-loop control ===
+
+    // added18/5=== BEGIN DQsym closed-loop control (members) ===
+    Eigen::VectorXd x_ctrl_dqsym_;          // persistent controller integrator states
+    Eigen::MatrixXcd mD_dqsym_;             // current Δ-modulation (set by stepControllers)
+    Eigen::MatrixXcd mS_dqsym_;             // current Σ-modulation
+    bool dqsym_initialized_ = false;        // first-call init flag
+
+    // Modulation references exposed by computeStateDerivatives (side-channel output).
+    // Written every call; read only by stepControllers.
+    mutable double last_vMDelta_d_ref_ = 0.0;
+    mutable double last_vMDelta_q_ref_ = 0.0;
+    mutable double last_vMSigma_d_ref_ = 0.0;
+    mutable double last_vMSigma_q_ref_ = 0.0;
+    mutable double last_vMSigma_z_ref_ = 0.0;
+    // added18/5=== END DQsym closed-loop control ===
+
+
+
     map_basic_basic getParameterSubstitutions() const override;
 
 private:
@@ -118,6 +152,10 @@ private:
 	// State variables
     int number_of_states = 12;
 	int vdc_index = 0; // Index for DC voltage in state vector
+
+    // add18/5=== BEGIN plant state count (captured at construction, before non-plant states added) ===
+    int n_plant_states_ = 12;   // will be overwritten in constructor with actual value
+    // add18/5=== END plant state count ===
 
     
 };

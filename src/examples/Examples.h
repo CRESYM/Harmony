@@ -10,6 +10,9 @@ extern void example_DQsym_math_operations();
 extern void example_DQsym_DSSS2();
 extern void example_DQsym_RLC();
 extern void example_DQsym_Simple_MMC();
+extern void example_DQsym_validation();
+
+
 
 extern void example_state_space();
 
