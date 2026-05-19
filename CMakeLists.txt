@@ -251,7 +251,7 @@ set(Examples_Source_files
     src/examples/example_DQsym_RLC.cpp
     src/examples/example_DQsym_Simple_MMC.cpp
     src/examples/example_state_space.cpp
-    src/examples/example_DQsym_validation.cpp
+    
 )
 
 # Add source_groups to create file filters (groups) in Visual Studio project

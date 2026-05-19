@@ -41,7 +41,7 @@ int main() {
 	//example_DQsym_DSSS2();
     //example_DQsym_RLC();
 	example_DQsym_Simple_MMC();
-	//example_DQsym_validation();
+	
 
 	// State-space examples
 	//example_state_space();
