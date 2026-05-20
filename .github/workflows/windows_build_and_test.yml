@@ -1,0 +1,82 @@
+name: Windows Build and Test
+
+# Workflow triggers tell GitHub when to run the workflow:
+on:
+  # Allows workflow to be triggered manually from the GitHub UI (Actions tab)
+  workflow_dispatch:
+  # Runs at 2:00 AM UTC, Monday through Friday
+  schedule:
+    - cron: '0 2 * * 1-5'
+  # When a pull request to merge a branch into main or develop is opened/updated
+  pull_request:
+    branches: [ "main", "develop"]
+
+# This workflow defines one job: build-and-test
+jobs:
+  build-and-test:
+    
+    # Use windows-latest runner.
+    # See https://github.com/actions/runner-images for a list of available runners.
+    runs-on: windows-latest
+    
+    steps:
+
+      # Checkout a copy of this repository on the runner
+      # We use the "checkout" GitHub Action
+      # https://github.com/actions/checkout
+      - uses: actions/checkout@v4
+
+      # Install conda on the runner
+      # We use the "setup-miniconda" GitHub Action
+      # https://github.com/marketplace/actions/setup-miniconda
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+            activate-environment: harmony
+            auto-activate-base: false
+
+      # Update conda environment with dependencies listed in environment.yml 
+      - name: Create conda environment from environment.yml
+        run: conda env update -n harmony -f environment.yml
+
+      # Install Gurobi on the runner
+      # Use msiexec to run the installer (/qn = quiet (no UI), /norestart = don't reboot the runner)
+      - name: Install Gurobi
+        run: |
+          mkdir dependencies
+          cd dependencies
+          curl -LO https://packages.gurobi.com/13.0/Gurobi-13.0.1-win64.msi         
+          Start-Process msiexec.exe -ArgumentList '/i', 'Gurobi-13.0.1-win64.msi', '/qn', '/norestart' -Wait -PassThru
+
+      # Setup the Gurobi WLS license
+      # The actual license is stored as a repository secret
+      - name: Setup Gurobi License
+        run: |
+          if (!(Test-Path "C:\gurobi")) {
+              New-Item -Path "C:\gurobi" -ItemType Directory -Force
+          }
+
+          $licenseContent = @"
+          WLSACCESSID=${{ secrets.GUROBI_WLSACCESSID }}
+          WLSSECRET=${{ secrets.GUROBI_WLSSECRET }}
+          LICENSEID=${{ secrets.GUROBI_LICENSEID }}
+          "@
+
+          Set-Content -Path "C:\gurobi\gurobi.lic" -Value $licenseContent
+
+      # Build the tests
+      - name: Build the tests
+        shell: bash -l {0}
+        run: |
+          export PATH="/c/gurobi1301/win64/bin:$PATH"
+          mkdir tests/build
+          cd tests/build
+          cmake .. -DGUROBI_PATH="C:\gurobi1301\win64"
+          cmake --build . --config Release -j4
+
+      # Run the tests
+      - name: Run the tests
+        shell: bash -l {0}
+        run: |
+          export PATH="/c/gurobi1301/win64/bin:$PATH"
+          cd tests/build
+          ctest -j4
