@@ -1,11 +1,13 @@
 name: macOS Build and Test
 
 # Workflow triggers tell GitHub when to run the workflow:
-# a) when there is a new commit on the main or develop branch
-# b) when a new pull request is opened to merge a branch into main or develop
 on:
-  push:
-    branches: [ "main", "develop"]
+  # Allows workflow to be triggered manually from the GitHub UI (Actions tab)
+  workflow_dispatch:
+  # Runs at 2:00 AM UTC, Monday through Friday
+  schedule:
+    - cron: '0 2 * * 1-5'
+  # When a pull request to merge a branch into main or develop is opened/updated
   pull_request:
     branches: [ "main", "develop"]
 
