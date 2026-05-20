@@ -12,6 +12,9 @@ void example_OPF_csv_1()
     pf.solve_opf(dc_case, ac_case, noData,
         /*vscControl=*/true,
         /*writeTxt=*/false,
-        /*plotResult=*/false,
+        /*plotResult=*/true,
         /*print_info=*/false);
+
+    std::cout << "Press Enter to exit...\n";
+    std::cin.get();
 }
