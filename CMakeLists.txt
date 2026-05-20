@@ -348,13 +348,19 @@ add_executable(
     ${IMGUI_BACKEND_SOURCES}
 
 )
-target_precompile_headers(Harmony PRIVATE
-    <Eigen/Dense>
-    <symengine/basic.h>
-    "./src/Constants.h"
-    "./src/Include_components.h"
-    "./src/Solver/Helper_Functions/Helper_Functions.h"
-)
+
+# Configure precompile headers.
+# This option is not compatible with clang-uml
+if (NOT CMAKE_EXPORT_COMPILE_COMMANDS)
+    message(STATUS "Using precompiled headers")
+    target_precompile_headers(Harmony PRIVATE
+        <Eigen/Dense>
+        <symengine/basic.h>
+        "./src/Constants.h"
+        "./src/Include_components.h"
+        "./src/Solver/Helper_Functions/Helper_Functions.h"
+    )
+endif()
 
 # Set Harmony as a starup project on Visual Studio Solution
 # Add the MP compiler flag for parallel compilation
