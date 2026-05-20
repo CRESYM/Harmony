@@ -25,19 +25,17 @@ void example_DQsym_Simple_MMC()
     net.addBus(dc_bus);
 
     std::vector<double> controller_params = {
-        0, //1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
-        0, // 1, 0, 8.0, 272.0, 2, 0, Vdc, // DC voltage controller parameters
+        0, // PLL controller parameters
+        0, // DC voltage controller parameters
 
-        1, 0, 6.6667e-04, 3.3333e-01, 1, 750,  // active power
-        0, // AC voltage
-        0, //1, 0, 6.6667e-07, 3.3333e-04, 1, 0, // reactive power
-        0,                 // energy controller: PI, Kp=120, Ki=400, ref=0
-        0,//1, 0, 19.93, 4500, 1, 1.25,             // ZCC: PI, Kp=19.93, Ki=4500, ref=0 (set dynamically)
+        1, 0, 6.6667e-04, 3.3333e-01, 1, 2e3,  // active power
+        0, // AC voltage control
+        0, /// reactive power
+        0, // energy controller: PI, Kp=120, Ki=400, ref=0
+        0, // ZCC: PI, Kp=19.93, Ki=4500, ref=0 (set dynamically)
        
          //The OCC d-axis reference at runtime is approximately 5 (set by active power), not 0. 
         // The 0 in controller_params is just the initial value, which gets immediately overwritten.
-
-
         1, 0, 117.93, 8.5e4, 2, 0, 0, // occ controller parameters  
         0, // ccc controller parameters
         0 //1, 1, -0.0001, 2, Vdc, 100e6 // droop control
@@ -47,7 +45,7 @@ void example_DQsym_Simple_MMC()
     // MMC
     std::vector<double> params = {
         omega, 0, 0.0, 0.0, 200, 0, Vdc,
-        52.9e-3, 166.3e-3, 1.7568e-3, 1, 0.0, 10.0, 0.0
+        52.9e-3, 166.3e-3, 1.7568e-3, 1, 1e-2, 1, 0.0
     };
     MMC* mmc = new MMC("MMC1", "AC1_DC1", params, controller_params);
     net.addElement(mmc);
@@ -91,35 +89,16 @@ void example_DQsym_Simple_MMC()
     // MMC virtual 12  → 12 B columns (4 groups of 3)
     // Total B_dqsym: 12×21 columns, all in groups of 3
 
-    //add18/5[
-
-    try {
-        DQsymResult result = dq.run(cfg);
-        std::cout << "Done: " << result.time.size() << " steps, "
-            << result.DSSabcHist.size() << " groups.\n";
-
-        dq.plot();
-        dq.exportCSV("DQsym_MMC_SigmaDelta.csv");
-    }
-    catch (const std::exception& e) {
-        std::cout << "EXCEPTION CAUGHT: " << e.what() << "\n";
-    }
-    catch (...) {
-        std::cout << "UNKNOWN EXCEPTION\n";
-    }
-    //add18/5]
-
-
 	//disabled 18/5 to adding the try-catch block above, which is needed to catch exceptions thrown by DQsym when the system becomes unstable
 
-    /*DQsymResult result = dq.run(cfg);
+    DQsymResult result = dq.run(cfg);
 
     std::cout << "Done: " << result.time.size() << " steps, "
         << result.DSSabcHist.size() << " groups.\n";
 
     
     dq.plot();
-    dq.exportCSV("DQsym_MMC_SigmaDelta.csv");*/
+    dq.exportCSV("DQsym_MMC_SigmaDelta.csv");
 
 	cout << "Example complete. Press any key to exit.\n";
 	std::cin.get();
