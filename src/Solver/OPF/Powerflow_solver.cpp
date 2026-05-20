@@ -919,7 +919,7 @@ void PowerFlow::solve_opf(
             double GenCostResUSA = model.get(GRB_DoubleAttr_ObjVal);;
             double GenCostResEURO = GenCostResUSA / 1.08;
             OPF_OUT << "\n The total generation cost is $" << std::fixed << std::setprecision(2)
-                << GenCostResUSA << "/MWh (�" << GenCostResEURO << "/MWh)";
+                << GenCostResUSA << "/MWh (\u20AC" << GenCostResEURO << "/MWh)";
             OPF_OUT << "\n\n";
 
             OPF_OUT << "\n===========================================================================================";
