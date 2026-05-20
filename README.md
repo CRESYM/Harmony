@@ -1,3 +1,5 @@
+![Windows build & test](https://github.com/CRESYM/Harmony/actions/workflows/windows_build_and_test.yml/badge.svg?branch=github_actions) ![Linux build & test](https://github.com/CRESYM/Harmony/actions/workflows/linux_build_and_test.yml/badge.svg?branch=github_actions) ![macOS build & test](https://github.com/CRESYM/Harmony/actions/workflows/macos_build_and_test.yml/badge.svg?branch=github_actions)
+
 # Harmony $~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~$    ![alt text](cresym.png?raw=true)  
 
 HARMONic stabilitY assessment of PE-penetrated power systems
