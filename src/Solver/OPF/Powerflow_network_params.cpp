@@ -92,6 +92,27 @@ std::map<std::string,
     Network* net,
     std::map<std::string, double>& global_params);
 
+/**
+ * @brief Ensure generator availability when only RES units exist.
+ *
+ * This function checks whether the AC generator dataset
+ * (`data["genAC"]`) is empty. If no generator exists
+ * but RES units are available (`data["resAC"]`), a virtual
+ * zero-output generator is automatically created at the RES-
+ * connected bus.
+ *
+ * The virtual generator is introduced only to satisfy OPF
+ * formulation requirements (e.g., generator data structure,
+ * generation cost data structure, and reference bus assignment).
+ * The generated unit has zero active and reactive power limits
+ * and therefore does not participate in optimization dispatch.
+ *
+ * @param data  Nested map containing parsed AC network data.
+ */
+static void ensureRESGen(
+    std::map<std::string,
+    std::map<std::string, std::map<std::string, double>>>& data);
+
 
 /**
  * @brief Add an AC bus entry to the system data table.
@@ -959,6 +980,8 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
     extendBranchAC(data, net, global_params);
     extendGenAC(data, net, global_params);
 
+    ensureRESGen(data);
+
 	cout << "[make_OPF] Finished processing elements.\n";
 
     /* 2. Transform to Eigen::MatrixXd */
@@ -1302,6 +1325,65 @@ static void extendGenAC(
             }
         }
     }
+}
+
+static void ensureRESGen(
+    std::map<std::string,
+    std::map<std::string, std::map<std::string, double>>>& data)
+{
+    if (!data["genAC"].empty()) return;
+
+    if (data["resAC"].empty())
+        throw std::runtime_error("[ensureRESGen] No generator exists, and no RES bus is available.");
+
+    const auto& resRow = data["resAC"].begin()->second;
+
+    int bus_id = static_cast<int>(resRow.at("bus"));
+    int grid_id = static_cast<int>(resRow.at("grid"));
+
+    std::string bus_row_key = std::to_string(bus_id - 1);
+    if (!data["busAC"].count(bus_row_key))
+        throw std::runtime_error("[ensureRESGen] RES-connected bus not found in busAC.");
+
+    auto& busRow = data["busAC"][bus_row_key];
+    busRow["type"] = 3.0;
+
+    auto& gRow = data["genAC"]["0"];
+    gRow["bus"] = bus_id;
+    gRow["Pg"] = 0.0;
+    gRow["Qg"] = 0.0;
+    gRow["Qmax"] = 0.0;
+    gRow["Qmin"] = 0.0;
+    gRow["Vg"] = 1.0;
+    gRow["mBase"] = 100.0;
+    gRow["status"] = 1.0;
+    gRow["Pmax"] = 0.0;
+    gRow["Pmin"] = 0.0;
+    gRow["Pc1"] = 0.0;
+    gRow["Pc2"] = 0.0;
+    gRow["Qc1min"] = 0.0;
+    gRow["Qc1max"] = 0.0;
+    gRow["Qc2min"] = 0.0;
+    gRow["Qc2max"] = 0.0;
+    gRow["ramp_agc"] = 0.0;
+    gRow["ramp_10"] = 0.0;
+    gRow["ramp_30"] = 0.0;
+    gRow["ramp_q"] = 0.0;
+    gRow["apf"] = 0.0;
+    gRow["grid"] = grid_id;
+
+    auto& cRow = data["genCostAC"]["0"];
+    cRow["model"] = 2.0;
+    cRow["startup"] = 0.0;
+    cRow["shutdown"] = 0.0;
+    cRow["n"] = 3.0;
+    cRow["c2"] = 0.0;
+    cRow["c1"] = 0.0;
+    cRow["c0"] = 0.0;
+    cRow["grid"] = grid_id;
+
+    std::cout << "[ensureRESGen] Added a zero-output virtual generator at RES bus "
+        << bus_id << " in grid " << grid_id << ".\n";
 }
 
 
