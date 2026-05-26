@@ -1,8 +1,34 @@
-# This File will generate the Visual Studio Solution for Harmony.
-# The path to Eigen and symengine will be configured automatically by CMake
-# The path to Gurobi and Mathplot++ are supplied by the user and
-# configured by by CMake
+# ==============================================================================
+# Harmony CMake Configuration
+#
+# This file configures how Harmony is built. It defines compiler settings and
+# linking options for external libraries.
+#
+# Source and header file organization is NOT handled here. See 'sources.cmake'.
+#
+# User-configurable options:
+#
+#   GUROBI_PATH
+#       Path to the local Gurobi installation.
+#
+#       Example:
+#       cmake -DGUROBI_PATH="/path/to/gurobi" ..
+#
+#       Common default paths:
+#         Windows: C:/gurobi1200/win64
+#         macOS:   /Library/gurobi1200/macos_universal2
+#         Linux:   /opt/gurobi1301/linux64
+#
+# In short:
+# - Compiler settings live here
+# - External libraries live here
+# - Build configuration lives here
+# - Source file organization lives in sources.cmake
+# ==============================================================================
 
+# ==============================================================================
+# 1. Project Setup
+# ==============================================================================
 cmake_minimum_required(VERSION 4.0)
 project(Harmony)
 
@@ -11,19 +37,29 @@ project(Harmony)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find Eigen3 library on local system.
+# ==============================================================================
+# 2. Find External Dependencies
+# ==============================================================================
+# Eigen
 find_package(Eigen3 REQUIRED)
 
-# Find Sundials on local system and include directories.
+# Sundials
 find_package(SUNDIALS 7.0 REQUIRED)
 
-# Find symengine on local system and include directories.
+# SymEngine
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)   #symengine requires this
 find_package(SymEngine CONFIG)
 set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
 include_directories(${SYMENGINE_INCLUDE_DIRS})
 
-# 1. ImGui (needed by Implot)
+# Implot (requires various other libraries)
+find_package(imgui REQUIRED)
+find_package(implot REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(GLEW) # Optional on Mac, but good for Win/Linux
+
+# ImGui (needed by Implot)
 include(FetchContent)
 FetchContent_Declare(
     imgui_source
@@ -36,22 +72,30 @@ if (APPLE)
     message(STATUS "macOS detected: Adding ImGui backend source files to build")
     list(APPEND IMGUI_BACKEND_SOURCES 
         ${IMGUI_BACKEND_DIR}/imgui_impl_glfw.cpp
-        ${IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp
-    )
+        ${IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp)
 endif()
 
-# Gurobi is configured below
-# They need to be configured after add_executable(Harmony ...)
+# Gurobi is configured below (needs to be done after add_executable(Harmony...)
 
-# Define an executable named 'Harmony' made up of source and header files
+
+# ==============================================================================
+# 3. Define Harmony Executable
+# ==============================================================================
 include(sources.cmake)
 add_executable(
     Harmony
     ${HARMONY_HEADER_FILES}
     ${HARMONY_SOURCE_FILES}
-    # Implot
-    ${IMGUI_BACKEND_SOURCES}
+    ${IMGUI_BACKEND_SOURCES}    # needed by Implot
 )
+
+
+# ==============================================================================
+# 4. Compile Options, Definition Flags, Platform Specific Options and Linking
+# ==============================================================================
+
+# 4.1 Precompiled headers 
+# Improve compilation speed by caching commonly included files that rarely change.
 target_precompile_headers(Harmony PRIVATE
     <Eigen/Dense>
     <symengine/basic.h>
@@ -60,34 +104,29 @@ target_precompile_headers(Harmony PRIVATE
     "./src/Solver/Helper_Functions/Helper_Functions.h"
 )
 
-# Set Harmony as a starup project on Visual Studio Solution
-# Add the MP compiler flag for parallel compilation
+# 4.2 Windows options
 if (MSVC)
+    # Set Harmony as a starup project on Visual Studio Solution
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Harmony)
+    
+    # Add the MP compiler flag for parallel compilation
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+    
+    # If using Conda GLEW on Windows, link statically
+    target_compile_definitions(Harmony PRIVATE GLEW_STATIC)
 endif()
 
-# Implot (requires various libraries)
-find_package(imgui REQUIRED)
-find_package(implot REQUIRED)
-find_package(glfw3 REQUIRED)
-find_package(OpenGL REQUIRED)
-find_package(GLEW) # Optional on Mac, but good for Win/Linux
-
-# macOS specific framework linking
+# 4.3 macOS options
 if(APPLE)
     target_link_libraries(Harmony "-framework Cocoa" "-framework IOKit" "-framework CoreFoundation")
 endif()
 
+# 4.3 
 # Tell the ImGui OpenGL backend to use GLEW
 target_compile_definitions(Harmony PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLEW)
 
-# If using Conda GLEW on Windows, link statically
-if(MSVC)
-    target_compile_definitions(Harmony PRIVATE GLEW_STATIC)
-endif()
-
-# Specify libraries that need to be linked to the harmony executable
+# 4.4 Linking
+# Link dependencies to the harmony executable
 # Although Eigen is a header-only lib, this will setup the include directories 
 target_link_libraries(
     Harmony
@@ -105,7 +144,10 @@ target_link_libraries(
     GLEW::GLEW
 )
 
-# Configure Gurobi
+
+# ==============================================================================
+# 5. Gurobi Configuration
+# ==============================================================================
 set(GUROBI_PATH "" CACHE PATH "Path to Gurobi installation")
 if(NOT GUROBI_PATH)
     # User did not provide a path for the Gurobi installation
@@ -116,14 +158,12 @@ if(NOT GUROBI_PATH)
         "Common default paths:\n"
         "  - Windows: C:\gurobi1200\win64\n"
         "  - macOS:   /Library/gurobi1200/macos_universal2\n"
-        "  - Linux:   /opt/gurobi1301/linux64"
-    )
+        "  - Linux:   /opt/gurobi1301/linux64")
 elseif(NOT EXISTS "${GUROBI_PATH}")
     # Path was provided but is invalid
     message(FATAL_ERROR 
         " Invalid GUROBI_PATH: \"${GUROBI_PATH}\"\n"
-        " The directory does not exist. Please check for typos or ensure Gurobi is correctly installed."
-    )
+        " The directory does not exist. Please check for typos or ensure Gurobi is correctly installed.")
 else()
     message(STATUS "Found Gurobi in: ${GUROBI_PATH}")
 
@@ -156,8 +196,7 @@ else()
             Harmony
             "${GUROBI_CORE_LIB}"
             $<$<CONFIG:Debug>:${GUROBI_CPP_DEBUG_LIB}>
-            $<$<CONFIG:Release>:${GUROBI_CPP_RELEASE_LIB}>
-        )
+            $<$<CONFIG:Release>:${GUROBI_CPP_RELEASE_LIB}>)
     else()
         # 1. Find the Core Library (Dynamic)
         if (APPLE)
@@ -192,15 +231,15 @@ else()
         target_link_libraries(
             Harmony
             "${GUROBI_CPP_LIB}"
-            "${GUROBI_CORE_LIB}"
-        )
+            "${GUROBI_CORE_LIB}")
     endif()
-
-
 endif()
 
 
-if(MSVC)
+# ==============================================================================
+# 6. Create MSI Installer on Windows (currently disabled)
+# ==============================================================================
+if(MSVC AND FALSE)
     # Find path to symengine dll and add it as a link directory
     get_target_property(SYMENGINE_DLL_PATH symengine LOCATION)
     get_filename_component(SYMENGINE_DLL_DIR "${SYMENGINE_DLL_PATH}" DIRECTORY)
