@@ -209,13 +209,43 @@ DQsymResult DQsym::run(Config& cfg)
     MatrixXd Cd_id = Eigen::MatrixXd::Identity(nx, nx);
     MatrixXd Dd_z = Eigen::MatrixXd::Zero(nx, nu);
     MatrixXd Ad_r, Bd_r;
+
+    std::ofstream file("state_space_outputcont.txt");
+    file << "State-space model formed:\n\n"
+        << "Ad_r (" << ssm.getA().rows() << "x" << ssm.getA().cols() << "):\n\n"
+        << ssm.getA() << "\n\n"
+        << "Bd_r (" << ssm.getB().rows() << "x" << ssm.getB().cols() << "):\n\n"
+        << ssm.getB() << "\n\n"
+        << "Cd_id (" << Cd_id.rows() << "x" << Cd_id.cols() << "):\n\n"
+        << Cd_id << "\n\n"
+        << "Dd_z (" << Dd_z.rows() << "x" << Dd_z.cols() << "):\n\n"
+        << Dd_z << "\n\n";
+
+    file.close();
+
     discretizeABCD(ssm.getA(), ssm.getB(), Cd_id, Dd_z,
         cfg.dt, Ad_r, Bd_r, Cd_id, Dd_z);
+
+   std::ofstream file1("state_space_output1.txt");
+    file1 << "State-space model formed:\n\n"
+        << "Ad_r (" << Ad_r.rows() << "x" << Ad_r.cols() << "):\n\n"
+        << Ad_r << "\n\n"
+        << "Bd_r (" << Bd_r.rows() << "x" << Bd_r.cols() << "):\n\n"
+        << Bd_r << "\n\n"
+        << "Cd_id (" << Cd_id.rows() << "x" << Cd_id.cols() << "):\n\n"
+        << Cd_id << "\n\n"
+        << "Dd_z (" << Dd_z.rows() << "x" << Dd_z.cols() << "):\n\n"
+        << Dd_z << "\n\n";
+
+    file1.close();
 
     MatrixXcd AdC = Ad_r.cast<std::complex<double>>();
     MatrixXcd BdC = Bd_r.cast<std::complex<double>>();
     MatrixXcd CdC = Cd_id.cast<std::complex<double>>();
     MatrixXcd DdC = Dd_z.cast<std::complex<double>>();
+
+    
+
 
     int ny = CdC.rows();
     int nGroups = ny / 3;
@@ -256,32 +286,83 @@ DQsymResult DQsym::run(Config& cfg)
 
         //add18/5[
 
-        // === BEGIN DQsym closed-loop control: step controllers ===
+        
+
+        // 3b. Build u (nu × nKeep) — sources + MMC feedback from previous step
+        MatrixXcd u = ssm.buildInputVector(cfg.nKeep, elementStates);
+		//cout << "Input vector u at step " << k << ":\n" << u << "\n";
+
+
         for (const auto& [name, elem] : converters) {
             MMC* mmc = dynamic_cast<MMC*>(elem);
             if (!mmc) continue;
 
-            // Grid voltage feedback. For now, use the AC source's nominal value.
-            // (Refine later: extract from bus state if AC source exposes it.)
-            Eigen::Vector2d Vg_dq(200, 0.0);  // matches your AC_source amplitude
+            // Find the AC bus this MMC connects to (terminal 1)
+            Bus* ac_bus = nullptr;
+            for (auto& [bus, terminal] : mmc->getConnections()) {
+                if (terminal == 1) { ac_bus = bus; break; }
+            }
+
+            // Find the AC source connected to the same AC bus and read its voltage from u
+            Eigen::Vector2d Vg_dq(0.0, 0.0);
+            if (ac_bus) {
+                for (const auto& g : ssm.getInputGroups()) {
+                    if (g.isVirtual) continue;
+                    // Check if this source connects to our AC bus
+                    bool found = false;
+                    for (auto& [bus, terminal] : g.element->getConnections()) {
+                        if (bus == ac_bus) { found = true; break; }
+                    }
+                    if (!found) continue;
+
+                    // Read positive-sequence fundamental: row dqsymStartCol+0, col 1
+                    if (g.dqsymStartCol < u.rows() && u.cols() >= 2) {
+                        std::complex<double> v_fund = u(g.dqsymStartCol, 1);
+                        Vg_dq(0) = v_fund.real();
+                        Vg_dq(1) = v_fund.imag();
+                    }
+                    break;
+                }
+            }
 
             if (elementStates.count(name)) {
                 mmc->stepControllers(cfg.dt, elementStates.at(name), Vg_dq);
             }
         }
         // === END DQsym closed-loop control: step controllers ===
-        
-        //add18/5]
 
-        // 3b. Build u (nu × nKeep) — sources + MMC feedback from previous step
-        MatrixXcd u = ssm.buildInputVector(cfg.nKeep, elementStates);
-		//cout << "Input vector u at step " << k << ":\n" << u << "\n";
+        //add18/5]
+        
 
         // 3c. DSSS
         MatrixXcd y = DSSS(dssState_, AdC, BdC, CdC, DdC,
             cfg.swOnRes, cfg.swOffRes, cfg.swType, brkVec,
             u, xo, cfg.dt, cfg.f);
 
+
+        if (k == 6000) {
+
+            std::ofstream file("state_space_output2.txt");
+
+            file << "State-space model formed with Standard mode:\n\n"
+
+                << "A (" << AdC.rows() << "x" << AdC.cols() << "):\n"
+                << AdC << "\n\n"
+
+                << "B (" << BdC.rows() << "x" << BdC.cols() << "):\n"
+                << BdC << "\n\n"
+
+                << "C (" << CdC.rows() << "x" << CdC.cols() << "):\n"
+                << CdC << "\n\n"
+
+                << "D (" << DdC.rows() << "x" << DdC.cols() << "):\n"
+                << DdC << "\n\n"
+
+                << "u (" << u.rows() << "x" << u.cols() << "):\n"
+                << u << "\n";
+
+            file.close();
+        }
 		//cout << y << "\n";
 
         // 3d. Extract state groups, update elementStates for next step

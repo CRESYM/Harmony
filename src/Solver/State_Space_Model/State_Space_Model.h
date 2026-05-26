@@ -34,6 +34,17 @@ struct OutputMapping {
 };
 
 
+/// add22/5 : moved from private :: Internal info: for each source/virtual provider, how many raw B columns it has
+struct InputGroup {
+    Element* element;
+    int rawCols;          ///< Actual pin count (2 for DC, 3 for AC, 12 for MMC virtual)
+    int dqsymCols;        ///< After expansion: ceil to next multiple of 3
+    int rawStartCol;      ///< Start column in raw B
+    int dqsymStartCol;    ///< Start column in B_dqsym
+    bool isVirtual;
+};
+
+
 class StateSpaceModel {
 public:
     class Tree {
@@ -84,6 +95,7 @@ public:
     const std::vector<InputMapping>& getInputMap() const { return input_map; }
     const std::vector<StateMapping>& getStateMap() const { return state_map; }
     const std::vector<OutputMapping>& getOutputMap() const { return output_map; }
+    const std::vector<InputGroup>& getInputGroups() const { return input_groups; }
 
     int getInputIndex(const std::string& elementName, int pin = 0) const {
         for (const auto& m : input_map)
@@ -136,16 +148,9 @@ private:
     std::vector<StateMapping>  state_map;
     std::vector<OutputMapping> output_map;
 
-    /// Internal info: for each source/virtual provider, how many raw B columns it has
-    struct InputGroup {
-        Element* element;
-        int rawCols;          ///< Actual pin count (2 for DC, 3 for AC, 12 for MMC virtual)
-        int dqsymCols;        ///< After expansion: ceil to next multiple of 3
-        int rawStartCol;      ///< Start column in raw B
-        int dqsymStartCol;    ///< Start column in B_dqsym
-        bool isVirtual;
-    };
+   
     std::vector<InputGroup> input_groups;
+
 
     void finalizeCounts(Network*);
     void substituteParameters(SymEngine::DenseMatrix& matrix);

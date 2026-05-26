@@ -11,7 +11,8 @@ void example_DQsym_Simple_MMC()
 
     const double f = 50.0;
     const double omega = 2.0 * M_PI * f;
-    const double Vdc = 400.0;
+    const double Vdc = 1e3;
+    const double Vac = 500;
     const int    nKeep = 5;
 
     Network net;
@@ -28,7 +29,7 @@ void example_DQsym_Simple_MMC()
         0, // PLL controller parameters
         0, // DC voltage controller parameters
 
-        1, 0, 6.6667e-04, 3.3333e-01, 1, 2e3,  // active power
+        1, 0, 6.6667e-04, 3.3333e-01, 1,2e3,  // active power
         0, // AC voltage control
         0, /// reactive power
         0, // energy controller: PI, Kp=120, Ki=400, ref=0
@@ -44,8 +45,8 @@ void example_DQsym_Simple_MMC()
 
     // MMC
     std::vector<double> params = {
-        omega, 0, 0.0, 0.0, 200, 0, Vdc,
-        52.9e-3, 166.3e-3, 1.7568e-3, 1, 1e-2, 1, 0.0
+        omega, 0, 0.0, 0.0, Vac, 0, Vdc,
+        52.9e-3, 166.3e-3, 1.7568e-3, 36, 1e-2, 1, 0.0
     };
     MMC* mmc = new MMC("MMC1", "AC1_DC1", params, controller_params);
     net.addElement(mmc);
@@ -60,7 +61,7 @@ void example_DQsym_Simple_MMC()
     net.connectElementToBus(vs_dc, 2, gnd);
 
     // AC source (3-pin, zero voltage)
-    AC_source* vs_ac = new AC_source("Vs_ac", "AC1", 3, 0.0, 0.0);
+    AC_source* vs_ac = new AC_source("Vs_ac", "AC1", 3, Vac, 0.0);
     net.addElement(vs_ac);
     net.connectElementToBus(vs_ac, 1, ac_bus);
     net.connectElementToBus(vs_ac, 2, gnd);
@@ -72,7 +73,7 @@ void example_DQsym_Simple_MMC()
     Config cfg;
     cfg.dt = 2e-5;
     cfg.t_start = 0.0;
-    cfg.t_end = 2;
+    cfg.t_end = 4;
     cfg.f = f;
     cfg.omega = omega;
     cfg.nKeep = nKeep;
