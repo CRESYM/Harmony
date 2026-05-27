@@ -1,3 +1,24 @@
+# -----------------------------------------------------------------------------
+# Harmony External Dependencies
+#
+# This file handles all third-party libraries required by Harmony:
+#
+#   - Eigen      (linear algebra)
+#   - SymEngine  (symbolic mathematics)
+#   - Sundials   (numerical solvers)
+#   - ImPlot     (interactive plotting)
+#   - Gurobi     (optimization)
+#
+# Each function below connects ("links") a library to a build target
+# (i.e., a program being compiled).
+#
+# These functions are called from CMakeLists.txt for:
+#   - Harmony            (main Harmony executable)
+#   - testharmony        (unit tests)
+#   - testexamples       (example/test problems)
+# -----------------------------------------------------------------------------
+
+
 # Eigen
 function(link_eigen TARGET_NAME)
     find_package(Eigen3 REQUIRED)

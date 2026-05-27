@@ -1,10 +1,14 @@
 # -----------------------------------------------------------------------------
 # Harmony CMake Configuration
 #
-# This file configures how Harmony is built. It defines compiler settings and
-# linking options for external libraries.
+# This file configures how Harmony is built. It makes use of:
 #
-# Source and header file organization is NOT handled here. See 'sources.cmake'.
+#   - sources.cmake
+#       Defines project source (.cpp) and header files (.h)
+#       Groups source files into groups
+#
+#   - cmake/dependencies.cmake
+#       Handles external libraries and dependencies
 #
 # User-configurable options:
 #
@@ -20,10 +24,9 @@
 #         Linux:   /opt/gurobi1301/linux64
 #
 # In short:
-# - Compiler settings live here
-# - External libraries live here
-# - Build configuration lives here
-# - Source file organization lives in sources.cmake
+#   - Build settings are configured here
+#   - Source files are listed in sources.cmake
+#   - External libraries are configured in dependencies.cmake
 # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
@@ -40,7 +43,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # -----------------------------------------------------------------------------
 # 2. Define Harmony Executable
 # -----------------------------------------------------------------------------
+
+# Load the list of source and header files.
 include(sources.cmake)
+
+# Create the Harmony executable from the project source files.
 add_executable(
     Harmony
     ${HARMONY_HEADER_FILES}     # defined in sources.cmake
@@ -74,7 +81,10 @@ endif()
 # 4. Link Dependencies
 # -----------------------------------------------------------------------------
 
+# Load helper functions that configure and link third-party libraries
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependencies.cmake)
+
+# Link required external libraries
 link_eigen(Harmony)
 link_symengine(Harmony)
 link_sundials(Harmony)

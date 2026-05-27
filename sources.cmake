@@ -1,4 +1,4 @@
-# ==============================================================================
+# -----------------------------------------------------------------------------
 # sources.cmake
 #
 # This file keeps track of all Harmony source files (.cpp) and header
@@ -25,14 +25,14 @@
 # - Keep project file organization here
 # - No compiler settings or external library configuration are handled here
 #
-# Build settings and external libraries (e.g., Eigen, Gurobi, ImGui)
-# are configured separately in CMakeLists.txt.
-# ==============================================================================
+# Build settings are configured in CMakeLists.txt
+# External libraries are configured in cmake/dependencies.cmake
+# -----------------------------------------------------------------------------
 
 
-# ==============================================================================
-# 1. Group header files
-# ==============================================================================
+# -----------------------------------------------------------------------------
+# 1. Group header files (.h)
+# -----------------------------------------------------------------------------
 set(Element_Header_Files src/Elements/Element.h)
 set(Element_Converter_Header_Files
     src/Elements/Converter/Converter.h
@@ -127,9 +127,9 @@ set(Examples_Header_files
     src/examples/Examples.h
 )
 
-# ==============================================================================
-# 2. Group source files
-# ==============================================================================
+# -----------------------------------------------------------------------------
+# 2. Group source files (.cpp)
+# -----------------------------------------------------------------------------
 set(Element_Source_Files src/Elements/Element.cpp)
 set(Element_Converter_Source_Files
     src/Elements/Converter/Converter.cpp
@@ -246,9 +246,9 @@ set(Examples_Source_files
     src/examples/example_state_space.cpp   
 )
 
-# ==============================================================================
+# -----------------------------------------------------------------------------
 # 3. Define HARMONY_HEADER_FILES variable
-# ==============================================================================
+# -----------------------------------------------------------------------------
 set(HARMONY_HEADER_FILES
     ${Header_Files}
     ${Element_Header_Files}
@@ -271,9 +271,9 @@ set(HARMONY_HEADER_FILES
     ${Examples_Header_files}
 )
 
-# ==============================================================================
+# -----------------------------------------------------------------------------
 # 4. Define HARMONY_SOURCE_FILES variable
-# ==============================================================================
+# -----------------------------------------------------------------------------
 set(HARMONY_SOURCE_FILES
     ${Source_Files}
     ${Element_Source_Files}
@@ -296,9 +296,9 @@ set(HARMONY_SOURCE_FILES
     ${Examples_Source_files}
 )
 
-# ==============================================================================
+# -----------------------------------------------------------------------------
 # 5. Define Visual Studio project filters
-# ==============================================================================
+# -----------------------------------------------------------------------------
 if(MSVC)
     source_group("Header Files" FILES ${Header_Files})
     source_group("Header Files\\Elements" FILES ${Element_Header_Files})
