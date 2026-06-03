@@ -29,10 +29,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Configure the runner
+      # Install dependencies
       # Call .github/actions/setup-env/action.yml
-      # This will checout the repo, create conda env and install Gurobi and its licence
-      - name: Setup Environment
+      # This script creates the conda env and installs Gurobi and its license
+      - name: Install dependencies
         uses: ./.github/actions/setup-env
         with:
           gurobi_wlsaccessid: ${{ secrets.GUROBI_WLSACCESSID }}
@@ -55,4 +55,4 @@ jobs:
         run: |
           export PATH="/c/gurobi1301/win64/bin:$PATH"
           cd tests/build
-          ctest -E BuildExamples -j4
+          ctest -E TestExamples -j4

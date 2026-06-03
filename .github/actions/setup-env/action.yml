@@ -1,5 +1,5 @@
 name: 'Setup Build Environment'
-description: 'Checkouts code, configures Conda, and installs Gurobi and its license'
+description: 'Creates Conda environment and installs Gurobi and its license'
 inputs:
   gurobi_wlsaccessid:
     description: 'Gurobi WLS Access ID'

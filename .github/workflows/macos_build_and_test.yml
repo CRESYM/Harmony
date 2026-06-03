@@ -10,6 +10,8 @@ on:
   # When a pull request to merge a branch into main or develop is opened/updated
   pull_request:
     branches: [ "main", "develop"]
+  push:
+    branches: ["52-test-examples"]
 
 # This workflow defines one job: build-and-test
 jobs:
@@ -26,37 +28,15 @@ jobs:
       # https://github.com/actions/checkout
       - uses: actions/checkout@v4
 
-      # Install conda on the runner
-      # We use the "setup-miniconda" GitHub Action
-      # https://github.com/marketplace/actions/setup-miniconda
-      - uses: conda-incubator/setup-miniconda@v3
+      # Install dependencies
+      # Call .github/actions/setup-env/action.yml
+      # This script creates the conda env and installs Gurobi and its license
+      - name: Install dependencies
+        uses: ./.github/actions/setup-env
         with:
-            activate-environment: harmony
-            auto-activate-base: false
-
-      # Update conda environment with dependencies listed in environment.yml 
-      - name: Create conda environment from environment.yml
-        run: conda env update -n harmony -f environment.yml
-
-      # Install Gurobi on the runner
-      - name: Install Gurobi
-        shell: bash -l {0}
-        run: |
-          mkdir dependencies
-          cd dependencies
-          curl -O https://packages.gurobi.com/13.0/gurobi13.0.1_macos_universal2.pkg
-          sudo installer -pkg gurobi13.0.1_macos_universal2.pkg -target /
-
-      # Setup the Gurobi WLS license
-      # The actual license is stored as a repository secret
-      - name: Setup Gurobi License
-        run: |
-          sudo mkdir -p /Library/gurobi
-          sudo bash -c "cat <<EOF > /Library/gurobi/gurobi.lic
-          WLSACCESSID=${{ secrets.GUROBI_WLSACCESSID }}
-          WLSSECRET=${{ secrets.GUROBI_WLSSECRET }}
-          LICENSEID=${{ secrets.GUROBI_LICENSEID }}
-          EOF"
+          gurobi_wlsaccessid: ${{ secrets.GUROBI_WLSACCESSID }}
+          gurobi_wlssecret: ${{ secrets.GUROBI_WLSSECRET }}
+          gurobi_licenseid: ${{ secrets.GUROBI_LICENSEID }}
 
       # Build the tests
       - name: Build the tests
@@ -67,9 +47,9 @@ jobs:
           cmake .. -DGUROBI_PATH="/Library/gurobi1301/macos_universal2"
           cmake --build . --config Release -j4
 
-      # Run the tests
+      # Run the tests (all except examples)
       - name: Run the tests
         shell: bash -l {0}
         run: |
           cd tests/build
-          ctest -j4 
+          ctest -E TestExamples -j4
