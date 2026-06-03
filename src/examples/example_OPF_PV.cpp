@@ -158,7 +158,7 @@ void example_OPF_PV()
     global_params["omega"] = omega;
     global_params["baseMVA"] = 100;
     global_params["ACbaseKV"] = 345.0;
-    global_params["DCbaseKV"] = 400.0;
+    global_params["DCbaseKV"] = 500.0;
     global_params["Z_base"] =
         global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"];
 

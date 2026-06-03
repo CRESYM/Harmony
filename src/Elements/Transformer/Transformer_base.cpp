@@ -20,7 +20,7 @@ void Transformer_base::computePowerFlow(std::map<std::string, double>& branchDat
     if ((area[0] == 'D' || area[0] == 'd') && (area[1] == 'C' || area[1] == 'c')) { // DC network
         cd Y12 = substitute_symbol(Y_matrix.get(0, m_pins), omega, 0.0);
 
-        cd zs = -cd(1.0) / Y12 / globalParams.at("Z_base");
+        cd zs = -cd(1.0) / Y12 / globalParams.at("ACZbase");
 
         branchData["r"] = std::real(zs);
         branchData["x"] = 0.0;
@@ -39,7 +39,7 @@ void Transformer_base::computePowerFlow(std::map<std::string, double>& branchDat
         cd Ys = -Y12 * tap;
         cd Yc = Y22 - Ys;
 
-        cd Zs = cd(1.0) / Ys / globalParams.at("Z_base");
+        cd Zs = cd(1.0) / Ys / globalParams.at("ACZbase");
 
         branchData["transformer"] = 1;
         branchData["tap"] = tap;

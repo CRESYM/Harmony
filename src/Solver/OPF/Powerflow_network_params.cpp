@@ -234,8 +234,8 @@ void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
     busDCRow["Va"] = 0.0;
     busDCRow["baseKV"] = global_params["DCbaseKV"];
     busDCRow["zone"] = 1.0 ;
-    busDCRow["Vmax"] = 1.1 * global_params["DCbaseKV"] / global_params["ACbaseKV"]; 
-    busDCRow["Vmin"] = 0.9 * global_params["DCbaseKV"] / global_params["ACbaseKV"];
+    busDCRow["Vmax"] = 1.1 ; 
+    busDCRow["Vmin"] = 0.9 ;
 
     bus->computePowerFlowDC(busDCRow, global_params);
 
@@ -1073,7 +1073,7 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
             double theta_deg = theta_s_k(i)/ M_PI * 180;
             double Pac_MW = ps_dc_k(i) * global_params["baseMVA"];
             double Qac_MVar = qs_dc_k(i) * global_params["baseMVA"];
-            double Vdc_kV = std::sqrt(vn2_dc_k(i)) * global_params["ACbaseKV"];
+            double Vdc_kV = std::sqrt(vn2_dc_k(i)) * global_params["DCbaseKV"];
             double Pdc_MW = pn_dc_k(i) * global_params["baseMVA"];
 
             // Convert units
@@ -1257,7 +1257,7 @@ static void extendBranchAC(
         br["fbus"] = fbus;
         br["tbus"] = tbus;
         br["r"] = 0.0;
-        br["x"] = zsrc/global_params["Z_base"];
+        br["x"] = zsrc/global_params["ACZbase"];
         br["b"] = 0.0;
         br["rateAC"] = 100.0;
         br["rateB"] = 100.0;
