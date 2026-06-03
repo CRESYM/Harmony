@@ -66,18 +66,18 @@ runs:
 
     # Install Gurobi on the runner
     - name: Download Gurobi (Linux)
-      if: runner.os == 'Ubuntu'
+      if: runner.os == 'Linux'
       shell: bash -l {0}
       run: |
-        mkdir dependencies
-        cd dependencies
+        mkdir "$GITHUB_WORKSPACE/dependencies"
+        cd "$GITHUB_WORKSPACE/dependencies"
         wget https://packages.gurobi.com/13.0/gurobi13.0.1_linux64.tar.gz
         tar -xzf gurobi13.0.1_linux64.tar.gz
 
     # Setup the Gurobi WLS license
     # The actual license is stored as a repository secret
     - name: Setup Gurobi License
-      if: runner.os == 'Ubuntu'
+      if: runner.os == 'Linux'
       shell: bash -l {0}
       run: |
         sudo mkdir -p /opt/gurobi
@@ -86,12 +86,10 @@ runs:
         WLSSECRET=${{ inputs.gurobi_wlssecret }}
         LICENSEID=${{ inputs.gurobi_licenseid }}
         EOF"
-        ls -l /opt/gurobi/gurobi.lic
-        cat /opt/gurobi/gurobi.lic
 
     # Download Implot/Imgui dependencies on the runner
     - name: Install Implot/ImGui system dependencies
-      if: runner.os == 'Ubuntu'
+      if: runner.os == 'Linux'
       shell: bash -l {0}
       run: |
         sudo apt install libgl1-mesa-dev libx11-dev libglfw3-dev
