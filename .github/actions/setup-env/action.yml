@@ -25,7 +25,7 @@ runs:
 
     # 2. Update conda environment with dependencies listed in environment.yml 
     - name: Create conda environment from environment.yml
-      shell: powershell
+      shell: bash
       run: conda env update -n harmony -f environment.yml
 
     # ---------------------------
