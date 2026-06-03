@@ -1,0 +1,58 @@
+name: Windows  Run  Examples
+
+# Workflow triggers tell GitHub when to run the workflow:
+on:
+  # Allows workflow to be triggered manually from the GitHub UI (Actions tab)
+  workflow_dispatch:
+  # Runs at 2:00 AM UTC, Monday through Friday
+  schedule:
+    - cron: '0 2 * * 1-5'
+  # When a pull request to merge a branch into main or develop is opened/updated
+  pull_request:
+    branches: [ "main", "develop"]
+  push:
+    branches: ["52-test-examples"]
+
+# This workflow defines one job: build-and-run-examples
+jobs:
+  build-and-run-examples:
+    
+    # Use windows-latest runner.
+    # See https://github.com/actions/runner-images for a list of available runners.
+    runs-on: windows-latest
+    
+    steps:
+
+      # Checkout the repository
+      # We use the "checkout" GitHub Action
+      # https://github.com/actions/checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install dependencies
+      # Call .github/actions/setup-env/action.yml
+      # This script creates the conda env and installs Gurobi and its license
+      - name: Install dependencies
+        uses: ./.github/actions/setup-env
+        with:
+          gurobi_wlsaccessid: ${{ secrets.GUROBI_WLSACCESSID }}
+          gurobi_wlssecret: ${{ secrets.GUROBI_WLSSECRET }}
+          gurobi_licenseid: ${{ secrets.GUROBI_LICENSEID }}
+
+      # Build the tests
+      - name: Build the tests
+        shell: bash -l {0}
+        run: |
+          export PATH="/c/gurobi1301/win64/bin:$PATH"
+          mkdir tests/build
+          cd tests/build
+          cmake .. -DGUROBI_PATH="C:\gurobi1301\win64"
+          cmake --build . --config Release -j4
+
+      # Run the example tests
+      - name: Run the tests
+        shell: bash -l {0}
+        run: |
+          export PATH="/c/gurobi1301/win64/bin:$PATH"
+          cd tests/build
+          ctest -R TestExamples -j4
