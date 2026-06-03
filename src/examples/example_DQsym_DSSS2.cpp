@@ -5,7 +5,7 @@
 #include "../Solver/Helper_Functions/Helper_Functions.h"
 
 
-void example_DQsym_DSSS2()
+void example_DQsym_DSSS2(bool plotting_enabled /*=true*/)
 {
     using cd = std::complex<double>;
 
@@ -145,7 +145,9 @@ void example_DQsym_DSSS2()
     for (int g = 0; g < nGroups; ++g)
         values2.push_back(XabcHist[g]);
 
-    plot_abc_groups_implot(time, values2, "DSSS2 outputs converted to abc");
+    if(plotting_enabled) {
+        plot_abc_groups_implot(time, values2, "DSSS2 outputs converted to abc");
+    }
 
     cout << "Press Enter to continue...\n";
     cin.get();

@@ -6,7 +6,7 @@
 #include "../Solver/OPF/Powerflow.h"
 
 
-void example_OPF_1() {
+void example_OPF_1(bool plotting_enabled /*=false*/) {
 
     ///* ---------- 0 Set Network Object ---------- */
     Network net9bus;
@@ -344,7 +344,7 @@ void example_OPF_1() {
     global_dict["DCbaseKV"] = 500.0; // Base voltage for DC, can be adjusted as needed
     global_dict["Z_base"] = 1.0; // Base impedance, can be adjusted as needed
 
-    pf.make_OPF(&net9bus, global_dict, false, false, false, false);
+    pf.make_OPF(&net9bus, global_dict, false, false, plotting_enabled, false);
 
     cout << "Press Enter to continue...\n";
     cin.get();
