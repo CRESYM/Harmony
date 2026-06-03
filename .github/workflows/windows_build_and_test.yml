@@ -10,8 +10,6 @@ on:
   # When a pull request to merge a branch into main or develop is opened/updated
   pull_request:
     branches: [ "main", "develop"]
-  push:
-    branches: ["52-test-examples"]
 
 # This workflow defines one job: build-and-test
 jobs:
@@ -50,7 +48,7 @@ jobs:
           cmake --build . --config Release -j4
 
       # Run the tests (all except examples)
-      - name: Run the tests
+      - name: Run the tests (except examples)
         shell: bash -l {0}
         run: |
           export PATH="/c/gurobi1301/win64/bin:$PATH"

@@ -1,4 +1,4 @@
-name: macOS Build and Test
+name: macOS  Run  Examples
 
 # Workflow triggers tell GitHub when to run the workflow:
 on:
@@ -10,6 +10,8 @@ on:
   # When a pull request to merge a branch into main or develop is opened/updated
   pull_request:
     branches: [ "main", "develop"]
+  push:
+    branches: ["52-test-examples"]
 
 # This workflow defines one job: build-and-test
 jobs:
@@ -46,8 +48,8 @@ jobs:
           cmake --build . --config Release -j4
 
       # Run the tests (all except examples)
-      - name: Run the tests (except examples)
+      - name: Run the tests (examples only)
         shell: bash -l {0}
         run: |
           cd tests/build
-          ctest -E TestExamples -j4
+          ctest -R TestExamples -j4
