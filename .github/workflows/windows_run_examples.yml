@@ -1,4 +1,4 @@
-name: Windows  Run  Examples
+name: Windows examples
 
 # Workflow triggers tell GitHub when to run the workflow:
 on:

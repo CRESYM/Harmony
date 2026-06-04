@@ -1,4 +1,4 @@
-name: macOS  Run  Examples
+name: macOS examples
 
 # Workflow triggers tell GitHub when to run the workflow:
 on:

@@ -1,4 +1,4 @@
-name: Linux  Run  Examples
+name: Linux examples
 
 # Workflow triggers tell GitHub when to run the workflow:
 on:
