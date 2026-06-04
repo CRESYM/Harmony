@@ -3,7 +3,7 @@
 #include "../Include_components.h"
 #include "../Constants.h"
 
-void example_PV_plant() {
+void example_PV_plant(bool plotting_enabled /*=true*/) {
 	// Example usage of the PVplant class
 	vector<double> pv_parameters = {
 		2.8e6,		// P_pv: Rated power of the PV plant in watts
@@ -40,8 +40,9 @@ void example_PV_plant() {
 
 	//pv->writeFile(1, 1000, 1000);
 
-	pv->plotYParameters(1, 10000, 500);
-
+	if (plotting_enabled) {
+		pv->plotYParameters(1, 10000, 500);
+	}
 
 	cout << "Press Enter to continue...\n";
 	cin.get();

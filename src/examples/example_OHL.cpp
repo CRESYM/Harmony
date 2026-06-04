@@ -11,7 +11,7 @@
  * geometric and material properties, compute its electrical parameters,
  * and analyze its behavior over a frequency range.
  */
-void example_OHL() {
+void example_OHL(bool plotting_enabled /*=true*/) {
 	// OHL constructor check
 	std::vector<double> distances = { 11.8, 27.5 }; // deltaXbc, ybc
 	std::vector<int> numbers = { 2, 2 }; // number of bundles, number of conductors per bundle
@@ -24,8 +24,10 @@ void example_OHL() {
 
 	cout << "Y-parameters printed in file." << endl;
 
-	ohl->plotYParameters(10, 1e3, 1000);
-
+	if (plotting_enabled) {
+		ohl->plotYParameters(10, 1e3, 1000);
+	}
+	
 	cout << "Press Enter to continue...\n";
 	cin.get();
 }

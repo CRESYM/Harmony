@@ -21,8 +21,6 @@ enable_testing()
 include(${CMAKE_CURRENT_SOURCE_DIR}/../sources.cmake)
 
 # Remove examples and main.cpp since they are not needed by the tests
-list(REMOVE_ITEM HARMONY_HEADER_FILES ${Examples_Header_files})
-list(REMOVE_ITEM HARMONY_SOURCE_FILES ${Examples_Source_files})
 list(REMOVE_ITEM HARMONY_SOURCE_FILES "src/main.cpp")
 
 # Prepend the relative path ("../") to harmony files
@@ -53,6 +51,7 @@ add_executable(
     testtransformerclassic.cpp
     testMMC.cpp
     testStabilityEstimate.cpp
+    testexamples.cpp
     utils.cpp
     ${CORRECTED_HARMONY_HEADERS}     # defined in sources.cmake
     ${CORRECTED_HARMONY_SOURCES}     # defined in sources.cmake
