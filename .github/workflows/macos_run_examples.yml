@@ -10,12 +10,10 @@ on:
   # When a pull request to merge a branch into main or develop is opened/updated
   pull_request:
     branches: [ "main", "develop"]
-  push:
-    branches: ["52-test-examples"]
 
 # This workflow defines one job: build-and-test
 jobs:
-  build-and-test:
+  build-and-run-examples:
     
     # Use macos-latest runner.
     # See https://github.com/actions/runner-images for a list of available runners.
