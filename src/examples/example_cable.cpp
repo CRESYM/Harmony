@@ -4,7 +4,7 @@
 #include "../Bus.h"
 #include "../Include_components.h"
 
-void example_cable() {
+void example_cable(bool plotting_enabled /*=true*/) {
 	// Cable constructor check
 
 	Cable::Conductor* conductor1 = new Cable::Conductor(0, 24.25e-3, 1.72e-8);
@@ -29,7 +29,9 @@ void example_cable() {
 	cable->writeFile(1, 1e5, 10000);
 	cout << "Y-parameters printed in file." << endl;
 	
-	cable->plotYParameters(0.1, 1e6, 1e4);
+	if (plotting_enabled) {
+		cable->plotYParameters(0.1, 1e6, 1e4);
+	}
 
 	cout << "Press Enter to continue...\n";
 	cin.get();

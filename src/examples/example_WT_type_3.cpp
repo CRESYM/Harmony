@@ -3,7 +3,7 @@
 #include "../Include_components.h"
 #include "../Constants.h"
 
-void example_WT_type_3() {
+void example_WT_type_3(bool plotting_enabled /*=true*/) {
 	// Example parameters for WT_type_3
 	vector<double> parameters = {
 		1080.0,			// nm_rpm
@@ -36,5 +36,7 @@ void example_WT_type_3() {
 
 	wt->writeFile(1, 1000, 1000);
 
-	wt->plotYParameters(1, 1000, 500);
+	if (plotting_enabled) {
+		wt->plotYParameters(1, 1000, 500);
+	}
 }

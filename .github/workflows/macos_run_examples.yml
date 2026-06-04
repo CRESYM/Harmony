@@ -1,4 +1,4 @@
-name: macOS Build and Test
+name: macOS examples
 
 # Workflow triggers tell GitHub when to run the workflow:
 on:
@@ -13,7 +13,7 @@ on:
 
 # This workflow defines one job: build-and-test
 jobs:
-  build-and-test:
+  build-and-run-examples:
     
     # Use macos-latest runner.
     # See https://github.com/actions/runner-images for a list of available runners.
@@ -46,8 +46,8 @@ jobs:
           cmake --build . --config Release -j4
 
       # Run the tests (all except examples)
-      - name: Run the tests (except examples)
+      - name: Run the tests (examples only)
         shell: bash -l {0}
         run: |
           cd tests/build
-          ctest -E TestExamples -j4
+          ctest -R TestExamples -j4

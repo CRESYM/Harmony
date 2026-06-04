@@ -6,7 +6,7 @@
 #include "../Solver/OPF/Powerflow.h"
 #include "../Solver/Stability_Estimate/Stability_estimate.h"
 
-void example_OPF_PV()
+void example_OPF_PV(bool plotting_enabled /*=true*/)
 {
     /* ---------- 0 Set Network Object ---------- */
     Network net;
@@ -168,7 +168,7 @@ void example_OPF_PV()
 
     global_params["Z_base"] = global_params["ACZbase"];
 
-    pf.make_OPF(&net, global_params, false, false, true, true);
+    pf.make_OPF(&net, global_params, false, false, plotting_enabled, true);
 
     std::cout << "Press Enter to continue...\n";
     std::cin.get();

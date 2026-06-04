@@ -6,7 +6,7 @@
 #include "../Solver/OPF/Powerflow.h"
 
 
-void example_OPF_1() {
+void example_OPF_1(bool plotting_enabled /*=true*/) {
 
     ///* ---------- 0 Set Network Object ---------- */
     Network net;
@@ -629,7 +629,7 @@ void example_OPF_1() {
     global_dict["DCZbase"] =
         global_dict["DCbaseKV"] * global_dict["DCbaseKV"] / global_dict["baseMVA"];
 
-    pf.make_OPF(&net, global_dict, false, false, true, true);
+    pf.make_OPF(&net, global_dict, false, false, plotting_enabled, true);
 
     cout << "Press Enter to continue...\n";
     cin.get();

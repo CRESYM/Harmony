@@ -3,7 +3,7 @@
 #include "../Include_components.h"
 #include "../Constants.h"
 
-void example_WT_type_4() {
+void example_WT_type_4(bool plotting_enabled /*=true*/) {
 	vector<double> parameters = {
 		690,		// Vm (Grid voltage line-to-line in V)
 		60.0,		// f1 (Grid frequency in Hz)
@@ -26,5 +26,7 @@ void example_WT_type_4() {
 
 	//wt->printElementValues();
 
-	wt->plotYParameters(1, 100000, 500);
+	if (plotting_enabled){
+		wt->plotYParameters(1, 100000, 500);
+	}
 }
