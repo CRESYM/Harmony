@@ -11,7 +11,7 @@ Transformer_base::~Transformer_base() {
 }
 
 void Transformer_base::computePowerFlow(std::map<std::string, double>& branchData,
-    const std::map<std::string, double>& globalParams) const
+    std::map<std::string, double>& globalParams) const
 {
     using cd = std::complex<double>;
 

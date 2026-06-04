@@ -956,8 +956,9 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
 	// Process branches: AC and DC branches, i.e., transmission lines, impedances, etc.
     for (const auto& [element_name, element] : elements)
     {
-		//cout << "[make_OPF] Checking element: " << element_name << endl;
-        if (dynamic_cast<Impedance*>(element)) {
+        if (dynamic_cast<Impedance*>(element) ||
+            dynamic_cast<Transformer_base*>(element)) {
+
             if (element->getInputPins() == 3) {
                 make_BranchAC(element, global_params, print_info);
             }
@@ -965,16 +966,13 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
                 make_BranchDC(element, global_params, print_info);
             }
             else {
-                throw std::runtime_error("[make_OPF] Error: Unsupported impedance pin number.");
+                throw std::runtime_error("[make_OPF] Error: Unsupported branch pin number.");
             }
-
         }
         else if (dynamic_cast<MMC*>(element)) {
             make_Converter(element, global_params, print_info);
         }
-        else {
-        }
-	}
+    }
 
     extendBusAC(data, net, global_params);
     extendBranchAC(data, net, global_params);

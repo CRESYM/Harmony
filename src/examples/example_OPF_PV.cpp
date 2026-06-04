@@ -12,45 +12,25 @@ void example_OPF_PV()
     Network net;
 
     /* ---------- 1.1 Create AC Buses ---------- */
-    Bus* bus1_ac = new Bus("ACBUS01", "AC1", 3);
-    Bus* bus2_ac = new Bus("ACBUS02", "AC1", 3);
-    Bus* bus3_ac = new Bus("ACBUS03", "AC2", 3);
-    Bus* bus4_ac = new Bus("ACBUS04", "AC2", 3);
+    Bus* bus1_ac = new Bus("ACBUS01", "AC1", 3); // PV side
+    Bus* bus2_ac = new Bus("ACBUS02", "AC1", 3); // line-transformer interface
+    Bus* bus3_ac = new Bus("ACBUS03", "AC1", 3); // MMC1 side
 
-    /* ---------- 1.2 Add AC Loads ---------- */
+    Bus* bus4_ac = new Bus("ACBUS04", "AC2", 3); // MMC2 side
+    Bus* bus5_ac = new Bus("ACBUS05", "AC2", 3); // transformer-line interface
+    Bus* bus6_ac = new Bus("ACBUS06", "AC2", 3); // load side
+
+    /* ---------- 1.2 Add AC Load ---------- */
     std::vector<double> load_params2 = { 119025, 0.01, 0 };
     Load* load2 = new Load("LOAD02", "AC2", 3, load_params2);
-    net.connectElementToBus(load2, 1, bus4_ac);
+    net.connectElementToBus(load2, 1, bus6_ac);
 
- 
-    /* ---------- 1.3 Add PV Plant at Generator Bus ---------- */
+    /* ---------- 1.3 Add PV Plant ---------- */
     std::vector<double> pv_parameters = {
-        5e6,        // P_pv
-        6570,       // I_pv
-        2760,       // N_s
-        720,        // N_p
-        1.5,        // n
-        2.5,        // I_sc
-        1e-10,      // I0
-        7.2e-3,     // C_pv
-        900.0,      // V_dc
-        16e-6,      // L_boost
-        70e-3,      // C_dc
-        4.9809e-06, // kp_boost
-        4.9809e-09, // ki_boost
-        103e-6,     // L_1
-        0,          // R_1
-        220e-6,     // C_f
-        0.1,        // R_c
-        125e-6,     // L_2
-        690.0,      // V_g
-        50.0,       // f_g
-        1.0,        // K_p_dc
-        500.0,      // K_i_dc
-        0.45,       // K_p_i
-        69.7,       // K_i_i
-        0.5,        // K_p_pll
-        1.0         // K_i_pll
+        5e6, 6570, 2760, 720, 1.5, 2.5, 1e-10, 7.2e-3,
+        900.0, 16e-6, 70e-3, 4.9809e-06, 4.9809e-09,
+        103e-6, 0, 220e-6, 0.1, 125e-6, 690.0, 50.0,
+        1.0, 500.0, 0.45, 69.7, 0.5, 1.0
     };
 
     PVplant* pv1 = new PVplant("PV1", "AC1", pv_parameters);
@@ -68,8 +48,25 @@ void example_OPF_PV()
     double ACX2 = 140;
     std::complex<double> ACZ2(ACR2, ACX2);
     Impedance* br2_ac = new Impedance("br2_ac", "AC2", 3, ACZ2);
-    net.connectElementToBus(br2_ac, 1, bus3_ac);
-    net.connectElementToBus(br2_ac, 2, bus4_ac);
+    net.connectElementToBus(br2_ac, 1, bus5_ac);
+    net.connectElementToBus(br2_ac, 2, bus6_ac);
+
+    /* ---------- 1.5 Add AC Transformers ---------- */
+    std::vector<double> tr_values = {
+        0.01,   // Rp
+        1.0,    // Lp
+        0.01,   // Rs
+        1.0,    // Ls
+        0.999   // M
+    };
+
+    Transformer_classic* tr1 = new Transformer_classic("TR1", "AC1", 3, tr_values);
+    net.connectElementToBus(tr1, 1, bus2_ac);
+    net.connectElementToBus(tr1, 2, bus3_ac);
+
+    Transformer_classic* tr2 = new Transformer_classic("TR2", "AC2", 3, tr_values);
+    net.connectElementToBus(tr2, 1, bus4_ac);
+    net.connectElementToBus(tr2, 2, bus5_ac);
 
     /* ---------- 2.1 Create DC Buses ---------- */
     Bus* bus1_dc = new Bus("DCBUS01", "DC1", 2);
@@ -113,7 +110,7 @@ void example_OPF_PV()
     };
 
     MMC* mmc1 = new MMC("MMC1", "AC1_DC1", converter_params1, controller_params1);
-    net.connectElementToBus(mmc1, 1, bus2_ac);
+    net.connectElementToBus(mmc1, 1, bus3_ac);
     net.connectElementToBus(mmc1, 2, bus1_dc);
 
     vector<double> converter_params2 = {
@@ -147,7 +144,7 @@ void example_OPF_PV()
     };
 
     MMC* mmc2 = new MMC("MMC2", "AC2_DC1", converter_params2, controller_params2);
-    net.connectElementToBus(mmc2, 1, bus3_ac);
+    net.connectElementToBus(mmc2, 1, bus4_ac);
     net.connectElementToBus(mmc2, 2, bus2_dc);
 
     /* ---------- 3 OPF Implementation ---------- */
@@ -155,12 +152,21 @@ void example_OPF_PV()
 
     std::map<std::string, double> global_params;
     double omega = 2 * M_PI * 50;
+
     global_params["omega"] = omega;
     global_params["baseMVA"] = 100;
     global_params["ACbaseKV"] = 345.0;
     global_params["DCbaseKV"] = 500.0;
-    global_params["Z_base"] =
-        global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"];
+
+    global_params["ACZbase"] =
+        global_params["ACbaseKV"] * global_params["ACbaseKV"]
+        / global_params["baseMVA"];
+
+    global_params["DCZbase"] =
+        global_params["DCbaseKV"] * global_params["DCbaseKV"]
+        / global_params["baseMVA"];
+
+    global_params["Z_base"] = global_params["ACZbase"];
 
     pf.make_OPF(&net, global_params, false, false, true, true);
 
