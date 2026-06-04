@@ -50,13 +50,14 @@ void example_point2point_case() {
     src1->setOPFInfo(src_info1);
 
     ///*  ---------- 1.4 Add Branches  ---------- */
-    double ACR1 = 5; double ACX1 = 140;
+
+    double ACR1 = 5 ; double ACX1 = 140 ;
     std::complex<double> ACZ1(ACR1, ACX1);
     Impedance* br1_ac = new Impedance("br1_ac", "AC1", 3, ACZ1);
     net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
 
-    double ACR2 = 5; double ACX2 = 140;
+    double ACR2 = 5 ; double ACX2 = 140 ;
     std::complex<double> ACZ2(ACR2, ACX2);
     Impedance* br2_ac = new Impedance("br2_ac", "AC2", 3, ACZ2);
     net.connectElementToBus(br2_ac, /*terminal=*/1, bus3_ac);
@@ -67,7 +68,7 @@ void example_point2point_case() {
     Bus* bus2_dc = new Bus("DCBUS02", "DC1", 2);
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
-    double DCR1 = 20;
+    double DCR1 = 20 ;
     Impedance* br1_dc = new Impedance("br1_dc", "DC1", 2, DCR1);
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
@@ -146,8 +147,11 @@ void example_point2point_case() {
     global_params["omega"] = omega;
     global_params["baseMVA"] = 100;
     global_params["ACbaseKV"] = 345.0; // Base voltage in kV, can be adjusted as needed
-    global_params["DCbaseKV"] = 400.0; // Base voltage for DC, can be adjusted as needed
-    global_params["Z_base"] = global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"]; // Base impedance, can be adjusted as needed
+    global_params["DCbaseKV"] = 440.0; // Base voltage for DC, can be adjusted as needed
+    global_params["ACZbase"] =
+        global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"];
+    global_params["DCZbase"] =
+        global_params["DCbaseKV"] * global_params["DCbaseKV"] / global_params["baseMVA"];
 
     pf.make_OPF(&net, global_params, false, false, false, true);
 

@@ -12,7 +12,7 @@ void Impedance_base::computePowerFlow(std::map<std::string, double>& branchData,
         // Convert SymEngine expression to double
         complex<double> Y_00 = substitute_symbol(Y_matrix.get(0, 0), omega, 0);
 
-        std::complex<double> Z_eq = std::complex<double>(1.0) / Y_00 / globalParams["Z_base"];
+        std::complex<double> Z_eq = std::complex<double>(1.0) / Y_00 / globalParams["DCZbase"];
 
         branchData["r"] = std::real(Z_eq);
 
@@ -37,7 +37,7 @@ void Impedance_base::computePowerFlow(std::map<std::string, double>& branchData,
             throw std::runtime_error("Y_matrix(0,0) is zero, division by zero error.");
         }
 
-        std::complex<double> Z_eq = std::complex<double>(1.0) / Y_00 / globalParams["Z_base"];
+        std::complex<double> Z_eq = std::complex<double>(1.0) / Y_00 / globalParams["ACZbase"];
 
         branchData["r"] = std::real(Z_eq);
         branchData["x"] = std::imag(Z_eq);
