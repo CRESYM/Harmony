@@ -3,7 +3,7 @@
 
 extern void example_OPF(bool plotting_enabled = true);
 extern void example_OPF_csv(bool plotting_enabled = true);
-extern void example_OPF_1(bool plotting_enabled = false);
+extern void example_OPF_1(bool plotting_enabled = true);
 extern void example_OPF_csv_1(bool plotting_enabled = true);
 extern void example_OPF_PV(bool plotting_enabled = true);
 extern void example_OPF_WT();

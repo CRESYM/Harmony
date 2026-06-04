@@ -6,329 +6,611 @@
 #include "../Solver/OPF/Powerflow.h"
 
 
-void example_OPF_1(bool plotting_enabled /*=false*/) {
+void example_OPF_1(bool plotting_enabled /*=true*/) {
 
     ///* ---------- 0 Set Network Object ---------- */
-    Network net9bus;
+    Network net;
 
-    ///* ---------- 1.1 Create AC Buses ---------- */
-    Bus* bus1_ac = new Bus("ACBUS01", "AC1", 3);
-    Bus* bus2_ac = new Bus("ACBUS02", "AC1", 3);
-    Bus* bus3_ac = new Bus("ACBUS03", "AC1", 3);
-    Bus* bus4_ac = new Bus("ACBUS04", "AC1", 3);
-    Bus* bus5_ac = new Bus("ACBUS05", "AC1", 3);
-    Bus* bus6_ac = new Bus("ACBUS06", "AC1", 3);
-    Bus* bus7_ac = new Bus("ACBUS07", "AC1", 3);
-    Bus* bus8_ac = new Bus("ACBUS08", "AC1", 3);
-    Bus* bus9_ac = new Bus("ACBUS09", "AC1", 3);
+    ///* ------- 1.1 Create AC Buses (Area 1) ----- */
+    Bus* bus1_ac1 = new Bus("ACBUS01", "AC1", 3);
+    Bus* bus2_ac1 = new Bus("ACBUS02", "AC1", 3);
+    Bus* bus3_ac1 = new Bus("ACBUS03", "AC1", 3);
+    Bus* bus4_ac1 = new Bus("ACBUS04", "AC1", 3);
+    Bus* bus5_ac1 = new Bus("ACBUS05", "AC1", 3);
+    Bus* bus6_ac1 = new Bus("ACBUS06", "AC1", 3);
+    Bus* bus7_ac1 = new Bus("ACBUS07", "AC1", 3);
+    Bus* bus8_ac1 = new Bus("ACBUS08", "AC1", 3);
+    Bus* bus9_ac1 = new Bus("ACBUS09", "AC1", 3);
+
+    ///* ------- 1.2 Create AC Buses (Area 2) ----- */
+    Bus* bus1_ac2 = new Bus("AC2BUS01", "AC2", 3);
+    Bus* bus2_ac2 = new Bus("AC2BUS02", "AC2", 3);
+    Bus* bus3_ac2 = new Bus("AC2BUS03", "AC2", 3);
+    Bus* bus4_ac2 = new Bus("AC2BUS04", "AC2", 3);
+    Bus* bus5_ac2 = new Bus("AC2BUS05", "AC2", 3);
+    Bus* bus6_ac2 = new Bus("AC2BUS06", "AC2", 3);
+    Bus* bus7_ac2 = new Bus("AC2BUS07", "AC2", 3);
+    Bus* bus8_ac2 = new Bus("AC2BUS08", "AC2", 3);
+    Bus* bus9_ac2 = new Bus("AC2BUS09", "AC2", 3);
+    Bus* bus10_ac2 = new Bus("AC2BUS10", "AC2", 3);
+    Bus* bus11_ac2 = new Bus("AC2BUS11", "AC2", 3);
+    Bus* bus12_ac2 = new Bus("AC2BUS12", "AC2", 3);
+    Bus* bus13_ac2 = new Bus("AC2BUS13", "AC2", 3);
+    Bus* bus14_ac2 = new Bus("AC2BUS14", "AC2", 3);
+
+    ///* ------- 1.3 Add AC Loads (Area 1) ----- */
+
+    // Bus 1
+    std::vector<double> load_params1_ac1 = { 1e12, 0.0, 0.0 };
+    Load* load1_ac1 = new Load("ACLOAD01", "AC1", 3, load_params1_ac1);
+    net.connectElementToBus(load1_ac1, 1, bus1_ac1);
+
+    // Bus 2
+    std::vector<double> load_params2_ac1 = { 1e12, 0.0, 0.0 };
+    Load* load2_ac1 = new Load("ACLOAD02", "AC1", 3, load_params2_ac1);
+    net.connectElementToBus(load2_ac1, 1, bus2_ac1);
+
+    // Bus 3
+    std::vector<double> load_params3_ac1 = { 1e12, 0.0, 0.0 };
+    Load* load3_ac1 = new Load("ACLOAD03", "AC1", 3, load_params3_ac1);
+    net.connectElementToBus(load3_ac1, 1, bus3_ac1);
+
+    // Bus 4
+    std::vector<double> load_params4_ac1 = { 1e12, 0.0, 0.0 };
+    Load* load4_ac1 = new Load("ACLOAD04", "AC1", 3, load_params4_ac1);
+    net.connectElementToBus(load4_ac1, 1, bus4_ac1);
+
+    // Bus 5: 90 MW + j30 MVAr
+    std::vector<double> load_params5_ac1 = { 1190.25, 1.262894, 0.0 };
+    Load* load5_ac1 = new Load("ACLOAD05", "AC1", 3, load_params5_ac1);
+    net.connectElementToBus(load5_ac1, 1, bus5_ac1);
+
+    // Bus 6
+    std::vector<double> load_params6_ac1 = { 1e12, 0.0, 0.0 };
+    Load* load6_ac1 = new Load("ACLOAD06", "AC1", 3, load_params6_ac1);
+    net.connectElementToBus(load6_ac1, 1, bus6_ac1);
+
+    // Bus 7: 100 MW + j35 MVAr
+    std::vector<double> load_params7_ac1 = { 1060.356347, 1.181327, 0.0 };
+    Load* load7_ac1 = new Load("ACLOAD07", "AC1", 3, load_params7_ac1);
+    net.connectElementToBus(load7_ac1, 1, bus7_ac1);
+
+    // Bus 8
+    std::vector<double> load_params8_ac1 = { 1e12, 0.0, 0.0 };
+    Load* load8_ac1 = new Load("ACLOAD08", "AC1", 3, load_params8_ac1);
+    net.connectElementToBus(load8_ac1, 1, bus8_ac1);
+
+    // Bus 9: 125 MW + j50 MVAr
+    std::vector<double> load_params9_ac1 = { 820.862069, 1.045154, 0.0 };
+    Load* load9_ac1 = new Load("ACLOAD09", "AC1", 3, load_params9_ac1);
+    net.connectElementToBus(load9_ac1, 1, bus9_ac1);
 
 
-    ///*  ---------- 1.2 Add AC Loads  ---------- */
+    ///* ------- 1.4 Add AC Loads (Area 2) ----- */
 
-    LoadPQ* load1 = new LoadPQ("LOAD01", "AC1", 3, { 0.0, 0.0 });
-    net9bus.connectElementToBus(load1, 1, bus1_ac);
+    // Bus 1
+    std::vector<double> load_params1_ac2 = { 1e12, 0.0, 0.0 };
+    Load* load1_ac2 = new Load("AC2LOAD01", "AC2", 3, load_params1_ac2);
+    net.connectElementToBus(load1_ac2, 1, bus1_ac2);
 
-    LoadPQ* load2 = new LoadPQ("LOAD02", "AC1", 3, { 0.0, 0.0 });
-    net9bus.connectElementToBus(load2, 1, bus2_ac);
+    // Bus 2: 21.7 MW + j12.7 MVAr
+    std::vector<double> load_params2_ac2 = { 4085.612484, 7.611168, 0.0 };
+    Load* load2_ac2 = new Load("AC2LOAD02", "AC2", 3, load_params2_ac2);
+    net.connectElementToBus(load2_ac2, 1, bus2_ac2);
 
-    LoadPQ* load3 = new LoadPQ("LOAD03", "AC1", 3, { 0.0, 0.0 });
-    net9bus.connectElementToBus(load3, 1, bus3_ac);
+    // Bus 3: 94.2 MW + j19 MVAr
+    std::vector<double> load_params3_ac2 = { 1214.140995, 0.779510, 0.0 };
+    Load* load3_ac2 = new Load("AC2LOAD03", "AC2", 3, load_params3_ac2);
+    net.connectElementToBus(load3_ac2, 1, bus3_ac2);
 
-    LoadPQ* load4 = new LoadPQ("LOAD04", "AC1", 3, { 0.0, 0.0 });
-    net9bus.connectElementToBus(load4, 1, bus4_ac);
+    // Bus 4: 47.8 MW - j3.9 MVAr
+    std::vector<double> load_params4_ac2 = { 2473.596226, 0.0, 1.577192e-05 };
+    Load* load4_ac2 = new Load("AC2LOAD04", "AC2", 3, load_params4_ac2);
+    net.connectElementToBus(load4_ac2, 1, bus4_ac2);
 
-    LoadPQ* load5 = new LoadPQ("LOAD05", "AC1", 3, { 90e6, 30e6 });
-    net9bus.connectElementToBus(load5, 1, bus5_ac);
+    // Bus 5: 7.6 MW + j1.6 MVAr
+    std::vector<double> load_params5_ac2 = { 14996.518568, 10.049558, 0.0 };
+    Load* load5_ac2 = new Load("AC2LOAD05", "AC2", 3, load_params5_ac2);
+    net.connectElementToBus(load5_ac2, 1, bus5_ac2);
 
-    LoadPQ* load6 = new LoadPQ("LOAD06", "AC1", 3, { 0.0, 0.0 });
-    net9bus.connectElementToBus(load6, 1, bus6_ac);
+    // Bus 6: 11.2 MW + j7.5 MVAr
+    std::vector<double> load_params6_ac2 = { 7337.112664, 15.639345, 0.0 };
+    Load* load6_ac2 = new Load("AC2LOAD06", "AC2", 3, load_params6_ac2);
+    net.connectElementToBus(load6_ac2, 1, bus6_ac2);
 
-    LoadPQ* load7 = new LoadPQ("LOAD07", "AC1", 3, { 100e6, 35e6 });
-    net9bus.connectElementToBus(load7, 1, bus7_ac);
+    // Bus 7
+    std::vector<double> load_params7_ac2 = { 1e12, 0.0, 0.0 };
+    Load* load7_ac2 = new Load("AC2LOAD07", "AC2", 3, load_params7_ac2);
+    net.connectElementToBus(load7_ac2, 1, bus7_ac2);
 
-    LoadPQ* load8 = new LoadPQ("LOAD08", "AC1", 3, { 0.0, 0.0 });
-    net9bus.connectElementToBus(load8, 1, bus8_ac);
+    // Bus 8
+    std::vector<double> load_params8_ac2 = { 1e12, 0.0, 0.0 };
+    Load* load8_ac2 = new Load("AC2LOAD08", "AC2", 3, load_params8_ac2);
+    net.connectElementToBus(load8_ac2, 1, bus8_ac2);
 
-    LoadPQ* load9 = new LoadPQ("LOAD09", "AC1", 3, { 125e6, 50e6 });
-    net9bus.connectElementToBus(load9, 1, bus9_ac);
+    // Bus 9: 29.5 MW + j16.6 MVAr
+    std::vector<double> load_params9_ac2 = { 3064.415130, 5.488881, 0.0 };
+    Load* load9_ac2 = new Load("AC2LOAD09", "AC2", 3, load_params9_ac2);
+    net.connectElementToBus(load9_ac2, 1, bus9_ac2);
 
-    ///*  ---------- 1.3 Add AC Generators  ---------- */
-    // Generator 1
-    std::vector<double> gen1_params = { 0.02, 0.3, 0.05};
-    Generator* gen1 = new Generator("GEN01", "AC1", 3, 345.0e3 * 1.02, gen1_params);
-    net9bus.connectElementToBus(gen1, 1, bus1_ac);
-    map<string, double> gen_info1 = {
+    // Bus 10: 9 MW + j5.8 MVAr
+    std::vector<double> load_params10_ac2 = { 9344.251570, 19.168147, 0.0 };
+    Load* load10_ac2 = new Load("AC2LOAD10", "AC2", 3, load_params10_ac2);
+    net.connectElementToBus(load10_ac2, 1, bus10_ac2);
+
+    // Bus 11: 3.5 MW + j1.8 MVAr
+    std::vector<double> load_params11_ac2 = { 26893.963848, 44.026018, 0.0 };
+    Load* load11_ac2 = new Load("AC2LOAD11", "AC2", 3, load_params11_ac2);
+    net.connectElementToBus(load11_ac2, 1, bus11_ac2);
+
+    // Bus 12: 6.1 MW + j1.6 MVAr
+    std::vector<double> load_params12_ac2 = { 18256.286145, 15.242377, 0.0 };
+    Load* load12_ac2 = new Load("AC2LOAD12", "AC2", 3, load_params12_ac2);
+    net.connectElementToBus(load12_ac2, 1, bus12_ac2);
+
+    // Bus 13: 13.5 MW + j5.8 MVAr
+    std::vector<double> load_params13_ac2 = { 7442.852842, 10.178500, 0.0 };
+    Load* load13_ac2 = new Load("AC2LOAD13", "AC2", 3, load_params13_ac2);
+    net.connectElementToBus(load13_ac2, 1, bus13_ac2);
+
+    // Bus 14: 14.9 MW + j5 MVAr
+    std::vector<double> load_params14_ac2 = { 7179.759929, 7.669089, 0.0 };
+    Load* load14_ac2 = new Load("AC2LOAD14", "AC2", 3, load_params14_ac2);
+    net.connectElementToBus(load14_ac2, 1, bus14_ac2);
+
+    ///* ------- 1.5 Add AC Generators (Area 1) ----- */
+
+    // Generator 1: AC1 bus 1
+    std::vector<double> gen1_ac1_params = { 0.02, 0.3, 0.05 };
+    Generator* gen1_ac1 = new Generator("AC1GEN01", "AC1", 3, 345.0e3 * 1.000, gen1_ac1_params);
+    net.connectElementToBus(gen1_ac1, 1, bus1_ac1);
+    map<string, double> gen1_ac1_info = {
         {"Pmax", 250.0}, {"Pmin", 10.0},
         {"Qmax", 300.0}, {"Qmin", -300.0},
-        {"c2", 0.11}, {"c1", 5.0},
-		{"c0", 150}, {"Vmax", 1.02}, {"Vmin", 1.02}
+        {"c2", 0.110000}, {"c1", 5.0},
+        {"c0", 150.0}, {"Ref", 1}, {"Vg", 345.0 * 1.000}
     };
-    gen1->setOPFInfo(gen_info1);
+    gen1_ac1->setOPFInfo(gen1_ac1_info);
 
-    // Generator 2
-    std::vector<double> gen2_params = { 0.02, 0.3, 0.05};
-    Generator* gen2 = new Generator("GEN02", "AC1", 3, 345.0e3 * 1.04, gen2_params);
-    net9bus.connectElementToBus(gen2, 1, bus2_ac);
-    map<string, double> gen_info2 = {
+    // Generator 2: AC1 bus 2
+    std::vector<double> gen2_ac1_params = { 0.02, 0.3, 0.05 };
+    Generator* gen2_ac1 = new Generator("AC1GEN02", "AC1", 3, 345.0e3 * 1.000, gen2_ac1_params);
+    net.connectElementToBus(gen2_ac1, 1, bus2_ac1);
+    map<string, double> gen2_ac1_info = {
         {"Pmax", 300.0}, {"Pmin", 10.0},
         {"Qmax", 300.0}, {"Qmin", -300.0},
-        {"c2", 0.085}, {"c1", 1.2},
-        {"c0", 600}, {"Vmax", 1.04}, {"Vmin", 1.04}
+        {"c2", 0.085000}, {"c1", 1.2},
+        {"c0", 600.0}, {"Vg", 345.0 * 1.000}
     };
-    gen2->setOPFInfo(gen_info2);
+    gen2_ac1->setOPFInfo(gen2_ac1_info);
 
-    // Generator 3
-    std::vector<double> gen3_params = { 0.02, 0.3, 0.05};
-    Generator* gen3 = new Generator("GEN03", "AC1", 3, 345e3, gen3_params);
-    net9bus.connectElementToBus(gen3, 1, bus3_ac);
-    map<string, double> gen_info3 = {
+    // Generator 3: AC1 bus 3
+    std::vector<double> gen3_ac1_params = { 0.02, 0.3, 0.05 };
+    Generator* gen3_ac1 = new Generator("AC1GEN03", "AC1", 3, 345.0e3 * 1.000, gen3_ac1_params);
+    net.connectElementToBus(gen3_ac1, 1, bus3_ac1);
+    map<string, double> gen3_ac1_info = {
         {"Pmax", 270.0}, {"Pmin", 10.0},
         {"Qmax", 300.0}, {"Qmin", -300.0},
-        {"c2", 0.1225}, {"c1", 1.0},
-        {"c0", 335}
+        {"c2", 0.122500}, {"c1", 1.0},
+        {"c0", 335.0}, {"Vg", 345.0 * 1.000}
     };
-    gen3->setOPFInfo(gen_info3);
+    gen3_ac1->setOPFInfo(gen3_ac1_info);
 
-    ///*  ---------- 1.4 Add RESs  ---------- */ 
-    // PV plant
-    vector<double> pv_parameters = {
-        2e6,		// P_pv: Rated power of the PV plant in watts
-        6570,		// I_pv: Rated current of the PV plant in amperes
-        2760,		// N_s: Number of series-connected modules
-        720,		// N_p: Number of parallel-connected strings
-        1.5,		// n: ideally factor of the diode
-        2.5,		// I_sc: Short-circuit current of a single module at STC
-        1e-10,		// I0: Reverse saturation current of the diode
-        7.2e-3,     // C_pv: Capacitance of the PV array in farads
-        900.0,		// V_dc: DC link voltage in volts
-        16e-6,      // L_boost: Inductance of the boost converter in henries
-        70e-3,      // C_dc: Capacitance of the DC link in farads
-        4.9809e-06,	// kp_boost: Proportional gain for the boost converter voltage control loop
-        4.9809e-09,	// ki_boost: Integral gain for the boost converter voltage control loop
-        103e-6,		// L_1: Inductance of the filter in henries
-        0,			// R_1: Resistance of the filter in ohms
-        220e-6,		// C_f: Capacitance of the filter in farads
-        0.1,		// R_c: Resistance of the filter in ohms
-        125e-6,		// L_2: Grid-side inductance in henries
-        690.0,		// V_g: Grid voltage in volts
-        50.0,	    // f_g: Grid frequency in hertz
-        1.0,		// K_p_dc: Proportional gain of the DC voltage controller
-        500.0,		// K_i_dc: Integral gain of the DC voltage controller
-        0.45,		// K_p_i: Proportional gain of the current controller
-        69.7,		// K_i_i: Integral gain of the current controller
-        0.5,		// K_p_pll: Proportional gain of the PLL
-        1.0			// K_i_pll: Integral gain of the PLL
+
+    ///* ------- 1.6 Add AC Generators (Area 2) ----- */
+
+    // Generator 1: AC2 bus 1
+    std::vector<double> gen1_ac2_params = { 0.02, 0.3, 0.05 };
+    Generator* gen1_ac2 = new Generator("AC2GEN01", "AC2", 3, 345.0e3 * 1.060, gen1_ac2_params);
+    net.connectElementToBus(gen1_ac2, 1, bus1_ac2);
+    map<string, double> gen1_ac2_info = {
+        {"Pmax", 332.4}, {"Pmin", 0.0},
+        {"Qmax", 10.0}, {"Qmin", 0.0},
+        {"c2", 0.043029}, {"c1", 20.0},
+        {"c0", 0.0}, {"Ref", 1}, {"Vg", 345.0 * 1.060}
     };
+    gen1_ac2->setOPFInfo(gen1_ac2_info);
 
-    PVplant* pv1 = new PVplant("PV1", "AC1", pv_parameters);
-    net9bus.connectElementToBus(pv1, 1, bus5_ac);
-
-    // Wind type-3
-    vector<double> wt3_parameters = {
-        1080.0,			// nm_rpm
-        3e6,				// p
-        0.0644e-3,		// Lr
-        0.0092,			// Rr
-        1.0 / 0.33,		// Nsr
-        0.0092,			// Rs
-        0.1356e-3,		// Ls
-        48.873,			// Kp_pll
-        3070.1,			// Ki_pll
-        564.1,			// V1_mag
-        -59,			// V1_theta_deg
-        0.052,			// Krp
-        0.027,			// Kri
-        0.00245,		// Krd
-        5.8,			// Ir_mag
-        -22,			// Ir_theta_deg
-        1.452,			// Ksp
-        3384.0,			// Ksi
-        0.025,			// Ksd
-        152.3,			// Ic_mag
-        114.0,			// Ic_theta_deg
-        0.0,			// Rf
-        0.001,			// Lf
-        50.0			// f1 (Grid frequency in Hz)
+    // Generator 2: AC2 bus 2
+    std::vector<double> gen2_ac2_params = { 0.02, 0.3, 0.05 };
+    Generator* gen2_ac2 = new Generator("AC2GEN02", "AC2", 3, 345.0e3 * 1.045, gen2_ac2_params);
+    net.connectElementToBus(gen2_ac2, 1, bus2_ac2);
+    map<string, double> gen2_ac2_info = {
+        {"Pmax", 140.0}, {"Pmin", 0.0},
+        {"Qmax", 50.0}, {"Qmin", -40.0},
+        {"c2", 0.250000}, {"c1", 20.0},
+        {"c0", 0.0}, {"Vg", 345.0 * 1.045}
     };
+    gen2_ac2->setOPFInfo(gen2_ac2_info);
 
-    WTtype3* wt1 = new WTtype3("DFIG", "AC1", wt3_parameters);
-    net9bus.connectElementToBus(wt1, 1, bus5_ac);
-
-    // Wind type-4
-    vector<double>  wt4_parameters = {
-        690,		// Vm (Grid voltage line-to-line in V)
-        60.0,		// f1 (Grid frequency in Hz)
-        3.0e6,		// Pwt (Wind turbine power in W)
-        1000,		// Vdc (DC link voltage in V)
-        0.93,		// Kp_pll (PLL proportional gain)
-        50,			// Ki_pll (PLL integral gain)
-        0.053,		// Kpi (Current controller proportional gain)
-        30.59,		// Kii (Current controller integral gain)
-        1.5 / 2.5e3,	// Tdelay (Delay in seconds)
-        1.23e6,     // wn (Natural frequency in rad/s)
-        4.74e-13,   // zeta (Damping ratio)
-        0.095,      // Rf (Filter resistance in Ohms)
-        0.0045,     // Lf (Filter inductance in H)
-        -75.73,     // Id_ref (Reference Id current in A)
-        0.0        // Iq_ref (Reference Iq current in A)
+    // Generator 3: AC2 bus 3
+    std::vector<double> gen3_ac2_params = { 0.02, 0.3, 0.05 };
+    Generator* gen3_ac2 = new Generator("AC2GEN03", "AC2", 3, 345.0e3 * 1.010, gen3_ac2_params);
+    net.connectElementToBus(gen3_ac2, 1, bus3_ac2);
+    map<string, double> gen3_ac2_info = {
+        {"Pmax", 100.0}, {"Pmin", 0.0},
+        {"Qmax", 40.0}, {"Qmin", 0.0},
+        {"c2", 0.010000}, {"c1", 40.0},
+        {"c0", 0.0}, {"Vg", 345.0 * 1.010}
     };
+    gen3_ac2->setOPFInfo(gen3_ac2_info);
 
-    WTtype4* wt2 = new WTtype4("PMSG", "AC1", wt4_parameters);
-    net9bus.connectElementToBus(wt2, 1, bus8_ac);
+    // Generator 4: AC2 bus 6
+    std::vector<double> gen4_ac2_params = { 0.02, 0.3, 0.05 };
+    Generator* gen4_ac2 = new Generator("AC2GEN04", "AC2", 3, 345.0e3 * 1.070, gen4_ac2_params);
+    net.connectElementToBus(gen4_ac2, 1, bus6_ac2);
+    map<string, double> gen4_ac2_info = {
+        {"Pmax", 100.0}, {"Pmin", 0.0},
+        {"Qmax", 24.0}, {"Qmin", -6.0},
+        {"c2", 0.010000}, {"c1", 40.0},
+        {"c0", 0.0}, {"Vg", 345.0 * 1.070}
+    };
+    gen4_ac2->setOPFInfo(gen4_ac2_info);
+
+    // Generator 5: AC2 bus 8
+    std::vector<double> gen5_ac2_params = { 0.02, 0.3, 0.05 };
+    Generator* gen5_ac2 = new Generator("AC2GEN05", "AC2", 3, 345.0e3 * 1.090, gen5_ac2_params);
+    net.connectElementToBus(gen5_ac2, 1, bus8_ac2);
+    map<string, double> gen5_ac2_info = {
+        {"Pmax", 100.0}, {"Pmin", 0.0},
+        {"Qmax", 24.0}, {"Qmin", -6.0},
+        {"c2", 0.010000}, {"c1", 40.0},
+        {"c0", 0.0}, {"Vg", 345.0 * 1.090}
+    };
+    gen5_ac2->setOPFInfo(gen5_ac2_info);
+   
+    ///* ------- 1.7 Add AC Branches (Area 1) ----- */
+
+    double ZbaseAC = 345.0 * 345.0 / 100.0;
+
+    // Branch 1: bus 1 - bus 4
+    double AC1R1 = 0.00000 * ZbaseAC;
+    double AC1X1 = 0.05760 * ZbaseAC;
+    std::complex<double> AC1Z1(AC1R1, AC1X1);
+    Impedance* br1_ac1 = new Impedance("br1_ac1", "AC1", 3, AC1Z1);
+    net.connectElementToBus(br1_ac1, 1, bus1_ac1);
+    net.connectElementToBus(br1_ac1, 2, bus4_ac1);
+
+    // Branch 2: bus 4 - bus 5
+    double AC1R2 = 0.01700 * ZbaseAC;
+    double AC1X2 = 0.09200 * ZbaseAC;
+    std::complex<double> AC1Z2(AC1R2, AC1X2);
+    Impedance* br2_ac1 = new Impedance("br2_ac1", "AC1", 3, AC1Z2);
+    net.connectElementToBus(br2_ac1, 1, bus4_ac1);
+    net.connectElementToBus(br2_ac1, 2, bus5_ac1);
+
+    // Branch 3: bus 5 - bus 6
+    double AC1R3 = 0.03900 * ZbaseAC;
+    double AC1X3 = 0.17000 * ZbaseAC;
+    std::complex<double> AC1Z3(AC1R3, AC1X3);
+    Impedance* br3_ac1 = new Impedance("br3_ac1", "AC1", 3, AC1Z3);
+    net.connectElementToBus(br3_ac1, 1, bus5_ac1);
+    net.connectElementToBus(br3_ac1, 2, bus6_ac1);
+
+    // Branch 4: bus 3 - bus 6
+    double AC1R4 = 0.00000 * ZbaseAC;
+    double AC1X4 = 0.05860 * ZbaseAC;
+    std::complex<double> AC1Z4(AC1R4, AC1X4);
+    Impedance* br4_ac1 = new Impedance("br4_ac1", "AC1", 3, AC1Z4);
+    net.connectElementToBus(br4_ac1, 1, bus3_ac1);
+    net.connectElementToBus(br4_ac1, 2, bus6_ac1);
+
+    // Branch 5: bus 6 - bus 7
+    double AC1R5 = 0.01190 * ZbaseAC;
+    double AC1X5 = 0.10080 * ZbaseAC;
+    std::complex<double> AC1Z5(AC1R5, AC1X5);
+    Impedance* br5_ac1 = new Impedance("br5_ac1", "AC1", 3, AC1Z5);
+    net.connectElementToBus(br5_ac1, 1, bus6_ac1);
+    net.connectElementToBus(br5_ac1, 2, bus7_ac1);
+
+    // Branch 6: bus 7 - bus 8
+    double AC1R6 = 0.00850 * ZbaseAC;
+    double AC1X6 = 0.07200 * ZbaseAC;
+    std::complex<double> AC1Z6(AC1R6, AC1X6);
+    Impedance* br6_ac1 = new Impedance("br6_ac1", "AC1", 3, AC1Z6);
+    net.connectElementToBus(br6_ac1, 1, bus7_ac1);
+    net.connectElementToBus(br6_ac1, 2, bus8_ac1);
+
+    // Branch 7: bus 8 - bus 2
+    double AC1R7 = 0.00000 * ZbaseAC;
+    double AC1X7 = 0.06250 * ZbaseAC;
+    std::complex<double> AC1Z7(AC1R7, AC1X7);
+    Impedance* br7_ac1 = new Impedance("br7_ac1", "AC1", 3, AC1Z7);
+    net.connectElementToBus(br7_ac1, 1, bus8_ac1);
+    net.connectElementToBus(br7_ac1, 2, bus2_ac1);
+
+    // Branch 8: bus 8 - bus 9
+    double AC1R8 = 0.03200 * ZbaseAC;
+    double AC1X8 = 0.16100 * ZbaseAC;
+    std::complex<double> AC1Z8(AC1R8, AC1X8);
+    Impedance* br8_ac1 = new Impedance("br8_ac1", "AC1", 3, AC1Z8);
+    net.connectElementToBus(br8_ac1, 1, bus8_ac1);
+    net.connectElementToBus(br8_ac1, 2, bus9_ac1);
+
+    // Branch 9: bus 9 - bus 4
+    double AC1R9 = 0.01000 * ZbaseAC;
+    double AC1X9 = 0.08500 * ZbaseAC;
+    std::complex<double> AC1Z9(AC1R9, AC1X9);
+    Impedance* br9_ac1 = new Impedance("br9_ac1", "AC1", 3, AC1Z9);
+    net.connectElementToBus(br9_ac1, 1, bus9_ac1);
+    net.connectElementToBus(br9_ac1, 2, bus4_ac1);
 
 
-    ///*  ---------- 1.6 Add Branches  ---------- */
-    double ACR1 = 0.0; double ACX1 = 0.0576;
-    std::complex<double> ACZ1(ACR1, ACX1);
-    Impedance* br1_ac = new Impedance("br1_ac", "AC1", 3, ACZ1);
-    net9bus.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
-    net9bus.connectElementToBus(br1_ac, /*terminal=*/2, bus4_ac);
+    ///* ------- 1.8 Add AC Branches (Area 2) ----- */
 
-    double ACR2 = 0.017; double ACX2 = 0.092;
-    std::complex<double> ACZ2(ACR2, ACX2);
-    Impedance* br2_ac = new Impedance("br2_ac", "AC1", 3, ACZ2);
-    net9bus.connectElementToBus(br2_ac, /*terminal=*/1, bus4_ac);
-    net9bus.connectElementToBus(br2_ac, /*terminal=*/2, bus5_ac);
+    // Branch 1: bus 1 - bus 2
+    double AC2R1 = 0.01938 * ZbaseAC;
+    double AC2X1 = 0.05917 * ZbaseAC;
+    std::complex<double> AC2Z1(AC2R1, AC2X1);
+    Impedance* br1_ac2 = new Impedance("br1_ac2", "AC2", 3, AC2Z1);
+    net.connectElementToBus(br1_ac2, 1, bus1_ac2);
+    net.connectElementToBus(br1_ac2, 2, bus2_ac2);
 
-    double ACR3 = 0.039; double ACX3 = 0.17;
-    std::complex<double> ACZ3(ACR3, ACX3);
-    Impedance* br3_ac = new Impedance("br3_ac", "AC1", 3, ACZ3);
-    net9bus.connectElementToBus(br3_ac, /*terminal=*/1, bus5_ac);
-    net9bus.connectElementToBus(br3_ac, /*terminal=*/2, bus6_ac);
+    // Branch 2: bus 1 - bus 5
+    double AC2R2 = 0.05403 * ZbaseAC;
+    double AC2X2 = 0.22304 * ZbaseAC;
+    std::complex<double> AC2Z2(AC2R2, AC2X2);
+    Impedance* br2_ac2 = new Impedance("br2_ac2", "AC2", 3, AC2Z2);
+    net.connectElementToBus(br2_ac2, 1, bus1_ac2);
+    net.connectElementToBus(br2_ac2, 2, bus5_ac2);
 
-    double ACR4 = 0.0; double ACX4 = 0.0586;
-    std::complex<double> ACZ4(ACR4, ACX4);
-    Impedance* br4_ac = new Impedance("br4_ac", "AC1", 3, ACZ4);
-    net9bus.connectElementToBus(br4_ac, /*terminal=*/1, bus3_ac);
-    net9bus.connectElementToBus(br4_ac, /*terminal=*/2, bus6_ac);
+    // Branch 3: bus 2 - bus 3
+    double AC2R3 = 0.04699 * ZbaseAC;
+    double AC2X3 = 0.19797 * ZbaseAC;
+    std::complex<double> AC2Z3(AC2R3, AC2X3);
+    Impedance* br3_ac2 = new Impedance("br3_ac2", "AC2", 3, AC2Z3);
+    net.connectElementToBus(br3_ac2, 1, bus2_ac2);
+    net.connectElementToBus(br3_ac2, 2, bus3_ac2);
 
-    double ACR5 = 0.0119; double ACX5 = 0.1008;
-    std::complex<double> ACZ5(ACR5, ACX5);
-    Impedance* br5_ac = new Impedance("br5_ac", "AC1", 3, ACZ5);
-    net9bus.connectElementToBus(br5_ac, /*terminal=*/1, bus6_ac);
-    net9bus.connectElementToBus(br5_ac, /*terminal=*/2, bus7_ac);
+    // Branch 4: bus 2 - bus 4
+    double AC2R4 = 0.05811 * ZbaseAC;
+    double AC2X4 = 0.17632 * ZbaseAC;
+    std::complex<double> AC2Z4(AC2R4, AC2X4);
+    Impedance* br4_ac2 = new Impedance("br4_ac2", "AC2", 3, AC2Z4);
+    net.connectElementToBus(br4_ac2, 1, bus2_ac2);
+    net.connectElementToBus(br4_ac2, 2, bus4_ac2);
 
-    double ACR6 = 0.0085; double ACX6 = 0.072;
-    std::complex<double> ACZ6(ACR6, ACX6);
-    Impedance* br6_ac = new Impedance("br6_ac", "AC1", 3, ACZ6);
-    net9bus.connectElementToBus(br6_ac, /*terminal=*/1, bus7_ac);
-    net9bus.connectElementToBus(br6_ac, /*terminal=*/2, bus8_ac);
+    // Branch 5: bus 2 - bus 5
+    double AC2R5 = 0.05695 * ZbaseAC;
+    double AC2X5 = 0.17388 * ZbaseAC;
+    std::complex<double> AC2Z5(AC2R5, AC2X5);
+    Impedance* br5_ac2 = new Impedance("br5_ac2", "AC2", 3, AC2Z5);
+    net.connectElementToBus(br5_ac2, 1, bus2_ac2);
+    net.connectElementToBus(br5_ac2, 2, bus5_ac2);
 
-    double ACR7 = 0.0; double ACX7 = 0.0625;
-    std::complex<double> ACZ7(ACR7, ACX7);
-    Impedance* br7_ac = new Impedance("br7_ac", "AC1", 3, ACZ7);
-    net9bus.connectElementToBus(br7_ac, /*terminal=*/1, bus8_ac);
-    net9bus.connectElementToBus(br7_ac, /*terminal=*/2, bus2_ac);
+    // Branch 6: bus 3 - bus 4
+    double AC2R6 = 0.06701 * ZbaseAC;
+    double AC2X6 = 0.17103 * ZbaseAC;
+    std::complex<double> AC2Z6(AC2R6, AC2X6);
+    Impedance* br6_ac2 = new Impedance("br6_ac2", "AC2", 3, AC2Z6);
+    net.connectElementToBus(br6_ac2, 1, bus3_ac2);
+    net.connectElementToBus(br6_ac2, 2, bus4_ac2);
 
-    double ACR8 = 0.032; double ACX8 = 0.161;
-    std::complex<double> ACZ8(ACR8, ACX8);
-    Impedance* br8_ac = new Impedance("br8_ac", "AC1", 3, ACZ8);
-    net9bus.connectElementToBus(br8_ac, /*terminal=*/1, bus8_ac);
-    net9bus.connectElementToBus(br8_ac, /*terminal=*/2, bus9_ac);
+    // Branch 7: bus 4 - bus 5
+    double AC2R7 = 0.01335 * ZbaseAC;
+    double AC2X7 = 0.04211 * ZbaseAC;
+    std::complex<double> AC2Z7(AC2R7, AC2X7);
+    Impedance* br7_ac2 = new Impedance("br7_ac2", "AC2", 3, AC2Z7);
+    net.connectElementToBus(br7_ac2, 1, bus4_ac2);
+    net.connectElementToBus(br7_ac2, 2, bus5_ac2);
 
-    double ACR9 = 0.01; double ACX9 = 0.085;
-    std::complex<double> ACZ9(ACR9, ACX9);
-    Impedance* br9_ac = new Impedance("br9_ac", "AC1", 3, ACZ9);
-    net9bus.connectElementToBus(br9_ac, /*terminal=*/1, bus9_ac);
-    net9bus.connectElementToBus(br9_ac, /*terminal=*/2, bus4_ac);
+    // Branch 8: bus 4 - bus 7
+    double AC2R8 = 0.00000 * ZbaseAC;
+    double AC2X8 = 0.20912 * ZbaseAC;
+    std::complex<double> AC2Z8(AC2R8, AC2X8);
+    Impedance* br8_ac2 = new Impedance("br8_ac2", "AC2", 3, AC2Z8);
+    net.connectElementToBus(br8_ac2, 1, bus4_ac2);
+    net.connectElementToBus(br8_ac2, 2, bus7_ac2);
 
-    ///*  ---------- 2.1 Create DC Buses  ---------- */
+    // Branch 9: bus 4 - bus 9
+    double AC2R9 = 0.00000 * ZbaseAC;
+    double AC2X9 = 0.55618 * ZbaseAC;
+    std::complex<double> AC2Z9(AC2R9, AC2X9);
+    Impedance* br9_ac2 = new Impedance("br9_ac2", "AC2", 3, AC2Z9);
+    net.connectElementToBus(br9_ac2, 1, bus4_ac2);
+    net.connectElementToBus(br9_ac2, 2, bus9_ac2);
+
+    // Branch 10: bus 5 - bus 6
+    double AC2R10 = 0.00000 * ZbaseAC;
+    double AC2X10 = 0.25202 * ZbaseAC;
+    std::complex<double> AC2Z10(AC2R10, AC2X10);
+    Impedance* br10_ac2 = new Impedance("br10_ac2", "AC2", 3, AC2Z10);
+    net.connectElementToBus(br10_ac2, 1, bus5_ac2);
+    net.connectElementToBus(br10_ac2, 2, bus6_ac2);
+
+    // Branch 11: bus 6 - bus 11
+    double AC2R11 = 0.09498 * ZbaseAC;
+    double AC2X11 = 0.19890 * ZbaseAC;
+    std::complex<double> AC2Z11(AC2R11, AC2X11);
+    Impedance* br11_ac2 = new Impedance("br11_ac2", "AC2", 3, AC2Z11);
+    net.connectElementToBus(br11_ac2, 1, bus6_ac2);
+    net.connectElementToBus(br11_ac2, 2, bus11_ac2);
+
+    // Branch 12: bus 6 - bus 12
+    double AC2R12 = 0.12291 * ZbaseAC;
+    double AC2X12 = 0.25581 * ZbaseAC;
+    std::complex<double> AC2Z12(AC2R12, AC2X12);
+    Impedance* br12_ac2 = new Impedance("br12_ac2", "AC2", 3, AC2Z12);
+    net.connectElementToBus(br12_ac2, 1, bus6_ac2);
+    net.connectElementToBus(br12_ac2, 2, bus12_ac2);
+
+    // Branch 13: bus 6 - bus 13
+    double AC2R13 = 0.06615 * ZbaseAC;
+    double AC2X13 = 0.13027 * ZbaseAC;
+    std::complex<double> AC2Z13(AC2R13, AC2X13);
+    Impedance* br13_ac2 = new Impedance("br13_ac2", "AC2", 3, AC2Z13);
+    net.connectElementToBus(br13_ac2, 1, bus6_ac2);
+    net.connectElementToBus(br13_ac2, 2, bus13_ac2);
+
+    // Branch 14: bus 7 - bus 8
+    double AC2R14 = 0.00000 * ZbaseAC;
+    double AC2X14 = 0.17615 * ZbaseAC;
+    std::complex<double> AC2Z14(AC2R14, AC2X14);
+    Impedance* br14_ac2 = new Impedance("br14_ac2", "AC2", 3, AC2Z14);
+    net.connectElementToBus(br14_ac2, 1, bus7_ac2);
+    net.connectElementToBus(br14_ac2, 2, bus8_ac2);
+
+    // Branch 15: bus 7 - bus 9
+    double AC2R15 = 0.00000 * ZbaseAC;
+    double AC2X15 = 0.11001 * ZbaseAC;
+    std::complex<double> AC2Z15(AC2R15, AC2X15);
+    Impedance* br15_ac2 = new Impedance("br15_ac2", "AC2", 3, AC2Z15);
+    net.connectElementToBus(br15_ac2, 1, bus7_ac2);
+    net.connectElementToBus(br15_ac2, 2, bus9_ac2);
+
+    // Branch 16: bus 9 - bus 10
+    double AC2R16 = 0.03181 * ZbaseAC;
+    double AC2X16 = 0.08450 * ZbaseAC;
+    std::complex<double> AC2Z16(AC2R16, AC2X16);
+    Impedance* br16_ac2 = new Impedance("br16_ac2", "AC2", 3, AC2Z16);
+    net.connectElementToBus(br16_ac2, 1, bus9_ac2);
+    net.connectElementToBus(br16_ac2, 2, bus10_ac2);
+
+    // Branch 17: bus 9 - bus 14
+    double AC2R17 = 0.12711 * ZbaseAC;
+    double AC2X17 = 0.27038 * ZbaseAC;
+    std::complex<double> AC2Z17(AC2R17, AC2X17);
+    Impedance* br17_ac2 = new Impedance("br17_ac2", "AC2", 3, AC2Z17);
+    net.connectElementToBus(br17_ac2, 1, bus9_ac2);
+    net.connectElementToBus(br17_ac2, 2, bus14_ac2);
+
+    // Branch 18: bus 10 - bus 11
+    double AC2R18 = 0.08205 * ZbaseAC;
+    double AC2X18 = 0.19207 * ZbaseAC;
+    std::complex<double> AC2Z18(AC2R18, AC2X18);
+    Impedance* br18_ac2 = new Impedance("br18_ac2", "AC2", 3, AC2Z18);
+    net.connectElementToBus(br18_ac2, 1, bus10_ac2);
+    net.connectElementToBus(br18_ac2, 2, bus11_ac2);
+
+    // Branch 19: bus 12 - bus 13
+    double AC2R19 = 0.22092 * ZbaseAC;
+    double AC2X19 = 0.19988 * ZbaseAC;
+    std::complex<double> AC2Z19(AC2R19, AC2X19);
+    Impedance* br19_ac2 = new Impedance("br19_ac2", "AC2", 3, AC2Z19);
+    net.connectElementToBus(br19_ac2, 1, bus12_ac2);
+    net.connectElementToBus(br19_ac2, 2, bus13_ac2);
+
+    // Branch 20: bus 13 - bus 14
+    double AC2R20 = 0.17093 * ZbaseAC;
+    double AC2X20 = 0.34802 * ZbaseAC;
+    std::complex<double> AC2Z20(AC2R20, AC2X20);
+    Impedance* br20_ac2 = new Impedance("br20_ac2", "AC2", 3, AC2Z20);
+    net.connectElementToBus(br20_ac2, 1, bus13_ac2);
+    net.connectElementToBus(br20_ac2, 2, bus14_ac2);
+    
+
+    ///*  ------ 2.1 Create DC Buses  ---- */
     Bus* bus1_dc = new Bus("DCBUS01", "DC1", 2);
     Bus* bus2_dc = new Bus("DCBUS02", "DC1", 2);
     Bus* bus3_dc = new Bus("DCBUS03", "DC1", 2);
 
-    ///*  ---------- 2.2 Create DC Buses  ---------- */
-    double DCR1 = 0.052;
+    ///* ------- 2.2 Add DC Branches ----- */
+
+    double ZbaseDC = 500.0 * 500.0 / 100.0;
+
+    // Branch 1: DC bus 1 - DC bus 2
+    double DCR1 = 0.052 * ZbaseDC;
     Impedance* br1_dc = new Impedance("br1_dc", "DC1", 2, DCR1);
-    net9bus.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
-    net9bus.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
+    net.connectElementToBus(br1_dc, 1, bus1_dc);
+    net.connectElementToBus(br1_dc, 2, bus2_dc);
 
-    double DCR2 = 0.073;
+    // Branch 2: DC bus 2 - DC bus 3
+    double DCR2 = 0.052 * ZbaseDC;
     Impedance* br2_dc = new Impedance("br2_dc", "DC1", 2, DCR2);
-    net9bus.connectElementToBus(br2_dc, /*terminal=*/1, bus1_dc);
-    net9bus.connectElementToBus(br2_dc, /*terminal=*/2, bus3_dc);
+    net.connectElementToBus(br2_dc, 1, bus2_dc);
+    net.connectElementToBus(br2_dc, 2, bus3_dc);
 
-    double DCR3 = 0.052;
+    // Branch 3: DC bus 1 - DC bus 3
+    double DCR3 = 0.073 * ZbaseDC;
     Impedance* br3_dc = new Impedance("br3_dc", "DC1", 2, DCR3);
-    net9bus.connectElementToBus(br3_dc, /*terminal=*/1, bus2_dc);
-    net9bus.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
+    net.connectElementToBus(br3_dc, 1, bus1_dc);
+    net.connectElementToBus(br3_dc, 2, bus3_dc);
 
-    ///*  ---------- 2.3 Create Converters ---------- */
+    ///* ------- 2.3 Add MMC Converters ----- */
+
+ // MMC 1: DC bus 1 - AC1 bus 2
     MMC* mmc1 = new MMC(
-        "MMC1",             // Symbol
-        "AC1",              // Location
-        1000.0,             // Omega (Nominal Frequency in rad/s)
-        -60.0 * 1e6,          // Active Power (P) in W
-        -40.0 * 1e6,        // Reactive Power (Q) in VA
-        0.0,                // Theta (Voltage Angle in rad)
-        345.0 * 1e3,        // AC Voltage (V_m) in V
-        60 * 1e6,           // DC power (P_dc) in W
-        500.0 * 1e3,        // DC Voltage (V_dc) in kV
-        0.05,               // Arm Inductance (L_arm) in H
-        1.07,               // Arm Resistance (R_arm) in Ω
-        0.01,               // Capacitance per Submodule (C_arm) in F
-        400,                // Number of Submodules (N)
-        0.0005,             // Reactor Inductance (L_reactor) in H
-        0.0001,             // Reactor Resistance (R_reactor) in Ω
-        0.00015             // Time Delay (t_delay) in seconds
+        "MMC1",
+        "AC1",
+        1000.0,
+        -60.0 * 1e6,          // P in W
+        -40.0 * 1e6,          // Q in Var
+        0.0,
+        345.0 * 1e3,          // AC voltage in V
+        60.0 * 1e6,           // DC power in W
+        500.0 * 1e3,          // DC voltage in V
+        0.05,
+        1.07,
+        0.01,
+        400,
+        0.0005,
+        0.0001,
+        0.00015
     );
-    net9bus.connectElementToBus(mmc1, 1, bus2_ac);
-    net9bus.connectElementToBus(mmc1, 2, bus1_dc);
+    net.connectElementToBus(mmc1, 1, bus2_ac1);
+    net.connectElementToBus(mmc1, 2, bus1_dc);
+
     map<string, double> mmc1_info = {
-        {"type_dc", 1},            // 2
-        {"type_ac", 1},            // 3
+        {"type_dc", 1},
+        {"type_ac", 1}
     };
     mmc1->setOPFInfo(mmc1_info);
 
+
+    // MMC 2: DC bus 2 - AC1 bus 5
     MMC* mmc2 = new MMC(
-        "MMC2",             // Symbol
-        "AC1", 		        // Location
-        1000.0,             // Omega (Nominal Frequency in rad/s)
-        100.0 * 1e6,        // Active Power (P) in W
-        50.0 * 1e6,         // Reactive Power (Q) in VA
-        0.0,                // Theta (Voltage Angle in rad)
-        345.0 * 1e3,        // AC Voltage (V_m) in V
-        -50 * 1e6,          // DC power (P_dc) in W
-        500.0 * 1e3,        // DC Voltage (V_dc) in V
-        0.05,               // Arm Inductance (L_arm) in H
-        1.07,               // Arm Resistance (R_arm) in Ω
-        0.01,               // Capacitance per Submodule (C_arm) in F
-        400,                // Number of Submodules (N)
-        0.0005,             // Reactor Inductance (L_reactor) in H
-        0.0001,             // Reactor Resistance (R_reactor) in Ω
-        0.00015             // Time Delay (t_delay) in seconds
+        "MMC2",
+        "AC1",
+        1000.0,
+        0.0 * 1e6,            // P in W
+        0.0 * 1e6,            // Q in Var
+        0.0,
+        345.0 * 1e3,          // AC voltage in V
+        0.0 * 1e6,            // DC power in W
+        500.0 * 1e3,          // DC voltage in V
+        0.05,
+        1.07,
+        0.01,
+        400,
+        0.0005,
+        0.0001,
+        0.00015
     );
-    net9bus.connectElementToBus(mmc2, 1, bus3_ac);
-    net9bus.connectElementToBus(mmc2, 2, bus2_dc);
+    net.connectElementToBus(mmc2, 1, bus5_ac1);
+    net.connectElementToBus(mmc2, 2, bus2_dc);
+
     map<string, double> mmc2_info = {
-        {"type_dc", 2},            // 2
-        {"type_ac", 2},            // 3
+        {"type_dc", 2},
+        {"type_ac", 2}
     };
     mmc2->setOPFInfo(mmc2_info);
 
+
+    // MMC 3: DC bus 3 - AC2 bus 5
     MMC* mmc3 = new MMC(
-        "MMC3",               // Symbol
-        "AC1", 			      // Location
-        1000.0,               // Omega (Nominal Frequency in rad/s)
-        35.0 * 1e6,           // Active Power (P) in W
-        5.0 * 1e6,            // Reactive Power (Q) in VA
-        0.0,                  // Theta (Voltage Angle in rad)
-        345.0 * 1e3,          // AC Voltage (V_m) in V
-        -35 * 1e6,            // DC power (P_dc) in W
-        500.0 * 1e3,          // DC Voltage (V_dc) in V
-        0.05,                 // Arm Inductance (L_arm) in H
-        1.07,                 // Arm Resistance (R_arm) in Ω
-        0.01,                 // Capacitance per Submodule (C_arm) in F
-        400,                  // Number of Submodules (N)
-        0.0005,               // Reactor Inductance (L_reactor) in H
-        0.0001,               // Reactor Resistance (R_reactor) in Ω
-        0.00015               // Time Delay (t_delay) in seconds
+        "MMC3",
+        "AC2",
+        1000.0,
+        35.0 * 1e6,           // P in W
+        5.0 * 1e6,            // Q in Var
+        0.0,
+        345.0 * 1e3,          // AC voltage in V
+        -35.0 * 1e6,          // DC power in W
+        500.0 * 1e3,          // DC voltage in V
+        0.05,
+        1.07,
+        0.01,
+        400,
+        0.0005,
+        0.0001,
+        0.00015
     );
-    net9bus.connectElementToBus(mmc3, 1, bus5_ac);
-    net9bus.connectElementToBus(mmc3, 2, bus3_dc);
+    net.connectElementToBus(mmc3, 1, bus5_ac2);
+    net.connectElementToBus(mmc3, 2, bus3_dc);
+
     map<string, double> mmc3_info = {
-    {"type_dc", 1},            // 2
-    {"type_ac", 1},            // 3
+        {"type_dc", 1},
+        {"type_ac", 2}
     };
     mmc3->setOPFInfo(mmc3_info);
 
@@ -340,11 +622,14 @@ void example_OPF_1(bool plotting_enabled /*=false*/) {
     double omega = 2 * M_PI * 50;
     global_dict["omega"] = omega;
     global_dict["baseMVA"] = 100;
-    global_dict["ACbaseKV"] = 345.0; // Base voltage in kV, can be adjusted as needed
-    global_dict["DCbaseKV"] = 500.0; // Base voltage for DC, can be adjusted as needed
-    global_dict["Z_base"] = 1.0; // Base impedance, can be adjusted as needed
+    global_dict["ACbaseKV"] = 345.0; 
+    global_dict["DCbaseKV"] = 500.0; 
+    global_dict["ACZbase"] =
+        global_dict["ACbaseKV"] * global_dict["ACbaseKV"] / global_dict["baseMVA"];
+    global_dict["DCZbase"] =
+        global_dict["DCbaseKV"] * global_dict["DCbaseKV"] / global_dict["baseMVA"];
 
-    pf.make_OPF(&net9bus, global_dict, false, false, plotting_enabled, false);
+    pf.make_OPF(&net, global_dict, false, false, plotting_enabled, true);
 
     cout << "Press Enter to continue...\n";
     cin.get();
