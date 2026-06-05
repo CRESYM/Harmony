@@ -6,7 +6,7 @@ extern void example_OPF_csv(bool plotting_enabled = true);
 extern void example_OPF_1(bool plotting_enabled = true);
 extern void example_OPF_csv_1(bool plotting_enabled = true);
 extern void example_OPF_PV(bool plotting_enabled = true);
-extern void example_OPF_WT();
+extern void example_OPF_WT(bool plotting_enabled = true);
 
 extern void example_DQsym_math_operations(bool plotting_enabled = true);
 extern void example_DQsym_DSSS2(bool plotting_enabled = true);
