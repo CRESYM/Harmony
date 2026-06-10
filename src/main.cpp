@@ -37,7 +37,7 @@ int main() {
 	//example_OPF_csv();
 	//example_OPF_csv_1();
 	//example_point2point_case();
-	example_OPF_PV();
+	//example_OPF_PV();
 	//example_OPF_WT();
 
 	//example_DQsym_math_operations();
@@ -50,7 +50,7 @@ int main() {
 	//example_state_space();
 	 
 	//example_visuals();
-	//example_stability_check();
+	example_stability_check();
 	//example_admittance_parameters();
 
 	return 0;

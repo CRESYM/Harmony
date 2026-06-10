@@ -1694,7 +1694,15 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
         qd_ac[ng] = bus_ac[ng].col(3) / baseMVA_ac;
 
         // Normalize RES capacity
-        sres_ac[ng] = res_ac[ng].col(2) / baseMVA_ac;
+        if (res_ac[ng].size() == 0) {
+            sres_ac[ng] = Eigen::VectorXd::Zero(0);
+            // pres_ac[ng] = Eigen::VectorXd::Zero(0);
+            // qres_ac[ng] = Eigen::VectorXd::Zero(0);
+            continue;
+        }
+        else {
+            sres_ac[ng] = res_ac[ng].col(2) / baseMVA_ac;
+        }
 
         //// mapping from "busname" to "id"
 
