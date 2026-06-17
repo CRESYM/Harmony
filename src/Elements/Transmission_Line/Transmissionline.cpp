@@ -56,12 +56,12 @@ void TransmissionLine::computePowerFlow(std::map<std::string, double>& branchDat
 
     if ((area[0] == 'A' || area[0] == 'a') && (area[1] == 'c' || area[1] == 'C')) {
         const double omega_num = globalParams.at("omega");
-        const double Zbase = globalParams.at("Z_base");
+        const double Zbase = globalParams.at("ACZbase");
 
         cd Y11 = substitute_symbol(Y_matrix.get(0, 0), omega, globalParams.at("omega"));
         cd Y12 = substitute_symbol(Y_matrix.get(0, m_pins), omega, globalParams.at("omega"));
 
-        cd Zs = -cd(1.0) / Y12 / globalParams.at("Z_base");
+        cd Zs = -cd(1.0) / Y12 / globalParams.at("ACZbase");
         cd Yend = (Y11 + Y12);
 
         branchData["transformer"] = 0;
@@ -86,7 +86,7 @@ void TransmissionLine::computePowerFlow(std::map<std::string, double>& branchDat
     else if ((area[0] == 'D' || area[0] == 'd') && (area[1] == 'c' || area[1] == 'C')) {
         cd Y12 = substitute_symbol(Y_matrix.get(0, m_pins), omega, 0.0);
 
-        cd Zs = -cd(1.0) / Y12 / globalParams.at("Z_base");
+        cd Zs = -cd(1.0) / Y12 / globalParams.at("ACZbase");
 
         branchData["r"] = std::real(Zs);
         branchData["x"] = 0.0;

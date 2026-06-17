@@ -844,8 +844,19 @@ void PowerFlow::solve_opf(
             OPF_OUT << "\n-----   -----  ------------------  --------  ---------  -------  -------   ---------  -----------";
 
             for (int ng = 0; ng < ngrids; ++ng) {
-                const auto& genidx = generator_ac[ng].col(0);
-                const auto& residx = res_ac[ng].col(0);
+                bool has_gen = generator_ac[ng].rows() > 0 && generator_ac[ng].cols() > 0;
+                bool has_res = res_ac[ng].rows() > 0 && res_ac[ng].cols() > 0;
+
+                Eigen::VectorXd genidx;
+                Eigen::VectorXd residx;
+
+                if (has_gen) {
+                    genidx = generator_ac[ng].col(0);
+                }
+
+                if (has_res) {
+                    residx = res_ac[ng].col(0);
+                }
 
                 for (int i = 0; i < nbuses_ac[ng]; ++i) {
                     double vmag = std::sqrt(vn2_ac_k[ng](i));
@@ -863,7 +874,7 @@ void PowerFlow::solve_opf(
                         OPF_OUT << " ";
                     }
 
-                    bool is_generator = (genidx.array() == i + 1).any();
+                    bool is_generator = has_gen && (genidx.array() == i + 1).any();
                     if (is_generator) {
                         int gen_idx = -1;
                         for (int j = 0; j < genidx.size(); ++j) {
@@ -894,7 +905,7 @@ void PowerFlow::solve_opf(
                     }
 
 
-                    bool is_res = (residx.array() == i + 1).any();
+                    bool is_res = has_res && (residx.array() == i + 1).any();
                     if (is_res) {
                         int res_idx = -1;
                         for (int j = 0; j < residx.size(); ++j) {

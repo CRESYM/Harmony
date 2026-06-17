@@ -26,7 +26,7 @@ public:
     }
    
     void computePowerFlow(std::map<std::string, double>& branchData,
-        const std::map<std::string, double>& global) const ;
+        std::map<std::string, double>& global) const override;
    
 protected:
     std::vector<double> R;  // Resistances for primary and secondary windings, and for magnetization resistance if given

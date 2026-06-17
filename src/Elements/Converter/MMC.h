@@ -63,8 +63,8 @@ public:
 		//data["bf"] = 0.0; // conductance of the filter
 		//data["rf"] = 0.0; // Resistance of the filter
 		//data["xf"] = 0.0; // Reactance of the filter
-		data["xc"] = globalParams["omega"] * L_reactor / globalParams["Z_base"]; // Base voltage for AC
-		data["rc"] = R_reactor / globalParams["Z_base"]; // Resistance of the phase reactor
+		data["xc"] = globalParams["omega"] * L_reactor / globalParams["ACZbase"]; // Base voltage for AC
+		data["rc"] = R_reactor / globalParams["ACZbase"]; // Resistance of the phase reactor
         data["P_g"] = P / 1e6; // Setting of DC p-control value
         data["Q_g"] = Q / 1e6; // Setting of AC q-control value
         data["Vtar"] = V_dc / 1e3 / globalParams["DCbaseKV"]; // Seting of DC v-control value

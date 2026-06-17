@@ -6,7 +6,7 @@
 #include "../Solver/OPF/Powerflow.h"
 
 
-void example_OPF() {
+void example_OPF(bool plotting_enabled /*=true*/) {
     ///* ---------- 0 Set Network Object ---------- */
     Network net;
     ///* ---------- 1.1 Create AC Buses ---------- */
@@ -17,9 +17,9 @@ void example_OPF() {
     Bus* bus5_ac = new Bus("ACBUS05", "AC1", 3);
 
     ///*  ---------- 1.2 Add AC Loads  ---------- */
-    
-     LoadPQ* load1 = new LoadPQ("LOAD01", "AC1", 3, {0.0, 0.0});
-     net.connectElementToBus(load1, 1, bus1_ac);
+    std::vector<double> load_params1 = { 1e12, 0., 0 };
+    Load* load1 = new Load("LOAD01", "AC1", 3, load_params1);
+    net.connectElementToBus(load1, 1, bus1_ac);
 
     std::vector<double> load_params2 = { 4761, 7.58, 0 };
     Load* load2 = new Load("LOAD02", "AC1", 3, load_params2);
@@ -46,7 +46,7 @@ void example_OPF() {
     map<string, double> gen_info1 = {
         {"Pmax", 300}, {"Pmin", 100},
         {"Qmax", 500.0}, {"Qmin", -500.0},
-        {"c2", 0.11}, {"c1", 50.0},
+        {"c2", 0.11}, {"c1", 5.0},
         {"c0", 150}, {"Ref", 1}, {"Vg", 345 * 1.06}
     };
 	gen1->setOPFInfo(gen_info1);
@@ -63,46 +63,52 @@ void example_OPF() {
 	gen2->setOPFInfo(gen_info2);
 
     ///*  ---------- 1.4 Add Branches  ---------- */
-    double ACR1 = 0.02; double ACX1 = 0.06;
+    double ZbaseAC = 345.0 * 345.0 / 100.0;
+
+    double ACR1 = 0.02 * ZbaseAC;
+    double ACX1 = 0.06 * ZbaseAC;
     std::complex<double> ACZ1(ACR1,ACX1);
     Impedance* br1_ac = new Impedance("br1_ac", "AC1", 3, ACZ1);
     net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
 
-    double ACR2 = 0.08; double ACX2 = 0.24;
+    double ACR2 = 0.08 * ZbaseAC;
+    double ACX2 = 0.24 * ZbaseAC;
     std::complex<double> ACZ2(ACR2, ACX2);
     Impedance* br2_ac = new Impedance("br2_ac", "AC1", 3, ACZ2);
     net.connectElementToBus(br2_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br2_ac, /*terminal=*/2, bus3_ac);
-
-    double ACR3 = 0.06; double ACX3 = 0.18;
+     
+    double ACR3 = 0.06 * ZbaseAC;
+    double ACX3 = 0.18 * ZbaseAC;
     std::complex<double> ACZ3(ACR3, ACX3);
     Impedance* br3_ac = new Impedance("br3_ac", "AC1", 3, ACZ3);
     net.connectElementToBus(br3_ac, /*terminal=*/1, bus2_ac);
     net.connectElementToBus(br3_ac, /*terminal=*/2, bus3_ac);
 
-    double ACR4 = 0.06; double ACX4 = 0.18;
+    double ACR4 = 0.06 * ZbaseAC;
+    double ACX4 = 0.18 * ZbaseAC;
     std::complex<double> ACZ4(ACR4, ACX4);
     Impedance* br4_ac = new Impedance("br4_ac", "AC1", 3, ACZ4);
     net.connectElementToBus(br4_ac, /*terminal=*/1, bus2_ac);
     net.connectElementToBus(br4_ac, /*terminal=*/2, bus4_ac);
 
-    double ACR5 = 0.04;
-    double ACX5 = 0.12;
+    double ACR5 = 0.04 * ZbaseAC;
+    double ACX5 = 0.12 * ZbaseAC;
     std::complex<double> ACZ5(ACR5, ACX5);
     Impedance* br5_ac = new Impedance("br5_ac", "AC1", 3, ACZ5);
     net.connectElementToBus(br5_ac, /*terminal=*/1, bus2_ac);
     net.connectElementToBus(br5_ac, /*terminal=*/2, bus5_ac);
 
-    double ACR6 = 0.01;
-    double ACX6 = 0.03;
+    double ACR6 = 0.01 * ZbaseAC;
+    double ACX6 = 0.03 * ZbaseAC;
     std::complex<double> ACZ6(ACR6, ACX6);
     Impedance* br6_ac = new Impedance("br6_ac", "AC1", 3, ACZ6);
     net.connectElementToBus(br6_ac, /*terminal=*/1, bus3_ac);
     net.connectElementToBus(br6_ac, /*terminal=*/2, bus4_ac);
 
-    double ACR7 = 0.08;
-    double ACX7 = 0.24;
+    double ACR7 = 0.08 * ZbaseAC;
+    double ACX7 = 0.24 * ZbaseAC;
     std::complex<double> ACZ7(ACR7, ACX7);
     Impedance* br7_ac = new Impedance("br7_ac", "AC1", 3, ACZ7);
     net.connectElementToBus(br7_ac, /*terminal=*/1, bus4_ac);
@@ -115,18 +121,19 @@ void example_OPF() {
     
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
+    double ZbaseDC = 500.0 * 500.0 / 100.0;
 
-    double DCR1 = 0.052;
+    double DCR1 = 0.052 * ZbaseDC;
     Impedance* br1_dc = new Impedance("br1_dc", "DC1", 2, DCR1);
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
 
-    double DCR2 = 0.073;
+    double DCR2 = 0.073 * ZbaseDC;
     Impedance* br2_dc = new Impedance("br2_dc", "DC1", 2, DCR2);
     net.connectElementToBus(br2_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br2_dc, /*terminal=*/2, bus3_dc);
 
-    double DCR3 = 0.052;
+    double DCR3 = 0.052 * ZbaseDC;
     Impedance* br3_dc = new Impedance("br3_dc", "DC1", 2, DCR3);
     net.connectElementToBus(br3_dc, /*terminal=*/1, bus2_dc);
     net.connectElementToBus(br3_dc, /*terminal=*/2, bus3_dc);
@@ -139,9 +146,9 @@ void example_OPF() {
         -60.0*1e6,          // Active Power (P) in W
         -40.0 * 1e6,        // Reactive Power (Q) in VA
         0.0,                // Theta (Voltage Angle in rad)
-        345.0 * 1e3,        // AC Voltage (V_m) in V
+        345 * 1e3,          // AC Voltage (V_m) in V
 		60 * 1e6,           // DC power (P_dc) in W
-        345.0 * 1e3,        // DC Voltage (V_dc) in kV
+        500 * 1e3,          // DC Voltage (V_dc) in kV
         0.05,               // Arm Inductance (L_arm) in H
         1.07,               // Arm Resistance (R_arm) in Ω
         0.01,               // Capacitance per Submodule (C_arm) in F
@@ -167,7 +174,7 @@ void example_OPF() {
         0.0,                // Theta (Voltage Angle in rad)
         345.0 * 1e3,        // AC Voltage (V_m) in V
         0 * 1e6,          // DC power (P_dc) in W
-        345.0 * 1e3,        // DC Voltage (V_dc) in V
+        500.0 * 1e3,        // DC Voltage (V_dc) in V
         0.05,               // Arm Inductance (L_arm) in H
         1.07,               // Arm Resistance (R_arm) in Ω
         0.01,               // Capacitance per Submodule (C_arm) in F
@@ -193,7 +200,7 @@ void example_OPF() {
         0.0,                  // Theta (Voltage Angle in rad)
         345.0 * 1e3,          // AC Voltage (V_m) in V
         -35 * 1e6,            // DC power (P_dc) in W
-        345.0 * 1e3,          // DC Voltage (V_dc) in V
+        500.0 * 1e3,          // DC Voltage (V_dc) in V
         0.05,                 // Arm Inductance (L_arm) in H
         1.07,                 // Arm Resistance (R_arm) in Ω
         0.01,                 // Capacitance per Submodule (C_arm) in F
@@ -210,8 +217,6 @@ void example_OPF() {
     };
     mmc3->setOPFInfo(mmc3_info);
 
-	net.add_areas();
-	net.print_summary();
 
 	///*----- 3 OPF Implementatiopn ----- */
 	PowerFlow pf;
@@ -222,10 +227,13 @@ void example_OPF() {
 	global_dict["omega"] = omega;
 	global_dict["baseMVA"] = 100;
 	global_dict["ACbaseKV"] = 345.0; // Base voltage in kV, can be adjusted as needed
-	global_dict["DCbaseKV"] = 345.0; // Base voltage for DC, can be adjusted as needed
-	global_dict["Z_base"] = 1.0; // Base impedance, can be adjusted as needed
+	global_dict["DCbaseKV"] = 500.0; // Base voltage for DC, can be adjusted as needed
+    global_dict["ACZbase"] =
+        global_dict["ACbaseKV"] * global_dict["ACbaseKV"] / global_dict["baseMVA"];
+    global_dict["DCZbase"] =
+        global_dict["DCbaseKV"] * global_dict["DCbaseKV"] / global_dict["baseMVA"];
     
-	pf.make_OPF(&net, global_dict, true, false, true, false);
+	pf.make_OPF(&net, global_dict, true, false, plotting_enabled, true);
 
     cout << "Press Enter to continue...\n";
     cin.get();
