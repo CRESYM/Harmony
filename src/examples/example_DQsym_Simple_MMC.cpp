@@ -11,9 +11,10 @@ void example_DQsym_Simple_MMC()
 
     const double f = 50.0;
     const double omega = 2.0 * M_PI * f;
-    const double Vdc = 1e3;
-    const double Vac = 500;
+    const double Vdc = 6.4E5;
+    const double Vac = 3.266e5;
     const int    nKeep = 5;
+   
 
     Network net;
 
@@ -29,7 +30,7 @@ void example_DQsym_Simple_MMC()
         0, // PLL controller parameters
         0, // DC voltage controller parameters
 
-        1, 0, 6.6667e-04, 3.3333e-01, 1,2e3,  // active power
+        1, 0, 2.57e-4, 3.2e-3, 1, 1e8,  //1, 0, 6.6667e-04, 3.3333e-01, 1,15e3,  // active power
         0, // AC voltage control
         0, /// reactive power
         0, // energy controller: PI, Kp=120, Ki=400, ref=0
@@ -37,7 +38,7 @@ void example_DQsym_Simple_MMC()
        
          //The OCC d-axis reference at runtime is approximately 5 (set by active power), not 0. 
         // The 0 in controller_params is just the initial value, which gets immediately overwritten.
-        1, 0, 117.93, 8.5e4, 2, 0, 0, // occ controller parameters  
+        1, 0, 48, 480, 2, 0, 0,//1, 0, 117.93, 8.5e4, 2, 0, 0, // occ controller parameters  
         0, // ccc controller parameters
         0 //1, 1, -0.0001, 2, Vdc, 100e6 // droop control
     };
@@ -46,7 +47,7 @@ void example_DQsym_Simple_MMC()
     // MMC
     std::vector<double> params = {
         omega, 0, 0.0, 0.0, Vac, 0, Vdc,
-        52.9e-3, 166.3e-3, 1.7568e-3, 36, 1e-2, 1, 0.0
+        52.9e-3, 166.3e-3, 1.7568e-3, 36, 1e-2, 10, 0.0
     };
     MMC* mmc = new MMC("MMC1", "AC1_DC1", params, controller_params);
     net.addElement(mmc);
