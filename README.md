@@ -125,5 +125,3 @@ All analysis solvers, optimization routines, and stability assessment methods ar
 [3] Li, H., Kermansaravi, A., Dimitrovski, R., & Lekić, A. (2025). ACDC-OpFlow, Unified, Cross-Language Framework for AC/DC Optimal Power Flow Solutions (Version v0.1) [Computer software]. https://doi.org/10.4121/66318317-4d5d-4dc4-ba5a-5fa65c585520
 
 [4] Alsarayreh, S., Dimitrovski, R., & Lekić, A. (2025). DQsym: A Dynamic Phasor-Based library for Analysis of Modern Power Systems This repository presents the Dynamic Phasor library for Analysis of Modern Power Systems (Version 1.0.0) [Computer software]. https://doi.org/https://doi.org/10.5281/zenodo.18544532
-
-[4] 
