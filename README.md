@@ -93,7 +93,7 @@ ctest
 
 ## Contributors
 - **Aleksandra Lekić**, development of the mathematical framework, development of individual components, and their spectral representation and formulation, design of the toolbox, different functionality interconnections, harmonic stability solver, supervision, and acquisition of the funding
-- **Robert Dimitrovski**, dynamic phasor formulation, development of a core of DQNsym, funding acquisition and supervision
+- **Robert Dimitrovski**, dynamic phasor formulation, development of a core of DQsym, funding acquisition and supervision
 - **Haixiao Li**, design of the power flow strategy, and formulation of the power flow solution
 - **Saif Alsarayreh**, dynamic phasor formulation, model design, and implementation
 - **Azadeh Kermansaravi**, programming of the part of the toolbox
@@ -107,8 +107,10 @@ ctest
  ## Technical Foundations
 
 Built on component models and state-space methods from prior work:
-- Transmission line, MMC models: PowerImpedanceACDC.jl (A. Lekić, 2024)
+- Transmission line, MMC base models: PowerImpedanceACDC.jl (A. Lekić, 2024)
 - State-space solver: dc_dc_simulator (A. Lekić, GitHub)
+- AC-DC OPF solver: ACDC-OpFlow (H. Li, GitHub)
+- Dynamic phasor solver: DQsym (S. Alsarayreh, R. Dimitrovski, GitHub)
 
 All analysis solvers, optimization routines, and stability assessment methods are original developments for this framework.
 
@@ -119,3 +121,9 @@ All analysis solvers, optimization routines, and stability assessment methods ar
 [1] ELECTA, PowerImpedanceACDC-Impedance-based stability analyses, "PowerImpedanceACDC.jl," 2024, https://github.com/Electa-Git/PowerImpedanceACDC.jl
 
 [2] Lekić, A., "DC-DC Simulator," https://github.com/kul-optec/dc_dc_simulator
+
+[3] Li, H., Kermansaravi, A., Dimitrovski, R., & Lekić, A. (2025). ACDC-OpFlow, Unified, Cross-Language Framework for AC/DC Optimal Power Flow Solutions (Version v0.1) [Computer software]. https://doi.org/10.4121/66318317-4d5d-4dc4-ba5a-5fa65c585520
+
+[4] Alsarayreh, S., Dimitrovski, R., & Lekić, A. (2025). DQsym: A Dynamic Phasor-Based library for Analysis of Modern Power Systems This repository presents the Dynamic Phasor library for Analysis of Modern Power Systems (Version 1.0.0) [Computer software]. https://doi.org/https://doi.org/10.5281/zenodo.18544532
+
+[4] 
