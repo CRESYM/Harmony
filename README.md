@@ -103,3 +103,18 @@ ctest
 
 
  The development of the Harmony was supported by the [Digital Competence Centre](https://www.tudelft.nl/index.php?id=67120&L=1/), Delft University of Technology.
+
+ ## Technical Foundations
+
+Built on component models and state-space methods from prior work:
+- Transmission line, MMC models: PowerImpedanceACDC.jl (A. Lekić, 2024)
+- State-space solver: dc_dc_simulator (A. Lekić, GitHub)
+
+All analysis solvers, optimization routines, and stability assessment methods are original developments for this framework.
+
+*License*: GPL v3
+
+### References
+
+[1] ELECTA, PowerImpedanceACDC-Impedance-based stability analyses, "PowerImpedanceACDC.jl," 2024, https://github.com/Electa-Git/PowerImpedanceACDC.jl
+[2] Lekić, A., "DC-DC Simulator," https://github.com/kul-optec/dc_dc_simulator
