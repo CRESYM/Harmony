@@ -117,4 +117,5 @@ All analysis solvers, optimization routines, and stability assessment methods ar
 ### References
 
 [1] ELECTA, PowerImpedanceACDC-Impedance-based stability analyses, "PowerImpedanceACDC.jl," 2024, https://github.com/Electa-Git/PowerImpedanceACDC.jl
+
 [2] Lekić, A., "DC-DC Simulator," https://github.com/kul-optec/dc_dc_simulator
