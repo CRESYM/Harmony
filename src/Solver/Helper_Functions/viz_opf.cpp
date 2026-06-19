@@ -8,6 +8,7 @@
 #include <utility>
 #include <thread>
 #include<unordered_set>
+#include <unordered_map>
 #include <algorithm>
 #include <iomanip>
 
@@ -259,6 +260,13 @@ void viz_opf(const OPFVisualData& d) {
     auto xs = g->x_data();
     auto ys = g->y_data();
 
+    // Matplot layout index i corresponds to sorted connected bus allNodes[i], not bus_id - 1.
+    std::unordered_map<int, size_t> busToLayout;
+    busToLayout.reserve(allNodes.size());
+    for (size_t li = 0; li < allNodes.size(); ++li) {
+        busToLayout[allNodes[li]] = li;
+    }
+
 
     /**************************************************
     * CONSTRUCT NETWORK GRAPH
@@ -267,14 +275,21 @@ void viz_opf(const OPFVisualData& d) {
     std::vector<size_t> idx_dc;
     idx_dc.reserve(dcNodes.size());
     for (int i = 0; i < dcNodes.size(); ++i) {
-        idx_dc.push_back(static_cast<size_t>(dcNodes(i) - 1));
+        const int busNum = dcNodes(i);
+        const auto it = busToLayout.find(busNum);
+        if (it != busToLayout.end()) {
+            idx_dc.push_back(it->second);
+        }
     }
 
     std::vector<size_t> idx_ac;
-    idx_ac.reserve(xs.size());
-    for (size_t i = 0; i < xs.size(); ++i) {
-        if (std::find(idx_dc.begin(), idx_dc.end(), i) == idx_dc.end())
-            idx_ac.push_back(i);
+    idx_ac.reserve(acNodes.size());
+    for (int i = 0; i < acNodes.size(); ++i) {
+        const int busNum = acNodes(i);
+        const auto it = busToLayout.find(busNum);
+        if (it != busToLayout.end()) {
+            idx_ac.push_back(it->second);
+        }
     }
 
     std::vector<double> x_ac, y_ac, x_dc, y_dc;
@@ -321,25 +336,36 @@ void viz_opf(const OPFVisualData& d) {
     }
 
 
-    Eigen::VectorXd voltMag_node(std::max(static_cast<int>(xs.size()), numNodes));
-    voltMag_node.setZero();
+    std::map<int, double> voltByBus;
 
-    // Map vn2 per grid/local bus index following bus_entire_ac row order (matches renumbered nodes).
+    // AC: vn2_ac_k[grid](local_i) follows bus_entire_ac row order within each area.
     std::vector<int> gridRowCount(d.ngrids, 0);
     for (int r = 0; r < numBuses_ac; ++r) {
         const int ng = static_cast<int>(d.bus_entire_ac(r, numColsBuses_ac - 1)) - 1;
         const int local_i = gridRowCount[ng]++;
-        const size_t graphIdx = static_cast<size_t>(bus_entire_ac_new(r, 0) - 1);
+        const int unifiedBus = static_cast<int>(bus_entire_ac_new(r, 0));
         if (ng >= 0 && ng < d.ngrids && local_i < d.vn2_ac_k[ng].size()) {
-            voltMag_node(static_cast<Eigen::Index>(graphIdx)) = std::sqrt(d.vn2_ac_k[ng](local_i));
+            voltByBus[unifiedBus] = std::sqrt(d.vn2_ac_k[ng](local_i));
         }
     }
 
-    // vn2_dc_k is indexed by bus_dc row (same convention as the OPF solver).
+    // DC: vn2_dc_k uses matrix index (original bus number - 1); converter i overrides at its DC bus.
     for (int i = 0; i < numBuses_dc; ++i) {
-        const size_t graphIdx = static_cast<size_t>(bus_dc_new(i, 0) - 1);
-        if (graphIdx < static_cast<size_t>(voltMag_node.size())) {
-            voltMag_node(static_cast<Eigen::Index>(graphIdx)) = std::sqrt(d.vn2_dc_k(i));
+        const int unifiedBus = static_cast<int>(bus_dc_new(i, 0));
+        const int origBus = static_cast<int>(d.bus_dc(i, 0));
+        const Eigen::Index vnIdx = origBus - 1;
+        if (vnIdx >= 0 && vnIdx < d.vn2_dc_k.size()) {
+            voltByBus[unifiedBus] = std::sqrt(d.vn2_dc_k(vnIdx));
+        }
+        else if (i < d.vn2_dc_k.size()) {
+            voltByBus[unifiedBus] = std::sqrt(d.vn2_dc_k(i));
+        }
+    }
+    for (int i = 0; i < d.nconvs_dc && i < d.vn2_dc_k.size(); ++i) {
+        const int origDcBus = static_cast<int>(d.conv_dc(i, 0));
+        const auto mapped = mapping_dc.find(origDcBus);
+        if (mapped != mapping_dc.end()) {
+            voltByBus[mapped->second] = std::sqrt(d.vn2_dc_k(i));
         }
     }
 
@@ -542,32 +568,39 @@ void viz_opf(const OPFVisualData& d) {
     /**************************************************
     * SET NODE LABEL, ORDER(#) AND VOLT (x.xx p.u.)
     **************************************************/
-    for (size_t gidx : idx_ac) {
-        const int acRow = static_cast<int>(gidx);
-        std::string acNodeLabel = std::string("#") + std::to_string(orig_idx_ac[acRow]);
-        text(xs[gidx], ys[gidx], acNodeLabel)
+    for (int r = 0; r < numBuses_ac; ++r) {
+        const int busNum = static_cast<int>(bus_entire_ac_new(r, 0));
+        const auto layoutIt = busToLayout.find(busNum);
+        if (layoutIt == busToLayout.end()) {
+            continue;
+        }
+        const size_t li = layoutIt->second;
+        std::string acNodeLabel = std::string("#") + std::to_string(orig_idx_ac[r]);
+        text(xs[li], ys[li], acNodeLabel)
             ->color({ 0.1f, 0.1f, 0.1f })
             .font_size(8);
     }
 
     for (int i = 0; i < numBuses_dc; ++i) {
-        const size_t gidx = static_cast<size_t>(dcNodes(i) - 1);
-        if (gidx >= xs.size()) {
+        const int busNum = static_cast<int>(bus_dc_new(i, 0));
+        const auto layoutIt = busToLayout.find(busNum);
+        if (layoutIt == busToLayout.end()) {
             continue;
         }
+        const size_t li = layoutIt->second;
         std::string dcNodeLabel = std::string("#") + std::to_string(orig_idx_dc[i]);
-        text(xs[gidx], ys[gidx], dcNodeLabel)
+        text(xs[li], ys[li], dcNodeLabel)
             ->color({ 0.1f, 0.1f, 0.1f })
             .font_size(8);
     }
 
-    for (size_t gidx = 0; gidx < xs.size(); ++gidx) {
-        if (gidx >= static_cast<size_t>(voltMag_node.size())) {
-            continue;
-        }
+    for (size_t li = 0; li < allNodes.size() && li < xs.size(); ++li) {
+        const int busNum = allNodes[li];
+        const auto voltIt = voltByBus.find(busNum);
+        const double vMag = voltIt != voltByBus.end() ? voltIt->second : 0.0;
         std::ostringstream oss;
-        oss << std::fixed << std::setprecision(3) << voltMag_node(static_cast<Eigen::Index>(gidx)) << " p.u.";
-        text(xs[gidx] + 4, ys[gidx] + 4, oss.str())
+        oss << std::fixed << std::setprecision(3) << vMag << " p.u.";
+        text(xs[li] + 4, ys[li] + 4, oss.str())
             ->color({ 0.0f, 0.0f, 0.0f })
             .font_size(8);
     }
