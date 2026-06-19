@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file MMC.cpp
  * @brief Implementation of Modular Multilevel Converter (MMC) state-space and MNA model.
  */

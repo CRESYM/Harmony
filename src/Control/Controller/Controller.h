@@ -1,4 +1,4 @@
-﻿#ifndef CONTROLLER_H
+#ifndef CONTROLLER_H
 #define CONTROLLER_H
 
 #include "../Control_block.h"

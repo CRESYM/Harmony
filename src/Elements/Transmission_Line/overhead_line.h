@@ -1,4 +1,4 @@
-﻿#ifndef OVERHEAD_LINE_H
+#ifndef OVERHEAD_LINE_H
 #define OVERHEAD_LINE_H
 
 /**

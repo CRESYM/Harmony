@@ -1,4 +1,4 @@
-﻿#ifndef _SYMBOLIC_FUNCTIONS_H_
+#ifndef _SYMBOLIC_FUNCTIONS_H_
 #define _SYMBOLIC_FUNCTIONS_H_
 
 /**

@@ -2,7 +2,7 @@
  * @file Symbolic_functions.cpp
  * @brief Implementation of SymEngine-based symbolic algebra utilities for network analysis.
  */
-﻿#include "Symbolic_functions.h"
+#include "Symbolic_functions.h"
 
 // Define the constants declared in the header
 const RCP<const Basic> PI = real_double(3.141592653589793); // SymEngine π

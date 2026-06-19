@@ -2,7 +2,7 @@
  * @file network.cpp
  * @brief Implementation of Top-level electrical network container: buses, elements, connections, and hierarchical grids.
  */
-﻿#include "Bus.h"
+#include "Bus.h"
 #include "SubNetwork.h"
 #include "Include_components.h"
 

@@ -1,4 +1,4 @@
-﻿#include <gtest/gtest.h>
+#include <gtest/gtest.h>
 #include "network.h"
 #include "Bus.h"
 #include "Include_components.h"

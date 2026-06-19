@@ -1,4 +1,4 @@
-﻿#include <gtest/gtest.h>
+#include <gtest/gtest.h>
 #include "Switch.h"
 #include "Bus.h"
 #include <symengine/basic.h>

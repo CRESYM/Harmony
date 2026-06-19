@@ -1,4 +1,4 @@
-﻿#ifndef _DQSYM_H_
+#ifndef _DQSYM_H_
 #define _DQSYM_H_
 
 /**

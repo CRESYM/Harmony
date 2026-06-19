@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file Constants.h
  * @brief Central include hub for Harmony: third-party libraries, standard headers, and shared type aliases.
  *

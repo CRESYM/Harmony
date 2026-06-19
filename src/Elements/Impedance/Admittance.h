@@ -1,4 +1,4 @@
-﻿#ifndef _ADMITTANCE_H_
+#ifndef _ADMITTANCE_H_
 #define _ADMITTANCE_H_
 
 /**

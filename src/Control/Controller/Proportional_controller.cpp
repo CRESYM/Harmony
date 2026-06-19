@@ -2,7 +2,7 @@
  * @file Proportional_controller.cpp
  * @brief Implementation of Proportional (P) controller.
  */
-﻿#include "Proportional_controller.h"
+#include "Proportional_controller.h"
 
 /**
  * @brief Defines the equations for a vector P controller.

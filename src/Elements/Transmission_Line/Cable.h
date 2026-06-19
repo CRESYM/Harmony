@@ -1,4 +1,4 @@
-﻿#ifndef _CABLE_H_
+#ifndef _CABLE_H_
 #define _CABLE_H_
 
 /**

@@ -1,4 +1,4 @@
-﻿#ifndef FILTER_H
+#ifndef FILTER_H
 #define FILTER_H
 
 #include "Control_block.h"

@@ -2,7 +2,7 @@
  * @file State_Space_Model.cpp
  * @brief Implementation of State-space model assembly from network MNA formulation.
  */
-﻿#include "State_Space_Model.h"
+#include "State_Space_Model.h"
 #include "../../network.h"      
 #include "../../Include_components.h"
 

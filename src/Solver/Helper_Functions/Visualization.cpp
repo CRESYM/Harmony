@@ -2,7 +2,7 @@
  * @file Visualization.cpp
  * @brief Implementation of Interactive ImGui/ImPlot visualization for solver results.
  */
-﻿#include "Visualization.h"
+#include "Visualization.h"
 
 // stb_image_write — single-header PNG/BMP writer (no external lib required).
 // Drop stb_image_write.h into your source tree from https://github.com/nothings/stb

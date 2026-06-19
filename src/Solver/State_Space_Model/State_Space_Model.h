@@ -1,4 +1,4 @@
-﻿#ifndef STATE_SPACE_MODEL
+#ifndef STATE_SPACE_MODEL
 #define STATE_SPACE_MODEL
 
 /**

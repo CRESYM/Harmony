@@ -2,7 +2,7 @@
  * @file example_point2point_case.cpp
  * @brief Runnable example: Point-to-point HVDC-style OPF case.
  */
-﻿#include "Examples.h"
+#include "Examples.h"
 
 #include "../network.h"
 #include "../Bus.h"

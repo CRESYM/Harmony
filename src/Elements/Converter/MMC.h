@@ -1,4 +1,4 @@
-﻿#ifndef MMC_H
+#ifndef MMC_H
 #define MMC_H
 
 /**

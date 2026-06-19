@@ -2,7 +2,7 @@
  * @file example_OPF.cpp
  * @brief Runnable example: Basic hybrid AC–DC optimal power flow case.
  */
-﻿#include "Examples.h"
+#include "Examples.h"
 
 #include "../network.h"
 #include "../Bus.h"

@@ -2,7 +2,7 @@
  * @file example_MMC.cpp
  * @brief Runnable example: MMC equilibrium, ABCD, Y-matrix, and eigenvalue study.
  */
-﻿#include "Examples.h"
+#include "Examples.h"
 
 #include "../network.h"
 #include "../Bus.h"

@@ -2,7 +2,7 @@
  * @file Switch.cpp
  * @brief Implementation of Multi-phase switch element for open/closed branch control.
  */
-﻿#include "Switch.h"
+#include "Switch.h"
 using namespace SymEngine;
 
 Switch::Switch(const std::string& symbol, const std::string& location, int pins, const std::vector<bool>& state)

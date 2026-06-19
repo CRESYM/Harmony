@@ -2,7 +2,7 @@
  * @file example_stability_check.cpp
  * @brief Runnable example: Full AC–DC hybrid stability study.
  */
-﻿#include "Examples.h"
+#include "Examples.h"
 
 #include "../network.h"
 #include "../Bus.h"
