@@ -1,7 +1,7 @@
 {
     "simulation": {
         "title": "dqsym_mmc",
-        "description": "JSON equivalent of example_DQsym_Simple_MMC.cpp — MMC with AC/DC sources and DQsym time-domain run.",
+        "description": "JSON equivalent of example_DQsym_Simple_MMC.cpp — MMC with AC/DC sources and DQsym time-domain run (Vdc=400 V, Vac=200 V).",
         "output_directory": "./files"
     },
     "buses": [
@@ -15,13 +15,13 @@
             "location": "AC1_DC1",
             "type": "mmc",
             "converter_params": [
-                314.1592653589793, 0.0, 0.0, 0.0, 326600.0, 0.0, 640000.0,
+                314.1592653589793, 0.0, 0.0, 0.0, 200.0, 0.0, 400.0,
                 0.0529, 0.1663, 0.0017568, 36.0, 0.01, 10.0, 0.0
             ],
             "controller_params": [
                 0,
                 0,
-                1, 0, 0.000257, 0.0032, 1, 100000000.0,
+                1, 0, 0.000257, 0.0032, 1, 1000.0,
                 0,
                 0,
                 0,
@@ -41,7 +41,7 @@
             "location": "DC1",
             "type": "dc_source",
             "pins": 2,
-            "voltage": [320000.0, -320000.0],
+            "voltage": [200.0, -200.0],
             "resistance": 0.0,
             "connected_buses": [
                 { "bus_id": "DC1", "terminal": 1 },
@@ -54,7 +54,7 @@
             "location": "AC1",
             "type": "ac_source",
             "pins": 3,
-            "voltage": 326600.0,
+            "voltage": 200.0,
             "values": [0.0],
             "connected_buses": [
                 { "bus_id": "AC1", "terminal": 1 },
@@ -73,6 +73,9 @@
             "frequency": 50.0,
             "n_keep": 5,
             "switch_count": 1,
+            "switch_on_resistance": [0.01],
+            "switch_off_resistance": [1000000.0],
+            "switch_types": [0],
             "output_bus_ids": ["AC1"],
             "plot": true
         }
