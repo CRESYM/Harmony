@@ -66,6 +66,21 @@ cmake --build . --config Release -j 4
 
 After building, run studies from the **repository root** with the conda environment active. Full details: [**Running Harmony**](docs/running-harmony.md).
 
+**HarmonyUI** (graphical launcher — pick examples, optional plots, log panel):
+
+```bash
+conda activate harmony
+cmake --build build --config Release --target HarmonyUI
+
+# Windows
+build\Release\HarmonyUI.exe
+
+# Linux / macOS
+./build/HarmonyUI
+```
+
+**Harmony** (CLI — scripts, CI, developers):
+
 ```bash
 conda activate harmony
 cd ..                              # repository root (from build/)
@@ -74,21 +89,22 @@ cd ..                              # repository root (from build/)
 build\Release\Harmony.exe --help
 build\Release\Harmony.exe --list-cpp
 build\Release\Harmony.exe --cpp stability_check
-build\Release\Harmony.exe --json src/examples/example.json
+build\Release\Harmony.exe --json src/examples/json/stability_check.json
 
 # Linux / macOS
 ./build/Harmony --help
 ./build/Harmony --cpp stability_check
-./build/Harmony --json src/examples/example.json
+./build/Harmony --json src/examples/json/stability_check.json
 ```
 
-| Goal | Command |
-|------|---------|
-| List C++ examples | `Harmony --list-cpp` |
-| Run C++ example | `Harmony --cpp <name>` (e.g. `mmc`, `opf`) |
-| Run JSON case | `Harmony --json <file>` |
-| No GUI plots | add `--no-plot` |
-| More output | add `--verbose` |
+| Goal | HarmonyUI | Harmony (CLI) |
+|------|-----------|---------------|
+| Interactive runs | Launcher → **Run** | `Harmony --cpp <name>` or `--json <file>` |
+| List examples | Dropdown menus | `--list-cpp`, `--list-json` |
+| No plots | Leave **Plot** unchecked | add `--no-plot` |
+| More output | **Verbose log** checkbox | add `--verbose` |
+
+See [User Manual — HarmonyUI](docs/manual/11-harmony-ui.md) for the full GUI guide.
 
 ### Run the tests
 To run the tests, you should follow a similar procedure to building and running the code.

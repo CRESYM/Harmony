@@ -4,15 +4,24 @@
 
 ---
 
-All examples are declared in `src/examples/Examples.h`. **Run from the terminal** (recommended):
+All examples are declared in `src/examples/Examples.h`. **Run from the terminal** or **HarmonyUI**:
 
 ```bash
 conda activate harmony
+
+# Graphical launcher (dropdown lists all C++ and JSON examples)
+HarmonyUI
+
+# CLI
 Harmony --list-cpp
 Harmony --cpp <name> [--no-plot] [--verbose]
+Harmony --list-json
+Harmony --json src/examples/json/<file>.json
 ```
 
-See [`../running-harmony.md`](../running-harmony.md) and [Chapter 10](10-command-line.md). Example names drop the `example_` prefix (`example_MMC` → `--cpp mmc`).
+See [`../running-harmony.md`](../running-harmony.md), [Chapter 11 — HarmonyUI](11-harmony-ui.md), and [Chapter 10](10-command-line.md). Example names drop the `example_` prefix (`example_MMC` → `--cpp mmc`).
+
+In **HarmonyUI**, OPF examples appear in a group at the top of each dropdown. Check **Plot** before **Run** to view charts in the **Plots** tab.
 
 Most plotting examples accept `bool plotting_enabled = true`. Use `--no-plot` in CI or headless environments.
 
@@ -141,6 +150,7 @@ GitHub Actions workflows build and run examples on Windows, Linux, and macOS (`w
 
 | Goal | Start with |
 |------|------------|
+| Interactive exploration | **HarmonyUI** → pick example → **Run** ([Chapter 11](11-harmony-ui.md)) |
 | Learn network assembly | `--cpp constructors`, `--cpp state_space` |
 | Understand MMC | `--cpp mmc` |
 | Full hybrid stability | `--cpp stability_check` |

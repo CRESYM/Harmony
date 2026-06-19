@@ -2,7 +2,9 @@
  * @file Visualization.cpp
  * @brief Implementation of Interactive ImGui/ImPlot visualization for solver results.
  */
+#include "Constants.h"
 #include "Visualization.h"
+#include "ui/harmony_banner_gui.h"
 
 // stb_image_write — single-header PNG/BMP writer (no external lib required).
 // Drop stb_image_write.h into your source tree from https://github.com/nothings/stb
@@ -29,6 +31,7 @@ namespace {
     std::atomic<bool>     g_running{ false };
     std::atomic<bool>     g_initialized{ false };
     std::atomic<bool>     g_stop{ false };
+    std::atomic<bool>     g_embedded{ false };
 
     GLFWwindow* g_window = nullptr;
     const char* glsl_version = "#version 130";
@@ -64,10 +67,13 @@ namespace {
 
     // Capture the current OpenGL back-buffer and write to a PNG file.
     // Must be called AFTER ImGui render draw data but BEFORE glfwSwapBuffers.
-    static void save_framebuffer(const std::string& path)
+    static void save_framebuffer(GLFWwindow* window, const std::string& path)
     {
+        if (window == nullptr) {
+            return;
+        }
         int w = 0, h = 0;
-        glfwGetFramebufferSize(g_window, &w, &h);
+        glfwGetFramebufferSize(window, &w, &h);
         if (w == 0 || h == 0) return;
 
         std::vector<uint8_t> buf(static_cast<size_t>(w * h * 3));
@@ -224,7 +230,16 @@ static void init_gui()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    g_window = glfwCreateWindow(1280, 720, "Harmony Visualization", NULL, NULL);
+    int vizWidth = 1500;
+    int vizHeight = 900;
+    if (GLFWmonitor* monitor = glfwGetPrimaryMonitor()) {
+        if (const GLFWvidmode* mode = glfwGetVideoMode(monitor)) {
+            vizWidth = static_cast<int>(mode->width * 0.85);
+            vizHeight = static_cast<int>(mode->height * 0.85);
+        }
+    }
+
+    g_window = glfwCreateWindow(vizWidth, vizHeight, "Harmony Visualization", NULL, NULL);
     if (!g_window)
         throw std::runtime_error("Failed to create window");
 
@@ -239,12 +254,75 @@ static void init_gui()
     ImGui_ImplGlfw_InitForOpenGL(g_window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
+    harmonyConfigurePlotUi(ImGui::GetIO());
+    ImGui::GetIO().Fonts->Build();
+    ImGui_ImplOpenGL3_DestroyDeviceObjects();
+    ImGui_ImplOpenGL3_CreateDeviceObjects();
+
     g_initialized = true;
     g_running = true;
 }
 
+// Draw registered plot tabs (shared by standalone window and HarmonyUI embedded mode).
+static void draw_plot_tabs(const char* tabBarId)
+{
+    if (!ImGui::BeginTabBar(tabBarId))
+        return;
+
+    std::vector<PlotTab> snapshot;
+    {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        snapshot = g_tabs;
+    }
+
+    for (auto& tab : snapshot)
+    {
+        if (ImGui::BeginTabItem(tab.title.c_str()))
+        {
+            {
+                constexpr const char* btnLabel = "Save PNG";
+                const ImGuiStyle&   st = ImGui::GetStyle();
+                const float         btnH = ImGui::GetFrameHeight();
+                const float         toolbarH = btnH + st.ItemSpacing.y * 2.0f;
+                const float         btnW = ImGui::CalcTextSize(btnLabel).x
+                    + st.FramePadding.x * 2.0f + 16.0f;
+
+                ImGui::BeginChild(
+                    "##tab_save_toolbar",
+                    ImVec2(-1.f, toolbarH),
+                    ImGuiChildFlags_None,
+                    ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+                const float rightX = ImGui::GetCursorPosX()
+                    + ImGui::GetContentRegionAvail().x - btnW;
+                ImGui::SetCursorPosX(std::max(ImGui::GetCursorPosX(), rightX));
+                ImGui::PushStyleColor(ImGuiCol_Button,
+                    ImVec4(0.18f, 0.42f, 0.18f, 1.f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                    ImVec4(0.25f, 0.58f, 0.25f, 1.f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive,
+                    ImVec4(0.12f, 0.30f, 0.12f, 1.f));
+
+                if (ImGui::Button(btnLabel, ImVec2(btnW, btnH)))
+                {
+                    std::lock_guard<std::mutex> lk(g_mutex);
+                    g_pending_save = tab.title + ".png";
+                }
+                ImGui::PopStyleColor(3);
+                ImGui::EndChild();
+            }
+
+            ImGui::Separator();
+            tab.draw();
+            ImGui::EndTabItem();
+        }
+    }
+
+    ImGui::EndTabBar();
+}
+
 // ============================================================
-// GUI LOOP  (runs on background thread)
+// GUI LOOP  (standalone window — CLI / C++ examples)
 // ============================================================
 
 static void gui_loop()
@@ -259,7 +337,6 @@ static void gui_loop()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // Full-screen host window
         ImGuiIO& io = ImGui::GetIO();
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(io.DisplaySize);
@@ -270,53 +347,7 @@ static void gui_loop()
             ImGuiWindowFlags_NoMove |
             ImGuiWindowFlags_NoBringToFrontOnFocus);
 
-        if (ImGui::BeginTabBar("Plots"))
-        {
-            // Snapshot under lock — draw() runs outside the lock so that
-            // callbacks can safely call add_tab() without deadlocking.
-            std::vector<PlotTab> snapshot;
-            {
-                std::lock_guard<std::mutex> lock(g_mutex);
-                snapshot = g_tabs;
-            }
-
-            for (auto& tab : snapshot)
-            {
-                if (ImGui::BeginTabItem(tab.title.c_str()))
-                {
-                    // ---- Save button — right-aligned in the tab's toolbar ----
-                    {
-                        constexpr float BTN_W = 95.0f;
-                        constexpr float BTN_H = 18.0f;
-                        const float     avail = ImGui::GetContentRegionAvail().x;
-                        const float     cursor = ImGui::GetCursorPosX();
-
-                        ImGui::SameLine(cursor + avail - BTN_W);
-                        ImGui::PushStyleColor(ImGuiCol_Button,
-                            ImVec4(0.18f, 0.42f, 0.18f, 1.f));
-                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-                            ImVec4(0.25f, 0.58f, 0.25f, 1.f));
-                        ImGui::PushStyleColor(ImGuiCol_ButtonActive,
-                            ImVec4(0.12f, 0.30f, 0.12f, 1.f));
-
-                        if (ImGui::Button((const char*)u8"💾 Save PNG", ImVec2(BTN_W, BTN_H)))
-                        {
-                            // Schedule capture — executed after this frame's
-                            // render call but before SwapBuffers.
-                            std::lock_guard<std::mutex> lk(g_mutex);
-                            g_pending_save = tab.title + ".png";
-                        }
-                        ImGui::PopStyleColor(3);
-                    }
-
-                    ImGui::Separator();
-                    tab.draw();
-                    ImGui::EndTabItem();
-                }
-            }
-
-            ImGui::EndTabBar();
-        }
+        draw_plot_tabs("HarmonyPlotTabs");
 
         ImGui::End();
         ImGui::Render();
@@ -329,8 +360,6 @@ static void gui_loop()
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        // Capture the back-buffer BEFORE the swap so glReadPixels
-        // sees the fully-rendered frame.
         {
             std::string pending;
             {
@@ -338,18 +367,18 @@ static void gui_loop()
                 std::swap(pending, g_pending_save);
             }
             if (!pending.empty())
-                save_framebuffer(pending);
+                save_framebuffer(g_window, pending);
         }
 
         glfwSwapBuffers(g_window);
     }
 
-    // ---- cleanup ----
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
     glfwDestroyWindow(g_window);
+    g_window = nullptr;
     glfwTerminate();
 
     g_running = false;
@@ -361,6 +390,11 @@ static void gui_loop()
 
 static void ensure_running()
 {
+    if (g_embedded.load()) {
+        g_running = true;
+        return;
+    }
+
     std::call_once(g_start_flag, []()
         {
             g_guiThread = std::thread(gui_loop);
@@ -384,14 +418,59 @@ static void add_tab(const std::string& title, std::function<void()> fn)
 // PUBLIC API
 // ============================================================
 
+void visualization_set_embedded_mode(const bool enabled)
+{
+    g_embedded = enabled;
+}
+
 void visualization_stop()
 {
     g_stop = true;
+    if (g_embedded.load()) {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        g_tabs.clear();
+        g_pending_save.clear();
+        g_running = false;
+    }
 }
 
 bool visualization_is_running()
 {
-    return g_running;
+    if (g_embedded.load()) {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        return !g_tabs.empty();
+    }
+    return g_running.load();
+}
+
+bool visualization_has_tabs()
+{
+    std::lock_guard<std::mutex> lock(g_mutex);
+    return !g_tabs.empty();
+}
+
+void visualization_clear_tabs()
+{
+    std::lock_guard<std::mutex> lock(g_mutex);
+    g_tabs.clear();
+    g_pending_save.clear();
+}
+
+void visualization_draw_embedded(const char* tabBarId)
+{
+    draw_plot_tabs(tabBarId != nullptr ? tabBarId : "HarmonyPlotTabs");
+}
+
+void visualization_process_pending_save(GLFWwindow* window)
+{
+    std::string pending;
+    {
+        std::lock_guard<std::mutex> lk(g_mutex);
+        std::swap(pending, g_pending_save);
+    }
+    if (!pending.empty()) {
+        save_framebuffer(window, pending);
+    }
 }
 
 /// Block until the window is closed by the user.
@@ -404,10 +483,29 @@ void visualization_wait()
 /// Schedule a PNG capture of the named tab on the next rendered frame.
 /// The file is written as "<tab_title>.png" in the working directory.
 /// Thread-safe: can be called from any thread.
-void visualization_save_tab(const std::string& tab_title)
+void visualization_save_tab(
+    const std::string& tab_title,
+    const std::filesystem::path& output_dir)
 {
     std::lock_guard<std::mutex> lk(g_mutex);
-    g_pending_save = tab_title + ".png";
+    const std::string filename = sanitise_filename(tab_title) + ".png";
+    if (output_dir.empty()) {
+        g_pending_save = filename;
+    }
+    else {
+        g_pending_save = (output_dir / filename).generic_string();
+    }
+}
+
+std::vector<std::string> visualization_tab_titles()
+{
+    std::lock_guard<std::mutex> lk(g_mutex);
+    std::vector<std::string> titles;
+    titles.reserve(g_tabs.size());
+    for (const auto& tab : g_tabs) {
+        titles.push_back(tab.title);
+    }
+    return titles;
 }
 
 /// Public interface used by external modules (e.g. viz_opf).
@@ -438,7 +536,7 @@ void bode_plot_implot(
             ImGui::BeginChild("BodeLayout");
 
             // ---- Magnitude ----
-            if (ImPlot::BeginPlot("Magnitude (dB)", ImVec2(-1, 260)))
+            if (ImPlot::BeginPlot("Magnitude (dB)", ImVec2(-1, kHarmonyPlotPanelHeightPx)))
             {
                 ImPlot::SetupAxes("Frequency (Hz)", "20 log10 |H(jw)|");
                 ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
@@ -459,7 +557,7 @@ void bode_plot_implot(
             ImGui::Dummy(ImVec2(0, 10));
 
             // ---- Phase ----
-            if (ImPlot::BeginPlot("Phase (deg)", ImVec2(-1, 260)))
+            if (ImPlot::BeginPlot("Phase (deg)", ImVec2(-1, kHarmonyPlotPanelHeightPx)))
             {
                 ImPlot::SetupAxes("Frequency (Hz)", "Angle H(jw)");
                 ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
@@ -595,7 +693,7 @@ void plot_eigenvalues_implot(
             ImGui::BeginChild("EigLayout");
 
             if (ImPlot::BeginPlot("Eigenvalues (s-plane)",
-                ImVec2(-1, 520),
+                ImVec2(-1, kHarmonyPlotEigenHeightPx),
                 ImPlotFlags_Equal))
             {
                 ImPlot::SetupAxes("Re(lambda)", "Im(lambda)");
@@ -603,7 +701,7 @@ void plot_eigenvalues_implot(
 
                 ImPlotSpec scatterSpec; // style for scatter plot
                 scatterSpec.Marker = ImPlotMarker_Circle;
-                scatterSpec.MarkerSize = 8.0f;
+                scatterSpec.MarkerSize = 12.0f;
                 scatterSpec.MarkerFillColor = ImVec4(0.1f, 0.4f, 0.8f, 1.0f);
                 scatterSpec.MarkerLineColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
       
@@ -829,7 +927,7 @@ void plot_abc_groups_implot(
         {
             // Each group gets a fixed slice of height; wrap in a scrollable child
             // so the tab remains usable regardless of group count.
-            constexpr float PLOT_H = 220.0f;
+            constexpr float PLOT_H = kHarmonyPlotWaveformHeightPx;
 
             ImGui::BeginChild("##abc_groups_scroll", ImVec2(-1, -1), false,
                 ImGuiWindowFlags_HorizontalScrollbar);
@@ -1222,7 +1320,7 @@ void viz_opf(const OPFVisualData& d)
             ImGui::SameLine(0, 4);
 
             // ---- B) NETWORK PLOT ----
-            ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(6, 6));
+            ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(14, 14));
             if (ImPlot::BeginPlot("##opf_net",
                 ImVec2(netW, height),
                 ImPlotFlags_Equal |
@@ -1243,7 +1341,7 @@ void viz_opf(const OPFVisualData& d)
                     auto rgb = oranges_colormap(t_n);
                     ImPlotSpec edgeSpec;
                     edgeSpec.LineColor = ImVec4(rgb[0], rgb[1], rgb[2], 1.0f);
-                    edgeSpec.LineWeight = 2.0f;
+                    edgeSpec.LineWeight = 3.0f;
                     double ex[2] = { xs[u], xs[v] };
                     double ey[2] = { ys[u], ys[v] };
                     ImPlot::PlotLine("##e", ex, ey, 2, edgeSpec);
@@ -1256,7 +1354,7 @@ void viz_opf(const OPFVisualData& d)
 
                     auto sz = [](double mw) -> float {
                         return static_cast<float>(
-                            std::min(std::max(4.0 + mw * 0.012, 4.0), 18.0));
+                            std::min(std::max(6.0 + mw * 0.015, 6.0), 24.0));
                         };
 
                     float lsz = sz(loadPow_v[idx]);
@@ -1306,7 +1404,7 @@ void viz_opf(const OPFVisualData& d)
                     double px = xs[idx], py = ys[idx];
                     ImPlotSpec dcSpec;
                     dcSpec.Marker = ImPlotMarker_Up;
-                    dcSpec.MarkerSize = 10.0f;
+                    dcSpec.MarkerSize = 14.0f;
                     dcSpec.MarkerFillColor = ImVec4(0.1f, 0.1f, 0.8f, 1.f);
                     dcSpec.MarkerLineColor = ImVec4(0.1f, 0.1f, 0.8f, 1.f);
                     ImPlot::PlotScatter("##dc", &px, &py, 1, dcSpec);
@@ -1323,11 +1421,11 @@ void viz_opf(const OPFVisualData& d)
                     else if (dcNodeToRow.count(node))
                         numLbl = "#" + std::to_string(orig_idx_dc[dcNodeToRow.at(node)]);
 
-                    ImPlot::PlotText(numLbl.c_str(), xs[i], ys[i], ImVec2(0, -14));
+                    ImPlot::PlotText(numLbl.c_str(), xs[i], ys[i], ImVec2(0, -18));
 
                     std::ostringstream oss;
                     oss << std::fixed << std::setprecision(3) << voltLabel[i] << "pu";
-                    ImPlot::PlotText(oss.str().c_str(), xs[i], ys[i], ImVec2(0, 10));
+                    ImPlot::PlotText(oss.str().c_str(), xs[i], ys[i], ImVec2(0, 14));
                 }
 
                 ImPlot::EndPlot();

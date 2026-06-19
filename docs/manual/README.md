@@ -16,7 +16,7 @@ For API-level documentation, see [Building API Documentation (Doxygen)](../doxyg
 
 For detailed installation steps with screenshots, see [`../installation.md`](../installation.md).
 
-For **how to run** Harmony after building, see [`../running-harmony.md`](../running-harmony.md) and [Chapter 10 — Command-line interface](10-command-line.md).
+For **how to run** Harmony after building, see [`../running-harmony.md`](../running-harmony.md), [Chapter 11 — HarmonyUI](11-harmony-ui.md) (graphical launcher), and [Chapter 10 — Command-line interface](10-command-line.md) (CLI).
 
 For the JSON input file specification, see [`../input-file-format.md`](../input-file-format.md).
 
@@ -36,6 +36,7 @@ For the JSON input file specification, see [`../input-file-format.md`](../input-
 | [8](08-examples-catalog.md) | Examples catalog | Guide to all bundled examples |
 | [9](09-troubleshooting.md) | Troubleshooting | Common errors and fixes |
 | [10](10-command-line.md) | Command-line interface | Run examples and JSON cases with `--cpp` / `--json` |
+| [11](11-harmony-ui.md) | HarmonyUI | Graphical launcher, embedded plots, PNG export |
 
 ---
 
@@ -44,6 +45,7 @@ For the JSON input file specification, see [`../input-file-format.md`](../input-
 | Task | Where to look |
 |------|----------------|
 | First-time install | [Chapter 2](02-getting-started.md), [`installation.md`](../installation.md) |
+| **Run Harmony (GUI)** | [**HarmonyUI**](11-harmony-ui.md), [`running-harmony.md`](../running-harmony.md) |
 | **Run Harmony (CLI)** | [**`running-harmony.md`**](../running-harmony.md), [Chapter 10](10-command-line.md) |
 | Run a hybrid AC–DC stability study | `Harmony --cpp stability_check`, [Chapter 7](07-analysis-workflows.md) |
 | Run optimal power flow | `Harmony --cpp opf`, [Chapter 7](07-analysis-workflows.md) |
@@ -63,7 +65,8 @@ Harmony/
 │   ├── Control/          PI controllers, filters (used by converters)
 │   ├── examples/         Runnable demonstration programs
 │   ├── data/             CSV case files for OPF
-│   └── main.cpp          Entry point (CLI: --cpp / --json)
+│   ├── main.cpp          CLI entry point (--cpp / --json)
+│   └── ui/               HarmonyUI launcher (harmony_ui_main.cpp)
 ├── src/json/             JSON builders, validation, computation runner
 ├── tests/                GoogleTest unit tests
 └── docs/                 Installation, running guide, and this manual

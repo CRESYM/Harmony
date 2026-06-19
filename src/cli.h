@@ -49,14 +49,31 @@ void printCliHelp();
 /** @brief List registered C++ examples. */
 void listCppExamples();
 
+/** @brief Registered C++ example names (sorted). */
+std::vector<std::string> cppExampleNames();
+
 /** @brief List JSON files found under configured search paths. */
 void listJsonFiles(const std::vector<std::filesystem::path>& searchPaths);
+
+/** @brief Discover `.json` files under @p searchPaths (sorted, unique). */
+std::vector<std::filesystem::path> discoverJsonFiles(
+	const std::vector<std::filesystem::path>& searchPaths);
+
+/** @brief Parse and schema-validate a JSON simulation file. */
+bool validateJsonFile(const std::filesystem::path& jsonPath, std::string& errorOut);
 
 /** @brief Run a named C++ example. @return 0 on success, non-zero on failure. */
 int runCppExample(const std::string& name, bool plot, bool verbose);
 
-/** @brief Run a JSON simulation file. @return 0 on success, non-zero on failure. */
-int runJsonSimulation(const std::filesystem::path& jsonPath, bool verbose, bool plot = true);
+/**
+ * @brief Run a JSON simulation file. @return 0 on success, non-zero on failure.
+ * @param waitForPlotClose When true (CLI default), block until the plot window closes.
+ */
+int runJsonSimulation(
+	const std::filesystem::path& jsonPath,
+	bool verbose,
+	bool plot = true,
+	bool waitForPlotClose = true);
 
 /** @brief Built-in JSON search directories (used when env/CLI overrides are unset). */
 std::vector<std::filesystem::path> builtinJsonSearchPaths();

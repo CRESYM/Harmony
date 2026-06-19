@@ -18,6 +18,26 @@
 void visualization_stop();
 
 /**
+ * @brief Use the host ImGui/GLFW context (HarmonyUI) instead of a background window.
+ *
+ * Call before any simulation runs. Prevents a second GLFW/ImGui context that can
+ * crash with ImGui focus-scope errors.
+ */
+void visualization_set_embedded_mode(bool enabled);
+
+/** @brief Returns whether plot tabs are registered. */
+bool visualization_has_tabs();
+
+/** @brief Remove all registered plot tabs (e.g. before a new run). */
+void visualization_clear_tabs();
+
+/** @brief Draw plot tabs inside the current ImGui window (embedded / HarmonyUI mode). */
+void visualization_draw_embedded(const char* tabBarId = "HarmonyPlotTabs");
+
+/** @brief Capture a pending PNG save after ImGui::Render() on @p window. */
+void visualization_process_pending_save(GLFWwindow* window);
+
+/**
  * @brief Returns whether the visualization window is currently open.
  * @return True if the GUI is running.
  */
@@ -34,7 +54,12 @@ void visualization_wait();
  * @brief Schedules a PNG capture of the named tab on the next rendered frame.
  * @param tab_title Title of the tab to capture (saved as "<tab_title>.png").
  */
-void visualization_save_tab(const std::string& tab_title);
+void visualization_save_tab(
+	const std::string& tab_title,
+	const std::filesystem::path& output_dir = {});
+
+/** @brief Titles of tabs currently registered in the visualization window. */
+std::vector<std::string> visualization_tab_titles();
 
 /**
  * @brief Registers a custom ImGui/ImPlot draw callback as a new tab.
@@ -98,7 +123,7 @@ extern void plot_participation_factors_implot(
 /**
  * @brief Plots three-phase abc waveforms over time.
  * @param t Time axis (s).
- * @param Xabc Waveform matrix (3 rows ◊ N samples).
+ * @param Xabc Waveform matrix (3 rows ù N samples).
  * @param title Plot window title.
  */
 extern void plot_abc_waveforms_implot(
@@ -109,7 +134,7 @@ extern void plot_abc_waveforms_implot(
 /**
  * @brief Plots multiple abc waveform groups on shared axes.
  * @param t Time axis (s).
- * @param Xabc_groups One 3◊N matrix per signal group.
+ * @param Xabc_groups One 3ùN matrix per signal group.
  * @param title Plot window title.
  */
 extern void plot_abc_groups_implot(

@@ -3,8 +3,10 @@
  * @brief Implementation of the unified Harmony command-line interface.
  */
 #include "cli.h"
+#include "harmony_banner.h"
 
 #include "examples/Examples.h"
+#include "json/json_validator.h"
 #include "json/simulation_builder.h"
 #include "Solver/Helper_Functions/Visualization.h"
 
@@ -293,8 +295,11 @@ CliOptions parseCli(int argc, char* argv[]) {
 
 
 void printCliHelp() {
+	printHarmonyBanner(std::cout);
 	std::cout <<
 		"Harmony — hybrid AC/DC power-system framework\n\n"
+		"HarmonyUI — graphical launcher with example picker, optional plots, and PNG export.\n"
+		"  Run HarmonyUI from your build output (developer CLI below is unchanged).\n\n"
 		"Usage:\n"
 		"  Harmony --cpp <example>     Run a C++ example program\n"
 		"  Harmony --json <file>       Run a JSON simulation file\n\n"
@@ -320,12 +325,81 @@ void printCliHelp() {
 
 
 void listCppExamples() {
-	const auto registry = exampleRegistry();
-	std::cout << "Available C++ examples (" << registry.size() << "):\n";
-	for (const auto& [name, fn] : registry) {
-		(void)fn;
+	const auto names = cppExampleNames();
+	std::cout << "Available C++ examples (" << names.size() << "):\n";
+	for (const auto& name : names) {
 		std::cout << "  " << name << "\n";
 	}
+}
+
+
+std::vector<std::string> cppExampleNames() {
+	const auto registry = exampleRegistry();
+	std::vector<std::string> names;
+	names.reserve(registry.size());
+	for (const auto& [name, fn] : registry) {
+		(void)fn;
+		names.push_back(name);
+	}
+	std::sort(names.begin(), names.end());
+	return names;
+}
+
+
+std::vector<std::filesystem::path> discoverJsonFiles(
+	const std::vector<std::filesystem::path>& searchPaths)
+{
+	std::vector<std::filesystem::path> files;
+	for (const auto& dir : searchPaths) {
+		if (!std::filesystem::is_directory(dir)) {
+			continue;
+		}
+		for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+			if (!entry.is_regular_file() || entry.path().extension() != ".json") {
+				continue;
+			}
+			const auto absolute = std::filesystem::absolute(entry.path());
+			if (std::find(files.begin(), files.end(), absolute) == files.end()) {
+				files.push_back(absolute);
+			}
+		}
+	}
+	std::sort(files.begin(), files.end());
+	return files;
+}
+
+
+bool validateJsonFile(const std::filesystem::path& jsonPath, std::string& errorOut) {
+	errorOut.clear();
+	if (!std::filesystem::exists(jsonPath)) {
+		errorOut = "File not found: " + jsonPath.generic_string();
+		return false;
+	}
+
+	std::ifstream stream(jsonPath);
+	if (!stream) {
+		errorOut = "Unable to open: " + jsonPath.generic_string();
+		return false;
+	}
+
+	JSON config;
+	try {
+		config = JSON::parse(stream);
+	}
+	catch (const JSON::parse_error& ex) {
+		errorOut = std::string("JSON parse error at byte ") + std::to_string(ex.byte) + ": " + ex.what();
+		return false;
+	}
+
+	try {
+		JsonValidator::validateRoot(config);
+	}
+	catch (const std::exception& ex) {
+		errorOut = ex.what();
+		return false;
+	}
+
+	return true;
 }
 
 
@@ -462,7 +536,8 @@ int runCppExample(const std::string& name, const bool plot, const bool verbose) 
 int runJsonSimulation(
 	const std::filesystem::path& jsonPath,
 	const bool verbose,
-	const bool plot)
+	const bool plot,
+	const bool waitForPlotClose)
 {
 	if (!std::filesystem::exists(jsonPath)) {
 		std::cerr << "Input file not found: " << jsonPath << "\n";
@@ -516,8 +591,7 @@ int runJsonSimulation(
 		std::cout << "\nSimulation finished.\n";
 	}
 
-	// Keep the ImGui plot window alive until the user closes it (C++ examples use cin.get()).
-	if (plot && visualization_is_running()) {
+	if (plot && waitForPlotClose && visualization_is_running()) {
 		if (verbose) {
 			std::cout << "Close the Harmony Visualization window to exit.\n";
 		}

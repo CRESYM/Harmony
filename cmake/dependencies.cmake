@@ -78,6 +78,7 @@ function (link_implot TARGET_NAME)
     FetchContent_MakeAvailable(imgui_source)
     
     set(IMGUI_BACKEND_DIR "${imgui_source_SOURCE_DIR}/backends")
+    set(HARMONY_IMGUI_FONT_PATH "${imgui_source_SOURCE_DIR}/misc/fonts/Cousine-Regular.ttf" CACHE INTERNAL "")
     
     target_include_directories(
         ${TARGET_NAME}
@@ -115,6 +116,11 @@ function (link_implot TARGET_NAME)
     # If using Conda GLEW on Windows, link statically
     if(MSVC)
         target_compile_definitions(${TARGET_NAME} PRIVATE GLEW_STATIC)
+    endif()
+
+    if(EXISTS "${HARMONY_IMGUI_FONT_PATH}")
+        target_compile_definitions(${TARGET_NAME} PRIVATE
+            "HARMONY_IMGUI_FONT_PATH=\"${HARMONY_IMGUI_FONT_PATH}\"")
     endif()
 
 endfunction()

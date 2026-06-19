@@ -1,12 +1,14 @@
 # Chapter 10 — Command-Line Interface
 
-[← Troubleshooting](09-troubleshooting.md) | [Manual index](README.md)
+[← Troubleshooting](09-troubleshooting.md) | [Manual index](README.md) | [Next: HarmonyUI →](11-harmony-ui.md)
 
 ---
 
-> **Canonical run guide:** [`../running-harmony.md`](../running-harmony.md) (conda, paths, Visual Studio, troubleshooting). This chapter is the detailed CLI reference.
+> **Canonical run guide:** [`../running-harmony.md`](../running-harmony.md) (conda, paths, Visual Studio, troubleshooting). This chapter is the detailed **CLI** reference for the `Harmony` executable.
+>
+> For interactive use with embedded plots, see [Chapter 11 — HarmonyUI](11-harmony-ui.md).
 
-After you have built Harmony (see [Chapter 2 § Build](02-getting-started.md#24-build-the-main-executable)), use the same executable to run **C++ examples** or **JSON simulation files**. No recompile is needed to switch studies.
+After you have built Harmony (see [Chapter 2 § Build](02-getting-started.md#24-build-the-main-executable)), use the **`Harmony`** executable to run **C++ examples** or **JSON simulation files**. No recompile is needed to switch studies. **`HarmonyUI`** is a separate target for the graphical launcher.
 
 Run from the **repository root** so default JSON search paths resolve correctly:
 
@@ -62,7 +64,7 @@ Example names in `--list-cpp` omit the `example_` prefix (e.g. `stability_check`
 ./build/Harmony --cpp opf --verbose
 ```
 
-Examples that open plot windows respect `--no-plot` (useful on headless machines or in CI).
+Examples that open plot windows respect `--no-plot` (useful on headless machines or in CI). The CLI opens a separate **Harmony Visualization** window and waits for it to close on JSON runs with plots. In **HarmonyUI**, charts appear in the **Plots** tab of the same window instead.
 
 **Visual Studio:** Set **Harmony** as the startup project. In **Project → Properties → Debugging → Command Arguments**, enter for example:
 
@@ -119,7 +121,7 @@ JSON format and component types: [Chapter 5](05-json-input.md) and [`../input-fi
 |----------|--------|
 | `stability_check` | Full AC–DC hybrid stability study |
 | `mmc` | MMC equilibrium, ABCD, Y-matrix |
-| `opf`, `opf_csv`, `opf_pv`, `opf_wt` | Optimal power flow cases |
+| `opf`, `opf_csv`, `opf_1`, `opf_csv_1`, `opf_pv`, `opf_wt` | Optimal power flow cases |
 | `dqsym_rlc`, `dqsym_simple_mmc`, `dqsym_dsss2` | Dynamic phasor (DQsym) demos |
 | `cable`, `ohl` | Cable and overhead line Y sweeps |
 | `wt_type_3`, `wt_type_4`, `pv_plant` | RES models |
@@ -180,7 +182,7 @@ Use an explicit path, or add `--search-path`. Confirm the file exists:
 
 ### Plots block the terminal
 
-Some examples wait for Enter after plotting. Use `--no-plot`, or run non-interactive examples via `--json`.
+JSON runs with `"plot": true` or `"plot_result": true` keep the CLI open until the **Harmony Visualization** window closes. Use `--no-plot`, or use **HarmonyUI** with the **Plot** checkbox for interactive viewing without blocking a script.
 
 More build and environment issues: [Chapter 9](09-troubleshooting.md).
 
@@ -188,6 +190,6 @@ More build and environment issues: [Chapter 9](09-troubleshooting.md).
 
 ## 10.8 Adding new examples (developers)
 
-To expose a new C++ example on the command line, register it in `src/cli.cpp`. You do not need to edit `src/main.cpp` or rebuild to switch between already-registered examples.
+To expose a new C++ example on the command line, register it in `src/cli.cpp`. You do not need to edit `src/main.cpp` or rebuild to switch between already-registered examples. New examples appear automatically in **HarmonyUI** dropdowns after rebuild.
 
-[← Troubleshooting](09-troubleshooting.md) | [Manual index](README.md)
+[← Troubleshooting](09-troubleshooting.md) | [Manual index](README.md) | [Next: HarmonyUI →](11-harmony-ui.md)

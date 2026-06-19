@@ -49,9 +49,21 @@ Studies are built as a **graph**: buses connected by **elements**. Solvers opera
 
 ---
 
-## 1.4 Two ways to define a study
+## 1.4 Two ways to run a study
 
-### A. C++ examples (command line)
+### A. HarmonyUI (graphical launcher)
+
+Pick bundled C++ examples or JSON files from dropdowns, run with optional embedded plots, and inspect output in the **Log** and **Plots** tabs. Recommended for interactive exploration.
+
+```bash
+conda activate harmony
+cmake --build build --config Release --target HarmonyUI
+build\Release\HarmonyUI.exe    # Windows
+```
+
+See [Chapter 11 — HarmonyUI](11-harmony-ui.md).
+
+### B. C++ examples (CLI)
 
 Bundled studies live under `src/examples/`. Run them **without recompiling**:
 
@@ -64,15 +76,15 @@ Harmony --cpp mmc --no-plot
 
 See [`../running-harmony.md`](../running-harmony.md) and [Chapter 10](10-command-line.md).
 
-### B. JSON input file
+### C. JSON input file
 
-Define buses, components, and computations in JSON under `src/json/` and `src/examples/`:
+Define buses, components, and computations in JSON under `src/examples/json/` and related paths:
 
 ```bash
-Harmony --json src/examples/example.json
+Harmony --json src/examples/json/stability_check.json
 ```
 
-See [Chapter 5](05-json-input.md) and [`../input-file-format.md`](../input-file-format.md).
+Also available from **HarmonyUI** (Launcher → JSON file). See [Chapter 5](05-json-input.md) and [`../input-file-format.md`](../input-file-format.md).
 
 ---
 

@@ -97,6 +97,34 @@ target_include_directories(Harmony PRIVATE
 )
 
 # -----------------------------------------------------------------------------
+# 5. HarmonyUI launcher executable
+# -----------------------------------------------------------------------------
+add_executable(
+    HarmonyUI
+    ${HARMONY_HEADER_FILES}
+    ${HARMONY_UI_SOURCE_FILES}
+)
+
+target_precompile_headers(HarmonyUI PRIVATE
+    <Eigen/Dense>
+    <symengine/basic.h>
+    "./src/Constants.h"
+    "./src/Include_components.h"
+    "./src/Solver/Helper_Functions/Helper_Functions.h"
+)
+
+link_eigen(HarmonyUI)
+link_symengine(HarmonyUI)
+link_sundials(HarmonyUI)
+link_implot(HarmonyUI)
+link_gurobi(HarmonyUI)
+link_nlohmann_json(HarmonyUI)
+
+target_include_directories(HarmonyUI PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+# -----------------------------------------------------------------------------
 # 6. Optional API documentation (Doxygen)
 # -----------------------------------------------------------------------------
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/doxygen.cmake)

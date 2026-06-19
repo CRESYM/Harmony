@@ -8,12 +8,16 @@
 
 After building a `Network`, you invoke a **solver** appropriate to the study type. This chapter describes the main workflows and points to example code.
 
-**How to run from the terminal:** [`../running-harmony.md`](../running-harmony.md). Typical pattern:
+**How to run:** [`../running-harmony.md`](../running-harmony.md). Use **HarmonyUI** for interactive runs with optional embedded plots ([Chapter 11](11-harmony-ui.md)), or the **`Harmony` CLI** for scripts and CI:
 
 ```bash
+HarmonyUI                             # graphical launcher (build target HarmonyUI)
 Harmony --cpp <example_name>          # C++ bundled study
 Harmony --json path/to/case.json      # JSON-defined study
+Harmony --json case.json --no-plot    # headless / CI
 ```
+
+In **HarmonyUI**, enable **Plot** on the Launcher tab to see Bode/Nyquist, OPF network, and DQsym charts under **Plots**. JSON plot flags apply only when **Plot** is checked.
 
 ---
 

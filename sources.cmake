@@ -118,10 +118,19 @@ set(Controller_Header_Files
 set(Header_Files
     src/Bus.h
     src/Constants.h
+    src/harmony_banner.h
+    src/ui/harmony_banner_gui.h
     src/Include_components.h
     src/Include_control_blocks.h
     src/network.h
     src/SubNetwork.h
+)
+set(Cli_Header_Files
+    src/cli.h
+)
+set(Ui_Header_Files
+    src/ui/harmony_launcher.h
+    src/ui/log_capture.h
 )
 set(Examples_Header_files
     src/examples/Examples.h
@@ -219,6 +228,8 @@ set(Source_Files
     src/main.cpp
     src/network.cpp
     src/SubNetwork.cpp
+    src/harmony_banner.cpp
+    src/ui/harmony_banner_gui.cpp
 )
 set(Json_Source_Files
     src/json/component_builder.cpp
@@ -258,6 +269,11 @@ set(Examples_Source_files
     src/examples/example_DQsym_Simple_MMC.cpp
     src/examples/example_state_space.cpp   
 )
+set(Ui_Source_Files
+    src/ui/harmony_launcher.cpp
+    src/ui/log_capture.cpp
+    src/ui/harmony_ui_main.cpp
+)
 
 # -----------------------------------------------------------------------------
 # 3. Define HARMONY_HEADER_FILES variable
@@ -283,6 +299,8 @@ set(HARMONY_HEADER_FILES
     ${Solver_State_Space_Model_Header_Files}
     ${Examples_Header_files}
     ${Json_Header_Files}
+    ${Cli_Header_Files}
+    ${Ui_Header_Files}
 )
 
 # -----------------------------------------------------------------------------
@@ -311,6 +329,11 @@ set(HARMONY_SOURCE_FILES
     ${Json_Source_Files}
 )
 
+# HarmonyUI: same core library as Harmony, different entry point (no src/main.cpp).
+set(HARMONY_UI_SOURCE_FILES ${HARMONY_SOURCE_FILES})
+list(REMOVE_ITEM HARMONY_UI_SOURCE_FILES src/main.cpp)
+list(APPEND HARMONY_UI_SOURCE_FILES ${Ui_Source_Files})
+
 # -----------------------------------------------------------------------------
 # 5. Define Visual Studio project filters
 # -----------------------------------------------------------------------------
@@ -336,6 +359,8 @@ if(MSVC)
     source_group("Header Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Header_Files})
     source_group("Header Files\\Examples" FILES ${Examples_Header_files})
     source_group("Header Files\\JSON" FILES ${Json_Header_Files})
+    source_group("Header Files\\CLI" FILES ${Cli_Header_Files})
+    source_group("Header Files\\UI" FILES ${Ui_Header_Files})
 
 
     source_group("Source Files" FILES ${Source_Files})
@@ -359,4 +384,5 @@ if(MSVC)
     source_group("Source Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Source_Files})
     source_group("Source Files\\Examples" FILES ${Examples_Source_files})
     source_group("Source Files\\JSON" FILES ${Json_Source_Files})
+    source_group("Source Files\\UI" FILES ${Ui_Source_Files})
 endif()

@@ -116,7 +116,19 @@ cmake --build . --config Release -j 4
 
 
 
-On Windows you may also open `build/Harmony.sln` in Visual Studio, set **Harmony** as startup project, and build Release.
+On Windows you may also open `build/Harmony.sln` in Visual Studio, set **HarmonyUI** (GUI) or **Harmony** (CLI) as startup project, and build Release.
+
+
+
+Build both executables explicitly:
+
+
+
+```bash
+
+cmake --build . --config Release --target Harmony --target HarmonyUI
+
+```
 
 
 
@@ -128,7 +140,41 @@ On Windows you may also open `build/Harmony.sln` in Visual Studio, set **Harmony
 
 
 
-Harmony is started from the command line. Use the **repository root** as the working directory and keep `(harmony)` active.
+Harmony ships two executables. Use **HarmonyUI** for interactive work, or **`Harmony`** for the command line (scripts, CI, developers). Use the **repository root** as the working directory and keep `(harmony)` active.
+
+
+
+### HarmonyUI (recommended for interactive use)
+
+
+
+```bash
+
+conda activate harmony
+
+cmake --build build --config Release --target HarmonyUI
+
+
+
+# Windows
+
+build\Release\HarmonyUI.exe
+
+
+
+# Linux / macOS
+
+./build/HarmonyUI
+
+```
+
+
+
+On **Launcher**, pick a C++ example or JSON file, optionally check **Plot**, then **Run**. Output appears under **Log**; charts under **Plots** when enabled. See [Chapter 11 — HarmonyUI](11-harmony-ui.md).
+
+
+
+### Harmony (CLI)
 
 
 
@@ -210,9 +256,9 @@ Use `--no-plot` on machines without a display or in CI.
 
 ```bash
 
-build\Release\Harmony.exe --json src/examples/example.json --verbose   # Windows
+build\Release\Harmony.exe --json src/examples/json/stability_check.json --verbose   # Windows
 
-./build/Harmony --json src/examples/example.json --verbose             # Linux / macOS
+./build/Harmony --json src/examples/json/stability_check.json --verbose             # Linux / macOS
 
 ```
 
@@ -328,9 +374,11 @@ Tests cover network wiring, individual elements, MMC Y-matrices, state-space for
 
 | 4 | Run `Harmony --cpp stability_check` for a full AC–DC study |
 
-| 5 | Run `Harmony --json src/examples/example.json` ([Chapter 5](05-json-input.md)) |
+| 5 | Run `Harmony --json src/examples/json/stability_check.json` ([Chapter 5](05-json-input.md)) |
 
-| 6 | Explore OPF: `Harmony --cpp opf` or `--cpp opf_csv` |
+| 6 | Try **HarmonyUI** for interactive runs ([Chapter 11](11-harmony-ui.md)) |
+
+| 7 | Explore OPF: `Harmony --cpp opf` or `--cpp opf_csv` |
 
 
 

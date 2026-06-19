@@ -164,30 +164,48 @@ Note: Harmony will add the ALL_BUILD and ZERO_CHECK projects to the VS solution.
 cmake --build . --config Release
 ```
 
-Windows users: You may also use the VS Build button or select Build->Solution from the menu at the top. The output file *Harmony.exe* will be created in the `build/Release` directory or `build/Debug` if the app was built in Debug mode.
+Windows users: You may also use the VS Build button or select Build->Solution from the menu at the top. The output files *Harmony.exe* and *HarmonyUI.exe* are created in the `build/Release` directory (or `build/Debug` in Debug mode).
 
 **9. Execute Harmony.**
->>>>>>> 55ccead0f158e145a7ee43035061ecd8741195b3
+
+Build produces two executables:
+
+| Executable | Build target | Use |
+|------------|--------------|-----|
+| **HarmonyUI** | `HarmonyUI` | Graphical launcher (recommended for interactive use) |
+| **Harmony** | `Harmony` | Command-line interface for developers and scripts |
+
 ```bash
 conda activate harmony
 cd ..    # repository root (from build/)
 
-# Windows
+# Build HarmonyUI (optional; included in a full build)
+cmake --build build --config Release --target HarmonyUI
+
+# Windows — graphical launcher
+build\Release\HarmonyUI.exe
+
+# Windows — CLI
 build\Release\Harmony.exe --help
 build\Release\Harmony.exe --cpp stability_check
-build\Release\Harmony.exe --json src/examples/example.json
+build\Release\Harmony.exe --json src/examples/json/stability_check.json
 
-# Linux / macOS
+# Linux / macOS — graphical launcher
+./build/HarmonyUI
+
+# Linux / macOS — CLI
 ./build/Harmony --help
 ./build/Harmony --cpp stability_check
-./build/Harmony --json src/examples/example.json
+./build/Harmony --json src/examples/json/stability_check.json
 ```
 
-| Goal | Command |
-|------|---------|
-| List C++ examples | `Harmony --list-cpp` |
-| Run C++ example | `Harmony --cpp <name>` |
-| Run JSON case | `Harmony --json <file>` |
-| Disable plots | `--no-plot` |
+| Goal | HarmonyUI | Harmony (CLI) |
+|------|-----------|---------------|
+| Pick and run examples | Launcher → **Run** | `Harmony --cpp <name>` |
+| Run JSON case | Launcher → JSON → **Run** | `Harmony --json <file>` |
+| Disable plots | Leave **Plot** unchecked | `--no-plot` |
+| List examples | Dropdown menus | `--list-cpp`, `--list-json` |
 
-Windows users: If you want to use the VS "Run" button, set **Harmony** as the startup project, set **Working Directory** to the repository root, and add **Command Arguments** such as `--cpp stability_check --no-plot` or `--json src/examples/example.json`. See [Running Harmony](running-harmony.md#visual-studio).
+Full details: [Running Harmony](running-harmony.md), [User Manual — HarmonyUI](manual/11-harmony-ui.md).
+
+**Visual Studio:** Set **HarmonyUI** as the startup project for the GUI, or **Harmony** for CLI debugging. Set **Working Directory** to the repository root. For **Harmony**, add **Command Arguments** such as `--cpp stability_check --no-plot` or `--json src/examples/json/stability_check.json`. See [Running Harmony — Visual Studio](running-harmony.md#visual-studio).

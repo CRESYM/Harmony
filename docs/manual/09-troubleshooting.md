@@ -1,6 +1,6 @@
 # Chapter 9 — Troubleshooting
 
-[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md) | [Next: Command-line interface →](10-command-line.md)
+[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md) | [Next: Command-line interface →](10-command-line.md) | [HarmonyUI →](11-harmony-ui.md)
 
 ---
 
@@ -80,11 +80,26 @@ Or set `"output_directory"` in JSON simulation section.
 
 ---
 
-### Plot window does not appear
+### Plot window does not appear (CLI)
 
 - Plots are enabled by default in most C++ examples
 - Headless/remote sessions may lack OpenGL/GLFW display
 - Disable plots from the CLI: `Harmony --cpp stability_check --no-plot`
+- JSON plots need `"plot": true` or `"plot_result": true` in the computation block
+
+### No charts in HarmonyUI
+
+- Check **Plot** on the Launcher tab before clicking **Run** (default is off)
+- JSON must include `"plot": true` or `"plot_result": true` on the relevant computation
+- After a run with plots, open the **Plots** section (HarmonyUI switches there automatically)
+
+### HarmonyUI crash or ImGui focus errors
+
+Older builds opened plots in a second GLFW/ImGui window, which could trigger `PopFocusScope()` errors. Current **HarmonyUI** embeds plots in the **Plots** tab (single window). Rebuild **HarmonyUI** from an up-to-date source tree.
+
+### Save PNG button missing or clipped
+
+Rebuild **HarmonyUI** — plot toolbar sizing was adjusted for larger fonts. Use **Save all tabs as PNG** on the Plots toolbar if a per-tab button is off-screen.
 
 ---
 
@@ -153,4 +168,4 @@ If extending the code:
 | `equivalent_impedance` not in JSON | C++ `StabilityEstimate` API |
 | User manual PDF not auto-generated from this draft | Export Markdown via Pandoc or publish to GitHub Pages |
 
-[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md) | [Next: Command-line interface →](10-command-line.md)
+[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md) | [Next: Command-line interface →](10-command-line.md) | [HarmonyUI →](11-harmony-ui.md)
