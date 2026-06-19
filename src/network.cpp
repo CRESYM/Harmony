@@ -8,15 +8,17 @@ Network::Network() : pins(0) {
 
 
 Network::~Network() {
-    // Delete all Bus objects in the network
-    for (std::unordered_map<std::string, Bus*>::iterator i = buses.begin(); i != buses.end(); i++)
-        delete i->second;
+    // SubNetworks hold non-owning views; delete shells before owned buses/elements
+    empty_areas();
+
+    for (auto& [name, bus] : buses)
+        delete bus;
     buses.clear();
-    // Delete all Element objects in the network
-    for (std::unordered_map<std::string, Element*>::iterator i = elements.begin(); i != elements.end(); i++)
-        delete i->second;
+
+    for (auto& [designator, elem] : elements)
+        delete elem;
     elements.clear();
-    // Clear all connections
+
     connections.clear();
 }
 
@@ -86,24 +88,47 @@ void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
 
 // Function to delete an element from the network
 void Network::deleteElement(const std::string& designator) {
-    if (elements.find(designator) != elements.end()) {
-        elements.erase(designator);
-    }
-    else {
+    auto it = elements.find(designator);
+    if (it == elements.end()) {
         throw std::invalid_argument("Element not found");
     }
+
+    Element* elem = it->second;
+
+    for (auto& [bus, elemList] : connections) {
+        elemList.erase(std::remove(elemList.begin(), elemList.end(), elem), elemList.end());
+    }
+
+    for (auto& [busName, bus] : buses) {
+        bus->detachElement(elem);
+    }
+
+    converters.erase(designator);
+    elements.erase(it);
+    delete elem;
 }
 
 // Function to delete a bus from the network
 void Network::deleteBus(const std::string& busName) {
-    if (buses.find(busName) != buses.end()) {
-        // Decrement the total pin count
-        pins -= buses[busName]->getPinNumber();
-        buses.erase(busName);
-    }
-    else {
+    auto it = buses.find(busName);
+    if (it == buses.end()) {
         throw std::invalid_argument("Bus not found");
     }
+
+    Bus* bus = it->second;
+
+    auto conn_it = connections.find(bus);
+    if (conn_it != connections.end() && !conn_it->second.empty()) {
+        throw std::invalid_argument("Cannot delete bus with connected elements");
+    }
+
+    connections.erase(bus);
+    if (!bus->isGround()) {
+        pins -= bus->getPinNumber();
+    }
+
+    buses.erase(it);
+    delete bus;
 }
 
 // Function to print the connections between elements and buses

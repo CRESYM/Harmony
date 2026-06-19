@@ -35,4 +35,6 @@ void example_cable(bool plotting_enabled /*=true*/) {
 
 	cout << "Press Enter to continue...\n";
 	cin.get();
+
+	delete cable;
 }

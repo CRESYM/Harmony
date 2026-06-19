@@ -223,6 +223,14 @@ Overhead_Line::Groundwires::Groundwires(int ng, std::vector<double>& values, dou
 }
 
 
+Overhead_Line::~Overhead_Line() {
+	delete conductors;
+	conductors = nullptr;
+	delete groundwires;
+	groundwires = nullptr;
+}
+
+
 Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& location, double len, std::tuple<double, double, double> earth,
 	std::tuple<std::string, std::vector<int>, std::vector<double>, double, double, double, double> conductor,
 	std::tuple<int, std::vector<double>, double> groundwire) : length(len), earthParameters(earth), Element(symbol, location, 1, 1) {

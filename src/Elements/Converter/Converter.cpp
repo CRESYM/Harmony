@@ -1,6 +1,17 @@
 ﻿#include "Converter.h"
 
 
+Converter::~Converter() {
+    for (auto& [name, controller] : controls)
+        delete controller;
+    controls.clear();
+
+    for (auto& [name, filter] : filters)
+        delete filter;
+    filters.clear();
+}
+
+
 /**
  * @brief Check system stability by evaluating eigenvalues of the A matrix.
  *

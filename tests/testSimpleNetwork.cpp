@@ -40,5 +40,7 @@ TEST_F(TestNetwork, TestSimpleNetwork) {
 	EXPECT_EQ(z->getBuses().size(), 2);
 	EXPECT_EQ(ac->getBuses().size(), 2);
 	//EXPECT_EQ(ac->getBuses()[0], b1);
+
+	delete myNetwork;
 }
 

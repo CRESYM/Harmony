@@ -6,7 +6,18 @@ SubNetwork::SubNetwork(const std::string& name)
     : Network(), subnetworkName(name) {
 }
 
-SubNetwork::~SubNetwork() = default;
+SubNetwork::~SubNetwork() {
+    // Non-owning view of parent Network's buses/elements — do not delete them
+    buses.clear();
+    elements.clear();
+    connections.clear();
+    outputBuses.clear();
+    ac_grids.clear();
+    dc_grids.clear();
+    ac_grid_names.clear();
+    dc_grid_names.clear();
+    converters.clear();
+}
 
 void SubNetwork::printInfo() const {
     std::cout << "SubNetwork Name: " << subnetworkName << std::endl;

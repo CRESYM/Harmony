@@ -43,4 +43,6 @@ void example_state_space() {
 	cout << "B matrix:" << endl << model.getB() << endl;
 	cout << "C matrix:" << endl << model.getC() << endl;
 	cout << "D matrix:" << endl << model.getD() << endl;
+
+	delete myNetwork;
 }

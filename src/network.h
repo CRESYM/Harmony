@@ -34,7 +34,7 @@ public:
     Network();
 
     // Destructor to handle resource cleanup
-    ~Network();
+    virtual ~Network();
 
     // Function to add a bus to the network using a bus object
     void addBus(Bus* bus);
@@ -73,16 +73,17 @@ public:
     // Add AC and DC grids to the system
     void add_areas();
     void empty_areas() {
-        for (auto& [name, sub] : ac_grids) {
+        for (auto& [name, sub] : ac_grids)
             delete sub;
-        }
         ac_grids.clear();
         ac_grid_names.clear();
-        for (auto& [name, sub] : dc_grids) {
+
+        for (auto& [name, sub] : dc_grids)
             delete sub;
-        }
         dc_grids.clear();
         dc_grid_names.clear();
+
+        converters.clear();
 	}
     bool is_area_empty() {return ac_grids.empty() && dc_grids.empty(); }
 

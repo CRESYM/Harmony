@@ -37,6 +37,9 @@ public:
     // Function to attach an element to the bus
     void attachElement(Element* elem);
 
+    // Remove an element from this bus without deleting it
+    void detachElement(Element* elem);
+
     // Function to print all the elements connected to this bus
     void printConnectedElements();
 

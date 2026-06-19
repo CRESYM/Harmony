@@ -22,3 +22,8 @@ WPplant::WPplant(const string& symbol, const std::string& location, int turbine_
 	// Scale Y_matrix by the number of wind turbines
 	mul_dense_scalar(Y_matrix, integer(number_WT), Y_matrix);
 }
+
+WPplant::~WPplant() {
+	delete wind_turbine;
+	wind_turbine = nullptr;
+}

@@ -30,4 +30,6 @@ void example_OHL(bool plotting_enabled /*=true*/) {
 	
 	cout << "Press Enter to continue...\n";
 	cin.get();
+
+	delete ohl;
 }

@@ -31,8 +31,8 @@ public:
     void init_Filter(const std::vector<double>& converter_params);
     void update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc);
 
-    // Destructor
-    ~MMC() {};
+    // Destructor — control blocks are freed by Converter base class
+    ~MMC() override = default;
        
     
     // Equilibrium point calculation

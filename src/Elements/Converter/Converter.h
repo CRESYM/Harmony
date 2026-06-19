@@ -14,6 +14,8 @@ public:
 	Converter(const std::string& symbol, const std::string& location)
 		: Element(symbol, location, 3, 2) {}
 
+	virtual ~Converter();
+
 	// Continuous-time matrix getters  
 	Eigen::MatrixXd getA() const { return A_matrix; }
 	Eigen::MatrixXd getB() const { return B_matrix; }

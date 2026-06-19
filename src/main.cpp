@@ -50,7 +50,7 @@ int main() {
 	//example_state_space();
 	 
 	//example_visuals();
-	example_stability_check();
+	example_stability_check(true);
 	//example_admittance_parameters();
 
 	return 0;

@@ -5,12 +5,11 @@
 
 class ControlBlock {
 public:
-	ControlBlock() = default; // Default constructor
+	ControlBlock() = default;
 
-	virtual void printValues() {}; // Pure virtual function to print element-specific values
+	virtual void printValues() {};
 
-	~ControlBlock() = default; // Default destructor
+	virtual ~ControlBlock() = default;
 };
 
 #endif // !_CONTROL_BLOCK_H_
-#pragma once

@@ -100,7 +100,11 @@ public:
 
 	// Function to remove a conductor from the conductors map
 	void removeConductor(const std::string& key) {
-		conductors.erase(key);
+		auto it = conductors.find(key);
+		if (it != conductors.end()) {
+			delete it->second;
+			conductors.erase(it);
+		}
 	}
 
 	// Define a member function in the Cable class to access the conductors map
