@@ -12,6 +12,119 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <optional>
+
+namespace {
+
+constexpr const char* kHarmonyJsonPathEnv = "HARMONY_JSON_PATH";
+
+std::filesystem::path g_executableDir;
+
+bool isHarmonyRepoRoot(const std::filesystem::path& dir) {
+	return std::filesystem::exists(dir / "CMakeLists.txt")
+		&& std::filesystem::exists(dir / "src/examples/example.json");
+}
+
+std::optional<std::filesystem::path> findRepoRootFrom(std::filesystem::path start) {
+	if (start.empty()) {
+		return std::nullopt;
+	}
+
+	try {
+		start = std::filesystem::absolute(start);
+	}
+	catch (const std::filesystem::filesystem_error&) {
+		return std::nullopt;
+	}
+
+	for (int depth = 0; depth < 10; ++depth) {
+		if (isHarmonyRepoRoot(start)) {
+			return start;
+		}
+		const auto parent = start.parent_path();
+		if (parent == start) {
+			break;
+		}
+		start = parent;
+	}
+	return std::nullopt;
+}
+
+void appendUniquePaths(
+	std::vector<std::filesystem::path>& dst,
+	const std::vector<std::filesystem::path>& src)
+{
+	for (const auto& path : src) {
+		if (std::find(dst.begin(), dst.end(), path) == dst.end()) {
+			dst.push_back(path);
+		}
+	}
+}
+
+std::vector<std::filesystem::path> parsePathList(const std::string& value) {
+	std::vector<std::filesystem::path> paths;
+	std::string token;
+	for (const char c : value) {
+		if (c == ';' || c == ':') {
+			if (!token.empty()) {
+				paths.emplace_back(token);
+				token.clear();
+			}
+		}
+		else {
+			token += c;
+		}
+	}
+	if (!token.empty()) {
+		paths.emplace_back(token);
+	}
+	return paths;
+}
+
+} // namespace
+
+
+void initCliPaths(const char* argv0) {
+	if (argv0 == nullptr || argv0[0] == '\0') {
+		return;
+	}
+	try {
+		g_executableDir = std::filesystem::absolute(std::filesystem::path(argv0)).parent_path();
+	}
+	catch (const std::filesystem::filesystem_error&) {
+		g_executableDir.clear();
+	}
+}
+
+
+std::optional<std::filesystem::path> harmonyRepoRoot() {
+	if (auto root = findRepoRootFrom(std::filesystem::current_path())) {
+		return root;
+	}
+	if (!g_executableDir.empty()) {
+		if (auto root = findRepoRootFrom(g_executableDir)) {
+			return root;
+		}
+	}
+	return std::nullopt;
+}
+
+
+namespace {
+
+std::vector<std::filesystem::path> repoAnchoredJsonSearchPaths() {
+	std::vector<std::filesystem::path> paths;
+	if (const auto root = harmonyRepoRoot()) {
+		paths.push_back(*root / "src/examples");
+		paths.push_back(*root / "src/examples/json");
+		paths.push_back(*root / "src/json");
+		paths.push_back(*root / "examples");
+	}
+	return paths;
+}
+
+} // namespace
+
 
 namespace {
 
@@ -58,9 +171,10 @@ std::string normalizeExampleName(std::string name) {
 } // namespace
 
 
-std::vector<std::filesystem::path> defaultJsonSearchPaths() {
+std::vector<std::filesystem::path> builtinJsonSearchPaths() {
 	return {
 		"src/examples",
+		"src/examples/json",
 		"src/json",
 		"examples",
 		"."
@@ -68,9 +182,56 @@ std::vector<std::filesystem::path> defaultJsonSearchPaths() {
 }
 
 
+std::vector<std::filesystem::path> jsonSearchPathsFromEnvironment() {
+	if (const char* env = std::getenv(kHarmonyJsonPathEnv)) {
+		const std::string value(env);
+		if (!value.empty()) {
+			return parsePathList(value);
+		}
+	}
+	return {};
+}
+
+
+std::vector<std::filesystem::path> defaultJsonSearchPaths() {
+	const auto fromEnv = jsonSearchPathsFromEnvironment();
+	if (!fromEnv.empty()) {
+		return fromEnv;
+	}
+	return builtinJsonSearchPaths();
+}
+
+
+std::vector<std::filesystem::path> buildJsonSearchPaths(
+	const std::vector<std::filesystem::path>& jsonPathOverrides,
+	const std::vector<std::filesystem::path>& extraSearchPaths)
+{
+	std::vector<std::filesystem::path> paths;
+	if (!jsonPathOverrides.empty()) {
+		paths = jsonPathOverrides;
+	}
+	else {
+		const auto fromEnv = jsonSearchPathsFromEnvironment();
+		if (!fromEnv.empty()) {
+			paths = fromEnv;
+		}
+		else {
+			appendUniquePaths(paths, repoAnchoredJsonSearchPaths());
+			appendUniquePaths(paths, builtinJsonSearchPaths());
+		}
+	}
+
+	appendUniquePaths(paths, extraSearchPaths);
+
+	if (std::find(paths.begin(), paths.end(), std::filesystem::path(".")) == paths.end()) {
+		paths.push_back(".");
+	}
+	return paths;
+}
+
+
 CliOptions parseCli(int argc, char* argv[]) {
 	CliOptions opts;
-	opts.searchPaths = defaultJsonSearchPaths();
 
 	for (int i = 1; i < argc; ++i) {
 		const std::string arg = argv[i];
@@ -81,10 +242,12 @@ CliOptions parseCli(int argc, char* argv[]) {
 		}
 		if (arg == "--list-cpp") {
 			opts.mode = CliOptions::Mode::ListCpp;
+			opts.searchPaths = buildJsonSearchPaths(opts.jsonPathOverrides, opts.extraSearchPaths);
 			return opts;
 		}
 		if (arg == "--list-json") {
 			opts.mode = CliOptions::Mode::ListJson;
+			opts.searchPaths = buildJsonSearchPaths(opts.jsonPathOverrides, opts.extraSearchPaths);
 			return opts;
 		}
 		if (arg == "--no-plot") {
@@ -95,8 +258,12 @@ CliOptions parseCli(int argc, char* argv[]) {
 			opts.verbose = true;
 			continue;
 		}
+		if (arg == "--json-path" && i + 1 < argc) {
+			opts.jsonPathOverrides.emplace_back(argv[++i]);
+			continue;
+		}
 		if (arg == "--search-path" && i + 1 < argc) {
-			opts.searchPaths.emplace_back(argv[++i]);
+			opts.extraSearchPaths.emplace_back(argv[++i]);
 			continue;
 		}
 		if (arg == "--cpp" && i + 1 < argc) {
@@ -118,6 +285,8 @@ CliOptions parseCli(int argc, char* argv[]) {
 	if (opts.mode == CliOptions::Mode::Help && argc == 1) {
 		opts.mode = CliOptions::Mode::Help;
 	}
+
+	opts.searchPaths = buildJsonSearchPaths(opts.jsonPathOverrides, opts.extraSearchPaths);
 	return opts;
 }
 
@@ -129,17 +298,22 @@ void printCliHelp() {
 		"  Harmony --cpp <example>     Run a C++ example program\n"
 		"  Harmony --json <file>       Run a JSON simulation file\n\n"
 		"Options:\n"
-		"  --search-path <dir>         Add JSON search directory (repeatable)\n"
+		"  --json-path <dir>           Replace default JSON search dirs (repeatable)\n"
+		"  --search-path <dir>         Append JSON search directory (repeatable)\n"
 		"  --list-cpp                  List available C++ examples\n"
 		"  --list-json                 List JSON files in search paths\n"
 		"  --no-plot                   Disable GUI plotting in examples\n"
 		"  --verbose, -v               Verbose output\n"
 		"  --help, -h                  Show this help\n\n"
-		"Default JSON search paths:\n"
-		"  src/examples, src/json, examples, .\n\n"
+		"Default JSON search paths (when HARMONY_JSON_PATH is unset):\n"
+		"  src/examples, src/examples/json, src/json, examples, .\n\n"
+		"Override defaults for all runs:\n"
+		"  set HARMONY_JSON_PATH=D:\\\\cases;D:\\\\other   (Windows)\n"
+		"  export HARMONY_JSON_PATH=/cases:/other         (Linux/macOS)\n\n"
 		"Examples:\n"
 		"  Harmony --cpp stability_check\n"
 		"  Harmony --json example.json\n"
+		"  Harmony --json-path D:\\cases --json my_case.json\n"
 		"  Harmony --json src/examples/example.json --verbose\n";
 }
 
@@ -155,10 +329,16 @@ void listCppExamples() {
 
 
 void listJsonFiles(const std::vector<std::filesystem::path>& searchPaths) {
-	std::cout << "JSON files in search paths:\n";
+	std::cout << "JSON files in search paths";
+	if (const auto root = harmonyRepoRoot()) {
+		std::cout << " (repo root: " << root->generic_string() << ")";
+	}
+	std::cout << ":\n";
+
 	bool found = false;
 	for (const auto& dir : searchPaths) {
 		if (!std::filesystem::is_directory(dir)) {
+			std::cout << "  [skip, not a directory] " << dir.generic_string() << "\n";
 			continue;
 		}
 		for (const auto& entry : std::filesystem::directory_iterator(dir)) {
@@ -172,7 +352,15 @@ void listJsonFiles(const std::vector<std::filesystem::path>& searchPaths) {
 		}
 	}
 	if (!found) {
-		std::cout << "  (none found — check --search-path directories)\n";
+		std::cout << "  (none found)\n";
+		std::cout << "Directories checked:\n";
+		for (const auto& dir : searchPaths) {
+			std::cout << "  " << std::filesystem::absolute(dir).generic_string() << "\n";
+		}
+		if (std::getenv(kHarmonyJsonPathEnv)) {
+			std::cout << "Note: HARMONY_JSON_PATH is set and replaces built-in defaults.\n";
+		}
+		std::cout << "Use --json-path, --search-path, a full file path, or run from the repository root.\n";
 	}
 }
 
@@ -183,17 +371,65 @@ std::filesystem::path resolveJsonPath(
 {
 	const std::filesystem::path direct(input);
 	if (std::filesystem::exists(direct)) {
-		return direct;
+		return std::filesystem::absolute(direct);
 	}
 
+	if (const auto root = harmonyRepoRoot()) {
+		const std::filesystem::path fromRoot = *root / direct;
+		if (std::filesystem::exists(fromRoot)) {
+			return std::filesystem::absolute(fromRoot);
+		}
+	}
+
+	const std::filesystem::path filename = direct.filename();
 	for (const auto& dir : searchPaths) {
 		const std::filesystem::path candidate = dir / input;
 		if (std::filesystem::exists(candidate)) {
-			return candidate;
+			return std::filesystem::absolute(candidate);
+		}
+		if (!filename.empty() && filename != direct) {
+			const std::filesystem::path byName = dir / filename;
+			if (std::filesystem::exists(byName)) {
+				return std::filesystem::absolute(byName);
+			}
 		}
 	}
 
 	return direct;
+}
+
+
+void printJsonNotFoundHelp(
+	const std::string& input,
+	const std::vector<std::filesystem::path>& searchPaths)
+{
+	std::cerr << "JSON file not found: " << input << "\n";
+
+	if (const auto root = harmonyRepoRoot()) {
+		std::cerr << "Repository root: " << root->generic_string() << "\n";
+	}
+	else {
+		std::cerr << "Repository root: (not detected — run from the Harmony repo or use a full path)\n";
+	}
+
+	std::cerr << "Current directory: "
+		<< std::filesystem::absolute(std::filesystem::path(".")).generic_string() << "\n";
+
+	if (std::getenv(kHarmonyJsonPathEnv)) {
+		std::cerr << "HARMONY_JSON_PATH=" << std::getenv(kHarmonyJsonPathEnv) << "\n";
+	}
+
+	std::cerr << "Search paths:\n";
+	for (const auto& dir : searchPaths) {
+		std::cerr << "  " << std::filesystem::absolute(dir).generic_string() << "\n";
+	}
+
+	std::cerr <<
+		"Tips:\n"
+		"  Harmony --list-json\n"
+		"  Harmony --json src/examples/example.json\n"
+		"  Harmony --json-path <dir> --json <file>\n"
+		"  Set Working Directory to the repository root in Visual Studio\n";
 }
 
 

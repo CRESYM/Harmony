@@ -1,7 +1,7 @@
 {
     "simulation": {
         "title": "harmony_json_example",
-        "description": "Minimal AC network built from JSON: load + real transformer.",
+        "description": "Minimal AC network built from JSON: load + real transformer (see also src/examples/json/).",
         "output_directory": "./files",
         "frequency_range": {
             "start": 10,

@@ -19,7 +19,7 @@ build\Release\Harmony.exe --list-json
 ./build/Harmony --json example.json --verbose
 ```
 
-Full run instructions: [**Running Harmony**](running-harmony.md). Harmony searches `src/examples`, `src/json`, `examples`, and the current directory for JSON files. Add paths with `--search-path`. CLI details: [User Manual Chapter 10](manual/10-command-line.md).
+Full run instructions: [**Running Harmony**](running-harmony.md). By default Harmony searches `src/examples`, `src/examples/json`, `src/json`, `examples`, and `.`. Override with the `HARMONY_JSON_PATH` environment variable or `--json-path`; append with `--search-path`. CLI details: [User Manual Chapter 10](manual/10-command-line.md).
 
 ## Top-level structure
 

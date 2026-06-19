@@ -20,6 +20,8 @@ Full run instructions: [`../running-harmony.md`](../running-harmony.md). It is s
 
 Full field-level specification: [`../input-file-format.md`](../input-file-format.md).
 
+JSON cases mirroring C++ examples live under `src/examples/json/` (see [Chapter 8 § JSON examples](08-examples-catalog.md#86-json-examples-from-c-examples)).
+
 ---
 
 ## 5.2 Run a JSON case

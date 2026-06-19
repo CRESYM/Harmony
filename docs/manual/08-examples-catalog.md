@@ -95,13 +95,43 @@ CLI names drop the `example_` prefix (`example_stability_check` → `stability_c
 
 ---
 
-## 8.6 CI coverage
+## 8.6 JSON examples (from C++ examples)
+
+JSON equivalents of bundled C++ demos are in `src/examples/json/`:
+
+| JSON file | C++ example | Notes |
+|-----------|-------------|-------|
+| `example.json` | (minimal) | Load + transformer |
+| `constructors.json` | `example_constructors` | Transmission line |
+| `transformer.json` | `example_transformer` | Delta-Y real transformer |
+| `generator.json` | `example_generator` | Generator Y-matrix |
+| `cable.json` | `example_cable` | Cable model |
+| `ohl.json` | `example_OHL` | Overhead line |
+| `mmc.json` | `example_MMC` | MMC (MMC1 parameters) |
+| `pv_plant.json` | `example_PV_plant` | PV plant |
+| `wt_type_3.json` | `example_WT_type_3` | Type-3 wind turbine |
+| `wt_type_4.json` | `example_WT_type_4` | Type-4 wind turbine |
+| `state_space.json` | `example_state_space` | RLC network (build only) |
+| `passives_rlc.json` | — | R/L/C passives demo |
+
+Run with:
+
+```bash
+Harmony --json src/examples/json/mmc.json --no-plot
+Harmony --list-json
+```
+
+Complex workflows (full stability, OPF with mismatched CSV prefixes, DQsym matrix tests) remain C++-only until extended in the JSON runner.
+
+---
+
+## 8.7 CI coverage
 
 GitHub Actions workflows build and run examples on Windows, Linux, and macOS (`windows_run_examples.yml`, etc.). Use CI logs to confirm an example runs cleanly on your target platform.
 
 ---
 
-## 8.7 Suggested example by user goal
+## 8.8 Suggested example by user goal
 
 | Goal | Start with |
 |------|------------|

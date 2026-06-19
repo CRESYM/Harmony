@@ -14,7 +14,7 @@ After [building](installation.md) the `Harmony` executable, use the **command-li
 
    The prompt should show `(harmony)`.
 
-2. **Use the repository root as the working directory** when possible. Harmony searches for JSON files relative to the current directory and default search paths under the repo.
+2. **Use the repository root as the working directory** when possible. Harmony also **auto-detects the repo root** from the executable location (e.g. `build/Release/Harmony.exe` → searches `../../src/examples/…`), so JSON files work even when the shell cwd is `build/Release`.
 
 3. **Locate the executable:**
 
@@ -64,23 +64,41 @@ build\Release\Harmony.exe --json src/examples/example.json --verbose
 |------|-------------|
 | `--no-plot` | Disable GUI plots (headless / CI) |
 | `--verbose`, `-v` | Extra console output |
-| `--search-path <dir>` | Add directory for resolving JSON filenames (repeatable) |
+| `--json-path <dir>` | Replace default JSON search directories (repeatable) |
+| `--search-path <dir>` | Append directory for resolving JSON filenames (repeatable) |
 
 Example names for `--cpp` omit the `example_` prefix: `example_stability_check` → `--cpp stability_check`.
 
 ### Default JSON search paths
 
-When `--json` receives a filename without a full path, Harmony looks in:
+When `HARMONY_JSON_PATH` is **unset**, Harmony looks for bare filenames in this order:
 
 1. `src/examples`
-2. `src/json`
-3. `examples`
-4. `.` (current directory)
+2. `src/examples/json`
+3. `src/json`
+4. `examples`
+5. `.` (current directory)
 
-Example:
+**Change defaults permanently** (environment variable):
 
 ```bash
+# Windows
+set HARMONY_JSON_PATH=D:\my_cases;D:\shared\harmony-json
+
+# Linux / macOS
+export HARMONY_JSON_PATH=/home/me/cases:/opt/harmony/json
+```
+
+**Change defaults for one run** (`--json-path` replaces built-in / env defaults):
+
+```bash
+Harmony --json-path D:\cases --json my_network.json
 Harmony --json example.json
+```
+
+**Append** without replacing defaults:
+
+```bash
 Harmony --search-path D:\cases --json my_network.json
 ```
 
@@ -155,7 +173,7 @@ Create `./files` if needed, or set `"output_directory"` in the JSON `simulation`
 |---------|------------|
 | Executable exits immediately (Windows `0xC0000135`) | Run `conda activate harmony` first; dependencies must be on `PATH`. |
 | `Unknown C++ example` | Run `--list-cpp` for valid names. |
-| JSON file not found | Use a full path, or `--search-path`; run `--list-json`. |
+| JSON file not found | Run `Harmony --list-json`. Harmony auto-detects the repo root from the executable path (works from `build/Release/`). Use a full path, `--json-path`, or set VS **Working Directory** to the repository root. Check `HARMONY_JSON_PATH` is not pointing at wrong folders. |
 | Plots block the terminal | Use `--no-plot`. |
 | OPF fails | Ensure Gurobi is installed and `GUROBI_PATH` was set at configure time. |
 

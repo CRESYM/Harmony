@@ -37,7 +37,8 @@ Common options:
 |------|---------|
 | `--no-plot` | Disable GUI plotting in examples that support it |
 | `--verbose`, `-v` | Extra console output |
-| `--search-path <dir>` | Add a directory when resolving JSON filenames (repeatable) |
+| `--json-path <dir>` | Replace default JSON search directories (repeatable) |
+| `--search-path <dir>` | Append a directory when resolving JSON filenames (repeatable) |
 
 ---
 
@@ -80,14 +81,29 @@ Set the **working directory** to the repository root.
 ./build/Harmony --json src/examples/example.json --verbose
 ```
 
-If `<file>` is not found in the current directory, Harmony searches these paths **in order**:
+If `<file>` is not found in the current directory, Harmony searches configured paths **in order** (see below).
+
+Built-in defaults (when `HARMONY_JSON_PATH` is unset):
 
 1. `src/examples`
-2. `src/json`
-3. `examples`
-4. `.` (current directory)
+2. `src/examples/json`
+3. `src/json`
+4. `examples`
+5. `.` (current directory)
 
-Add custom locations:
+Override defaults for one run:
+
+```bash
+./build/Harmony --json-path /path/to/my_cases --json case_01.json
+```
+
+Set defaults for all runs in the shell:
+
+```bash
+export HARMONY_JSON_PATH=/path/to/my_cases:/path/to/other
+```
+
+Append a directory without replacing defaults:
 
 ```bash
 ./build/Harmony --search-path /path/to/my_cases --json case_01.json

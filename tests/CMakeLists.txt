@@ -52,6 +52,7 @@ add_executable(
     testMMC.cpp
     testStabilityEstimate.cpp
     testOPF.cpp
+    testJsonPipeline.cpp
     testexamples.cpp
     utils.cpp
     ${CORRECTED_HARMONY_HEADERS}     # defined in sources.cmake
