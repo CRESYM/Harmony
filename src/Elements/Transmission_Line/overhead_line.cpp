@@ -1,3 +1,7 @@
+/**
+ * @file overhead_line.cpp
+ * @brief Implementation of Overhead transmission line with conductor bundle and ground-wire geometry.
+ */
 ﻿#include "overhead_line.h"
 
 

@@ -1,6 +1,11 @@
 ﻿#ifndef MMC_H
 #define MMC_H
 
+/**
+ * @file MMC.h
+ * @brief Modular Multilevel Converter (MMC) state-space and MNA model.
+ */
+
 #include "Converter.h"
 #include "../../Include_control_blocks.h"
 
@@ -8,9 +13,32 @@
 class Controller;
 class Filter;
 
+/**
+ * @class MMC
+ * @brief Modular Multilevel Converter with arm dynamics and control loops.
+ * @ingroup converter
+ */
 class MMC : public Converter {
 public:
-    // Constructor 
+    /**
+     * @brief Construct an MMC from individual scalar parameters.
+     * @param symbol Element identifier.
+     * @param location Network area string encoding AC and DC areas.
+     * @param omega Nominal angular frequency (rad/s).
+     * @param activePower Active power setpoint (W).
+     * @param reactivePower Reactive power setpoint (VAR).
+     * @param angle AC voltage angle (rad).
+     * @param acVoltage AC voltage amplitude (V).
+     * @param Pdc DC power (W).
+     * @param dcVoltage DC bus voltage (V).
+     * @param armInductance Arm inductance (H).
+     * @param armResistance Arm resistance (Ω).
+     * @param armCapacitance Submodule capacitance (F).
+     * @param numSubmodules Number of submodules per arm.
+     * @param reactorInductance Phase reactor inductance (H).
+     * @param reactorResistance Phase reactor resistance (Ω).
+     * @param timeDelay Control time delay (s).
+     */
     MMC(const std::string& symbol, const std::string& location,
         double omega, double activePower, double reactivePower,
         double angle, double acVoltage, double Pdc, double dcVoltage,
@@ -18,11 +46,31 @@ public:
         int numSubmodules, double reactorInductance, double reactorResistance,
         double timeDelay);
 
-    // Constructor to initialize MMC with the converter_params (from init_MMC)
+    /**
+     * @brief Construct an MMC from a converter parameter vector.
+     * @param symbol Element identifier.
+     * @param location Network area string encoding AC and DC areas.
+     * @param converter_params Packed converter parameters from init_MMC.
+     */
     MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params);
 
+    /**
+     * @brief Construct an MMC with converter and controller parameters.
+     * @param symbol Element identifier.
+     * @param location Network area string encoding AC and DC areas.
+     * @param converter_params Packed converter parameters.
+     * @param controller_params Controller gain and setpoint parameters.
+     */
     MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params, const std::vector<double>& controller_params);
 
+    /**
+     * @brief Construct an MMC with converter, controller, and filter parameters.
+     * @param symbol Element identifier.
+     * @param location Network area string encoding AC and DC areas.
+     * @param converter_params Packed converter parameters.
+     * @param controller_params Controller gain and setpoint parameters.
+     * @param filter_params Filter time-constant and gain parameters.
+     */
     MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params,
         const std::vector<double>& controller_params, const std::vector<double>& filter_params);
 

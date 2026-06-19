@@ -1,12 +1,28 @@
 ﻿#ifndef SWITCH_H
 #define SWITCH_H
 
+/**
+ * @file Switch.h
+ * @brief Multi-phase switch element for open/closed branch control.
+ */
+
 #include "../Element.h"
 
+/**
+ * @class Switch
+ * @brief Single- or multi-phase switch with per-phase open/closed state.
+ * @ingroup elements
+ */
 class Switch : public Element {
 public:
 
-    // Unified constructor for single-phase and three-phase systems
+    /**
+     * @brief Construct a switch with an initial per-phase state vector.
+     * @param symbol Element identifier.
+     * @param location Network area or location string.
+     * @param pins Number of pins (phases).
+     * @param state Per-phase state (true = closed, false = open).
+     */
     Switch(const std::string& symbol, const std::string& location, int pins, const std::vector<bool>& state);
 
     // override generic stamper

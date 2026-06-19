@@ -1,3 +1,7 @@
+/**
+ * @file Differential_equations.cpp
+ * @brief Implementation of Numerical integration, equilibrium finding, and discretization utilities.
+ */
 ﻿#include "Differential_equations.h"
 #include <stdexcept>
 #include <iostream>

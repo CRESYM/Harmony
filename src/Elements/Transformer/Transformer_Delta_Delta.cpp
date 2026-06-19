@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_Delta_Delta.cpp
+ * @brief Implementation of Delta-delta (Δ-Δ) classic transformer topology.
+ */
 #include "Transformer_Delta_Delta.h"
 
 // Constructor

@@ -1,3 +1,7 @@
+/**
+ * @file example_OPF_WT.cpp
+ * @brief Runnable example: OPF study including a wind-turbine plant.
+ */
 ﻿#include "Examples.h"
 
 #include "../network.h"

@@ -1,3 +1,7 @@
+/**
+ * @file example_DQsym_Simple_MMC.cpp
+ * @brief Runnable example: Simplified MMC model in the DQsym solver.
+ */
 ﻿#include "Examples.h"
 
 #include "../network.h"

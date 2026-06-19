@@ -1,3 +1,7 @@
+/**
+ * @file example_cable.cpp
+ * @brief Runnable example: Underground cable layers and Y-parameter sweep.
+ */
 #include "Examples.h"
 
 #include "../network.h"

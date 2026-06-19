@@ -1,3 +1,7 @@
+/**
+ * @file Converter.cpp
+ * @brief Implementation of Base class for power electronic converters with state-space models.
+ */
 ﻿#include "Converter.h"
 
 

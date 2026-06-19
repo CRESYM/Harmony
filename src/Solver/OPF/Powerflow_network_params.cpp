@@ -1,3 +1,7 @@
+/**
+ * @file Powerflow_network_params.cpp
+ * @brief Implementation of PowerFlow network parameter assembly.
+ */
 ﻿#include "Powerflow.h"
 #include "../Helper_Functions/Helper_Functions.h"
 

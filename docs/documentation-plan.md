@@ -46,7 +46,7 @@ Suggested chapters:
 
 1. JSON input docs — [`input-file-format.md`](input-file-format.md) (done)
 2. **User manual draft** — [`manual/README.md`](manual/README.md) (done)
-3. Doxygen setup + document `Network`, `Element`, solvers
+3. **Doxygen API docs** — [`doxygen/README.md`](doxygen/README.md) (done — build with `-DBUILD_DOCS=ON`)
 4. Expand manual (figures, MMC parameter tables, PDF export)
 5. JSON Schema + MMC/RES JSON builders
 

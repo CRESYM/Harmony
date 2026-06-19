@@ -1,0 +1,76 @@
+/**
+ * @defgroup network Network model
+ * @brief Core graph representation: buses, elements, connections, and AC/DC areas.
+ * @{
+ *   @ref Network
+ *   @ref Bus
+ *   @ref SubNetwork
+ * @}
+ */
+
+/**
+ * @defgroup elements Component library
+ * @brief Physical and control device models derived from @ref Element.
+ */
+
+/**
+ * @defgroup impedance Impedance elements
+ * @ingroup elements
+ * @brief Resistors, inductors, capacitors, and generic impedance/admittance.
+ */
+
+/**
+ * @defgroup transformer Transformer models
+ * @ingroup elements
+ * @brief Ideal and real transformer topologies (YY, Y-D, Δ-Y, …).
+ */
+
+/**
+ * @defgroup converter Power converters
+ * @ingroup elements
+ * @brief Converter base class and MMC implementation.
+ */
+
+/**
+ * @defgroup res Renewable energy sources
+ * @ingroup elements
+ * @brief Wind and PV plant models.
+ */
+
+/**
+ * @defgroup transmission Transmission lines
+ * @ingroup elements
+ * @brief Overhead lines, cables, and lumped transmission lines.
+ */
+
+/**
+ * @defgroup source Sources and loads
+ * @ingroup elements
+ * @brief AC/DC sources, generators, and load models.
+ */
+
+/**
+ * @defgroup solvers Analysis solvers
+ * @brief OPF, dynamic phasor (DQsym), state-space, and stability engines.
+ */
+
+/**
+ * @defgroup control Control blocks
+ * @brief PI controllers, filters, and integrators used by converters.
+ */
+
+/**
+ * @defgroup helpers Helper functions
+ * @ingroup solvers
+ * @brief Symbolic/numeric utilities, I/O, and visualization.
+ */
+
+/**
+ * @defgroup input JSON input
+ * @brief File-driven simulation builder (`input_file/`).
+ */
+
+/**
+ * @defgroup examples Examples
+ * @brief Runnable demonstration programs under `src/examples/`.
+ */

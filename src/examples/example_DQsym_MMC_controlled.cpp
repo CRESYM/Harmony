@@ -1,3 +1,7 @@
+/**
+ * @file example_DQsym_MMC_controlled.cpp
+ * @brief Runnable example: Controlled MMC model in the DQsym solver.
+ */
 ﻿#include "Examples.h"
 
 #include "../network.h"

@@ -1,3 +1,7 @@
+/**
+ * @file main.cpp
+ * @brief JSON-driven simulation executable entry point.
+ */
 #include <iostream>
 #include <fstream>
 #include <filesystem>

@@ -91,8 +91,13 @@ link_sundials(Harmony)
 link_implot(Harmony)
 link_gurobi(Harmony)
 
+# -----------------------------------------------------------------------------
+# 6. Optional API documentation (Doxygen)
+# -----------------------------------------------------------------------------
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/doxygen.cmake)
+
 # ==============================================================================
-# 5. Create MSI Installer on Windows (currently disabled)
+# 7. Create MSI Installer on Windows (currently disabled)
 # ==============================================================================
 if(MSVC AND FALSE)
     # Find path to symengine dll and add it as a link directory

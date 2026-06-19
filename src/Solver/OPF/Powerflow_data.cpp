@@ -1,3 +1,7 @@
+/**
+ * @file Powerflow_data.cpp
+ * @brief Implementation of PowerFlow CSV I/O and network data loading.
+ */
 #include "Powerflow.h"
 
 Eigen::MatrixXd PowerFlow::readCSVtoCpp(const std::string& filename) {

@@ -1,3 +1,7 @@
+/**
+ * @file example_DQsym_RLC.cpp
+ * @brief Runnable example: Simple RLC circuit in the DQsym framework.
+ */
 #include "Examples.h"
 
 #include "../Solver/DQsym/DQsym.h"

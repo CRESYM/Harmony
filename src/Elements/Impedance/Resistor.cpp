@@ -1,3 +1,7 @@
+/**
+ * @file Resistor.cpp
+ * @brief Implementation of Resistor element for nodal admittance (MNA) stamping.
+ */
 #include "Resistor.h"
 
 

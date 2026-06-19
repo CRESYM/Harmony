@@ -1,3 +1,7 @@
+/**
+ * @file Cable.cpp
+ * @brief Implementation of Underground or aerial multi-conductor cable with layered geometry.
+ */
 ﻿#include "Cable.h"
 
 /**

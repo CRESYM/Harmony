@@ -1,3 +1,7 @@
+/**
+ * @file Writer.cpp
+ * @brief Implementation of CSV file output for time-series simulation data.
+ */
 #include "Writer.h"
 
 void write_file(const std::vector<double>& time, const std::vector<Eigen::MatrixXd>& values, const std::vector<std::string>& headers, const std::string& filename)

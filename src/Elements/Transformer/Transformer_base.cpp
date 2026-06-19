@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_base.cpp
+ * @brief Implementation of Base class for transformer models with winding R-L parameters.
+ */
 ﻿#include "Transformer_base.h"
 
 Transformer_base::Transformer_base(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)

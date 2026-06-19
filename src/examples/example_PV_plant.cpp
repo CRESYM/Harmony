@@ -1,3 +1,7 @@
+/**
+ * @file example_PV_plant.cpp
+ * @brief Runnable example: Photovoltaic plant model demonstration.
+ */
 #include "Examples.h"
 
 #include "../Include_components.h"

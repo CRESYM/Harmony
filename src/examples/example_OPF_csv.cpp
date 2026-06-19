@@ -1,3 +1,7 @@
+/**
+ * @file example_OPF_csv.cpp
+ * @brief Runnable example: OPF case driven by CSV network data.
+ */
 #include "Examples.h"
 #include "../Solver/OPF/Powerflow.h"
 

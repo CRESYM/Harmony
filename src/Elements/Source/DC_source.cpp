@@ -1,3 +1,7 @@
+/**
+ * @file DC_source.cpp
+ * @brief Implementation of Ideal DC voltage source with optional series impedance.
+ */
 #include "DC_source.h"
 
 DC_source::DC_source(const std::string& symbol, const std::string& location, int pins, double Vi, double Z)

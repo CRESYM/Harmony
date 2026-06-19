@@ -1,3 +1,7 @@
+/**
+ * @file Proportional_controller.cpp
+ * @brief Implementation of Proportional (P) controller.
+ */
 ﻿#include "Proportional_controller.h"
 
 /**

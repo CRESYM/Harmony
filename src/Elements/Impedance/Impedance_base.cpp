@@ -1,3 +1,7 @@
+/**
+ * @file Impedance_base.cpp
+ * @brief Implementation of Base class for passive impedance-type network elements.
+ */
 #include "Impedance_base.h"
 
 // Power flow computation (calls AC or DC based on network type)

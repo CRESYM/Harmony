@@ -1,16 +1,27 @@
 ﻿#ifndef _CONVERTER_H_
 #define _CONVERTER_H_
 
+/**
+ * @file Converter.h
+ * @brief Base class for power electronic converters with state-space models.
+ */
 
 #include "../Element.h"
 #include "../../Include_control_blocks.h"
 
-
-
+/**
+ * @class Converter
+ * @brief Abstract power converter with ABCD matrices, controllers, and filters.
+ * @ingroup converter
+ */
 class Converter : public Element {
 public:
 
-	// Constructor
+	/**
+	 * @brief Construct a three-phase, two-terminal converter element.
+	 * @param symbol Element identifier.
+	 * @param location Network area string encoding AC and DC areas (e.g. AC1_DC1).
+	 */
 	Converter(const std::string& symbol, const std::string& location)
 		: Element(symbol, location, 3, 2) {}
 

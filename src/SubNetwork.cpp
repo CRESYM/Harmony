@@ -1,3 +1,7 @@
+/**
+ * @file SubNetwork.cpp
+ * @brief Implementation of Hierarchical sub-network view for modular AC/DC grids and converter interfaces.
+ */
 #include "SubNetwork.h"
 
 SubNetwork::SubNetwork() : Network(), subnetworkName("Unnamed_SubNetwork") {}

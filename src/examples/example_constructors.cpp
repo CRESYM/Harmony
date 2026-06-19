@@ -1,3 +1,7 @@
+/**
+ * @file example_constructors.cpp
+ * @brief Runnable example: Instantiate basic element types via constructors.
+ */
 #include "Examples.h"
 
 

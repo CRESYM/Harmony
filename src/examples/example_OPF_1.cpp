@@ -1,3 +1,7 @@
+/**
+ * @file example_OPF_1.cpp
+ * @brief Runnable example: Extended hybrid OPF demonstration.
+ */
 ﻿#include "Examples.h"
 
 #include "../network.h"

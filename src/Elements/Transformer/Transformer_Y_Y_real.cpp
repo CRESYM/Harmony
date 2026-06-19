@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_Y_Y_real.cpp
+ * @brief Implementation of Wye-wye (Y-Y) real transformer topology.
+ */
 #include "Transformer_Y_Y_real.h"
 
 // Constructor

@@ -1,3 +1,7 @@
+/**
+ * @file main.cpp
+ * @brief Harmony executable entry point and example program dispatcher.
+ */
 ﻿#include "network.h"
 #include "Bus.h"
 #include "Include_components.h"

@@ -1,3 +1,7 @@
+/**
+ * @file AC_source.cpp
+ * @brief Implementation of Ideal AC voltage source with series internal impedance.
+ */
 #include "AC_source.h"
 
 AC_source::AC_source(const std::string& symbol, const std::string& location, int pins, double Vi, DenseMatrix Z)

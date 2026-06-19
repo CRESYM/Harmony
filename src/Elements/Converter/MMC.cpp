@@ -1,12 +1,13 @@
-﻿#include "MMC.h"
+﻿/**
+ * @file MMC.cpp
+ * @brief Implementation of Modular Multilevel Converter (MMC) state-space and MNA model.
+ */
+#include "MMC.h"
 
 // -----------------------------------------------------------------------------
 // State Vector Ordering
 // -----------------------------------------------------------------------------
 /**
- * @file MMC.cpp
- * @brief Implementation of the Modular Multilevel Converter (MMC) class.
- *
  * @details
  * The state vector 'x' in MMC is ordered as follows (from end to start):
  * [iDelta_d, iDelta_q, iSigma_d, iSigma_q, iSigma_z, vCDelta_d, vCDelta_q, vCDelta_Zd, vCDelta_Zq, vCSigma_d, vCSigma_q, vCSigma_z]

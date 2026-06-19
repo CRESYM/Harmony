@@ -1,10 +1,22 @@
 #ifndef VIZ_OPF_H
 #define VIZ_OPF_H
 
+/**
+ * @file viz_opf.h
+ * @brief Standalone OPF network visualization interface.
+ *
+ * Lightweight header defining the OPFVisualData payload and viz_opf()
+ * entry point for rendering AC/DC OPF results without pulling in the
+ * full Visualization.h module graph.
+ */
+
 #include <Eigen/Dense>
 #include <vector>
 #include <array>
 
+/**
+ * @brief Container for OPF topology and solution data passed to viz_opf().
+ */
 struct OPFVisualData {
 
     Eigen::MatrixXd bus_entire_ac;
@@ -39,7 +51,10 @@ struct OPFVisualData {
 
 };
 
+/**
+ * @brief Opens an interactive AC/DC OPF network diagram.
+ * @param data OPF topology matrices and solved bus/branch quantities.
+ */
 void viz_opf(const OPFVisualData& data);
 
 #endif
-

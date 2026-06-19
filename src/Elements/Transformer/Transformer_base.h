@@ -1,12 +1,27 @@
 #ifndef TRANSFORMER_BASE_H
 #define TRANSFORMER_BASE_H
 
+/**
+ * @file Transformer_base.h
+ * @brief Base class for transformer models with winding R-L parameters.
+ */
+
 #include "../Element.h"
 
-
+/**
+ * @class Transformer_base
+ * @brief Base transformer with primary/secondary winding R and L values.
+ * @ingroup transformer
+ */
 class Transformer_base : public Element {
 public:
-    // Constructor to initialize the Transformer with a given symbol, number of pins, and values
+    /**
+     * @brief Construct a transformer from a parameter value vector.
+     * @param symbol Element identifier.
+     * @param location Network area or location string.
+     * @param pins Number of pins (phases) per winding.
+     * @param values Winding R, L, and optional magnetizing branch values.
+     */
     Transformer_base(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values);
 
     ~Transformer_base();

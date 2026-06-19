@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_Y_Delta.cpp
+ * @brief Implementation of Wye-delta (Y-Δ) classic transformer topology.
+ */
 #include "Transformer_Y_Delta.h"
 
 // Constructor

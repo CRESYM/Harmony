@@ -1,3 +1,7 @@
+/**
+ * @file simulation_builder.cpp
+ * @brief Implementation of JSON simulation orchestration (SimulationBuilder).
+ */
 #include "simulation_builder.h"
 
 #include "../src/Solver/Stability_Estimate/Stability_estimate.h"

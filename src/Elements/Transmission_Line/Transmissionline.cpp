@@ -1,3 +1,7 @@
+/**
+ * @file Transmissionline.cpp
+ * @brief Implementation of Lumped-parameter transmission line model with distributed R, L, G, C.
+ */
 #include "Transmissionline.h"
 
 TransmissionLine::TransmissionLine(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)

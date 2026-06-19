@@ -1,3 +1,7 @@
+/**
+ * @file Symbolic_functions.cpp
+ * @brief Implementation of SymEngine-based symbolic algebra utilities for network analysis.
+ */
 ﻿#include "Symbolic_functions.h"
 
 // Define the constants declared in the header

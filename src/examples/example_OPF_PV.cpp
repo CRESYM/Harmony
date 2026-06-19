@@ -1,3 +1,7 @@
+/**
+ * @file example_OPF_PV.cpp
+ * @brief Runnable example: OPF study including a PV plant.
+ */
 ﻿#include "Examples.h"
 
 #include "../network.h"

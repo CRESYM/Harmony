@@ -12,7 +12,7 @@ Project: [CRESYM/Harmony](https://github.com/CRESYM/Harmony)
 
 This manual explains how to **install**, **build**, and **use** Harmony for stability and analysis studies on AC–DC power systems with high power-electronics penetration. It is written for researchers and engineers who run studies rather than developers extending the C++ library.
 
-For API-level documentation (classes, methods), see the planned Doxygen reference described in [`../documentation-plan.md`](../documentation-plan.md).
+For API-level documentation, see [Building API Documentation (Doxygen)](../doxygen/README.md).
 
 For detailed installation steps with screenshots, see [`../installation.md`](../installation.md).
 

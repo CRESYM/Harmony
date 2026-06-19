@@ -1,3 +1,7 @@
+/**
+ * @file DQsym.cpp
+ * @brief Implementation of Dynamic phasor (DQsym) time-domain solver with switch handling.
+ */
 ﻿#include "DQsym.h"
 #include "../../Constants.h"
 

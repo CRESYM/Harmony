@@ -1,3 +1,7 @@
+/**
+ * @file Impedance.cpp
+ * @brief Implementation of the Impedance series branch element.
+ */
 #include "Impedance.h"
 
 /*

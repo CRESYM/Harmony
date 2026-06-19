@@ -1,18 +1,37 @@
 ﻿#ifndef _CABLE_H_
 #define _CABLE_H_
 
+/**
+ * @file Cable.h
+ * @brief Underground or aerial multi-conductor cable with layered geometry.
+ */
+
 #include "../Element.h"
 
 class Element; // Forward declaration of Element class
 
-// Define the Cable class as a subtype (<:) of abstract type Element
+/**
+ * @class Cable
+ * @brief Multi-layer cable model with conductor and insulator sections.
+ * @ingroup transmission
+ */
 class Cable : public Element {
 public:
 
-	// Define the Conductor class presents conducting layer
+	/**
+	 * @class Conductor
+	 * @brief Conducting layer with inner/outer radius and material properties.
+	 */
 	class Conductor {
 	public:
-		// Constructor
+		/**
+		 * @brief Construct a cable conductor layer.
+		 * @param ri Inner radius (m).
+		 * @param ro Outer radius (m).
+		 * @param resistivity Resistivity rho (Ω·m).
+		 * @param permeability Relative permeability mu_r.
+		 * @param area Nominal cross-sectional area (m²).
+		 */
 		Conductor(double ri = 0, double ro = 0, double resistivity = 0, double permeability = 1, double area = 0)
 			: ri(ri), ro(ro), resistivity(resistivity), permeability(permeability), area(area) {}
 
@@ -24,10 +43,21 @@ public:
 		double area; //nominal area
 	};
 
-	// Define the Insulator class presents insulating layer
+	/**
+	 * @class Insulator
+	 * @brief Insulating layer with optional inner/outer semiconductor radii.
+	 */
 	class Insulator {
 	public:
-		// Constructor
+		/**
+		 * @brief Construct a cable insulator layer.
+		 * @param ri Inner radius (m).
+		 * @param ro Outer radius (m).
+		 * @param permittivity Relative permittivity epsilon_r.
+		 * @param permeability Relative permeability mu_r.
+		 * @param innerSemiConductorOuterRadius Inner semiconductor outer radius a (m).
+		 * @param outerSemiConductorInnerRadius Outer semiconductor inner radius b (m).
+		 */
 		Insulator(double ri = 0, double ro = 0, double permittivity = 1, double permeability = 1, double innerSemiConductorOuterRadius = 0, double outerSemiConductorInnerRadius = 0)
 			: ri(ri), ro(ro), permittivity(permittivity), permeability(permeability), a(innerSemiConductorOuterRadius), b(outerSemiConductorInnerRadius) {}
 
@@ -43,9 +73,23 @@ public:
 	};
 
 	// Constructor simple
+	/**
+	 * @brief Default cable with placeholder symbol, location, and pin counts.
+	 */
 	Cable() : Element("cable", "DC1", 1, 1), length(0), type("underground"), eliminate(true) {};
 	
-	// Constructor filled in
+	/**
+	 * @brief Construct a cable from geometry, earth, conductor, and insulator maps.
+	 * @param symbol Element identifier.
+	 * @param location Network area or location string.
+	 * @param pins Number of pins (phases).
+	 * @param type_constructor Cable type ("underground" or "aerial").
+	 * @param length_constructor Line length (m).
+	 * @param earth Earth parameters tuple (mu_r, epsilon_r, resistivity).
+	 * @param conductors_constructor Map of conductor symbols to Conductor layers.
+	 * @param insulators_constructor Map of insulator symbols to Insulator layers.
+	 * @param positions_constructor (x, y) positions of each cable in the layout.
+	 */
 	Cable(const string& symbol, const std::string& location, int pins, const string& type_constructor,
 		double length_constructor, std::tuple<double, double, double> earth,
 		std::map<string, Conductor*> conductors_constructor, std::map<string, Insulator*> insulators_constructor,

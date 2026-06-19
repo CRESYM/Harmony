@@ -1,11 +1,26 @@
 #ifndef _SOURCE_BASE_H
 #define _SOURCE_BASE_H
 
+/**
+ * @file Source_base.h
+ * @brief Base class for AC and DC voltage sources and generators.
+ */
+
 #include "../Element.h"
 
-// Base class for AC and DC sources, containing common properties and methods
+/**
+ * @class Source_base
+ * @brief Common properties and power-flow methods for source elements.
+ * @ingroup source
+ */
 class Source_base : public Element {
 public:
+	/**
+	 * @brief Construct a source with equal input and output pin counts.
+	 * @param symbol Element identifier.
+	 * @param location Network area or location string.
+	 * @param pins Number of pins (phases).
+	 */
 	Source_base(const std::string& symbol, const std::string& location, int pins) : Element(symbol, location, pins, pins) {}
 	~Source_base() {}
 

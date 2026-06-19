@@ -1,3 +1,7 @@
+/**
+ * @file Integrator.cpp
+ * @brief Implementation of Integrator control block (state derivative equals input error).
+ */
 #include "Integrator.h"
 
 // For scalar input: dx/dt = error

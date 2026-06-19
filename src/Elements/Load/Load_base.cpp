@@ -1,3 +1,7 @@
+/**
+ * @file Load_base.cpp
+ * @brief Implementation of Base class for load elements connected to network buses.
+ */
 #include "Load_base.h"
 
 void Load_base::computePowerFlow(std::map<std::string, double>& branchData,

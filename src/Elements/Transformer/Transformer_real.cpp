@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_real.cpp
+ * @brief Implementation of Real transformer model with turns ratio and phase shift.
+ */
 #include "Transformer_real.h"
 
 // Constructor

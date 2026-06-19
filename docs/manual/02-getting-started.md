@@ -161,4 +161,17 @@ cmake .. -DGUROBI_PATH="..."
 cmake --build . --config Release
 ```
 
+---
+
+## 2.11 Generate API documentation (optional)
+
+Harmony source includes Doxygen comments on all headers and `.cpp` files. Build HTML reference:
+
+```bash
+cmake .. -DGUROBI_PATH="/path/to/gurobi" -DBUILD_DOCS=ON
+cmake --build . --target harmony-docs
+```
+
+Open `build/docs/html/index.html`. Requires Doxygen and optionally Graphviz — both are listed in [`environment.yml`](../../environment.yml). See [`../doxygen/README.md`](../doxygen/README.md).
+
 [← Introduction](01-introduction.md) | [Manual index](README.md) | [Next: Core concepts →](03-core-concepts.md)

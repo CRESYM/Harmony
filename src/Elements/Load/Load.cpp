@@ -1,3 +1,7 @@
+/**
+ * @file Load.cpp
+ * @brief Implementation of the Load series R-L-C element.
+ */
 ﻿// Load.cpp
 #include "Load.h"
 

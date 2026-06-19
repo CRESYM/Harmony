@@ -1,3 +1,7 @@
+/**
+ * @file Generator.cpp
+ * @brief Implementation of Synchronous generator source model.
+ */
 #include "Generator.h"
 
 // Constructor

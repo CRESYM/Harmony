@@ -1,13 +1,27 @@
 ﻿#ifndef OVERHEAD_LINE_H
 #define OVERHEAD_LINE_H
 
+/**
+ * @file overhead_line.h
+ * @brief Overhead transmission line with conductor bundle and ground-wire geometry.
+ */
+
 #include "Transmissionline.h"
 #include "../Element.h"
 
 class Element; // Forward declaration of Element class
 
+/**
+ * @class Overhead_Line
+ * @brief Overhead line model with bundle geometry and frequency-dependent Y parameters.
+ * @ingroup transmission
+ */
 class Overhead_Line : public Element {
 private:
+	/**
+	 * @class Conductors
+	 * @brief Phase conductor bundle geometry and electrical properties.
+	 */
 	class Conductors {
 	public:
 		int number_bundles = 1; //number of bundles (phases) nᵇ
@@ -29,6 +43,17 @@ private:
 
 		// Constructors
 		Conductors() {};
+		/**
+		 * @brief Construct a conductor bundle with organization and geometry parameters.
+		 * @param organization Bundle arrangement symbol (flat, vertical, delta, etc.).
+		 * @param nb Vector of bundle counts per phase group.
+		 * @param geo Geometry parameter vector (spacing, sag, radius, etc.).
+		 * @param ybc Height of the lowest bundle above ground (m).
+		 * @param dybc Vertical offset between bundles (m).
+		 * @param dxbc Horizontal offset between lowest bundles (m).
+		 * @param dtxbc Horizontal offset in bundle group (m).
+		 * @param positions Optional absolute (x, y) positions per subconductor.
+		 */
 		Conductors(std::string, std::vector<int>&, std::vector<double>&, double, double, double, double, std::tuple<std::vector<double>, std::vector<double>>); // Default constructor for organization
 
 		// Functions for bundle positions
@@ -41,6 +66,10 @@ private:
 		std::tuple<std::vector<double>, std::vector<double>> bundle_position();
 	};
 
+	/**
+	 * @class Groundwires
+	 * @brief Overhead ground wire geometry and electrical properties.
+	 */
 	class Groundwires {
 	public:
 		int ng = 0; // number of groundwires (typically 0 or 2) 
@@ -52,6 +81,14 @@ private:
 		double mu_g = 1; // relative groundwire permeability μᵣ
 		std::tuple<std::vector<double>, std::vector<double>> positions; // add absolute positions manually
 
+		/**
+		 * @brief Construct ground wire geometry from parameter tuples.
+		 * @param ng Number of ground wires (typically 0 or 2).
+		 * @param geo Geometry parameter vector (offsets, radius, sag, resistance).
+		 * @param dxg Horizontal offset between ground wires (m).
+		 * @param dyg Vertical offset from lowest conductor (m).
+		 * @param positions Optional absolute (x, y) positions per ground wire.
+		 */
 		Groundwires(int, std::vector<double>&, double, double, std::tuple<std::vector<double>, std::vector<double>>);
 	};
 
@@ -71,6 +108,15 @@ private:
 	std::vector<double> organization_x_values;
 	std::vector<double> organization_y_values;
 public:
+	/**
+	 * @brief Construct an overhead line with earth, conductor, and ground-wire data.
+	 * @param symbol Element identifier.
+	 * @param location Network area or location string.
+	 * @param length Line length (km).
+	 * @param earth Earth parameters tuple (mu_r, epsilon_r, resistivity).
+	 * @param conductor Conductor bundle tuple (organization, counts, geometry, offsets).
+	 * @param groundwire Ground wire tuple (count, geometry, horizontal/vertical offsets).
+	 */
 	Overhead_Line(const std::string& symbol, const std::string& location, double length, std::tuple<double, double, double> earth,
 		std::tuple<std::string, std::vector<int>, std::vector<double>, double, double, double, double> conductor,
 		std::tuple<int, std::vector<double>, double> groundwire);

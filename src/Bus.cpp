@@ -1,3 +1,7 @@
+/**
+ * @file Bus.cpp
+ * @brief Implementation of Electrical bus (node) representation with pin count, connections, and OPF metadata.
+ */
 #include "Bus.h"
 #include "./Elements/Element.h"
 

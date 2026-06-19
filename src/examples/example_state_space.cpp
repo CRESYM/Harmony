@@ -1,3 +1,7 @@
+/**
+ * @file example_state_space.cpp
+ * @brief Runnable example: Build state-space (A, B, C, D) matrices for an RLC network.
+ */
 #include "Examples.h"
 
 #include "../Solver/State_Space_Model/State_Space_Model.h"

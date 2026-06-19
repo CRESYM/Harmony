@@ -1,38 +1,60 @@
 #ifndef _VISUALIZATION_H_
 #define _VISUALIZATION_H_
 
+/**
+ * @file Visualization.h
+ * @brief Interactive ImGui/ImPlot visualization for solver results.
+ *
+ * Provides a shared GUI window with built-in Bode, Nyquist, eigenvalue,
+ * participation-factor, and abc waveform plots, plus OPF network rendering
+ * and an extension API for custom plot tabs.
+ */
+
 #include "../../Constants.h"
 
-// ============================================================
-// CORE CONTROL
-// ============================================================
-
+/**
+ * @brief Closes the visualization window and stops the GUI thread.
+ */
 void visualization_stop();
+
+/**
+ * @brief Returns whether the visualization window is currently open.
+ * @return True if the GUI is running.
+ */
 bool visualization_is_running();
 
-/// Block the calling thread until the user closes the window.
-/// Call this at the end of main() to prevent the process from
-/// exiting while the GUI is still open.
+/**
+ * @brief Blocks until the user closes the visualization window.
+ *
+ * Call at the end of main() to keep the process alive while the GUI is open.
+ */
 void visualization_wait();
 
-/// Schedule a PNG capture of the named tab on the next rendered frame.
-/// Written to "<tab_title>.png" in the working directory.
-/// Thread-safe — can be called from any thread at any time.
+/**
+ * @brief Schedules a PNG capture of the named tab on the next rendered frame.
+ * @param tab_title Title of the tab to capture (saved as "<tab_title>.png").
+ */
 void visualization_save_tab(const std::string& tab_title);
 
-// ============================================================
-// EXTEND — register a custom draw tab from external modules
-// ============================================================
-
-/// Register an arbitrary ImGui/ImPlot draw callback as a tab.
-/// The GUI thread is auto-started on the first call.
-/// fn() is called every frame while the tab is active.
+/**
+ * @brief Registers a custom ImGui/ImPlot draw callback as a new tab.
+ *
+ * The GUI thread is auto-started on the first call. @p fn is invoked every
+ * frame while the tab is active.
+ *
+ * @param title Tab title shown in the tab bar.
+ * @param fn Draw callback executed each frame.
+ */
 void add_plot_tab(const std::string& title, std::function<void()> fn);
 
-// ============================================================
-// BUILT-IN PLOTS  (auto-start visualization on first call)
-// ============================================================
-
+/**
+ * @brief Opens a Bode magnitude/phase plot in the visualization window.
+ * @param freq Frequency axis (Hz).
+ * @param mag_dB Magnitude in dB, one vector per trace.
+ * @param phase_deg Phase in degrees, one vector per trace.
+ * @param labels Trace legend labels.
+ * @param title Plot window title.
+ */
 extern void bode_plot_implot(
     const std::vector<double>& freq,
     const std::vector<std::vector<double>>& mag_dB,
@@ -40,55 +62,79 @@ extern void bode_plot_implot(
     const std::vector<std::string>& labels,
     const std::string& title);
 
+/**
+ * @brief Opens a Nyquist plot in the visualization window.
+ * @param H_data Complex frequency response, one vector per trace.
+ * @param labels Trace legend labels.
+ * @param title Plot window title.
+ */
 extern void nyquist_plot_implot(
     const std::vector<std::vector<std::complex<double>>>& H_data,
     const std::vector<std::string>& labels,
     const std::string& title);
 
+/**
+ * @brief Plots eigenvalues in the complex plane.
+ * @param eigvals List of eigenvalues.
+ * @param title Plot window title.
+ */
 extern void plot_eigenvalues_implot(
     const std::vector<std::complex<double>>& eigvals,
     const std::string& title);
 
+/**
+ * @brief Plots participation factor heatmap (states vs modes).
+ * @param P Participation factor matrix [state][mode].
+ * @param state_labels Row labels (state names).
+ * @param mode_labels Column labels (mode indices/names).
+ * @param title Plot window title.
+ */
 extern void plot_participation_factors_implot(
     const std::vector<std::vector<double>>& P,
     const std::vector<std::string>& state_labels,
     const std::vector<std::string>& mode_labels,
     const std::string& title);
 
+/**
+ * @brief Plots three-phase abc waveforms over time.
+ * @param t Time axis (s).
+ * @param Xabc Waveform matrix (3 rows × N samples).
+ * @param title Plot window title.
+ */
 extern void plot_abc_waveforms_implot(
     const std::vector<double>& t,
     const Eigen::MatrixXd& Xabc,
     const std::string& title);
 
+/**
+ * @brief Plots multiple abc waveform groups on shared axes.
+ * @param t Time axis (s).
+ * @param Xabc_groups One 3×N matrix per signal group.
+ * @param title Plot window title.
+ */
 extern void plot_abc_groups_implot(
     const std::vector<double>& t,
     const std::vector<Eigen::MatrixXd>& Xabc_groups,
     const std::string& title);
 
-// ============================================================
-// OPF VISUALISATION
-// ============================================================
-
-/// All solver outputs needed to render the AC/DC OPF network.
+/**
+ * @brief Container for all OPF topology and solution data needed by viz_opf().
+ */
 struct OPFVisualData {
 
-    // ---- AC topology ----
-    Eigen::MatrixXd bus_entire_ac;    // [bus_id, Pd, Qd, ..., area]
-    Eigen::MatrixXd branch_entire_ac; // [from, to, ..., area]
-    Eigen::MatrixXd gen_entire_ac;    // [bus_id, Pg, Qg, ..., area]
+    Eigen::MatrixXd bus_entire_ac;
+    Eigen::MatrixXd branch_entire_ac;
+    Eigen::MatrixXd gen_entire_ac;
 
-    // ---- DC topology ----
-    Eigen::MatrixXd bus_dc;           // [bus_id, ...]
-    Eigen::MatrixXd branch_dc;        // [from, to, ...]
-    Eigen::MatrixXd conv_dc;          // [dc_bus, ac_bus, area, ...]
+    Eigen::MatrixXd bus_dc;
+    Eigen::MatrixXd branch_dc;
+    Eigen::MatrixXd conv_dc;
 
-    // ---- DC solution ----
-    Eigen::VectorXd vn2_dc_k;         // squared voltage (DC buses)
-    Eigen::VectorXd ps_dc_k;          // converter active power (p.u.)
-    Eigen::VectorXd qs_dc_k;          // converter reactive power (p.u.)
-    Eigen::MatrixXd pij_dc_k;         // DC branch active power (p.u.)
+    Eigen::VectorXd vn2_dc_k;
+    Eigen::VectorXd ps_dc_k;
+    Eigen::VectorXd qs_dc_k;
+    Eigen::MatrixXd pij_dc_k;
 
-    // ---- AC solution (per sub-grid) ----
     std::vector<int> nbuses_ac;
     std::vector<int> ngens_ac;
 
@@ -99,7 +145,6 @@ struct OPFVisualData {
     std::vector<Eigen::MatrixXd> pij_ac_k;
     std::vector<Eigen::MatrixXd> qij_ac_k;
 
-    // ---- System parameters ----
     int    nconvs_dc;
     int    nbuses_dc;
     int    ngrids;
@@ -109,9 +154,14 @@ struct OPFVisualData {
     double pol_dc;
 };
 
-/// Registers an "AC/DC OPF" tab in the shared visualization window.
-/// Returns immediately — the window stays open until the user closes it
-/// or visualization_stop() / visualization_wait() is called.
+/**
+ * @brief Registers an "AC/DC OPF" network diagram tab in the visualization window.
+ *
+ * Returns immediately; the window stays open until the user closes it or
+ * visualization_stop() / visualization_wait() is called.
+ *
+ * @param data OPF topology and solved bus/branch quantities.
+ */
 void viz_opf(const OPFVisualData& data);
 
 #endif // _VISUALIZATION_H_

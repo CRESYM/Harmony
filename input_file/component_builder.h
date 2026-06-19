@@ -7,15 +7,52 @@ using JSON = nlohmann::json;
 #include "../src/network.h"
 #include "../src/Include_components.h"
 
+/**
+ * @file component_builder.h
+ * @brief Factory for constructing @ref Element objects from JSON component entries.
+ * @ingroup input
+ */
+
+/**
+ * @brief Parses JSON component definitions and returns heap-allocated elements.
+ *
+ * Callers (typically @ref SimulationBuilder or @ref Network) own the returned pointers.
+ */
 class ComponentBuilder {
 
 public:
 
-	/// Parse a JSON component object and return a heap-allocated Element (caller/Network owns it).
+	/**
+	 * @brief Parse a JSON component object and return a heap-allocated Element.
+	 * @param comp JSON object describing one component (`type`, `id`, `values`, …).
+	 * @param index Zero-based index in the components array (used in error messages).
+	 * @return Pointer to a newly allocated element; caller must manage lifetime.
+	 */
 	static Element* buildFromJSON(const JSON& comp, unsigned int index);
 
+	/**
+	 * @brief Require a numeric JSON field.
+	 * @param key Field name.
+	 * @param j JSON object to inspect.
+	 * @throws std::invalid_argument if the field is missing or not numeric.
+	 */
 	static void findNumber(const std::string& key, const JSON& j);
+
+	/**
+	 * @brief Require a non-empty string JSON field.
+	 * @param key Field name.
+	 * @param j JSON object to inspect.
+	 * @throws std::invalid_argument if the field is missing or empty.
+	 */
 	static void findNonEmptyString(const std::string& key, const JSON& j);
+
+	/**
+	 * @brief Require a non-empty numeric JSON array.
+	 * @param key Field name.
+	 * @param j JSON object to inspect.
+	 * @param arraysize Expected array length, or `-1` to skip length check.
+	 * @throws std::invalid_argument if the field is missing, empty, or wrong size.
+	 */
 	static void findNonEmptyNumericArray(const std::string& key, const JSON& j, int arraysize = -1);
 
 private:

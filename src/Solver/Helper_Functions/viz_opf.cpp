@@ -1,3 +1,7 @@
+/**
+ * @file viz_opf.cpp
+ * @brief Implementation of Standalone OPF network visualization interface.
+ */
 ﻿#include "viz_opf.h"
 #include<matplot/matplot.h>
 #include <cmath>

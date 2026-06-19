@@ -1,3 +1,7 @@
+/**
+ * @file example_generator.cpp
+ * @brief Runnable example: Generator element demonstration.
+ */
 #include "Examples.h"
 
 #include "../network.h"

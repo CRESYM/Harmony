@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_Delta_Y_real.cpp
+ * @brief Implementation of Delta-wye (Δ-Y) real transformer topology.
+ */
 #include "Transformer_Delta_Y_real.h"
 
 // Constructor

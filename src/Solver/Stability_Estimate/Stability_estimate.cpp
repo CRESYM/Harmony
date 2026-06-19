@@ -1,3 +1,7 @@
+/**
+ * @file Stability_estimate.cpp
+ * @brief Implementation of Small-signal stability and impedance analysis for AC/DC areas.
+ */
 ﻿#include "Stability_estimate.h"
 
 #include "../../network.h"      // For access to the Network class and its members

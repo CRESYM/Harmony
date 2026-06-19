@@ -1,3 +1,7 @@
+/**
+ * @file example_DQsym_math_operations.cpp
+ * @brief Runnable example: Validate core dynamic-phasor (DQsym) math operations.
+ */
 #include "Examples.h"
 
 #include "../Solver/DQsym/DQsym.h"

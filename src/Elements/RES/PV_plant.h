@@ -1,16 +1,30 @@
 #ifndef PV_PLANT_H_
 #define PV_PLANT_H_
 
+/**
+ * @file PV_plant.h
+ * @brief Aggregated PV plant with boost converter and grid-connected inverter.
+ */
+
 #include "RES_base.h"
 
-/*
-* PV plant is considered as the two stage PV inverter with first stage being the boost DC-DC converter,
-* and second stage being the voltage source inverter. At the output of the VSC is attached an LCL filter.
-* The PV array is taken as an aggregated model of the entire plant.
-*/
+/**
+ * @class PVplant
+ * @brief Two-stage PV inverter plant with boost DC-DC stage and LCL-filtered VSC.
+ * @ingroup res
+ *
+ * The PV array is modeled as an aggregated plant with DC-link, boost converter,
+ * voltage-source inverter, and grid-side filter parameters.
+ */
 class PVplant : public RES_base {
 	friend class PowerFlow;
 public:
+	/**
+	 * @brief Construct a PV plant from a parameter vector.
+	 * @param symbol Element identifier.
+	 * @param location Network area or location string.
+	 * @param parameters Packed PV array, converter, filter, and control parameters.
+	 */
 	PVplant(const string& symbol, const std::string& location, const vector<double>& parameters);
 	~PVplant() {}
 

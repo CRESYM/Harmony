@@ -1,3 +1,7 @@
+/**
+ * @file Admittance.cpp
+ * @brief Implementation of Generic multi-phase admittance element with symbolic or numeric values.
+ */
 ﻿#include "Admittance.h"
 
 /*

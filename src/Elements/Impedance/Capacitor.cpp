@@ -1,3 +1,7 @@
+/**
+ * @file Capacitor.cpp
+ * @brief Implementation of Capacitor element with frequency-domain admittance Y = sC.
+ */
 ﻿#include "Capacitor.h"
 
 

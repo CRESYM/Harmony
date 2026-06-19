@@ -1,3 +1,7 @@
+/**
+ * @file ProportionalIntegral_controller.cpp
+ * @brief Implementation of Proportional–integral (PI) controller.
+ */
 ﻿#include "ProportionalIntegral_controller.h"
 
 /**

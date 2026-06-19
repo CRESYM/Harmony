@@ -1,3 +1,7 @@
+/**
+ * @file RES_base.cpp
+ * @brief Implementation of Base class for renewable energy source (RES) plant models.
+ */
 #include "RES_base.h"
 
 void RES_base::computePowerFlow(std::map<std::string, double>& branchData,

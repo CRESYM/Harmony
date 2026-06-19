@@ -1,3 +1,7 @@
+/**
+ * @file example_DQsym_DSSS2.cpp
+ * @brief Runnable example: DQsym switching / DSSS demonstration.
+ */
 #include "Examples.h"
 
 

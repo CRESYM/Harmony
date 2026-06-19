@@ -1,3 +1,7 @@
+/**
+ * @file Switch.cpp
+ * @brief Implementation of Multi-phase switch element for open/closed branch control.
+ */
 ﻿#include "Switch.h"
 using namespace SymEngine;
 

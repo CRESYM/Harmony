@@ -1,3 +1,7 @@
+/**
+ * @file example_OHL.cpp
+ * @brief Runnable example: Overhead transmission line geometry and Y-parameter sweep.
+ */
 #include "Examples.h"
 
 #include "../network.h"

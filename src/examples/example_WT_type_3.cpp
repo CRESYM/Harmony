@@ -1,3 +1,7 @@
+/**
+ * @file example_WT_type_3.cpp
+ * @brief Runnable example: Type-3 wind-turbine model demonstration.
+ */
 #include "Examples.h"
 
 #include "../Include_components.h"

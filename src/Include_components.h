@@ -1,6 +1,14 @@
 #ifndef INCLUDE_COMPONENTS_H
 #define INCLUDE_COMPONENTS_H
 
+/**
+ * @file Include_components.h
+ * @brief Umbrella header for network element models and the state-space model.
+ *
+ * Includes impedance elements, loads, switches, transformers, sources,
+ * transmission lines, converters, renewable plants, and @ref State_Space_Model.
+ */
+
 // ELEMENTS
 #include "./Elements/Element.h"
 

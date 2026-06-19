@@ -1,3 +1,7 @@
+/**
+ * @file WP_plant.cpp
+ * @brief Implementation of Wind power plant aggregating one or more wind turbine models.
+ */
 #include "WP_plant.h"
 #include "WT_type_3.h"
 #include "WT_type_4.h"

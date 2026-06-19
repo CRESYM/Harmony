@@ -1,3 +1,7 @@
+/**
+ * @file component_builder.cpp
+ * @brief Implementation of JSON-based Element factory (ComponentBuilder).
+ */
 #include "component_builder.h"
 
 

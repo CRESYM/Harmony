@@ -1,3 +1,7 @@
+/**
+ * @file example_visuals.cpp
+ * @brief Runnable example: Plotting and visualization utilities.
+ */
 #include "Examples.h"
 
 #include "../Include_components.h"

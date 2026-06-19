@@ -1,3 +1,7 @@
+/**
+ * @file Load_PQ.cpp
+ * @brief Implementation of Constant active and reactive power (PQ) load model.
+ */
 #include "Load_PQ.h"
 
 LoadPQ::LoadPQ(const std::string& symbol, const std::string& location, int pins, vector<double> values) : Load_base(symbol, location, pins, pins) {

@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_Y_Y.cpp
+ * @brief Implementation of Wye-wye (Y-Y) classic transformer topology.
+ */
 #include "Transformer_Y_Y.h"
 
 // Constructor
