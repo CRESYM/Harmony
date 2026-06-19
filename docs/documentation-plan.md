@@ -44,9 +44,10 @@ Suggested chapters:
 
 ## Recommended priority
 
-1. JSON input docs (done)
-2. Doxygen setup + document `Network`, `Element`, solvers
-3. User manual draft in `docs/manual/`
-4. JSON Schema + MMC/RES JSON builders
+1. JSON input docs — [`input-file-format.md`](input-file-format.md) (done)
+2. **User manual draft** — [`manual/README.md`](manual/README.md) (done)
+3. Doxygen setup + document `Network`, `Element`, solvers
+4. Expand manual (figures, MMC parameter tables, PDF export)
+5. JSON Schema + MMC/RES JSON builders
 
 Ask which items to implement next.
