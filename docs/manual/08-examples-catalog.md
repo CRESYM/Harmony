@@ -142,7 +142,12 @@ CSV OPF reads `src/data/` relative to the repo (auto-detected from the working d
 
 ## 8.7 CI coverage
 
-GitHub Actions workflows build and run examples on Windows, Linux, and macOS (`windows_run_examples.yml`, etc.). Use CI logs to confirm an example runs cleanly on your target platform.
+GitHub Actions workflows on Windows, Linux, and macOS:
+
+- **`windows_build_and_test.yml`**, **`linux_build_and_test.yml`**, **`macos_build_and_test.yml`** — build **Harmony** and **HarmonyUI**, then run unit tests
+- **`windows_run_examples.yml`**, etc. — run bundled C++ examples via `ctest`
+
+HarmonyUI is compile-tested on all three platforms; example workflows use the CLI with `--no-plot` (no GUI on headless runners).
 
 ---
 

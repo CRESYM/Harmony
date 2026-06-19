@@ -37,6 +37,11 @@ jobs:
           gurobi_wlssecret: ${{ secrets.GUROBI_WLSSECRET }}
           gurobi_licenseid: ${{ secrets.GUROBI_LICENSEID }}
 
+      - name: Build Harmony and HarmonyUI
+        uses: ./.github/actions/build-harmony
+        with:
+          gurobi_path: 'C:\gurobi1301\win64'
+
       # Build the tests
       - name: Build the tests
         shell: bash -l {0}
