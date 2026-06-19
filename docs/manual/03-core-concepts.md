@@ -109,4 +109,17 @@ Controller parameters are passed as numeric vectors at construction time. See [C
 
 Do not `delete` a bus or element still registered in a network. Use `deleteElement` / `deleteBus` if you need to remove items during assembly.
 
+---
+
+## 3.9 Running a built network
+
+Once a `Network` is assembled (in C++ or from JSON), run solvers as in [Chapter 7](07-analysis-workflows.md). From the terminal, use bundled examples without recompiling:
+
+```bash
+Harmony --cpp stability_check
+Harmony --json src/examples/example.json
+```
+
+See [`../running-harmony.md`](../running-harmony.md).
+
 [← Getting started](02-getting-started.md) | [Manual index](README.md) | [Next: Building networks →](04-building-networks.md)

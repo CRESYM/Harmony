@@ -6,6 +6,8 @@
 
 This chapter summarizes major device types, parameters, and construction patterns. Units are **SI** unless noted. For exact constructor signatures, see source headers under `src/Elements/`.
 
+To **run** studies that use these components, see [`../running-harmony.md`](../running-harmony.md) (`Harmony --cpp …` or `--json …`).
+
 ---
 
 ## 6.1 Passive elements

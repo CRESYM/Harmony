@@ -15,7 +15,9 @@ with high power-electronics penetration.
 
 ## User documentation
 
-See the [User Manual](../manual/README.md) for installation, workflows, and examples.
+- [**Running Harmony**](../running-harmony.md) — command-line usage (`--cpp`, `--json`)
+- [User Manual](../manual/README.md) — installation, workflows, and examples
+- [JSON input format](../input-file-format.md) — schema for `--json`
 
 ## License
 

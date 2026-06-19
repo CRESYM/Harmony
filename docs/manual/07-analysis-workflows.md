@@ -8,6 +8,13 @@
 
 After building a `Network`, you invoke a **solver** appropriate to the study type. This chapter describes the main workflows and points to example code.
 
+**How to run from the terminal:** [`../running-harmony.md`](../running-harmony.md). Typical pattern:
+
+```bash
+Harmony --cpp <example_name>          # C++ bundled study
+Harmony --json path/to/case.json      # JSON-defined study
+```
+
 ---
 
 ## 7.2 Y-parameter / frequency sweep
@@ -21,7 +28,7 @@ element->plotYParameters(1.0, 1e4, 1000);     // interactive Bode plot
 
 Output: `./files/<element_id>.csv`
 
-**Examples:** `example_MMC.cpp`, `example_transformer.cpp`, `example_cable.cpp`, `example_OHL.cpp`
+**Examples:** `Harmony --cpp mmc`, `Harmony --cpp transformer`, `Harmony --cpp cable`, `Harmony --cpp ohl`
 
 **JSON:** `"type": "y_matrix"` in computations block.
 
@@ -42,7 +49,7 @@ Eigen::MatrixXd B = model.getB();
 
 Use `SSMMode::DQsym` when preparing matrices for dynamic phasor coupling.
 
-**Examples:** `example_state_space.cpp`
+**Examples:** `Harmony --cpp state_space`
 
 **Tests:** `tests/teststatespacemodel.cpp`, `tests/testABCDforming.cpp`
 
@@ -68,17 +75,9 @@ solver.exportCSV("output.csv");
 solver.plot();
 ```
 
-**Examples:**
+**Examples:** `Harmony --cpp dqsym_rlc`, `Harmony --cpp dqsym_simple_mmc`, `Harmony --cpp dqsym_dsss2`, `Harmony --cpp dqsym_math_operations`
 
-| Example | Focus |
-|---------|-------|
-| `example_DQsym_RLC` | Basic RLC circuit |
-| `example_DQsym_Simple_MMC` | MMC without full control |
-| `example_DQsym_DSSS2` | Switching sequence |
-| `example_DQsym_math_operations` | Library validation |
-| `example_DQsym_MMC_controlled` | Controlled MMC |
-
-**Note:** JSON runner does not yet expose DQsym; use C++ examples.
+**JSON:** `"type": "dqsym"` or `"time_domain"` in the `computations` block (see [Chapter 5](05-json-input.md)).
 
 ---
 
@@ -121,7 +120,9 @@ pf.make_OPF(&network, globalParams, /*vscControl=*/true,
             /*writeTxt=*/false, /*plotResult=*/false, /*print_info=*/true);
 ```
 
-**Examples:** `example_OPF.cpp`, `example_OPF_csv.cpp`, `example_OPF_1.cpp`, `example_point2point_case.cpp`, `example_OPF_PV.cpp`, `example_OPF_WT.cpp`
+**Examples:** `Harmony --cpp opf`, `Harmony --cpp opf_csv`, `Harmony --cpp point2point_case`, `Harmony --cpp opf_pv`, `Harmony --cpp opf_wt`
+
+**JSON:** `"type": "opf"` with `"case_name"` in `computations`.
 
 **Requirements:** Gurobi license; network elements must carry OPF metadata where needed.
 
@@ -155,7 +156,9 @@ stability.nyquistplotTF("MMC2", "DC", 10, 2000, 500);
 stability.writeFileTF("MMC2", "DC", 10, 2000, 500);
 ```
 
-**Reference example:** `example_stability_check.cpp` (also the default in `src/main.cpp`).
+**Run:** `Harmony --cpp stability_check`
+
+**JSON:** `"type": "stability_assessment"` in `computations` (requires converters in the model).
 
 **Location argument:** `"AC"` or `"DC"` selects which converter terminal is analyzed.
 
@@ -176,7 +179,7 @@ mmc->plotEigenvalues();
 mmc->plotParticipationFactors();
 ```
 
-**Example:** `example_MMC.cpp`
+**Run:** `Harmony --cpp mmc`
 
 ---
 
@@ -189,7 +192,7 @@ mmc->plotParticipationFactors();
 
 These require programmatic bus/element selection; not yet exposed in JSON.
 
-**Example:** `example_admittance_parameters.cpp`
+**Run:** `Harmony --cpp admittance_parameters`
 
 ---
 
@@ -205,7 +208,7 @@ These require programmatic bus/element selection; not yet exposed in JSON.
 
 ### Converter control tuning
 
-1. Single MMC in isolation (`example_MMC.cpp`)
+1. Single MMC in isolation (`Harmony --cpp mmc`)
 2. Tune `controller_params`, re-run `computeABCD` and eigenvalue plots
 3. Integrate into full network stability check
 
@@ -214,5 +217,7 @@ These require programmatic bus/element selection; not yet exposed in JSON.
 1. Match steady state from OPF or equilibrium solve
 2. Configure DQsym with appropriate `dt` and output buses
 3. Apply breaker function if modeling switching events
+
+See [`../running-harmony.md`](../running-harmony.md) for CLI usage.
 
 [← Component reference](06-component-reference.md) | [Manual index](README.md) | [Next: Examples catalog →](08-examples-catalog.md)

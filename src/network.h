@@ -8,6 +8,8 @@
 
 #include "Constants.h"
 
+#include <memory>
+
 class Bus;
 class Element;
 class SubNetwork;
@@ -33,22 +35,27 @@ using Net = std::unordered_map<Bus*, std::vector<Element*>>;
  */
 class Network {
 protected:
-    //StateSpaceModel state_space_model; 
-    std::unordered_map<std::string, Bus*> buses; // Map of bus names to buses
-    std::unordered_map<std::string, Element*> elements;  // Map of designators to elements
-    std::unordered_map<Bus*, std::vector<Element*>> connections; // Connections between buses and elements
+    std::unordered_map<std::string, Bus*> buses;
+    std::unordered_map<std::string, Element*> elements;
+    std::unordered_map<Bus*, std::vector<Element*>> connections;
 
-    int pins; // Total number of pins/phases in the network, used for equivalent admittance/impedance calculation
+    int pins = 0;
 
-    // Names for identification
     std::vector<std::string> ac_grid_names;
     std::vector<std::string> dc_grid_names;
 
-    // Core hierarchical system representation
-    std::unordered_map<std::string, SubNetwork*> ac_grids;  // AC grids as subnetworks
-    std::unordered_map<std::string, SubNetwork*> dc_grids;  // DC grids as subnetworks
-    std::unordered_map<std::string, Element*> converters; // Converter subnetworks
-    
+    std::unordered_map<std::string, SubNetwork*> ac_grids;
+    std::unordered_map<std::string, SubNetwork*> dc_grids;
+    std::unordered_map<std::string, Element*> converters;
+
+    /** When true, buses/elements registered via addBus/addElement are owned. */
+    bool ownsResources_ = true;
+
+private:
+    std::unordered_map<std::string, std::unique_ptr<Bus>> ownedBuses_;
+    std::unordered_map<std::string, std::unique_ptr<Element>> ownedElements_;
+    std::unordered_map<std::string, std::unique_ptr<SubNetwork>> ownedGrids_;
+
 public:
 
     /**
@@ -61,31 +68,29 @@ public:
      */
     virtual ~Network();
 
-    /**
-     * @brief Register a bus using its own name as the map key.
-     * @param bus Bus to add; must not be null. Pin count is updated unless the bus is ground.
-     */
+    /** @brief Register an owned bus (transfers ownership on root networks). */
+    void addBus(const std::string& busName, std::unique_ptr<Bus> bus);
+
+    /** @brief Register a bus using its own name as the map key. */
     void addBus(Bus* bus);
 
-    /**
-     * @brief Register a bus under an explicit name.
-     * @param busName Key used in the internal bus map.
-     * @param bus Bus to add; must not be null. Pin count is updated unless the bus is ground.
-     */
+    /** @brief Register a bus under an explicit name (transfers ownership on root networks). */
     void addBus(const std::string& busName, Bus* bus);
 
-    /**
-     * @brief Register an element using an auto-generated designator.
-     * @param elem Element to add; ownership transfers to the network.
-     */
+    /** @brief Register a non-owning bus pointer (used by @ref SubNetwork views). */
+    void addBusView(const std::string& busName, Bus* bus);
+
+    /** @brief Register an owned element. */
+    void addElement(const std::string& designator, std::unique_ptr<Element> elem);
+
+    /** @brief Register an element using an auto-generated designator. */
     void addElement(Element* elem);
 
-    /**
-     * @brief Register an element under a specific designator string.
-     * @param designator Unique element identifier (e.g. "R1", "L2").
-     * @param elem Element to add; ownership transfers to the network.
-     */
+    /** @brief Register an element under a specific designator string. */
     void addElement(const std::string& designator, Element* elem);
+
+    /** @brief Register a non-owning element pointer (used by @ref SubNetwork views). */
+    void addElementView(const std::string& designator, Element* elem);
 
     /**
      * @brief Connect an element terminal to a bus and record the association in both directions.
@@ -168,19 +173,7 @@ public:
      * Deletes owned SubNetwork shells in ac_grids and dc_grids; does not delete buses or
      * elements referenced by those views.
      */
-    void empty_areas() {
-        for (auto& [name, sub] : ac_grids)
-            delete sub;
-        ac_grids.clear();
-        ac_grid_names.clear();
-
-        for (auto& [name, sub] : dc_grids)
-            delete sub;
-        dc_grids.clear();
-        dc_grid_names.clear();
-
-        converters.clear();
-	}
+    void empty_areas();
 
     /**
      * @brief Check whether both AC and DC grid maps are empty.

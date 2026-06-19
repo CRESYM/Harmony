@@ -51,17 +51,28 @@ Studies are built as a **graph**: buses connected by **elements**. Solvers opera
 
 ## 1.4 Two ways to define a study
 
-### A. C++ examples (primary workflow today)
+### A. C++ examples (command line)
 
-Most bundled studies are C++ functions under `src/examples/`. You uncomment the desired function in `src/main.cpp`, rebuild, and run `Harmony.exe`.
+Bundled studies live under `src/examples/`. Run them **without recompiling**:
 
-This gives full access to every component and solver, including MMC with custom controller tuning.
+```bash
+conda activate harmony
+Harmony --list-cpp
+Harmony --cpp stability_check
+Harmony --cpp mmc --no-plot
+```
 
-### B. JSON input file (growing workflow)
+See [`../running-harmony.md`](../running-harmony.md) and [Chapter 10](10-command-line.md).
 
-The `input_file/` target reads a JSON description of buses, components, and optional post-build computations. This is suited to repeatable case definitions without recompiling.
+### B. JSON input file
 
-See [Chapter 5](05-json-input.md). Not all component types are available via JSON yet.
+Define buses, components, and computations in JSON under `src/json/` and `src/examples/`:
+
+```bash
+Harmony --json src/examples/example.json
+```
+
+See [Chapter 5](05-json-input.md) and [`../input-file-format.md`](../input-file-format.md).
 
 ---
 
@@ -83,6 +94,7 @@ Analysis solvers and stability methods in this repository are original developme
 Before running studies you need:
 
 - A working **Harmony build** (see [Chapter 2](02-getting-started.md))
+- **`conda activate harmony`** before each run (see [`../running-harmony.md`](../running-harmony.md))
 - **Gurobi** license for OPF studies (free academic licenses available)
 - Basic familiarity with power-system concepts (buses, per-unit, converters)
 - For plotting examples: display/OpenGL support (ImPlot/GLFW)
@@ -94,8 +106,8 @@ You do **not** need to modify C++ code for introductory admittance sweeps if you
 ## 1.7 Document conventions
 
 - Paths are relative to the repository root unless stated otherwise.
-- `Harmony` denotes the main executable built from `src/main.cpp`.
-- `Harmony` in `input_file/` is a **separate** executable with the same name — context clarifies which is meant.
-- Code blocks show bash commands for Linux/macOS; on Windows use `Release\Harmony.exe` and backslashes where needed.
+- `Harmony` denotes the main executable (built from `src/main.cpp`; typically `build/Release/Harmony.exe` on Windows or `build/Harmony` on Linux/macOS).
+- Run from the **repository root** with `conda activate harmony`. See [`../running-harmony.md`](../running-harmony.md).
+- Code blocks show bash commands for Linux/macOS; on Windows use `build\Release\Harmony.exe` and backslashes where needed.
 
 [← Manual index](README.md) | [Next: Getting started →](02-getting-started.md)

@@ -24,7 +24,7 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 
 ## Installation and Usage
 
-See the [detailed installation instructions](docs/installation.md), the [User Manual](docs/manual/README.md), and the [API documentation (Doxygen)](docs/doxygen/README.md).
+See the [detailed installation instructions](docs/installation.md), [**Running Harmony**](docs/running-harmony.md), the [User Manual](docs/manual/README.md), and the [API documentation (Doxygen)](docs/doxygen/README.md).
 
 ### Prerequisites 
 Harmony can be compiled on Windows. The requirements are:
@@ -43,8 +43,6 @@ To build and run Harmony, open Visual Studio and select "Continue without code" 
 # Download the repository
 git clone https://github.com/CRESYM/Harmony.git
 cd Harmony
-# If you want to run the code with an input file, go to the folder input_file
-# (cd Harmony/src/input_file) and follow the rest of the instructions
 
 # Create conda environment with dependencies
 conda env create -f environment.yml
@@ -59,14 +57,38 @@ cmake .. -DGUROBI_PATH="gurobi_installation_dir_config"
 # Compile Harmony
 # Replace 4 with the number of CPU cores you wish to use for parallel compilation
 cmake --build . --config Release -j 4
-
-# Run Harmony
-cd Release
-./Harmony
 ```
 
 > [!TIP]
 > Adding the `-j` flag enables parallel compilation on Linux and macOS using the specified number of cores. For Windows, Harmony is already configured to automatically detect and use the maximum number of available cores for parallel compilation.
+
+### Running Harmony
+
+After building, run studies from the **repository root** with the conda environment active. Full details: [**Running Harmony**](docs/running-harmony.md).
+
+```bash
+conda activate harmony
+cd ..                              # repository root (from build/)
+
+# Windows
+build\Release\Harmony.exe --help
+build\Release\Harmony.exe --list-cpp
+build\Release\Harmony.exe --cpp stability_check
+build\Release\Harmony.exe --json src/examples/example.json
+
+# Linux / macOS
+./build/Harmony --help
+./build/Harmony --cpp stability_check
+./build/Harmony --json src/examples/example.json
+```
+
+| Goal | Command |
+|------|---------|
+| List C++ examples | `Harmony --list-cpp` |
+| Run C++ example | `Harmony --cpp <name>` (e.g. `mmc`, `opf`) |
+| Run JSON case | `Harmony --json <file>` |
+| No GUI plots | add `--no-plot` |
+| More output | add `--verbose` |
 
 ### Run the tests
 To run the tests, you should follow a similar procedure to building and running the code.

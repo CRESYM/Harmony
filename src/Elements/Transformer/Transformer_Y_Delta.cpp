@@ -38,7 +38,5 @@ TransformerYDelta::TransformerYDelta(const std::string& symbol, const std::strin
 }
 
 // Destructor
-TransformerYDelta::~TransformerYDelta() {
-    std::cout << "Transformer Y Delta object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+TransformerYDelta::~TransformerYDelta() = default;
 

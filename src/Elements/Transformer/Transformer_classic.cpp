@@ -37,6 +37,4 @@ Transformer_classic::Transformer_classic(const std::string& symbol, const std::s
     }
 }
 
-Transformer_classic::~Transformer_classic() {
-    std::cout << "Transformer object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+Transformer_classic::~Transformer_classic() = default;

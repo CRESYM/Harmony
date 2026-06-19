@@ -51,6 +51,7 @@ add_executable(
     testtransformerclassic.cpp
     testMMC.cpp
     testStabilityEstimate.cpp
+    testOPF.cpp
     testexamples.cpp
     utils.cpp
     ${CORRECTED_HARMONY_HEADERS}     # defined in sources.cmake

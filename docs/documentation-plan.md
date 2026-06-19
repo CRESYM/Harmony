@@ -3,6 +3,7 @@
 ## Current state
 
 - **Installation guide** — [`installation.md`](installation.md)
+- **Running Harmony** — [`running-harmony.md`](running-harmony.md) (CLI: `--cpp`, `--json`)
 - **JSON input format** — [`input-file-format.md`](input-file-format.md)
 - **Doxygen-style comments** — partial (`@brief` in solvers, some elements); no `Doxyfile`
 - **User manual PDF** — referenced in README/installer but **not in this repository**
@@ -14,7 +15,7 @@
 
 Best for developers integrating or extending Harmony.
 
-- Class/method reference from `src/` and `input_file/`
+- Class/method reference from `src/` (including `src/json/`)
 - Module pages: Elements, Solvers, Control, Network
 - Inheritance diagrams for `Element` hierarchy
 - CMake `doxygen_add_docs` target + optional GitHub Pages CI

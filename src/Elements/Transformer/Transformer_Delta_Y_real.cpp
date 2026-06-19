@@ -36,7 +36,5 @@ TransformerDeltaY_real::TransformerDeltaY_real(const std::string& symbol, const 
 }
 
 // Destructor
-TransformerDeltaY_real::~TransformerDeltaY_real() {
-    std::cout << "Transformer Delta Y object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+TransformerDeltaY_real::~TransformerDeltaY_real() = default;
 

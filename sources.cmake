@@ -215,9 +215,22 @@ set(Controller_Source_Files
 set(Source_Files
     src/Bus.cpp
     src/Constants.cpp
+    src/cli.cpp
     src/main.cpp
     src/network.cpp
     src/SubNetwork.cpp
+)
+set(Json_Source_Files
+    src/json/component_builder.cpp
+    src/json/computation_runner.cpp
+    src/json/json_validator.cpp
+    src/json/simulation_builder.cpp
+)
+set(Json_Header_Files
+    src/json/component_builder.h
+    src/json/computation_runner.h
+    src/json/json_validator.h
+    src/json/simulation_builder.h
 )
 set(Examples_Source_files
     src/examples/example_OPF.cpp
@@ -269,6 +282,7 @@ set(HARMONY_HEADER_FILES
     ${Solver_Helper_Functions_Header_Files}
     ${Solver_State_Space_Model_Header_Files}
     ${Examples_Header_files}
+    ${Json_Header_Files}
 )
 
 # -----------------------------------------------------------------------------
@@ -294,6 +308,7 @@ set(HARMONY_SOURCE_FILES
     ${Solver_Helper_Functions_Source_Files}
     ${Solver_State_Space_Model_Source_Files}
     ${Examples_Source_files}
+    ${Json_Source_Files}
 )
 
 # -----------------------------------------------------------------------------
@@ -320,6 +335,7 @@ if(MSVC)
     source_group("Header Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Header_Files})
     source_group("Header Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Header_Files})
     source_group("Header Files\\Examples" FILES ${Examples_Header_files})
+    source_group("Header Files\\JSON" FILES ${Json_Header_Files})
 
 
     source_group("Source Files" FILES ${Source_Files})
@@ -342,4 +358,5 @@ if(MSVC)
     source_group("Source Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Source_Files})
     source_group("Source Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Source_Files})
     source_group("Source Files\\Examples" FILES ${Examples_Source_files})
+    source_group("Source Files\\JSON" FILES ${Json_Source_Files})
 endif()

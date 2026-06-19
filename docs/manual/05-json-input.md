@@ -6,7 +6,13 @@
 
 ## 5.1 Purpose
 
-The `input_file/` module lets you define a study in **JSON** instead of editing C++ and recompiling. It is suitable for:
+The **`src/json/`** module lets you define a study in **JSON** and run it with:
+
+```bash
+Harmony --json src/examples/example.json
+```
+
+Full run instructions: [`../running-harmony.md`](../running-harmony.md). It is suitable for:
 
 - Parameter sweeps on passives and transformers
 - Automated batch runs
@@ -16,21 +22,23 @@ Full field-level specification: [`../input-file-format.md`](../input-file-format
 
 ---
 
-## 5.2 Build and run
+## 5.2 Run a JSON case
+
+Build the main executable once ([Chapter 2 § Build](02-getting-started.md#24-build-the-main-executable)), then from the **repository root**:
 
 ```bash
 conda activate harmony
-cd input_file
-mkdir build && cd build
-cmake .. -DGUROBI_PATH="/path/to/gurobi"
-cmake --build . --config Release
+# Windows
+build\Release\Harmony.exe --json src/examples/example.json
+build\Release\Harmony.exe --json example.json --verbose
+build\Release\Harmony.exe --search-path /path/to/cases --json my_case.json
 
-# Run with explicit path
-./Release/Harmony.exe ../../src/examples/example.json
-
-# Or omit path to use the default example.json
-./Release/Harmony.exe
+# Linux / macOS
+./build/Harmony --json src/examples/example.json
+./build/Harmony --json example.json --verbose
 ```
+
+Full run guide: [`../running-harmony.md`](../running-harmony.md). CLI reference: [Chapter 10](10-command-line.md).
 
 ---
 
@@ -96,22 +104,21 @@ See `src/examples/example.json`:
 | `resistor`, `inductor`, `capacitor` | Per-phase `"values"` array |
 | `transformer_real` | Object `"values"` with R, L, turns ratio, phase shift |
 | `transformer_classic`, `transformer_yy`, `transformer_deltay`, … | Object `"values"` with R, L, M |
+| `dc_source` | `"voltage"` (scalar or array), optional `"resistance"` / `"values"` |
+| `impedance`, `admittance` | Per-phase or matrix `"values"` |
+| `switch` | `"state"` (bool array) or `"closed"` (bool) |
+| `transmission_line` | `"values"`: `[R, L, G, C, length]` (5 numbers) |
+| `cable` | `"cable_type"`, `"length"`, `"earth"`, `"conductors"`, `"insulators"`, `"positions"` |
+| `overhead_line` | `"length_km"`, `"earth"`, `"conductor"`, `"groundwire"` |
+| `mmc` | `"converter_params"`; optional `"controller_params"`, `"filter_params"` |
+| `wt_type_3`, `wt_type_4`, `pv_plant` | `"parameters"` numeric array |
+| `wp_plant` | `"turbine_type"`, `"number_wt"`, `"parameters"` |
+
+JSON is validated strictly at load time: unknown keys are rejected. See [`../input-file-format.md`](../input-file-format.md).
 
 ---
 
-## 5.7 Not yet available via JSON
-
-These require C++ examples today:
-
-- MMC and generic converters
-- Cables, overhead lines, transmission lines
-- Switches
-- Generic impedance/admittance branches
-- RES plants (PV, wind types 3/4)
-
----
-
-## 5.8 Computations block
+## 5.7 Computations block
 
 After the network is built, the runner executes each entry in `computations`:
 
@@ -121,8 +128,9 @@ After the network is built, the runner executes each entry in `computations`:
 | `network_summary` | AC/DC area breakdown |
 | `y_matrix` | CSV frequency sweep; optional `"component_id"` |
 | `stability_assessment` | Requires converters in model; optional `"converter_id"`, `"location"` |
-| `power_flow` | Requires `"case_name"` matching CSV prefix in `src/data/` |
-| `equivalent_impedance`, `dqsym` | Not wired — use C++ API |
+| `power_flow` / `opf` | Requires `"case_name"` matching CSV prefix in `src/data/` |
+| `dqsym` / `time_domain` | Time-domain DQsym on the built network (`dt`, `t_end`, `output_bus_ids`, …) |
+| `equivalent_impedance` | Not wired — use C++ API |
 
 Example:
 
@@ -141,7 +149,7 @@ Output CSV files go to `./files/` (or `"output_directory"` in `simulation`).
 
 ---
 
-## 5.9 Validation errors
+## 5.8 Validation errors
 
 The builder validates:
 
@@ -154,13 +162,12 @@ Errors print to stderr and terminate with a non-zero exit code.
 
 ---
 
-## 5.10 When to use JSON vs C++
+## 5.9 When to use JSON vs C++
 
 | Use JSON | Use C++ examples |
 |----------|------------------|
-| Passive networks and transformers | MMC with custom controllers |
-| Repeatable Y-matrix sweeps | DQsym time-domain with breakers |
-| Teaching / batch preprocessing | Full OPF hybrid cases with RES |
-| Early case prototyping | Stability studies with detailed OPF setup |
+| Repeatable Y-matrix sweeps | MMC with custom controllers (fine-tune in C++) |
+| Batch runs via `--json` | Complex breaker schedules in DQsym (C++ for now) |
+| Teaching / case sharing | Full hybrid OPF cases with RES when JSON is insufficient |
 
 [← Building networks](04-building-networks.md) | [Manual index](README.md) | [Next: Component reference →](06-component-reference.md)

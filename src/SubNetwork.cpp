@@ -4,10 +4,13 @@
  */
 #include "SubNetwork.h"
 
-SubNetwork::SubNetwork() : Network(), subnetworkName("Unnamed_SubNetwork") {}
+SubNetwork::SubNetwork() : Network(), subnetworkName("Unnamed_SubNetwork") {
+    ownsResources_ = false;
+}
 
 SubNetwork::SubNetwork(const std::string& name)
     : Network(), subnetworkName(name) {
+    ownsResources_ = false;
 }
 
 SubNetwork::~SubNetwork() {

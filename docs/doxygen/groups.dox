@@ -67,7 +67,7 @@
 
 /**
  * @defgroup input JSON input
- * @brief File-driven simulation builder (`input_file/`).
+ * @brief File-driven simulation builder (`src/json/`).
  */
 
 /**

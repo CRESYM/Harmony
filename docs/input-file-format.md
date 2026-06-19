@@ -1,15 +1,25 @@
 # JSON Input File Format
 
-Harmony can build a `Network` from a JSON simulation file via the executable in `input_file/`.
+Harmony can build a `Network` from a JSON simulation file using the main executable.
 
 ## Usage
 
+Build Harmony from the repository root (see [`installation.md`](installation.md) or [User Manual Chapter 2](manual/02-getting-started.md)). Then run from the **repository root**:
+
 ```bash
-cd input_file/build/Release   # after building the input_file target
-./Harmony path/to/simulation.json
+conda activate harmony
+
+# Windows
+build\Release\Harmony.exe --json path/to/simulation.json
+build\Release\Harmony.exe --json example.json --verbose
+build\Release\Harmony.exe --list-json
+
+# Linux / macOS
+./build/Harmony --json path/to/simulation.json
+./build/Harmony --json example.json --verbose
 ```
 
-If no path is given, the default is `../src/examples/example.json`.
+Full run instructions: [**Running Harmony**](running-harmony.md). Harmony searches `src/examples`, `src/json`, `examples`, and the current directory for JSON files. Add paths with `--search-path`. CLI details: [User Manual Chapter 10](manual/10-command-line.md).
 
 ## Top-level structure
 
@@ -77,16 +87,17 @@ At least one connection form is required for the component to be wired into the 
 | `resistor`, `inductor`, `capacitor` | `values`: per-phase parameters |
 | `transformer_real` | `values`: `{R_primary, L_primary, R_secondary, L_secondary, turns_ratio, phase_shift}` |
 | `transformer_classic`, `transformer_yy`, `transformer_deltay`, … | `values`: `{R_primary, L_primary, R_secondary, L_secondary, M}` |
+| `dc_source` | `voltage` (number or array); optional `resistance` / `values` |
+| `impedance`, `admittance` | Numeric `values` array |
+| `switch` | `state` (bool array) or `closed` (bool) |
+| `transmission_line` | `values`: `[R, L, G, C, length]` |
+| `cable` | `cable_type`, `length`, `earth`, `conductors`, `insulators`, `positions` |
+| `overhead_line` | `length_km`, `earth`, `conductor`, `groundwire` |
+| `mmc` | `converter_params`; optional `controller_params`, `filter_params` |
+| `wt_type_3`, `wt_type_4`, `pv_plant` | `parameters` array |
+| `wp_plant` | `turbine_type`, `number_wt`, `parameters` |
 
-### Not yet supported via JSON
-
-These types exist in the C++ library but do not yet have JSON builders:
-
-- `mmc`, `converter`
-- `cable`, `overhead_line`, `transmission_line`
-- `switch`
-- `impedance`, `admittance`
-- RES plants (`pv_plant`, `wt_type_3`, …)
+Unknown keys are rejected (strict validation at load time).
 
 ## `computations` array
 
@@ -99,14 +110,11 @@ Each entry has a `type` field (case-insensitive).
 | `y_matrix` (`y_matrx`) | Frequency sweep to CSV. Optional `component_id`, `frequency_range` |
 | `stability_assessment` | `StabilityEstimate` after `add_areas`. Optional: `converter_id`, `location`, `frequency_range` |
 | `power_flow` / `opf` | Requires `case_name` matching CSV prefix under `src/data/` |
+| `time_domain` / `dqsym` | DQsym time-domain run (`dt`, `t_end`, `frequency`, `output_bus_ids`, …) |
 | `equivalent_impedance` | Not wired — use C++ API |
-| `time_domain` / `dqsym` | Not wired — use DQsym examples |
 
-## Build target
+## See also
 
-```bash
-cd input_file
-mkdir build && cd build
-cmake .. -DGUROBI_PATH="/path/to/gurobi"
-cmake --build . --config Release
-```
+- [User Manual — Command-line interface](manual/10-command-line.md)
+- [User Manual — JSON workflow](manual/05-json-input.md)
+- Build and install: [`installation.md`](installation.md)

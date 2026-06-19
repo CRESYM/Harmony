@@ -2,7 +2,7 @@
  * @file Filter.cpp
  * @brief Implementation of First- and second-order filter control block.
  */
-﻿#include "Filter.h"
+#include "Filter.h"
 
 void Filter::updateParameters(double newTimeConstant, double newZeta, double newBandwidth) {
     timeConstant = newTimeConstant;

@@ -90,6 +90,11 @@ link_symengine(Harmony)
 link_sundials(Harmony)
 link_implot(Harmony)
 link_gurobi(Harmony)
+link_nlohmann_json(Harmony)
+
+target_include_directories(Harmony PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
 # -----------------------------------------------------------------------------
 # 6. Optional API documentation (Doxygen)

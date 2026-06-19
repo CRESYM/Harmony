@@ -2,6 +2,8 @@
 
 This document describes how to set up a development environment that allows you to compile and run Harmony.
 
+After building, see [**Running Harmony**](running-harmony.md) for command-line usage (`--cpp`, `--json`, flags, and troubleshooting).
+
 ## Prerequisites 
 Harmony can be compiled on Windows, Linux (tested in Ubuntu 22.04.5), and macOS (tested in Sequoia 15.5). The requirements for each operating system are:
 - Compilers for C and C++
@@ -226,11 +228,29 @@ cmake --build . --config Release
 Windows users: You may also use the VS Build button or select Build->Solution from the menu at the top. The output file *Harmony.exe* will be created in the `build/Release` directory or `build/Debug` if the app was built in Debug mode.
 
 **11. Execute Harmony.**
+
+Activate the conda environment and run from the **repository root**. See [**Running Harmony**](running-harmony.md) for the full command-line reference.
+
 ```bash
-# Windows only: open the folder containing Harmony.exe
-cd Release
-# Run Harmony
-./Harmony
+conda activate harmony
+cd ..    # repository root (from build/)
+
+# Windows
+build\Release\Harmony.exe --help
+build\Release\Harmony.exe --cpp stability_check
+build\Release\Harmony.exe --json src/examples/example.json
+
+# Linux / macOS
+./build/Harmony --help
+./build/Harmony --cpp stability_check
+./build/Harmony --json src/examples/example.json
 ```
 
-Windows users: If you want to use the VS "Run" button or menu options, you need to set the Harmony project as the startup project in the Solution (CMake adds ALL_BUILD and ZERO_CHECK projects). To do so: right-click on the Harmony project in the *Solution Explorer* and select the option *Set as Startup Project*.
+| Goal | Command |
+|------|---------|
+| List C++ examples | `Harmony --list-cpp` |
+| Run C++ example | `Harmony --cpp <name>` |
+| Run JSON case | `Harmony --json <file>` |
+| Disable plots | `--no-plot` |
+
+Windows users: If you want to use the VS "Run" button, set **Harmony** as the startup project, set **Working Directory** to the repository root, and add **Command Arguments** such as `--cpp stability_check --no-plot` or `--json src/examples/example.json`. See [Running Harmony](running-harmony.md#visual-studio).

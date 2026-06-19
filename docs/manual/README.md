@@ -16,6 +16,8 @@ For API-level documentation, see [Building API Documentation (Doxygen)](../doxyg
 
 For detailed installation steps with screenshots, see [`../installation.md`](../installation.md).
 
+For **how to run** Harmony after building, see [`../running-harmony.md`](../running-harmony.md) and [Chapter 10 — Command-line interface](10-command-line.md).
+
 For the JSON input file specification, see [`../input-file-format.md`](../input-file-format.md).
 
 ---
@@ -33,6 +35,7 @@ For the JSON input file specification, see [`../input-file-format.md`](../input-
 | [7](07-analysis-workflows.md) | Analysis workflows | OPF, stability, state-space, DQsym |
 | [8](08-examples-catalog.md) | Examples catalog | Guide to all bundled examples |
 | [9](09-troubleshooting.md) | Troubleshooting | Common errors and fixes |
+| [10](10-command-line.md) | Command-line interface | Run examples and JSON cases with `--cpp` / `--json` |
 
 ---
 
@@ -41,11 +44,12 @@ For the JSON input file specification, see [`../input-file-format.md`](../input-
 | Task | Where to look |
 |------|----------------|
 | First-time install | [Chapter 2](02-getting-started.md), [`installation.md`](../installation.md) |
-| Run a hybrid AC–DC stability study | [Chapter 7](07-analysis-workflows.md) |
-| Run optimal power flow | [Chapter 7](07-analysis-workflows.md) |
-| Define a case without C++ | [Chapter 5](05-json-input.md) |
+| **Run Harmony (CLI)** | [**`running-harmony.md`**](../running-harmony.md), [Chapter 10](10-command-line.md) |
+| Run a hybrid AC–DC stability study | `Harmony --cpp stability_check`, [Chapter 7](07-analysis-workflows.md) |
+| Run optimal power flow | `Harmony --cpp opf`, [Chapter 7](07-analysis-workflows.md) |
+| Define a case without C++ | `Harmony --json …`, [Chapter 5](05-json-input.md) |
 | MMC converter parameters | [Chapter 6 § Converters](06-component-reference.md#62-modular-multilevel-converter-mmc) |
-| Run unit tests | [Chapter 2 § Tests](02-getting-started.md#running-the-test-suite) |
+| Run unit tests | [Chapter 2 § Tests](02-getting-started.md#27-running-the-test-suite) |
 
 ---
 
@@ -59,10 +63,12 @@ Harmony/
 │   ├── Control/          PI controllers, filters (used by converters)
 │   ├── examples/         Runnable demonstration programs
 │   ├── data/             CSV case files for OPF
-│   └── main.cpp          Entry point — uncomment one example to run
-├── input_file/           JSON-driven network builder (separate executable)
+│   └── main.cpp          Entry point (CLI: --cpp / --json)
+├── src/json/             JSON builders, validation, computation runner
 ├── tests/                GoogleTest unit tests
-└── docs/                 Installation guide and this manual
+└── docs/                 Installation, running guide, and this manual
+    ├── running-harmony.md
+    └── installation.md
 ```
 
 ---

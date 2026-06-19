@@ -10,9 +10,7 @@ Transformer_base::Transformer_base(const std::string& symbol, const std::string&
 }
 
 // Destructor
-Transformer_base::~Transformer_base() {
-    std::cout << "Transformer object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+Transformer_base::~Transformer_base() = default;
 
 void Transformer_base::computePowerFlow(std::map<std::string, double>& branchData,
     std::map<std::string, double>& globalParams) const

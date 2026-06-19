@@ -1,8 +1,10 @@
 # Chapter 9 — Troubleshooting
 
-[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md)
+[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md) | [Next: Command-line interface →](10-command-line.md)
 
 ---
+
+> **Running Harmony:** [`../running-harmony.md`](../running-harmony.md) — conda activation, working directory, CLI flags, and common run failures.
 
 ## 9.1 Build and environment
 
@@ -80,9 +82,9 @@ Or set `"output_directory"` in JSON simulation section.
 
 ### Plot window does not appear
 
-- Run with `plotting_enabled = true` (default in most examples)
+- Plots are enabled by default in most C++ examples
 - Headless/remote sessions may lack OpenGL/GLFW display
-- Pass `false` to disable plots: `example_stability_check(false)`
+- Disable plots from the CLI: `Harmony --cpp stability_check --no-plot`
 
 ---
 
@@ -147,10 +149,8 @@ If extending the code:
 
 | Limitation | Workaround |
 |------------|------------|
-| Main executable has no CLI for example selection | Edit `src/main.cpp` or use JSON input target |
-| MMC not in JSON builder | Use C++ `example_stability_check` as template |
-| DQsym not in JSON computations | Use DQsym examples |
+| Complex DQsym breaker schedules | C++ DQsym examples; basic `dqsym` in JSON |
 | `equivalent_impedance` not in JSON | C++ `StabilityEstimate` API |
 | User manual PDF not auto-generated from this draft | Export Markdown via Pandoc or publish to GitHub Pages |
 
-[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md)
+[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md) | [Next: Command-line interface →](10-command-line.md)

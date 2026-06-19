@@ -12,6 +12,4 @@ TransformerYY_real::TransformerYY_real(const std::string& symbol, const std::str
 }
 
 // Destructor
-TransformerYY_real::~TransformerYY_real() {
-    std::cout << "Transformer Y-Y object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+TransformerYY_real::~TransformerYY_real() = default;

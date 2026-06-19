@@ -4,40 +4,48 @@
 
 ---
 
-All examples are declared in `src/examples/Examples.h` and invoked from `src/main.cpp` by uncommenting one function call.
+All examples are declared in `src/examples/Examples.h`. **Run from the terminal** (recommended):
 
-Most plotting examples accept `bool plotting_enabled = true`. Pass `false` in CI or headless environments.
+```bash
+conda activate harmony
+Harmony --list-cpp
+Harmony --cpp <name> [--no-plot] [--verbose]
+```
+
+See [`../running-harmony.md`](../running-harmony.md) and [Chapter 10](10-command-line.md). Example names drop the `example_` prefix (`example_MMC` → `--cpp mmc`).
+
+Most plotting examples accept `bool plotting_enabled = true`. Use `--no-plot` in CI or headless environments.
 
 ---
 
 ## 8.1 Component demonstrations
 
-| Example | File | Description |
-|---------|------|-------------|
-| `example_constructors()` | `example_constructors.cpp` | Instantiate basic element types |
-| `example_transformer()` | `example_transformer.cpp` | Transformer topologies and Y-parameters |
-| `example_generator()` | `example_generator.cpp` | Generator model |
-| `example_cable()` | `example_cable.cpp` | Underground cable layers and Y sweep |
-| `example_OHL()` | `example_OHL.cpp` | Overhead line geometry and Y sweep |
-| `example_MMC()` | `example_MMC.cpp` | MMC equilibrium, ABCD, Y-matrix, eigenvalues |
-| `example_WT_type_3()` | `example_WT_type_3.cpp` | Type 3 wind turbine |
-| `example_WT_type_4()` | `example_WT_type_4.cpp` | Type 4 wind turbine |
-| `example_PV_plant()` | `example_PV_plant.cpp` | PV plant model |
-| `example_visuals()` | `example_visuals.cpp` | Plotting utilities |
+| Example | `--cpp` name | File |
+|---------|--------------|------|
+| `example_constructors()` | `constructors` | `example_constructors.cpp` |
+| `example_transformer()` | `transformer` | `example_transformer.cpp` |
+| `example_generator()` | `generator` | `example_generator.cpp` |
+| `example_cable()` | `cable` | `example_cable.cpp` |
+| `example_OHL()` | `ohl` | `example_OHL.cpp` |
+| `example_MMC()` | `mmc` | `example_MMC.cpp` |
+| `example_WT_type_3()` | `wt_type_3` | `example_WT_type_3.cpp` |
+| `example_WT_type_4()` | `wt_type_4` | `example_WT_type_4.cpp` |
+| `example_PV_plant()` | `pv_plant` | `example_PV_plant.cpp` |
+| `example_visuals()` | `visuals` | `example_visuals.cpp` |
 
 ---
 
 ## 8.2 Solver examples — OPF
 
-| Example | File | Description |
-|---------|------|-------------|
-| `example_OPF()` | `example_OPF.cpp` | Basic hybrid OPF |
-| `example_OPF_1()` | `example_OPF_1.cpp` | Extended OPF case |
-| `example_OPF_csv()` | `example_OPF_csv.cpp` | OPF from CSV data |
-| `example_OPF_csv_1()` | `example_OPF_csv_1.cpp` | Variant CSV OPF |
-| `example_point2point_case()` | `example_point2point_case.cpp` | Point-to-point HVDC-style case |
-| `example_OPF_PV()` | `example_OPF_PV.cpp` | OPF with PV plant |
-| `example_OPF_WT()` | `example_OPF_WT.cpp` | OPF with wind plant |
+| Example | `--cpp` name | File | Description |
+|---------|--------------|------|-------------|
+| `example_OPF()` | `opf` | `example_OPF.cpp` | Basic hybrid OPF |
+| `example_OPF_1()` | `opf_1` | `example_OPF_1.cpp` | Extended OPF case |
+| `example_OPF_csv()` | `opf_csv` | `example_OPF_csv.cpp` | OPF from CSV data |
+| `example_OPF_csv_1()` | `opf_csv_1` | `example_OPF_csv_1.cpp` | Variant CSV OPF |
+| `example_point2point_case()` | `point2point_case` | `example_point2point_case.cpp` | Point-to-point HVDC-style case |
+| `example_OPF_PV()` | `opf_pv` | `example_OPF_PV.cpp` | OPF with PV plant |
+| `example_OPF_WT()` | `opf_wt` | `example_OPF_WT.cpp` | OPF with wind plant |
 
 **Requires:** Gurobi, CSV files in `src/data/`.
 
@@ -45,36 +53,45 @@ Most plotting examples accept `bool plotting_enabled = true`. Pass `false` in CI
 
 ## 8.3 Solver examples — DQsym
 
-| Example | File | Description |
-|---------|------|-------------|
-| `example_DQsym_math_operations()` | `example_DQsym_math_operations.cpp` | Core math validation |
-| `example_DQsym_RLC()` | `example_DQsym_RLC.cpp` | Simple RLC circuit |
-| `example_DQsym_Simple_MMC()` | `example_DQsym_Simple_MMC.cpp` | Simplified MMC |
-| `example_DQsym_DSSS2()` | `example_DQsym_DSSS2.cpp` | Switching / DSSS demo |
-| `example_DQsym_MMC_controlled()` | `example_DQsym_MMC_controlled.cpp` | MMC with controls |
-| `example_DQsym_validation()` | (header only) | Validation routines |
+| Example | `--cpp` name | File | Description |
+|---------|--------------|------|-------------|
+| `example_DQsym_math_operations()` | `dqsym_math_operations` | `example_DQsym_math_operations.cpp` | Core math validation |
+| `example_DQsym_RLC()` | `dqsym_rlc` | `example_DQsym_RLC.cpp` | Simple RLC circuit |
+| `example_DQsym_Simple_MMC()` | `dqsym_simple_mmc` | `example_DQsym_Simple_MMC.cpp` | Simplified MMC |
+| `example_DQsym_DSSS2()` | `dqsym_dsss2` | `example_DQsym_DSSS2.cpp` | Switching / DSSS demo |
+| `example_DQsym_MMC_controlled()` | *(not in CLI yet)* | `example_DQsym_MMC_controlled.cpp` | MMC with controls |
+| `example_DQsym_validation()` | *(header only)* | — | Validation routines |
 
 ---
 
 ## 8.4 Solver examples — state-space and stability
 
-| Example | File | Description |
-|---------|------|-------------|
-| `example_state_space()` | `example_state_space.cpp` | Form A,B,C,D for RLC network |
-| `example_stability_check()` | `example_stability_check.cpp` | **Full AC–DC hybrid stability study** |
-| `example_admittance_parameters()` | `example_admittance_parameters.cpp` | Equivalent admittance utilities |
+| Example | `--cpp` name | File | Description |
+|---------|--------------|------|-------------|
+| `example_state_space()` | `state_space` | `example_state_space.cpp` | Form A,B,C,D for RLC network |
+| `example_stability_check()` | `stability_check` | `example_stability_check.cpp` | **Full AC–DC hybrid stability study** |
+| `example_admittance_parameters()` | `admittance_parameters` | `example_admittance_parameters.cpp` | Equivalent admittance utilities |
 
 ---
 
 ## 8.5 How to switch examples
 
-1. Edit `src/main.cpp`
-2. Comment out the currently active example
-3. Uncomment the desired `example_*()` call
-4. Rebuild: `cmake --build . --config Release`
-5. Run from `build/Release/`
+From the **repository root** with `(harmony)` active:
 
-There is no runtime flag on the main executable to select examples.
+```bash
+conda activate harmony
+
+# Windows
+build\Release\Harmony.exe --list-cpp
+build\Release\Harmony.exe --cpp stability_check
+build\Release\Harmony.exe --cpp mmc --no-plot
+
+# Linux / macOS
+./build/Harmony --list-cpp
+./build/Harmony --cpp stability_check
+```
+
+CLI names drop the `example_` prefix (`example_stability_check` → `stability_check`). See [`../running-harmony.md`](../running-harmony.md).
 
 ---
 
@@ -88,12 +105,12 @@ GitHub Actions workflows build and run examples on Windows, Linux, and macOS (`w
 
 | Goal | Start with |
 |------|------------|
-| Learn network assembly | `example_constructors`, `example_state_space` |
-| Understand MMC | `example_MMC` |
-| Full hybrid stability | `example_stability_check` |
-| OPF from files | `example_OPF_csv` |
-| Time-domain transients | `example_DQsym_RLC` → `example_DQsym_Simple_MMC` |
-| RES integration | `example_PV_plant`, `example_OPF_PV` |
-| Lines and cables | `example_cable`, `example_OHL` |
+| Learn network assembly | `--cpp constructors`, `--cpp state_space` |
+| Understand MMC | `--cpp mmc` |
+| Full hybrid stability | `--cpp stability_check` |
+| OPF from files | `--cpp opf_csv` |
+| Time-domain transients | `--cpp dqsym_rlc` → `--cpp dqsym_simple_mmc` |
+| RES integration | `--cpp pv_plant`, `--cpp opf_pv` |
+| Lines and cables | `--cpp cable`, `--cpp ohl` |
 
 [← Analysis workflows](07-analysis-workflows.md) | [Manual index](README.md) | [Next: Troubleshooting →](09-troubleshooting.md)

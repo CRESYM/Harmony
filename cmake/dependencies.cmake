@@ -120,6 +120,17 @@ function (link_implot TARGET_NAME)
 endfunction()
 
 
+# nlohmann_json
+function(link_nlohmann_json TARGET_NAME)
+    find_package(nlohmann_json CONFIG REQUIRED)
+    target_link_libraries(
+        ${TARGET_NAME}
+        PRIVATE
+        nlohmann_json::nlohmann_json
+    )
+endfunction()
+
+
 # Gurobi
 set(GUROBI_PATH "" CACHE PATH "Path to Gurobi installation")
 function(link_gurobi TARGET_NAME)

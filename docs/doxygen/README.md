@@ -44,7 +44,7 @@ build/docs/html/index.html
 |-------|----------|
 | `src/**/*.h` | All public headers — classes, methods, modules |
 | `src/**/*.cpp` | `@file` / `@brief` on every translation unit |
-| `input_file/` | JSON builder API |
+| `src/json/` | JSON builder API |
 | `docs/doxygen/` | Main page and `@defgroup` module index |
 
 Excluded: `stb_image_write.h`, `tests/`, `build/`.
@@ -62,5 +62,6 @@ Defined in `docs/doxygen/groups.dox`:
 
 ## Related docs
 
+- [**Running Harmony**](running-harmony.md) — command-line usage after build
 - [User Manual](manual/README.md) — workflows and tutorials
 - [Input file format](input-file-format.md) — JSON schema

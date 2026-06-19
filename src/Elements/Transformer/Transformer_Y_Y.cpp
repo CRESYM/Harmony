@@ -11,6 +11,4 @@ TransformerYY::TransformerYY(const std::string& symbol, const std::string& locat
 }
 
 // Destructor
-TransformerYY::~TransformerYY() {
-    std::cout << "Transformer Y-Y object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+TransformerYY::~TransformerYY() = default;
