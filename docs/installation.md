@@ -87,72 +87,12 @@ cmake ..
 
 The VS Solution or makefile will be inside the `build` directory. The VS Solution or makefile needs to be regenerated every time you make changes to *CMakeLists.txt*. These changes can include, for example: adding a new *.h* or *.cpp* file to the project, adding a dependency on a third-party library, etc. To regenerate the solution or makefile, delete the `build` folder and re-run the commands listed in this step.
 
-After building the harmony, two other libraries need to be installed and configured: `Gurobi` and `Matplot++`
-
-
-**5. Matplot++ Installation using vcpkg**
-`vcpkg` can be used to install `Matplot++` following these steps to install and configure the library:
-
-Download `vcpkg`:
-   ```bash
-   git clone https://github.com/microsoft/vcpkg.git
-   cd vcpkg
-   ./bootstrap-vcpkg.bat
-   ```
-   Intergrate`vcpkg` with Visual Studio:
-   ```bash
-   ./vcpkg integrate install
-   ```
-Install `Matplot++` via `vcpkg`. Open  `Powershell` or `CMD`, and navigate to the  `vcpkg` directory, like: 
-
-```bash
-   cd C:\XXX\vcpkg
-```
-   In the root directory of `vcpkg`, type:
-
-   ```bash
-   .\vcpkg install matplotplusplus
-   ```
-**6. Matplot++ Configuration in Visual Studio IDE**
-
-After installing `Matplot++`, you probably still have problems running it successfully. 
-
-First,  `Matplot++` only uses `C++17` or higher. In your Visual Studio, you need to go to `Configuration Properties` and then set:
-
-<p align="left">
-  <img src="assets\matplot++_f4.jpg" alt="Logo" width="660">
-</p> 
-
-Then, you will still get an error report:
-   ```bash
-   Unhandled exception at 0x0007ffe9ececf19 in MatplotPlusPlus_text.exe:
-   Microsoft C++ exception: std::runtime_error at memory location 0x000000F632EFEC68.
-   ```
-This is because `Matplot++` relies on [gunplot](https://sourceforge.net/projects/gnuplot/) to achieve the plot function. You need to download and install `gunplot`.
-<p align="left">
-  <img src="assets\matplot++_f3.png" alt="Logo" width="660">
-</p> 
-
-After installing `gunplot`, add the `gunplot.exe` file to `PATH` under `System Variables` :
-<p align="left">
-  <img src="assets\matplot++_f2.jpg" alt="Logo" width="350">
-</p> 
-
-<p align="left">
-  <img src="assets\matplot++_f1.jpg" alt="Logo" width="350">
-</p> 
-
-Last, add the `gunplot` library path in Visual Studio:
-<p align="left">
-  <img src="assets\matplot++_f5.jpg" alt="Logo" width="660">
-</p> 
-
-**7. Gurobi Configuration in Visual Studio IDE**
+**5. Gurobi Configuration in Visual Studio IDE**
 
 download [Gurobi](https://www.gurobi.com/downloads/) manually and install it follow a [Instruction](https://support.gurobi.com/hc/en-us/articles/4534161999889-How-do-I-install-Gurobi-Optimizer).
    
 
-**8. Gurobi Configuration in Visual Studio IDE**
+**6. Gurobi Configuration in Visual Studio IDE**
   
  Below are details regarding the Gurobi Configuration. Based on our local setup, the configuration is demonstrated using `Gurobi 9.5.2` and `Visual Studio 2022`.
 
@@ -214,18 +154,18 @@ Step3: click `OK`
 </p> 
 
 
-**9.** (Optional, Windows) Open the VS Solution created in the previous step. Do so by selecting File->Open->Project/Solution on the top menu. Choose the file `<path-to-harmony/build/Harmony.sln>`. Carry out your development as usual, making changes to the project's source files and saving them.
+**7.** (Optional, Windows) Open the VS Solution created in the previous step. Do so by selecting File->Open->Project/Solution on the top menu. Choose the file `<path-to-harmony/build/Harmony.sln>`. Carry out your development as usual, making changes to the project's source files and saving them.
 
 Note: Harmony will add the ALL_BUILD and ZERO_CHECK projects to the VS solution. You can ignore them.
 
-**10. Compile Harmony.** The following command (which needs to be run from the `build` folder containing the VS Solution or makefile) will build Harmony in Release mode. Use `--config Debug` to build in Debug mode.
+**8. Compile Harmony.** The following command (which needs to be run from the `build` folder containing the VS Solution or makefile) will build Harmony in Release mode. Use `--config Debug` to build in Debug mode.
 ```bash
 cmake --build . --config Release
 ```
 
 Windows users: You may also use the VS Build button or select Build->Solution from the menu at the top. The output file *Harmony.exe* will be created in the `build/Release` directory or `build/Debug` if the app was built in Debug mode.
 
-**11. Execute Harmony.**
+**9. Execute Harmony.**
 ```bash
 # Windows only: open the folder containing Harmony.exe
 cd Release
