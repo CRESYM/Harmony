@@ -15,8 +15,8 @@ void example_DQsym_Simple_MMC(bool plotting_enabled /*=true*/)
 
     const double f = 50.0;
     const double omega = 2.0 * M_PI * f;
-    const double Vdc = 6.4E5;
-    const double Vac = 3.266e5;
+    const double Vdc = 400;
+    const double Vac = 200;
     const int    nKeep = 5;
    
 
@@ -34,7 +34,7 @@ void example_DQsym_Simple_MMC(bool plotting_enabled /*=true*/)
         0, // PLL controller parameters
         0, // DC voltage controller parameters
 
-        1, 0, 2.57e-4, 3.2e-3, 1, 1e8,  //1, 0, 6.6667e-04, 3.3333e-01, 1,15e3,  // active power
+        1, 0, 2.57e-4, 3.2e-3, 1, 1e3,  //1, 0, 6.6667e-04, 3.3333e-01, 1,15e3,  // active power
         0, // AC voltage control
         0, /// reactive power
         0, // energy controller: PI, Kp=120, Ki=400, ref=0
