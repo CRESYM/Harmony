@@ -6,6 +6,7 @@
 
 #include "examples/Examples.h"
 #include "json/simulation_builder.h"
+#include "Solver/Helper_Functions/Visualization.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -514,5 +515,14 @@ int runJsonSimulation(
 	if (verbose) {
 		std::cout << "\nSimulation finished.\n";
 	}
+
+	// Keep the ImGui plot window alive until the user closes it (C++ examples use cin.get()).
+	if (plot && visualization_is_running()) {
+		if (verbose) {
+			std::cout << "Close the Harmony Visualization window to exit.\n";
+		}
+		visualization_wait();
+	}
+
 	return EXIT_SUCCESS;
 }
