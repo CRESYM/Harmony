@@ -1,38 +1,32 @@
 #pragma once
 #include "component_builder.h"
 
-// struct SimulationParameters
+struct FrequencyRange {
+	double start = 1.0;
+	double end = 1000.0;
+	int points = 100;
+};
 
 class SimulationBuilder {
 
 public:
 
-	SimulationBuilder() {};
-	~SimulationBuilder() {};
-	
+	SimulationBuilder() = default;
+	~SimulationBuilder() = default;
+
 	void buildFromJSON(const JSON& simJSON, Network& network);
+	void runComputations(const JSON& simJSON, Network& network) const;
 
-	std::vector<ComponentType> getComponents() const {
-		return components;
-	}
-
-	std::vector<Bus> getBuses() const {
-		return buses;
-	}
+	const JSON& getSimulationConfig() const { return simulationConfig_; }
 
 private:
 
 	void validateJSON(const JSON& simJSON) const;
+	void buildBusesFromJSON(const JSON& simJSON, Network& network) const;
+	void connectElementsToBuses(const JSON& simJSON, Network& network) const;
 
-	void buildBusFromJSON(const JSON& simJSON) const;
+	static FrequencyRange parseFrequencyRange(const JSON& rangeJson);
+	static void connectComponent(const JSON& comp, Element* elem, Network& network);
 
-	void connectElementsToBuses();
-
-	std::vector<ComponentType> components;
-	std::vector<Bus> buses;
-	//std::vector<Computations> computations;
-
-	//SimulationParameters parameters;
-	
-
+	JSON simulationConfig_;
 };

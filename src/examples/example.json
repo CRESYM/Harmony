@@ -1,95 +1,72 @@
 {
     "simulation": {
-        "title": "simulation_20240305",
-        "description": "This is a sample simulation with loads, transformers and buses.",
-        "output_directory": "/home/simulations/20240305/results",
+        "title": "harmony_json_example",
+        "description": "Minimal AC network built from JSON: load + real transformer.",
+        "output_directory": "./files",
         "frequency_range": {
-            "start": 1000,
-            "end": 5000,
-            "step": 200
+            "start": 10,
+            "end": 1000,
+            "step": 50
         },
-        "global_simulation_parameter": 10.0,
-        "nominal_power": 1.0,
-        "nominal_voltage": 2000,
-        "frequency_grid": "50Hz",
-        "calculations": ["y_matrix", "power_flow", "stability_assesment, time_domain"]
+        "nominal_power": 100.0,
+        "nominal_voltage": 345.0
     },
     "computations": [
         {
-            "type": "y_matrx",
-            "frequency_range": {
-                "start": 1000,
-                "end": 5000,
-                "step": 200
-            }
+            "type": "print_connections"
         },
         {
-            "type": "equivalent_impedance",
-            "range": {
-                "start_buses": ["bus1", "bus2"],
-                "end_buses": ["bus3", "bus4"],
-                "skip_components": ["l1", "transformer2"]
-            }
+            "type": "y_matrix",
+            "component_id": "l1"
         },
         {
-            "type": "equivalent_impedance_num",
-            "range": {
-                "start_buses": ["bus1", "bus2"],
-                "end_buses": ["bus3", "bus4"],
-                "skip_components": ["l1", "transformer2"]
-            },
-            "frequency_range": {
-                "start": 1000,
-                "end": 5000,
-                "step": 200
-            },
-            "matrix": [1, 1, "divjomega",
-                        3, 5, 6,
-                        9, 10, 11]
+            "type": "network_summary"
         }
     ],
     "buses": [
         {
             "id": "bus1",
-            "pins": 1,
+            "location": "AC1",
+            "pins": 3,
             "enabled": true
         },
         {
             "id": "bus2",
-            "pins": 1,
-            "enabled": false
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
         }
     ],
     "components": [
         {
             "id": "l1",
-			"location": "AC1",
+            "location": "AC1",
             "type": "load",
             "pins": 3,
-            "values": [1, 1, 1],
+            "values": [3859.46, 2047.0, 0.0],
             "connected_bus": {
-                "bus_id": "bus1",
-                "terminal": 1 
+                "bus_id": "bus2",
+                "terminal": 1
             },
             "enabled": true
         },
         {
             "id": "transformer1",
-			"location": "AC1",
+            "location": "AC1",
             "type": "transformer_real",
-            "pins": 1,
+            "pins": 3,
             "values": {
-                "R_primary": 10.0,
-                "L_primary": 5.0,
-                "R_secondary": 12.0,
-                "L_secondary": 6.0,
-                "turns_ratio": 2.0,
+                "R_primary": 1.0,
+                "L_primary": 0.04,
+                "R_secondary": 1.0,
+                "L_secondary": 0.04,
+                "turns_ratio": 1.0,
                 "phase_shift": 0.0
             },
-            "connected_bus": {
-                "bus_id": "bus2",
-                "terminal": 1 
-            },
+            "connected_buses": [
+                { "bus_id": "bus1", "terminal": 1 },
+                { "bus_id": "bus2", "terminal": 2 }
+            ],
             "enabled": true
         }
     ]
