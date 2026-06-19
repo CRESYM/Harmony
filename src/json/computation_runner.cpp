@@ -14,6 +14,20 @@
 
 namespace {
 
+bool jsonPlotRequested(const JSON& calc, const bool plottingEnabled) {
+	return plottingEnabled && calc.value("plot", false);
+}
+
+bool jsonPlotResultRequested(const JSON& calc, const bool plottingEnabled) {
+	return plottingEnabled && calc.value("plot_result", false);
+}
+
+std::string lowerCopy(std::string value) {
+	std::transform(value.begin(), value.end(), value.begin(),
+		[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+	return value;
+}
+
 FrequencyRange parseFrequencyRangeLocal(const JSON& rangeJson) {
 	FrequencyRange range;
 	range.start = rangeJson.value("start", range.start);
@@ -31,7 +45,7 @@ FrequencyRange parseFrequencyRangeLocal(const JSON& rangeJson) {
 	return range;
 }
 
-void runYMatrix(const JSON& calc, Network& network, const JSON& defaultRange) {
+void runYMatrix(const JSON& calc, Network& network, const JSON& defaultRange, const bool plottingEnabled) {
 	const JSON rangeJson = calc.value("frequency_range", defaultRange);
 	const FrequencyRange range = parseFrequencyRangeLocal(rangeJson);
 	for (const auto& [id, elem] : network.getElements()) {
@@ -42,33 +56,76 @@ void runYMatrix(const JSON& calc, Network& network, const JSON& defaultRange) {
 			<< range.start << "–" << range.end << " Hz, "
 			<< range.points << " points)\n";
 		elem->writeFile(range.start, range.end, range.points);
+		if (jsonPlotRequested(calc, plottingEnabled)) {
+			elem->plotYParameters(range.start, range.end, range.points);
+		}
 	}
 }
 
-void runOpf(const JSON& calc, Network& network, const JSON& simulationConfig) {
-	if (!calc.contains("case_name")) {
-		throw std::invalid_argument("'opf' / 'power_flow' requires 'case_name'.\n");
+void runStabilityPlots(
+	StabilityEstimate& stability,
+	const JSON& calc,
+	const FrequencyRange& range,
+	const bool plottingEnabled)
+{
+	if (!jsonPlotRequested(calc, plottingEnabled)) {
+		return;
+	}
+	if (!calc.contains("converter_id") || !calc.contains("location")) {
+		throw std::invalid_argument(
+			"stability_assessment 'plot' requires 'converter_id' and 'location'.\n");
+	}
+
+	const std::string converterId = calc.at("converter_id").get<std::string>();
+	const std::string location = calc.at("location").get<std::string>();
+	const std::string plotType = lowerCopy(calc.value("plot_type", std::string("bode")));
+
+	if (plotType == "bode") {
+		stability.bodeplotTF(converterId, location, range.start, range.end, range.points);
+	}
+	else if (plotType == "nyquist") {
+		stability.nyquistplotTF(converterId, location, range.start, range.end, range.points);
+	}
+	else {
+		throw std::invalid_argument(
+			"stability_assessment 'plot_type' must be 'bode' or 'nyquist', got '" + plotType + "'.\n");
+	}
+}
+
+void runOpf(const JSON& calc, Network& network, const JSON& simulationConfig, const bool plottingEnabled) {
+	PowerFlow pf;
+	if (calc.contains("case_name")) {
+		const std::string acCase = calc.at("case_name").get<std::string>();
+		const std::string dcCase = calc.value("dc_case_name", acCase);
+		pf.solve_opf(
+			dcCase,
+			acCase,
+			nullptr,
+			calc.value("vsc_control", true),
+			calc.value("write_txt", false),
+			jsonPlotResultRequested(calc, plottingEnabled),
+			calc.value("print_info", false));
+		return;
 	}
 
 	std::map<std::string, double> globalParams;
 	globalParams["baseMVA"] = simulationConfig.value("nominal_power", 100.0);
 	globalParams["ACbaseKV"] = simulationConfig.value("nominal_voltage", 345.0);
 	globalParams["DCbaseKV"] = simulationConfig.value("dc_nominal_voltage", 400.0);
+	globalParams["omega"] = simulationConfig.value("omega", 2.0 * M_PI * 50.0);
+	globalParams["ACZbase"] =
+		globalParams["ACbaseKV"] * globalParams["ACbaseKV"] / globalParams["baseMVA"];
+	globalParams["DCZbase"] =
+		globalParams["DCbaseKV"] * globalParams["DCbaseKV"] / globalParams["baseMVA"];
 
-	PowerFlow pf;
-	const std::string caseName = calc.at("case_name");
-	auto dataAc = pf.create_ac(caseName);
-	auto dataDc = pf.create_dc(caseName);
-	pf.load_params_ac("AC1", dataAc);
-	pf.load_params_dc("DC1", dataDc);
 	pf.make_OPF(&network, globalParams,
 		calc.value("vsc_control", true),
 		calc.value("write_txt", false),
-		calc.value("plot_result", false),
+		jsonPlotResultRequested(calc, plottingEnabled),
 		calc.value("print_info", true));
 }
 
-void runDqsym(const JSON& calc, Network& network) {
+void runDqsym(const JSON& calc, Network& network, const bool plottingEnabled) {
 	DQsym dq;
 	dq.initialize(&network);
 
@@ -128,15 +185,17 @@ void runDqsym(const JSON& calc, Network& network) {
 		}
 	}
 
-	const bool plot = calc.value("plot", false);
-	(void)plot;
 	dq.run(cfg);
+	if (jsonPlotRequested(calc, plottingEnabled)) {
+		dq.plot();
+	}
 }
 
 } // namespace
 
 
-ComputationRunner::ComputationRunner() {
+ComputationRunner::ComputationRunner(const bool plottingEnabled)
+	: plottingEnabled_(plottingEnabled) {
 	registerBuiltins();
 }
 
@@ -150,8 +209,8 @@ std::string ComputationRunner::normalizeType(const JSON& calc) {
 
 
 void ComputationRunner::registerBuiltins() {
-	handlers_["y_matrix"] = [](const JSON& calc, Network& net, const JSON& simCfg) {
-		runYMatrix(calc, net, simCfg.value("frequency_range", JSON::object()));
+	handlers_["y_matrix"] = [this](const JSON& calc, Network& net, const JSON& simCfg) {
+		runYMatrix(calc, net, simCfg.value("frequency_range", JSON::object()), plottingEnabled_);
 	};
 	handlers_["y_matrx"] = handlers_["y_matrix"];
 
@@ -163,7 +222,7 @@ void ComputationRunner::registerBuiltins() {
 		net.printConnections();
 	};
 
-	handlers_["stability_assessment"] = [](const JSON& calc, Network& net, const JSON& simCfg) {
+	handlers_["stability_assessment"] = [this](const JSON& calc, Network& net, const JSON& simCfg) {
 		net.add_areas();
 		StabilityEstimate stability;
 		stability.add_areas(&net);
@@ -175,17 +234,18 @@ void ComputationRunner::registerBuiltins() {
 				calc.at("converter_id").get<std::string>(),
 				calc.at("location").get<std::string>(),
 				range.start, range.end, range.points);
+			runStabilityPlots(stability, calc, range, plottingEnabled_);
 		}
 	};
 	handlers_["stability_assesment"] = handlers_["stability_assessment"];
 
-	handlers_["power_flow"] = [](const JSON& calc, Network& net, const JSON& simCfg) {
-		runOpf(calc, net, simCfg);
+	handlers_["power_flow"] = [this](const JSON& calc, Network& net, const JSON& simCfg) {
+		runOpf(calc, net, simCfg, plottingEnabled_);
 	};
 	handlers_["opf"] = handlers_["power_flow"];
 
-	handlers_["dqsym"] = [](const JSON& calc, Network& net, const JSON&) {
-		runDqsym(calc, net);
+	handlers_["dqsym"] = [this](const JSON& calc, Network& net, const JSON&) {
+		runDqsym(calc, net, plottingEnabled_);
 	};
 	handlers_["time_domain"] = handlers_["dqsym"];
 }

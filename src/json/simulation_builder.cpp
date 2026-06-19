@@ -122,7 +122,11 @@ FrequencyRange SimulationBuilder::parseFrequencyRange(const JSON& rangeJson) {
 }
 
 
-void SimulationBuilder::runComputations(const JSON& sim, Network& network) const {
-	ComputationRunner runner;
+void SimulationBuilder::runComputations(
+	const JSON& sim,
+	Network& network,
+	const bool plottingEnabled) const
+{
+	ComputationRunner runner(plottingEnabled);
 	runner.runAll(sim, network, simulationConfig_);
 }

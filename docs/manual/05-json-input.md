@@ -62,6 +62,18 @@ Full run guide: [`../running-harmony.md`](../running-harmony.md). CLI reference:
 | `components` | Yes | Devices with `type`, parameters, and bus connections |
 | `computations` | No | Analysis steps run after the network is built |
 
+### `pins` on components
+
+| JSON `pins` | Component types |
+|-------------|-----------------|
+| **Required** | Passives, sources, loads, switches, lines, transformers, impedance/admittance |
+| **Optional** (default `1`) | `cable` |
+| **Omit** (fixed in C++ model) | `overhead_line`, `mmc`, `wt_type_3`, `wt_type_4`, `pv_plant`, `wp_plant` |
+
+Buses always need `pins`. When JSON `pins` is required, it must match the connected bus pin count. Converters use 3 pins on AC buses and 2 on DC buses automatically.
+
+See [`../input-file-format.md`](../input-file-format.md) for the full table.
+
 ---
 
 ## 5.4 Minimal working example
@@ -128,11 +140,13 @@ After the network is built, the runner executes each entry in `computations`:
 |--------|-------------|
 | `print_connections` | Print wiring table |
 | `network_summary` | AC/DC area breakdown |
-| `y_matrix` | CSV frequency sweep; optional `"component_id"` |
-| `stability_assessment` | Requires converters in model; optional `"converter_id"`, `"location"` |
-| `power_flow` / `opf` | Requires `"case_name"` matching CSV prefix in `src/data/` |
-| `dqsym` / `time_domain` | Time-domain DQsym on the built network (`dt`, `t_end`, `output_bus_ids`, …) |
+| `y_matrix` | CSV frequency sweep; optional `"component_id"`, `"plot": true` (Bode GUI) |
+| `stability_assessment` | Requires converters in model; optional `"converter_id"`, `"location"`, `"plot"`, `"plot_type": "bode"` or `"nyquist"` |
+| `power_flow` / `opf` | Built-network OPF when `case_name` is omitted; CSV cases with `"case_name"` and optional `"dc_case_name"`; optional `"plot_result": true` |
+| `dqsym` / `time_domain` | Time-domain DQsym on the built network; optional `"plot": true` |
 | `equivalent_impedance` | Not wired — use C++ API |
+
+Use `--no-plot` on the CLI to disable all JSON plot flags (same as C++ examples).
 
 Example:
 
@@ -142,7 +156,15 @@ Example:
   {
     "type": "y_matrix",
     "component_id": "l1",
+    "plot": true,
     "frequency_range": { "start": 10, "end": 1000, "step": 50 }
+  },
+  {
+    "type": "stability_assessment",
+    "converter_id": "MMC1",
+    "location": "DC",
+    "plot": true,
+    "plot_type": "nyquist"
   }
 ]
 ```

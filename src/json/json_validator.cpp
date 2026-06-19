@@ -26,6 +26,22 @@ void requireKeys(const JSON& j, const std::set<std::string>& keys, const char* c
 	}
 }
 
+/** Pin count is fixed inside the C++ model; JSON must not supply `pins`. */
+bool componentUsesJsonPins(const std::string& type) {
+	return type != "overhead_line"
+		&& type != "mmc"
+		&& type != "wt_type_3"
+		&& type != "wt_type_4"
+		&& type != "pv_plant"
+		&& type != "wp_plant"
+		&& type != "cable";
+}
+
+/** `location` on the component is optional (builder supplies a default). */
+bool componentRequiresJsonLocation(const std::string& type) {
+	return type != "overhead_line";
+}
+
 } // namespace
 
 
@@ -87,7 +103,7 @@ void JsonValidator::validateSimulation(const JSON& sim) {
 	requireObject(sim, "simulation");
 	rejectUnknownKeys(sim, {
 		"title", "description", "output_directory", "frequency_range",
-		"nominal_power", "nominal_voltage", "dc_nominal_voltage"
+		"nominal_power", "nominal_voltage", "dc_nominal_voltage", "omega"
 	}, "simulation");
 }
 
@@ -104,7 +120,7 @@ void JsonValidator::validateByType(const JSON& comp, const std::string& type) {
 	const std::string ctx = "component '" + comp.at("id").get<std::string>() + "'";
 
 	if (type == "load" || type == "load_pq" || type == "capacitor" || type == "inductor"
-		|| type == "resistor" || type == "impedance") {
+		|| type == "resistor") {
 		rejectUnknownKeys(comp, {
 			"id", "type", "location", "pins", "values", "enabled",
 			"connected_bus", "connected_buses"
@@ -113,9 +129,30 @@ void JsonValidator::validateByType(const JSON& comp, const std::string& type) {
 		return;
 	}
 
+	if (type == "impedance") {
+		rejectUnknownKeys(comp, {
+			"id", "type", "location", "pins", "values", "complex", "enabled",
+			"connected_bus", "connected_buses"
+		}, ctx.c_str());
+		if (!comp.contains("values") && !comp.contains("complex")) {
+			throw std::invalid_argument("ERROR: impedance requires 'values' or 'complex'.\n");
+		}
+		if (comp.contains("values")) {
+			ComponentBuilder::findNonEmptyNumericArray("values", comp);
+		}
+		if (comp.contains("complex")) {
+			ComponentBuilder::findNonEmptyNumericArray("complex", comp);
+			const auto& z = comp.at("complex");
+			if (!z.is_array() || z.size() != 2) {
+				throw std::invalid_argument("ERROR: impedance 'complex' must be [R, X].\n");
+			}
+		}
+		return;
+	}
+
 	if (type == "ac_source" || type == "generator") {
 		rejectUnknownKeys(comp, {
-			"id", "type", "location", "pins", "values", "voltage", "enabled",
+			"id", "type", "location", "pins", "values", "voltage", "opf_info", "enabled",
 			"connected_bus", "connected_buses"
 		}, ctx.c_str());
 		ComponentBuilder::findNonEmptyNumericArray("values", comp);
@@ -181,6 +218,9 @@ void JsonValidator::validateByType(const JSON& comp, const std::string& type) {
 			"connected_bus", "connected_buses"
 		}, ctx.c_str());
 		requireKeys(comp, { "cable_type", "length", "earth", "conductors", "insulators", "positions" }, ctx.c_str());
+		if (comp.contains("pins")) {
+			ComponentBuilder::findNumber("pins", comp);
+		}
 		return;
 	}
 
@@ -232,8 +272,10 @@ void JsonValidator::validateComponent(const JSON& comp, const unsigned index) {
 	ComponentBuilder::findNonEmptyString("id", comp);
 
 	const std::string type = lowerType(comp);
-	if (type != "overhead_line") {
+	if (componentRequiresJsonLocation(type)) {
 		ComponentBuilder::findNonEmptyString("location", comp);
+	}
+	if (componentUsesJsonPins(type)) {
 		ComponentBuilder::findNumber("pins", comp);
 	}
 
@@ -245,12 +287,26 @@ void JsonValidator::validateComputation(const JSON& calc, const unsigned index) 
 	const std::string ctx = "computation[" + std::to_string(index) + "]";
 	requireObject(calc, ctx.c_str());
 	rejectUnknownKeys(calc, {
-		"type", "case_name", "component_id", "converter_id", "location",
+		"type", "case_name", "dc_case_name", "component_id", "converter_id", "location",
 		"frequency_range", "vsc_control", "write_txt", "plot_result", "print_info",
 		"dt", "t_start", "t_end", "frequency", "n_keep", "output_bus_ids",
-		"switch_on_resistance", "switch_off_resistance", "switch_types", "plot"
+		"switch_count", "switch_on_resistance", "switch_off_resistance", "switch_types",
+		"plot", "plot_type"
 	}, ctx.c_str());
 	if (!calc.contains("type") || !calc.at("type").is_string()) {
 		throw std::invalid_argument("ERROR: computation requires string 'type'.\n");
+	}
+	if (calc.contains("plot_type")) {
+		if (!calc.at("plot_type").is_string()) {
+			throw std::invalid_argument("ERROR: computation 'plot_type' must be a string.\n");
+		}
+		const std::string plotType = calc.at("plot_type").get<std::string>();
+		std::string lower = plotType;
+		std::transform(lower.begin(), lower.end(), lower.begin(),
+			[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		if (lower != "bode" && lower != "nyquist") {
+			throw std::invalid_argument(
+				"ERROR: computation 'plot_type' must be 'bode' or 'nyquist'.\n");
+		}
 	}
 }

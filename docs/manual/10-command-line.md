@@ -138,8 +138,10 @@ When using `--json`, the `computations` array in the file runs after the network
 | `print_connections`, `network_summary` | Wiring and area summary |
 | `y_matrix` | Y-parameter frequency sweep to CSV |
 | `stability_assessment` | Impedance-based stability (needs converters in model) |
-| `opf`, `power_flow` | OPF; requires `"case_name"` (CSV prefix under `src/data/`) |
-| `dqsym`, `time_domain` | DQsym time-domain run on the built network |
+| `opf`, `power_flow` | OPF; requires `"case_name"` (CSV prefix under `src/data/`); optional `"plot_result": true` |
+| `dqsym`, `time_domain` | DQsym time-domain run on the built network; optional `"plot": true` |
+
+Plot flags in JSON are ignored when you pass `--no-plot` on the CLI.
 
 Example DQsym block:
 

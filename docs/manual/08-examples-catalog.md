@@ -113,15 +113,21 @@ JSON equivalents of bundled C++ demos are in `src/examples/json/`:
 | `wt_type_4.json` | `example_WT_type_4` | Type-4 wind turbine |
 | `state_space.json` | `example_state_space` | RLC network (build only) |
 | `passives_rlc.json` | — | R/L/C passives demo |
+| `opf_csv.json` | `example_OPF_csv` | CSV OPF via `solve_opf` (`ac5` + `mtdc3`); stub network is ignored |
+| `dqsym_mmc.json` | `example_DQsym_Simple_MMC` | DQsym time-domain MMC with sources |
+| `stability_check.json` | `example_stability_check` | Full hybrid OPF + stability + Y-matrix plots |
 
 Run with:
 
 ```bash
 Harmony --json src/examples/json/mmc.json --no-plot
+Harmony --json src/examples/json/stability_check.json --no-plot
+Harmony --json src/examples/json/dqsym_mmc.json --no-plot
+Harmony --json src/examples/json/opf_csv.json --no-plot
 Harmony --list-json
 ```
 
-Complex workflows (full stability, OPF with mismatched CSV prefixes, DQsym matrix tests) remain C++-only until extended in the JSON runner.
+CSV OPF reads `src/data/` relative to the repo (auto-detected from the working directory). Built-network OPF/stability cases use components in the JSON file.
 
 ---
 

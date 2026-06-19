@@ -6,8 +6,8 @@
         "frequency_range": { "start": 10, "end": 1000, "points": 15 }
     },
     "buses": [
-        { "id": "bus1", "location": "AC1", "pins": 2, "enabled": true },
-        { "id": "bus2", "location": "AC1", "pins": 2, "enabled": true }
+        { "id": "bus1", "location": "AC1", "pins": 1, "enabled": true },
+        { "id": "bus2", "location": "AC1", "pins": 1, "enabled": true }
     ],
     "components": [
         {

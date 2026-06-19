@@ -62,7 +62,7 @@ build\Release\Harmony.exe --json src/examples/example.json --verbose
 
 | Flag | Description |
 |------|-------------|
-| `--no-plot` | Disable GUI plots (headless / CI) |
+| `--no-plot` | Disable GUI plots for C++ examples and JSON `plot` / `plot_result` flags |
 | `--verbose`, `-v` | Extra console output |
 | `--json-path <dir>` | Replace default JSON search directories (repeatable) |
 | `--search-path <dir>` | Append directory for resolving JSON filenames (repeatable) |

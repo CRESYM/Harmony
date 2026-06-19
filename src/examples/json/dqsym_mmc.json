@@ -1,0 +1,80 @@
+{
+    "simulation": {
+        "title": "dqsym_mmc",
+        "description": "JSON equivalent of example_DQsym_Simple_MMC.cpp — MMC with AC/DC sources and DQsym time-domain run.",
+        "output_directory": "./files"
+    },
+    "buses": [
+        { "id": "gnd", "location": "GND", "pins": 1, "enabled": true },
+        { "id": "AC1", "location": "AC1", "pins": 3, "enabled": true },
+        { "id": "DC1", "location": "DC1", "pins": 2, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "MMC1",
+            "location": "AC1_DC1",
+            "type": "mmc",
+            "converter_params": [
+                314.1592653589793, 0.0, 0.0, 0.0, 326600.0, 0.0, 640000.0,
+                0.0529, 0.1663, 0.0017568, 36.0, 0.01, 10.0, 0.0
+            ],
+            "controller_params": [
+                0,
+                0,
+                1, 0, 0.000257, 0.0032, 1, 100000000.0,
+                0,
+                0,
+                0,
+                0,
+                1, 0, 48.0, 480.0, 2, 0.0, 0.0,
+                0,
+                0
+            ],
+            "connected_buses": [
+                { "bus_id": "AC1", "terminal": 1 },
+                { "bus_id": "DC1", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "Vs_dc",
+            "location": "DC1",
+            "type": "dc_source",
+            "pins": 2,
+            "voltage": [320000.0, -320000.0],
+            "resistance": 0.0,
+            "connected_buses": [
+                { "bus_id": "DC1", "terminal": 1 },
+                { "bus_id": "gnd", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "Vs_ac",
+            "location": "AC1",
+            "type": "ac_source",
+            "pins": 3,
+            "voltage": 326600.0,
+            "values": [0.0],
+            "connected_buses": [
+                { "bus_id": "AC1", "terminal": 1 },
+                { "bus_id": "gnd", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "print_connections" },
+        {
+            "type": "dqsym",
+            "dt": 2.0e-5,
+            "t_start": 0.0,
+            "t_end": 0.02,
+            "frequency": 50.0,
+            "n_keep": 5,
+            "switch_count": 1,
+            "output_bus_ids": ["AC1"],
+            "plot": true
+        }
+    ]
+}

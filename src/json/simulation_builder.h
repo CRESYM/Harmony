@@ -35,16 +35,17 @@ public:
 	 * @brief Run analyses selected in the simulation JSON (OPF, stability, etc.).
 	 * @param simJSON Root JSON object (must contain a `simulation` section).
 	 * @param network Assembled network to analyse.
+	 * @param plottingEnabled When false, JSON `plot` / `plot_result` flags are ignored (CLI `--no-plot`).
 	 */
-	void runComputations(const JSON& simJSON, Network& network) const;
+	void runComputations(const JSON& simJSON, Network& network, bool plottingEnabled = true) const;
 
 	/** @brief Return the parsed `simulation` configuration object. */
 	const JSON& getSimulationConfig() const { return simulationConfig_; }
 
-private:
-
 	/** @brief Validate required top-level JSON sections and unique IDs. @param simJSON Root JSON object. */
 	void validateJSON(const JSON& simJSON) const;
+
+private:
 
 	/**
 	 * @brief Create buses from the `buses` array and add them to @p network.

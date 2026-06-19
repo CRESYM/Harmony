@@ -56,7 +56,7 @@ void listJsonFiles(const std::vector<std::filesystem::path>& searchPaths);
 int runCppExample(const std::string& name, bool plot, bool verbose);
 
 /** @brief Run a JSON simulation file. @return 0 on success, non-zero on failure. */
-int runJsonSimulation(const std::filesystem::path& jsonPath, bool verbose);
+int runJsonSimulation(const std::filesystem::path& jsonPath, bool verbose, bool plot = true);
 
 /** @brief Built-in JSON search directories (used when env/CLI overrides are unset). */
 std::vector<std::filesystem::path> builtinJsonSearchPaths();

@@ -14,7 +14,6 @@
             "id": "cable",
             "location": "DC1",
             "type": "cable",
-            "pins": 1,
             "cable_type": "aerial",
             "length": 100000.0,
             "earth": [1.0, 1.0, 1.0],

@@ -15,11 +15,12 @@ class ComputationRunner {
 public:
 	using Handler = std::function<void(const JSON&, Network&, const JSON& simulationConfig)>;
 
-	ComputationRunner();
+	explicit ComputationRunner(bool plottingEnabled = true);
 
 	void runAll(const JSON& sim, Network& network, const JSON& simulationConfig) const;
 
 private:
+	bool plottingEnabled_;
 	std::unordered_map<std::string, Handler> handlers_;
 
 	void registerBuiltins();

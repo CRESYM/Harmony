@@ -50,6 +50,6 @@
     ],
     "computations": [
         { "type": "print_connections" },
-        { "type": "y_matrix", "component_id": "R1" }
+        { "type": "y_matrix", "component_id": "R1", "plot": true }
     ]
 }

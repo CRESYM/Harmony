@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 			printJsonNotFoundHelp(opts.target, opts.searchPaths);
 			return EXIT_FAILURE;
 		}
-		return runJsonSimulation(path, opts.verbose);
+		return runJsonSimulation(path, opts.verbose, opts.plot);
 	}
 
 	default:

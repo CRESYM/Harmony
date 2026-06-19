@@ -302,7 +302,7 @@ void printCliHelp() {
 		"  --search-path <dir>         Append JSON search directory (repeatable)\n"
 		"  --list-cpp                  List available C++ examples\n"
 		"  --list-json                 List JSON files in search paths\n"
-		"  --no-plot                   Disable GUI plotting in examples\n"
+		"  --no-plot                   Disable GUI plots (C++ examples and JSON computations)\n"
 		"  --verbose, -v               Verbose output\n"
 		"  --help, -h                  Show this help\n\n"
 		"Default JSON search paths (when HARMONY_JSON_PATH is unset):\n"
@@ -458,14 +458,19 @@ int runCppExample(const std::string& name, const bool plot, const bool verbose) 
 }
 
 
-int runJsonSimulation(const std::filesystem::path& jsonPath, const bool verbose) {
+int runJsonSimulation(
+	const std::filesystem::path& jsonPath,
+	const bool verbose,
+	const bool plot)
+{
 	if (!std::filesystem::exists(jsonPath)) {
 		std::cerr << "Input file not found: " << jsonPath << "\n";
 		return EXIT_FAILURE;
 	}
 
 	if (verbose) {
-		std::cout << "Using JSON file: " << jsonPath << "\n";
+		std::cout << "Using JSON file: " << jsonPath
+			<< " (plot=" << (plot ? "on" : "off") << ")\n";
 	}
 
 	std::ifstream stream(jsonPath);
@@ -500,7 +505,7 @@ int runJsonSimulation(const std::filesystem::path& jsonPath, const bool verbose)
 	network.printElements();
 
 	try {
-		builder.runComputations(config, network);
+		builder.runComputations(config, network, plot);
 	}
 	catch (const std::exception& e) {
 		std::cerr << "[WARN] Computation step failed: " << e.what() << "\n";

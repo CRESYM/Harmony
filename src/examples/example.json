@@ -17,7 +17,8 @@
         },
         {
             "type": "y_matrix",
-            "component_id": "l1"
+            "component_id": "l1",
+            "plot": true
         },
         {
             "type": "network_summary"

@@ -4,9 +4,38 @@
  */
 #include "component_builder.h"
 
+#include <complex>
+#include <map>
 #include <symengine/matrix.h>
 
 
+namespace {
+
+std::map<std::string, double> readOpfInfo(const JSON& comp) {
+	std::map<std::string, double> info;
+	if (!comp.contains("opf_info") || !comp.at("opf_info").is_object()) {
+		return info;
+	}
+	for (auto it = comp.at("opf_info").begin(); it != comp.at("opf_info").end(); ++it) {
+		if (!it.value().is_number()) {
+			throw std::invalid_argument("ERROR: opf_info['" + it.key() + "'] must be numeric.\n");
+		}
+		info[it.key()] = it.value().get<double>();
+	}
+	return info;
+}
+
+void applyOpfInfo(Element* element, const JSON& comp) {
+	if (!comp.contains("opf_info")) {
+		return;
+	}
+	auto info = readOpfInfo(comp);
+	if (!info.empty()) {
+		element->setOPFInfo(info);
+	}
+}
+
+} // namespace
 std::unique_ptr<Element> ComponentBuilder::buildFromJSON(const JSON& comp, const unsigned int i) {
 	std::string comptype = "unknown";
 
@@ -100,7 +129,22 @@ Resistor* ComponentBuilder::buildResistor(const JSON& comp) {
 }
 
 Impedance* ComponentBuilder::buildImpedance(const JSON& comp) {
-	return new Impedance(comp["id"], comp["location"], comp["pins"], readNumericArray(comp, "values"));
+	const int pins = comp["pins"].get<int>();
+	if (comp.contains("complex")) {
+		const auto z = readNumericArray(comp, "complex");
+		if (z.size() != 2) {
+			throw std::invalid_argument("impedance 'complex' must contain [R, X]");
+		}
+		return new Impedance(
+			comp["id"], comp["location"], pins,
+			std::complex<double>(z[0], z[1]));
+	}
+
+	const auto values = readNumericArray(comp, "values");
+	if (values.size() == 1u) {
+		return new Impedance(comp["id"], comp["location"], pins, values[0]);
+	}
+	return new Impedance(comp["id"], comp["location"], pins, values);
 }
 
 Admittance* ComponentBuilder::buildAdmittance(const JSON& comp) {
@@ -117,28 +161,51 @@ LoadPQ* ComponentBuilder::buildLoadPQ(const JSON& comp) {
 
 AC_source* ComponentBuilder::buildACSource(const JSON& comp) {
 	findNumber("voltage", comp);
-	return new AC_source(
-		comp["id"], comp["location"], comp["pins"],
-		comp["voltage"].get<double>(),
-		readNumericArray(comp, "values"));
+	const auto values = readNumericArray(comp, "values");
+	AC_source* src = nullptr;
+	if (values.size() == 1u) {
+		src = new AC_source(
+			comp["id"], comp["location"], comp["pins"],
+			comp["voltage"].get<double>(), values[0]);
+	}
+	else {
+		src = new AC_source(
+			comp["id"], comp["location"], comp["pins"],
+			comp["voltage"].get<double>(), values);
+	}
+	applyOpfInfo(src, comp);
+	return src;
 }
 
 Generator* ComponentBuilder::buildGenerator(const JSON& comp) {
 	findNumber("voltage", comp);
-	return new Generator(
+	const auto values = readNumericArray(comp, "values");
+	Generator* gen = new Generator(
 		comp["id"], comp["location"], comp["pins"],
-		comp["voltage"].get<double>(),
-		readNumericArray(comp, "values"));
+		comp["voltage"].get<double>(), values);
+	applyOpfInfo(gen, comp);
+	return gen;
 }
 
 DC_source* ComponentBuilder::buildDCSource(const JSON& comp) {
 	const auto voltages = readVoltageVector(comp);
 	const double resistance = comp.value("resistance", 0.0);
 	if (voltages.size() == 1) {
+		if (comp.contains("values")) {
+			const auto z = readNumericArray(comp, "values");
+			if (z.size() == 1) {
+				return new DC_source(comp["id"], comp["location"], comp["pins"], voltages[0], z[0]);
+			}
+			return new DC_source(comp["id"], comp["location"], comp["pins"], voltages[0], z);
+		}
 		return new DC_source(comp["id"], comp["location"], comp["pins"], voltages[0], resistance);
 	}
 	if (comp.contains("values")) {
-		return new DC_source(comp["id"], comp["location"], comp["pins"], voltages, readNumericArray(comp, "values"));
+		const auto z = readNumericArray(comp, "values");
+		if (z.size() == 1) {
+			return new DC_source(comp["id"], comp["location"], comp["pins"], voltages, z[0]);
+		}
+		return new DC_source(comp["id"], comp["location"], comp["pins"], voltages, z);
 	}
 	return new DC_source(comp["id"], comp["location"], comp["pins"], voltages, resistance);
 }
@@ -200,7 +267,7 @@ Cable* ComponentBuilder::buildCable(const JSON& comp) {
 	}
 
 	return new Cable(
-		comp["id"], comp["location"], comp["pins"],
+		comp["id"], comp["location"], comp.value("pins", 1),
 		comp.at("cable_type").get<std::string>(),
 		comp.at("length").get<double>(),
 		earth, conductors, insulators, positions);
