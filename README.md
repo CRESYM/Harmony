@@ -1,6 +1,23 @@
 ![Windows build & test](https://github.com/CRESYM/Harmony/actions/workflows/windows_build_and_test.yml/badge.svg?branch=main) ![Linux build & test](https://github.com/CRESYM/Harmony/actions/workflows/linux_build_and_test.yml/badge.svg?branch=main) ![macOS build & test](https://github.com/CRESYM/Harmony/actions/workflows/macos_build_and_test.yml/badge.svg?branch=main)   
 ![Windows run examples](https://github.com/CRESYM/Harmony/actions/workflows/windows_run_examples.yml/badge.svg?branch=main) ![Linux run examples](https://github.com/CRESYM/Harmony/actions/workflows/linux_run_examples.yml/badge.svg?branch=main) ![macOS run examples](https://github.com/CRESYM/Harmony/actions/workflows/macos_run_examples.yml/badge.svg?branch=main)
 
+ ,ggg,        gg            ,ggg, ,ggggggggggg,   ,ggg, ,ggg,_,ggg,    _,gggggg,_      ,ggg, ,ggggggg,  ,ggg,         gg 
+dP""Y8b       88           dP""8IdP"""88""""""Y8,dP""Y8dP""Y88P""Y8b ,d8P""d8P"Y8b,   dP""Y8,8P"""""Y8bdP""Y8a        88 
+Yb, `88       88          dP   88Yb,  88      `8bYb, `88'  `88'  `88,d8'   Y8   "8b,dPYb, `8dP'     `88Yb, `88        88 
+ `"  88       88         dP    88 `"  88      ,8P `"  88    88    88d8'    `Ybaaad88P' `"  88'       88 `"  88        88 
+     88aaaaaaa88        ,8'    88     88aaaad8P"      88    88    888P       `""""Y8       88        88     88        88 
+     88"""""""88        d88888888     88""""Yb,       88    88    888b            d8       88        88     88        88 
+     88       88  __   ,8"     88     88     "8b      88    88    88Y8,          ,8P       88        88     88       ,88 
+     88       88 dP"  ,8P      Y8     88      `8i     88    88    88`Y8,        ,8P'       88        88     Y8b,___,d888 
+     88       Y8,Yb,_,dP       `8b,   88       Yb,    88    88    Y8,`Y8b,,__,,d8P'        88        Y8,     "Y88888P"88,
+     88       `Y8 "Y8P"         `Y8   88        Y8    88    88    `Y8  `"Y8888P"'          88        `Y8          ,ad8888
+                                                                                                                 d8P" 88 
+                                                                                                               ,d8'   88 
+                                                                                                               d8'    88 
+                                                                                                               88     88 
+                                                                                                               Y8,_ _,88 
+                                                                                                                "Y888P"  
+
 # Harmony $~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~$    ![alt text](cresym.png?raw=true)  
 
 HARMONic stabilitY assessment of PE-penetrated power systems
