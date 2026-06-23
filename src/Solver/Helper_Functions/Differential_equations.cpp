@@ -1,4 +1,8 @@
-﻿#include "Differential_equations.h"
+/**
+ * @file Differential_equations.cpp
+ * @brief Implementation of Numerical integration, equilibrium finding, and discretization utilities.
+ */
+#include "Differential_equations.h"
 #include <stdexcept>
 #include <iostream>
 #include <cmath>
@@ -369,7 +373,12 @@ void padeDelaySystemMulti2(double T, MatrixXd& Ad, MatrixXd& Bd, MatrixXd& Cd, M
     Eigen::MatrixXd B(2, 1); B << 1, 0;
     Eigen::MatrixXd C(1, 2); C << (b1 - b2 * a1 / a2) / a2, (b0 - b2 * a0 / a2) / a2;
     Eigen::MatrixXd D(1, 1); D << b2 / a2;
-    for (int i = 0; i < ns; ++i) { Ad.block(i * 2, i * 2, 2, 2) = A; Bd.block(i * 2, i, 2, 1) = B; Cd.block(i, i * 2, 1, 2) = C; Dd(i, i) = D(0, 0); }
+    for (int i = 0; i < ns; ++i) { 
+        Ad.block(i * 2, i * 2, 2, 2) = A; 
+        Bd.block(i * 2, i, 2, 1) = B; 
+        Cd.block(i, i * 2, 1, 2) = C; 
+        Dd(i, i) = D(0, 0); 
+    }
 }
 
 

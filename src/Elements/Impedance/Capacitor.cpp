@@ -1,4 +1,8 @@
-﻿#include "Capacitor.h"
+/**
+ * @file Capacitor.cpp
+ * @brief Implementation of Capacitor element with frequency-domain admittance Y = sC.
+ */
+#include "Capacitor.h"
 
 
 // Frequency-domain constructor Supports both single-phase and multi-phase

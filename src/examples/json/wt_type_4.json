@@ -1,0 +1,27 @@
+{
+    "simulation": {
+        "title": "wt_type_4",
+        "description": "JSON equivalent of example_WT_type_4.cpp — type-4 (PMSG) wind turbine Y-matrix.",
+        "output_directory": "./files",
+        "frequency_range": { "start": 1, "end": 1000, "points": 15 }
+    },
+    "buses": [
+        { "id": "bus1", "location": "AC1", "pins": 3, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "PMSG",
+            "location": "AC1",
+            "type": "wt_type_4",
+            "parameters": [
+                690.0, 60.0, 3200000.0, 1000.0, 0.93, 50.0, 0.053, 30.59,
+                0.0006, 1230000.0, 4.74e-13, 0.095, 0.0045, -75.73, 0.0
+            ],
+            "connected_bus": { "bus_id": "bus1", "terminal": 1 },
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "y_matrix", "component_id": "PMSG" }
+    ]
+}

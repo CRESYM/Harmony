@@ -7,6 +7,7 @@ dependencies:
   - symengine
   - nlohmann_json
   - doxygen
+  - graphviz
   - implot
   - glew # needed by implot
   - sundials

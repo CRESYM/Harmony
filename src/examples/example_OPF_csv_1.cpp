@@ -1,7 +1,11 @@
+/**
+ * @file example_OPF_csv_1.cpp
+ * @brief Runnable example: Variant OPF case from CSV data.
+ */
 #include "Examples.h"
 #include "../Solver/OPF/Powerflow.h"
 
-void example_OPF_csv_1()
+void example_OPF_csv_1(bool plotting_enabled /*=true*/)
 {
     PowerFlow pf;
     std::unordered_map<std::string, Eigen::MatrixXd>* noData = nullptr;
@@ -12,7 +16,7 @@ void example_OPF_csv_1()
     pf.solve_opf(dc_case, ac_case, noData,
         /*vscControl=*/true,
         /*writeTxt=*/false,
-        /*plotResult=*/true,
+        /*plotResult=*/plotting_enabled,
         /*print_info=*/false);
 
     std::cout << "Press Enter to exit...\n";

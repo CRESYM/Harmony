@@ -1,4 +1,38 @@
+/**
+ * @file Powerflow_data.cpp
+ * @brief Implementation of PowerFlow CSV I/O and network data loading.
+ */
 #include "Powerflow.h"
+
+#include <filesystem>
+
+
+namespace {
+
+std::filesystem::path findHarmonyDataDirectory() {
+	namespace fs = std::filesystem;
+	fs::path dir = fs::current_path();
+	for (int depth = 0; depth < 10; ++depth) {
+		const fs::path candidate = dir / "src" / "data";
+		if (fs::is_directory(candidate)) {
+			return candidate;
+		}
+		if (!dir.has_parent_path() || dir == dir.parent_path()) {
+			break;
+		}
+		dir = dir.parent_path();
+	}
+	return {};
+}
+
+std::string harmonyDataCsvPath(const std::string& filename) {
+	if (const auto dataDir = findHarmonyDataDirectory(); !dataDir.empty()) {
+		return (dataDir / filename).string();
+	}
+	return "../../src/data/" + filename;
+}
+
+} // namespace
 
 Eigen::MatrixXd PowerFlow::readCSVtoCpp(const std::string& filename) {
     std::ifstream file(filename);
@@ -62,12 +96,12 @@ std::unordered_map<std::string, Eigen::MatrixXd> PowerFlow::create_ac(const std:
         //ac["generator"] = readCSVtoCpp("data/" + case_name + "_gen_ac.csv");
         //ac["gencost"] = readCSVtoCpp("data/" + case_name + "_gencost_ac.csv");
         
-        ac["baseMVA"] = readCSVtoCpp("../../src/data/" + case_name + "_baseMVA_ac.csv");
-        ac["bus"] = readCSVtoCpp("../../src/data/" + case_name + "_bus_ac.csv");
-        ac["branch"] = readCSVtoCpp("../../src/data/" + case_name + "_branch_ac.csv");
-        ac["generator"] = readCSVtoCpp("../../src/data/" + case_name + "_gen_ac.csv");
-        ac["gencost"] = readCSVtoCpp("../../src/data/" + case_name + "_gencost_ac.csv");
-        ac["res"] = readCSVtoCpp("../../src/data/" + case_name + "_res_ac.csv");
+        ac["baseMVA"] = readCSVtoCpp(harmonyDataCsvPath(case_name + "_baseMVA_ac.csv"));
+        ac["bus"] = readCSVtoCpp(harmonyDataCsvPath(case_name + "_bus_ac.csv"));
+        ac["branch"] = readCSVtoCpp(harmonyDataCsvPath(case_name + "_branch_ac.csv"));
+        ac["generator"] = readCSVtoCpp(harmonyDataCsvPath(case_name + "_gen_ac.csv"));
+        ac["gencost"] = readCSVtoCpp(harmonyDataCsvPath(case_name + "_gencost_ac.csv"));
+        ac["res"] = readCSVtoCpp(harmonyDataCsvPath(case_name + "_res_ac.csv"));
     }
     catch (const std::exception& e) {
         std::cerr << "Error in create_ac: " << e.what() << std::endl;
@@ -88,11 +122,11 @@ std::unordered_map<std::string, Eigen::MatrixXd> PowerFlow::create_dc(const std:
         //dc["branch"] = readCSVtoCpp("data/" + case_name + "_branch_dc.csv");
         //dc["converter"] = readCSVtoCpp("data/" + case_name + "_conv_dc.csv");
 
-        dc["baseMW"] = readCSVtoCpp("../../src/data/" + case_name + "_baseMW_dc.csv");
-        dc["pol"] = readCSVtoCpp("../../src/data/" + case_name + "_pol_dc.csv");
-        dc["bus"] = readCSVtoCpp("../../src/data/" + case_name + "_bus_dc.csv");
-        dc["branch"] = readCSVtoCpp("../../src/data/" + case_name + "_branch_dc.csv");
-        dc["converter"] = readCSVtoCpp("../../src/data/" + case_name + "_conv_dc.csv");
+        dc["baseMW"] = readCSVtoCpp(harmonyDataCsvPath(case_name + "_baseMW_dc.csv"));
+        dc["pol"] = readCSVtoCpp(harmonyDataCsvPath(case_name + "_pol_dc.csv"));
+        dc["bus"] = readCSVtoCpp(harmonyDataCsvPath(case_name + "_bus_dc.csv"));
+        dc["branch"] = readCSVtoCpp(harmonyDataCsvPath(case_name + "_branch_dc.csv"));
+        dc["converter"] = readCSVtoCpp(harmonyDataCsvPath(case_name + "_conv_dc.csv"));
     }
     catch (const std::exception& e) {
         std::cerr << "Error in create_dc: " << e.what() << std::endl;

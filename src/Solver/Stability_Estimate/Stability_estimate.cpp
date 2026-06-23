@@ -1,4 +1,8 @@
-﻿#include "Stability_estimate.h"
+/**
+ * @file Stability_estimate.cpp
+ * @brief Implementation of Small-signal stability and impedance analysis for AC/DC areas.
+ */
+#include "Stability_estimate.h"
 
 #include "../../network.h"      // For access to the Network class and its members
 #include "../../Include_components.h"
@@ -14,6 +18,26 @@ void StabilityEstimate::add_areas(Network* net) {
     dc_grids = net->get_dc_grids();
     converters = net->get_converters();
 }
+
+
+void StabilityEstimate::print_summary() const {
+    std::cout << "\n--- Stability assessment areas ---\n";
+    std::cout << "AC grids: " << ac_grids.size() << ", DC grids: " << dc_grids.size()
+        << ", converters: " << converters.size() << "\n";
+    for (const auto& [name, sub] : ac_grids) {
+        if (sub) {
+            sub->printInfo();
+        }
+        (void)name;
+    }
+    for (const auto& [name, sub] : dc_grids) {
+        if (sub) {
+            sub->printInfo();
+        }
+        (void)name;
+    }
+}
+
 
 /**
  * @brief Computes the symbolic equivalent impedance of a portion of the network.

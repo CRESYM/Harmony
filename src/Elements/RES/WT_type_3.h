@@ -1,11 +1,27 @@
 #ifndef _WT_TYPE_3_H_
 #define _WT_TYPE_3_H_
 
+/**
+ * @file WT_type_3.h
+ * @brief Type 3 doubly-fed induction generator (DFIG) wind turbine model.
+ */
+
 #include "RES_base.h"
 
+/**
+ * @class WTtype3
+ * @brief Type 3 wind turbine with DFIG, RSC/GSC converters, and filter.
+ * @ingroup res
+ */
 class WTtype3 : public RES_base {
 	friend class PowerFlow;
 public:
+	/**
+	 * @brief Construct a Type 3 wind turbine from a parameter vector.
+	 * @param symbol Element identifier.
+	 * @param location Network area or location string.
+	 * @param parameters Packed electrical, control, and filter parameters.
+	 */
 	WTtype3(const string& symbol, const std::string& location, const vector<double>& parameters);
 
 	~WTtype3() {}

@@ -1,25 +1,30 @@
 #ifndef INDUCTOR_H
 #define INDUCTOR_H
 
+/**
+ * @file Inductor.h
+ * @brief Inductor element with frequency-domain admittance Y = 1/(sL).
+ */
+
 #include "../Element.h"
 
 /**
  * @class Inductor
  * @brief Represents an inductor element for circuit/network equations.
+ * @ingroup impedance
  *
- * This class models an inductor component used in the network formulation.
- * It supports frequency-domain representation (symbolic or numeric) where the
- * admittance is Y(s) = 1 / (s * L) for each modeled branch. The class
- * provides an interface to write the element contributions into the MNA
- * (Modified Nodal Analysis) symbolic matrix and to print element values.
- *
- * The constructor expects a vector of inductance values (one per terminal or
- * configuration) and the element participates in assembling the global MNA
- * matrix via `writeMNAmatrix`.
+ * Supports frequency-domain representation where admittance is Y(s) = 1 / (s * L)
+ * for each modeled branch and stamps into the symbolic MNA matrix.
  */
 class Inductor : public Element {
 public:
-    // Frequency-domain constructor (symbolic admittance Y = 1 / (sL))
+    /**
+     * @brief Construct an inductor with per-phase or uniform inductance values.
+     * @param symbol Element identifier.
+     * @param location Network area or location string.
+     * @param pins Number of pins (phases).
+     * @param inductance Inductance values in henries (one value or one per pin).
+     */
     Inductor(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& inductance);
 
     // MNA matrix writer

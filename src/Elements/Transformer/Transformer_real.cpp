@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_real.cpp
+ * @brief Implementation of Real transformer model with turns ratio and phase shift.
+ */
 #include "Transformer_real.h"
 
 // Constructor
@@ -54,9 +58,7 @@ Transformer_real::Transformer_real(const std::string& symbol, const std::string&
 }
 
 // Destructor
-Transformer_real::~Transformer_real() {
-    std::cout << "Transformer object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+Transformer_real::~Transformer_real() = default;
 
 
  

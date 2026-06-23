@@ -1,0 +1,20 @@
+name: 'Build Harmony executables'
+description: 'Configure and build Harmony (CLI) and HarmonyUI from the repository root'
+inputs:
+  gurobi_path:
+    description: 'Path to the Gurobi installation'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build Harmony and HarmonyUI
+      shell: bash -l {0}
+      run: |
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          export PATH="/c/gurobi1301/win64/bin:$PATH"
+        fi
+        mkdir -p build
+        cd build
+        cmake .. -DGUROBI_PATH="${{ inputs.gurobi_path }}"
+        cmake --build . --config Release --target Harmony --target HarmonyUI -j4

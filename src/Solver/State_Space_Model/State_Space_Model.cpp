@@ -1,4 +1,8 @@
-﻿#include "State_Space_Model.h"
+/**
+ * @file State_Space_Model.cpp
+ * @brief Implementation of State-space model assembly from network MNA formulation.
+ */
+#include "State_Space_Model.h"
 #include "../../network.h"      
 #include "../../Include_components.h"
 
@@ -376,7 +380,6 @@ void StateSpaceModel::expandBForDQsym()
     }
 
     // D_dqsym: same expansion pattern applied to D
-    // D_dqsym: same expansion pattern applied to D
     if (D.cols() > 0) {
         int ny = D.rows();
         D_dqsym = Eigen::MatrixXd::Zero(ny, nu_dqsym);
@@ -471,42 +474,108 @@ void StateSpaceModel::buildMappings()
 //  buildInputVector — DQsym mode: 3 rows per group
 // ===================================================================
 
+//MatrixXcd StateSpaceModel::buildInputVector(
+//    int nKeep,
+//    const std::map<std::string, std::vector<MatrixXcd>>& elementStates) const
+//{
+//    int nu = B_dqsym.cols();
+//    MatrixXcd u = MatrixXcd::Zero(nu, nKeep);
+//
+//    for (const auto& g : input_groups) {
+//        std::string name = g.element->getElementSymbol();
+//        if (!g.isVirtual) {
+//            for (const auto& g : input_groups) {
+//                std::string name = g.element->getElementSymbol();
+//
+//                // Source element — call simulateInputStep
+//                auto vals = g.element->simulateInputStep({}, nKeep);
+//                if (vals.empty()) continue;
+//                MatrixXcd V = vals[0];  // Assuming simulateInputStep returns a matrix with rows corresponding to pins
+//
+//                if (mode_ == SSMMode::DQsym) {
+//                    // Expand: each raw pin → 3 identical rows (zero-sequence broadcast)
+//                    for (int p = 0; p < g.rawCols && p < V.rows(); ++p) {
+//                        int base = g.dqsymStartCol + p * 3;
+//                        for (int ph = 0; ph < 3; ++ph)
+//                            if (base + ph < nu)
+//                                u.row(base + ph) = V.row(3 * p + ph);
+//                    }
+//                }
+//                else {
+//                    // Standard: direct placement
+//                    for (int p = 0; p < g.rawCols && p < V.rows(); ++p)
+//                        u.row(g.rawStartCol + p) = V.row(p);
+//                }
+//            }
+//        }
+//        else {
+//            // Virtual input — call simulateInputStep with states
+//            std::vector<MatrixXcd> states;
+//            auto it = elementStates.find(name);
+//            if (it != elementStates.end())
+//                states = it->second;
+//
+//            auto feedback = g.element->simulateInputStep(states, nKeep);
+//            // feedback = [u_vMΔ(3×nKeep), u_vMΣ(3×nKeep), u_PΔ(3×nKeep), u_PΣ(3×nKeep)]
+//            // Already in groups of 3 — place directly
+//
+//            int col = (mode_ == SSMMode::DQsym) ? g.dqsymStartCol : g.rawStartCol;
+//            for (const auto& fb : feedback) {
+//                for (int ph = 0; ph < fb.rows() && ph < 3; ++ph) {
+//                    if (col < nu)
+//                        u.row(col) = fb.row(ph);
+//                    ++col;
+//                }
+//            }
+//        }
+//    }
+//
+//    return u;
+//}
+
+
 MatrixXcd StateSpaceModel::buildInputVector(
     int nKeep,
     const std::map<std::string, std::vector<MatrixXcd>>& elementStates) const
 {
-    int nu = B_dqsym.cols();
+    int nu = (mode_ == SSMMode::DQsym) ? B_dqsym.cols() : B.cols();
     MatrixXcd u = MatrixXcd::Zero(nu, nKeep);
 
     for (const auto& g : input_groups) {
         std::string name = g.element->getElementSymbol();
+
         if (!g.isVirtual) {
-            for (const auto& g : input_groups) {
-                std::string name = g.element->getElementSymbol();
+            // ===== Source element: call simulateInputStep({}) =====
+            auto vals = g.element->simulateInputStep({}, nKeep);
+            if (vals.empty()) continue;
+            const MatrixXcd& V = vals[0];
 
-                // Source element — call simulateInputStep
-                auto vals = g.element->simulateInputStep({}, nKeep);
-                if (vals.empty()) continue;
-                MatrixXcd V = vals[0];  // Assuming simulateInputStep returns a matrix with rows corresponding to pins
-
-                if (mode_ == SSMMode::DQsym) {
-                    // Expand: each raw pin → 3 identical rows (zero-sequence broadcast)
-                    for (int p = 0; p < g.rawCols && p < V.rows(); ++p) {
-                        int base = g.dqsymStartCol + p * 3;
-                        for (int ph = 0; ph < 3; ++ph)
-                            if (base + ph < nu)
-                                u.row(base + ph) = V.row(3 * p + ph);
+            if (mode_ == SSMMode::DQsym) {
+                // Each source's V may have different row count:
+                //  - DC source: V.rows() = pins * 3 (pre-expanded layout)
+                //  - AC source: V.rows() = 3 (sequence components)
+                // Place V's rows into u, skipping out-of-bounds reads
+                for (int p = 0; p < g.rawCols; ++p) {
+                    int base = g.dqsymStartCol + p * 3;
+                    for (int ph = 0; ph < 3; ++ph) {
+                        int v_row = 3 * p + ph;
+                        if (v_row >= V.rows()) continue;   // source's V exhausted
+                        if (base + ph < nu)
+                            u.row(base + ph) = V.row(v_row);
                     }
                 }
-                else {
-                    // Standard: direct placement
-                    for (int p = 0; p < g.rawCols && p < V.rows(); ++p)
-                        u.row(g.rawStartCol + p) = V.row(p);
+            }
+            else {
+                // Standard mode: direct placement
+                for (int p = 0; p < g.rawCols && p < V.rows(); ++p) {
+                    int col = g.rawStartCol + p;
+                    if (col < nu)
+                        u.row(col) = V.row(p);
                 }
             }
         }
         else {
-            // Virtual input — call simulateInputStep with states
+            // ===== Virtual input: call simulateInputStep(states) =====
             std::vector<MatrixXcd> states;
             auto it = elementStates.find(name);
             if (it != elementStates.end())
@@ -529,7 +598,6 @@ MatrixXcd StateSpaceModel::buildInputVector(
 
     return u;
 }
-
 
 // ===================================================================
 //  printMapping

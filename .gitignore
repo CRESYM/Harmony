@@ -273,8 +273,12 @@ Harmony/.vs/Harmony/v15/.suo
 # Harmony output files
 src/files/
 
+# Legacy input_file build artifacts (module moved to src/json/)
+input_file/
+
 # Harmony build directory
 build/
+
 
 # Harmony installers
 install/Harmony/

@@ -1,4 +1,5 @@
-![Windows build & test](https://github.com/CRESYM/Harmony/actions/workflows/windows_build_and_test.yml/badge.svg?branch=main) ![Linux build & test](https://github.com/CRESYM/Harmony/actions/workflows/linux_build_and_test.yml/badge.svg?branch=main) ![macOS build & test](https://github.com/CRESYM/Harmony/actions/workflows/macos_build_and_test.yml/badge.svg?branch=main)
+![Windows build & test](https://github.com/CRESYM/Harmony/actions/workflows/windows_build_and_test.yml/badge.svg?branch=main) ![Linux build & test](https://github.com/CRESYM/Harmony/actions/workflows/linux_build_and_test.yml/badge.svg?branch=main) ![macOS build & test](https://github.com/CRESYM/Harmony/actions/workflows/macos_build_and_test.yml/badge.svg?branch=main)   
+![Windows run examples](https://github.com/CRESYM/Harmony/actions/workflows/windows_run_examples.yml/badge.svg?branch=main) ![Linux run examples](https://github.com/CRESYM/Harmony/actions/workflows/linux_run_examples.yml/badge.svg?branch=main) ![macOS run examples](https://github.com/CRESYM/Harmony/actions/workflows/macos_run_examples.yml/badge.svg?branch=main)
 
 # Harmony $~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~$    ![alt text](cresym.png?raw=true)  
 
@@ -23,7 +24,7 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 
 ## Installation and Usage
 
-See the [detailed installation instructions](docs/installation.md).
+See the [detailed installation instructions](docs/installation.md), [**Running Harmony**](docs/running-harmony.md), the [User Manual](docs/manual/README.md), and the [API documentation (Doxygen)](docs/doxygen/README.md).
 
 ### Prerequisites 
 Harmony can be compiled on Windows. The requirements are:
@@ -42,8 +43,6 @@ To build and run Harmony, open Visual Studio and select "Continue without code" 
 # Download the repository
 git clone https://github.com/CRESYM/Harmony.git
 cd Harmony
-# If you want to run the code with an input file, go to the folder input_file
-# (cd Harmony/src/input_file) and follow the rest of the instructions
 
 # Create conda environment with dependencies
 conda env create -f environment.yml
@@ -58,14 +57,54 @@ cmake .. -DGUROBI_PATH="gurobi_installation_dir_config"
 # Compile Harmony
 # Replace 4 with the number of CPU cores you wish to use for parallel compilation
 cmake --build . --config Release -j 4
-
-# Run Harmony
-cd Release
-./Harmony
 ```
 
 > [!TIP]
 > Adding the `-j` flag enables parallel compilation on Linux and macOS using the specified number of cores. For Windows, Harmony is already configured to automatically detect and use the maximum number of available cores for parallel compilation.
+
+### Running Harmony
+
+After building, run studies from the **repository root** with the conda environment active. Full details: [**Running Harmony**](docs/running-harmony.md).
+
+**HarmonyUI** (graphical launcher — pick examples, optional plots, log panel):
+
+```bash
+conda activate harmony
+cmake --build build --config Release --target HarmonyUI
+
+# Windows
+build\Release\HarmonyUI.exe
+
+# Linux / macOS
+./build/HarmonyUI
+```
+
+**Harmony** (CLI — scripts, CI, developers):
+
+```bash
+conda activate harmony
+cd ..                              # repository root (from build/)
+
+# Windows
+build\Release\Harmony.exe --help
+build\Release\Harmony.exe --list-cpp
+build\Release\Harmony.exe --cpp stability_check
+build\Release\Harmony.exe --json src/examples/json/stability_check.json
+
+# Linux / macOS
+./build/Harmony --help
+./build/Harmony --cpp stability_check
+./build/Harmony --json src/examples/json/stability_check.json
+```
+
+| Goal | HarmonyUI | Harmony (CLI) |
+|------|-----------|---------------|
+| Interactive runs | Launcher → **Run** | `Harmony --cpp <name>` or `--json <file>` |
+| List examples | Dropdown menus | `--list-cpp`, `--list-json` |
+| No plots | Leave **Plot** unchecked | add `--no-plot` |
+| More output | **Verbose log** checkbox | add `--verbose` |
+
+See [User Manual — HarmonyUI](docs/manual/11-harmony-ui.md) for the full GUI guide.
 
 ### Run the tests
 To run the tests, you should follow a similar procedure to building and running the code.
@@ -92,7 +131,7 @@ ctest
 
 ## Contributors
 - **Aleksandra Lekić**, development of the mathematical framework, development of individual components, and their spectral representation and formulation, design of the toolbox, different functionality interconnections, harmonic stability solver, supervision, and acquisition of the funding
-- **Robert Dimitrovski**, dynamic phasor formulation, development of a core of DQNsym, funding acquisition and supervision
+- **Robert Dimitrovski**, dynamic phasor formulation, development of a core of DQsym, funding acquisition and supervision
 - **Haixiao Li**, design of the power flow strategy, and formulation of the power flow solution
 - **Saif Alsarayreh**, dynamic phasor formulation, model design, and implementation
 - **Azadeh Kermansaravi**, programming of the part of the toolbox
@@ -102,3 +141,25 @@ ctest
 
 
  The development of the Harmony was supported by the [Digital Competence Centre](https://www.tudelft.nl/index.php?id=67120&L=1/), Delft University of Technology.
+
+ ## Technical Foundations
+
+Built on component models and state-space methods from prior work:
+- Transmission line, MMC base models: PowerImpedanceACDC.jl (A. Lekić, 2024)
+- State-space solver: dc_dc_simulator (A. Lekić, GitHub)
+- AC-DC OPF solver: ACDC-OpFlow (H. Li, GitHub)
+- Dynamic phasor solver: DQsym (S. Alsarayreh, R. Dimitrovski, GitHub)
+
+All analysis solvers, optimization routines, and stability assessment methods are original developments for this framework.
+
+*License*: GPL v3
+
+### References
+
+[1] ELECTA, PowerImpedanceACDC-Impedance-based stability analyses, "PowerImpedanceACDC.jl," 2024, https://github.com/Electa-Git/PowerImpedanceACDC.jl
+
+[2] Lekić, A., "DC-DC Simulator," https://github.com/kul-optec/dc_dc_simulator
+
+[3] Li, H., Kermansaravi, A., Dimitrovski, R., & Lekić, A. (2025). ACDC-OpFlow, Unified, Cross-Language Framework for AC/DC Optimal Power Flow Solutions (Version v0.1) [Computer software]. https://doi.org/10.4121/66318317-4d5d-4dc4-ba5a-5fa65c585520
+
+[4] Alsarayreh, S., Dimitrovski, R., & Lekić, A. (2025). DQsym: A Dynamic Phasor-Based library for Analysis of Modern Power Systems This repository presents the Dynamic Phasor library for Analysis of Modern Power Systems (Version 1.0.0) [Computer software]. https://doi.org/https://doi.org/10.5281/zenodo.18544532

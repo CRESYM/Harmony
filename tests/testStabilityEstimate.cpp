@@ -1,4 +1,4 @@
-﻿#include <gtest/gtest.h>
+#include <gtest/gtest.h>
 #include "network.h"
 #include "Bus.h"
 #include "Include_components.h"
@@ -19,7 +19,7 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
 
     ///*  ---------- 1.2 Add AC Loads  ---------- */
 
-    std::vector<double> load_params2 = { 2380.5, 18.9, 0 };
+    std::vector<double> load_params2 = { 3859.46, 2.047, 0 };
     Load* load2 = new Load("LOAD02", "AC2", 3, load_params2);
     net.connectElementToBus(load2, 1, bus4_ac);
 
@@ -30,30 +30,31 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
     AC_source* src1 = new AC_source("SRC01", "AC1", 3, 345e3, Zsrc);
     net.connectElementToBus(src1, 1, bus1_ac);
     map<string, double> src_info1 = {
-        {"Pmax", 250.0},   // Maximum active power output (MW)
-        {"Pmin", 10.0},    // Minimum active power output (MW)
-
-        {"Qmax", 10.0},    // Maximum reactive power output (MVar)
-        {"Qmin", -10.0},   // Minimum reactive power output (MVar)
-
-        {"c2", 0.11},      // Quadratic coefficient of the generation cost function (c2*P^2 + c1*P + c0)
-        {"c1", 5.0},       // Linear coefficient of the generation cost function
-        {"c0", 150},       // Constant term of the generation cost function (fixed operation cost)
-
-        {"Vmax", 1.0},    // Maximum voltage limit (p.u.)
-        {"Vmin", 1.0},    // Minimum voltage limit (p.u.)
-        {"Ref", 1}         // Reference bus flag (1 = set as slack/reference bus)
+        {"Pmax", 250.0},
+        {"Pmin", 0.0},
+        {"Qmax", 10.0},
+        {"Qmin", -10.0},
+        {"c2", 0.11},
+        {"c1", 5.0},
+        {"c0", 150},
+        {"Vmax", 1.06},
+        {"Vmin", 1.06},
+        {"Vg", 345.0 * 1.06},
+        {"Ref", 1}
     };
+
     src1->setOPFInfo(src_info1);
 
     ///*  ---------- 1.4 Add Branches  ---------- */
-    double ACR1 = 1e-1; double ACX1 = 10;
+    double ACR1 = 1.0;
+    double ACX1 = 40.0;
     std::complex<double> ACZ1(ACR1, ACX1);
     Impedance* br1_ac = new Impedance("br1_ac", "AC1", 3, ACZ1);
     net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
 
-    double ACR2 = 1e-1; double ACX2 = 10;
+    double ACR2 = 1.0;
+    double ACX2 = 40.0;
     std::complex<double> ACZ2(ACR2, ACX2);
     Impedance* br2_ac = new Impedance("br2_ac", "AC2", 3, ACZ2);
     net.connectElementToBus(br2_ac, /*terminal=*/1, bus3_ac);
@@ -64,7 +65,7 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
     Bus* bus2_dc = new Bus("DCBUS02", "DC1", 2);
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
-    double DCR1 = 0.05;
+    double DCR1 = 10.0;
     Impedance* br1_dc = new Impedance("br1_dc", "DC1", 2, DCR1);
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
@@ -77,7 +78,7 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
         0.0,            // Theta (Voltage Angle in rad)
         345.0 * 1e3,    // AC Voltage (V_m) in V
         50 * 1e6,       // DC power (P_dc) in W
-        440.0 * 1e3,    // DC Voltage (V_dc) in kV
+        400.0 * 1e3,    // DC Voltage (V_dc) in kV
         0.05,           // Arm Inductance (L_arm) in H
         1.07,           // Arm Resistance (R_arm) in Ω
         0.01,           // Capacitance per Submodule (C_arm) in F
@@ -104,12 +105,12 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
 
     vector<double> converter_params2 = {
         2 * M_PI * 50,  // Omega (Nominal Frequency in rad/s)
-        -50.0 * 1e6,    // Active Power (P) in W
-        -20e6,          // Reactive Power (Q) in VA
+        -50.0 * 1e6,   // Active Power (P) in W
+        -10e6,              // Reactive Power (Q) in VA
         0.0,            // Theta (Voltage Angle in rad)
         345.0 * 1e3,    // AC Voltage (V_m) in V
-        -50 * 1e6,       // DC power (P_dc) in W
-        440.0 * 1e3,    // DC Voltage (V_dc) in kV
+        -50 * 1e6,     // DC power (P_dc) in W
+        400.0 * 1e3,    // DC Voltage (V_dc) in kV
         0.05,           // Arm Inductance (L_arm) in H
         1.07,           // Arm Resistance (R_arm) in Ω
         0.01,           // Capacitance per Submodule (C_arm) in F
@@ -120,10 +121,10 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
     };
     std::vector<double> controller_params2 = {
         1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
-        1, 0, 2, 82, 2, 0, 440e3, // DC voltage controller parameters
+        1, 0, 2, 82, 2, 0, 400e3, // DC voltage controller parameters
         0, // active power
         0, // AC voltage
-        1, 0, 6.6667e-07, 3.3333e-04, 1, -20e6, // reactive power
+        1, 0, 6.6667e-07, 3.3333e-04, 1, -10e6, // reactive power
         1, 0, 120, 400, 1, 0, // energy controller parameters 
         1, 0, 19.93, 4500, 1, -41.66, // zcc controller parameters 
         1, 0, 117.93, 8.5e4, 2, -89.71, 0, // occ controller parameters
@@ -144,8 +145,13 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
     global_params["baseMVA"] = 100;
     global_params["ACbaseKV"] = 345.0; // Base voltage in kV, can be adjusted as needed
     global_params["DCbaseKV"] = 400.0; // Base voltage for DC, can be adjusted as needed
-    global_params["Z_base"] = global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"]; // Base impedance, can be adjusted as needed
+    global_params["ACZbase"] =
+        global_params["ACbaseKV"] * global_params["ACbaseKV"]
+        / global_params["baseMVA"];
 
+    global_params["DCZbase"] =
+        global_params["DCbaseKV"] * global_params["DCbaseKV"]
+        / global_params["baseMVA"];
     pf.make_OPF(&net, global_params, false, false, false, false);
 
     // Making Stability Estimate Object
@@ -158,6 +164,7 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
 
     complex<double> y1 = 1.0 / ACZ1;
     complex<double> yeq1 = y1 * (1.0 / Zsrc) / (y1 + 1.0 / Zsrc);
+    
 
     MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], 1000);
 	MatrixXcd Y_expected(2, 2);
@@ -173,15 +180,15 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
 
 	MatrixXcd Y_params_ac2 = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC2"], 1000);
 	MatrixXcd Y_expected_ac2(2, 2);
-    Y_expected_ac2 << complex<double>(0.00000016998493740629959743013473611614, -0.0000084378541382775769787664741363764), complex<double>(-0.00000042151746063742602958727381714352, -0.000000016947890082084092743050323217742),
-        complex<double>(0.00000042151746063742602958727381714352, 0.000000016947890082084092743050323217742), complex<double>(0.00000016998493740629959743013473611614, -0.0000084378541382775769787664741363764);
+    Y_expected_ac2 << complex<double>(0.00002141663268486, -0.00007124882626222), complex<double>(-0.00000296638331456, -0.00000195511729152),
+        complex<double>(0.00000296638331456, 0.00000195511729152), complex<double>(0.00002141663268486, -0.00007124882626222);
 
 	EXPECT_TRUE(Y_params_ac2.isApprox(Y_expected_ac2, 1e-4));
 
 	MatrixXcd TF_mmc1 = stability->compute_transfer_function("MMC2", "AC", 1000);
 	MatrixXcd TF_expected_mmc1(2, 2);
-    TF_expected_mmc1 << complex<double>(-0.0000000011415929972972480115817804890081,- 0.00000000069420976353464676942360994809942), complex<double>(-0.000000000070637381163895091483519434301443, 0.000000000012985916708061616687133863378409),
-		complex<double>(0.00000000018625543042188184929089783956877, 0.000000000155453122491070491996073619414), complex<double>(0.0000000017580855558519716478730965321898, - 0.0000000017899283330032036472928021987746);
+    TF_expected_mmc1 << complex<double>(0.55882973170418726, 0.12374482570387829), complex<double>(0.19708733457865962, 0.12172222983223854),
+		complex<double>(0.11101225027226810, 0.15018134890425119), complex<double>(-2.14981022600911187, 3.51018238952165262);
 
 
     delete stability;

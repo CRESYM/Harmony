@@ -1,3 +1,7 @@
+/**
+ * @file WP_plant.cpp
+ * @brief Implementation of Wind power plant aggregating one or more wind turbine models.
+ */
 #include "WP_plant.h"
 #include "WT_type_3.h"
 #include "WT_type_4.h"
@@ -21,4 +25,9 @@ WPplant::WPplant(const string& symbol, const std::string& location, int turbine_
 	}
 	// Scale Y_matrix by the number of wind turbines
 	mul_dense_scalar(Y_matrix, integer(number_WT), Y_matrix);
+}
+
+WPplant::~WPplant() {
+	delete wind_turbine;
+	wind_turbine = nullptr;
 }

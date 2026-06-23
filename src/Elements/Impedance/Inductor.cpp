@@ -1,4 +1,8 @@
-﻿#include "Inductor.h"
+/**
+ * @file Inductor.cpp
+ * @brief Implementation of Inductor element with frequency-domain admittance Y = 1/(sL).
+ */
+#include "Inductor.h"
 
 // Frequency-domain constructor (symbolic Y = 1 / (sL))
 Inductor::Inductor(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& inductance)

@@ -1,0 +1,43 @@
+{
+    "simulation": {
+        "title": "mmc",
+        "description": "JSON equivalent of example_MMC.cpp — MMC1 equilibrium and Y-matrix (first converter set).",
+        "output_directory": "./files",
+        "frequency_range": { "start": 1, "end": 1000, "points": 15 },
+        "nominal_power": 100.0,
+        "nominal_voltage": 345.0,
+        "dc_nominal_voltage": 400.0
+    },
+    "buses": [
+        { "id": "ac_bus", "location": "AC1", "pins": 3, "enabled": true },
+        { "id": "dc_bus", "location": "DC1", "pins": 2, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "MMC1",
+            "location": "AC1_DC1",
+            "type": "mmc",
+            "converter_params": [
+                314.1592653589793, 100000000.0, 0.0, 0.0, 100000.0, 100000000.0,
+                200000.0, 0.05, 1.07, 0.01, 400.0, 0.06, 0.535, 0.00015
+            ],
+            "controller_params": [
+                0, 0, 1, 0, 6.6667e-07, 0.00033333, 1, 100000000.0,
+                1, 0, 120.0, 400.0, 1, 0.0,
+                1, 0, 19.93, 4500.0, 1, 166.67,
+                1, 0, 117.93, 85000.0, 2, 666.67, 0.0,
+                1, 0, 19.93, 4500.0, 2, 0.0, 0.0,
+                0
+            ],
+            "connected_buses": [
+                { "bus_id": "ac_bus", "terminal": 1 },
+                { "bus_id": "dc_bus", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "print_connections" },
+        { "type": "y_matrix", "component_id": "MMC1" }
+    ]
+}

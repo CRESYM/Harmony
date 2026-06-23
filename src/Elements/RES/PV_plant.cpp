@@ -1,3 +1,7 @@
+/**
+ * @file PV_plant.cpp
+ * @brief Implementation of Aggregated PV plant with boost converter and grid-connected inverter.
+ */
 #include "PV_plant.h"
 
 PVplant::PVplant(const string& symbol, const std::string& location, const vector<double>& parameters) : RES_base(symbol, location) {

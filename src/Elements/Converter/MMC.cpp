@@ -1,12 +1,13 @@
-﻿#include "MMC.h"
+/**
+ * @file MMC.cpp
+ * @brief Implementation of Modular Multilevel Converter (MMC) state-space and MNA model.
+ */
+#include "MMC.h"
 
 // -----------------------------------------------------------------------------
 // State Vector Ordering
 // -----------------------------------------------------------------------------
 /**
- * @file MMC.cpp
- * @brief Implementation of the Modular Multilevel Converter (MMC) class.
- *
  * @details
  * The state vector 'x' in MMC is ordered as follows (from end to start):
  * [iDelta_d, iDelta_q, iSigma_d, iSigma_q, iSigma_z, vCDelta_d, vCDelta_q, vCDelta_Zd, vCDelta_Zq, vCSigma_d, vCSigma_q, vCSigma_z]
@@ -71,10 +72,9 @@ MMC::MMC(const std::string& symbol, const std::string& location,
     if (t_delay != 0) {
         number_of_states += 5 * pade_order; // Add states for delay system
         Adelay = Eigen::MatrixXd::Zero(5 * pade_order, 5 * pade_order);
-        Bdelay = Eigen::MatrixXd::Zero(5 * pade_order, 1); // Assuming one input for delay system
+        Bdelay = Eigen::MatrixXd::Zero(5 * pade_order, 5); // Assuming one input for delay system
         Cdelay = Eigen::MatrixXd::Zero(5, 5 * pade_order); // Assuming one output for delay system
         Ddelay = Eigen::MatrixXd::Zero(5, 5); // Assuming one output for delay system
-        // cout << "Adding " << 5 * pade_order << " states for delay system with order " << pade_order << endl;
         if (pade_order == 2) {
             padeDelaySystemMulti2(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
         }
@@ -125,17 +125,17 @@ MMC::MMC(const std::string& symbol, const std::string& location, const std::vect
     if (t_delay != 0) {
         number_of_states += 5 * pade_order; // Add states for delay system
         Adelay = Eigen::MatrixXd::Zero(5 * pade_order, 5 * pade_order);
-        Bdelay = Eigen::MatrixXd::Zero(5 * pade_order, 1); // Assuming one input for delay system
+        Bdelay = Eigen::MatrixXd::Zero(5 * pade_order, 5); // Assuming one input for delay system
         Cdelay = Eigen::MatrixXd::Zero(5, 5 * pade_order); // Assuming one output for delay system
         Ddelay = Eigen::MatrixXd::Zero(5, 5); // Assuming one output for delay system
         // cout << "Adding " << 5 * pade_order << " states for delay system with order " << pade_order << endl;
         if (pade_order == 2) {
             padeDelaySystemMulti2(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
-			// cout << "Using 2nd order Padé approximation for delay system." << endl;
-			//cout << Adelay << endl;
-			//cout << Bdelay << endl;
-			//cout << Cdelay << endl;
-			//cout << Ddelay << endl;
+			 cout << "Using 2nd order Padé approximation for delay system." << endl;
+			cout << Adelay << endl;
+			cout << Bdelay << endl;
+			cout << Cdelay << endl;
+			cout << Ddelay << endl;
         }
         else if (pade_order == 3) {
             padeDelaySystemMulti3(t_delay, Adelay, Bdelay, Cdelay, Ddelay, 5);
@@ -146,7 +146,6 @@ MMC::MMC(const std::string& symbol, const std::string& location, const std::vect
     }
 
     Y_matrix.resize(3, 3);
-    //cout << "MMC initialized with " << number_of_states << " states." << endl;
 };
 
 /**

@@ -1,9 +1,13 @@
+/**
+ * @file example_DQsym_math_operations.cpp
+ * @brief Runnable example: Validate core dynamic-phasor (DQsym) math operations.
+ */
 #include "Examples.h"
 
 #include "../Solver/DQsym/DQsym.h"
 #include "../Solver/Helper_Functions/Helper_Functions.h"
 
-void example_DQsym_math_operations()
+void example_DQsym_math_operations(bool plotting_enabled /*=true*/)
 {
 
 	// small test: zeros
@@ -138,11 +142,11 @@ void example_DQsym_math_operations()
 			<< res.Xabc(0, 1) << ", "
 			<< res.Xabc(0, 2) << "\n";
 
-		cout << "Plotting...\n";
-
-		plot_abc_waveforms_implot(res.t, res.Xabc, "dqn2abc Example");
-
-		cout << "Plot finished.\n";
+		if (plotting_enabled){
+			cout << "Plotting...\n";
+			plot_abc_waveforms_implot(res.t, res.Xabc, "dqn2abc Example");
+			cout << "Plot finished.\n";
+		}
 
 		// Prevent immediate exit (important!)
 		std::cout << "Press Enter to continue...\n";

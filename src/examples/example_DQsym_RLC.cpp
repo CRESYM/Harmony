@@ -1,9 +1,13 @@
+/**
+ * @file example_DQsym_RLC.cpp
+ * @brief Runnable example: Simple RLC circuit in the DQsym framework.
+ */
 #include "Examples.h"
 
 #include "../Solver/DQsym/DQsym.h"
 #include "../Solver/Helper_Functions/Helper_Functions.h"
 
-void example_DQsym_RLC()
+void example_DQsym_RLC(bool plotting_enabled /*=true*/)
 {
     using cd = std::complex<double>;
 
@@ -120,11 +124,12 @@ void example_DQsym_RLC()
     }
 
     write_file(time, values, headers, "DQsymRLC_abc_output.csv");
-    
 
     std::cout << "Wrote DQsymRLC_abc_output.csv\n";
 
-    plot_abc_groups_implot(time, XabcHist, "DQsym RLC outputs converted to abc");
+    if (plotting_enabled){
+        plot_abc_groups_implot(time, XabcHist, "DQsym RLC outputs converted to abc");
+    }
 
     cout << "Press Enter to continue...\n";
     cin.get();

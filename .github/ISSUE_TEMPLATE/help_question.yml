@@ -1,0 +1,58 @@
+name: Question or help
+description: "Ask a question or request help"
+title: "Question/Help: <add a short description>"
+labels: ["question", "help wanted"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before submitting your issue, please make sure to check previous issues and the project's [documentation](../../docs)
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        Describe the question in as much detail as possible. Explain what you are trying to accomplish, what you have tried so far, and where you are stuck.  
+        If the error is related to a simulation, include the simulation setup code or input file.    
+        Include any relevant error messages, logs, screenshots, or other context that may help.
+    validations:
+      required: true
+      
+  - type: input
+    id: harmony-version
+    attributes:
+      label: Harmony Version (git commit ID)
+      description: |
+        Let us know the git commit ID. You can find it by running `git rev-parse HEAD` from the Harmony directory in the terminal.
+      placeholder: e.g. 7a3b5c1...
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      placeholder: e.g., Ubuntu 22.04, Windows 11, MacOS 15.0
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have checked existing issues (opened and closed).
+          required: true
+        - label: I have checked the [user manual]() and [project documentation]().
+          required: true
+        - label: I have provided a detailed description of the question.
+          required: true
+        - label: I have added screenshots and code snippets where appropriate.
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        Thank you for contributing! We’ll review your issue as soon as possible.

@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_Delta_Delta.cpp
+ * @brief Implementation of Delta-delta (Δ-Δ) classic transformer topology.
+ */
 #include "Transformer_Delta_Delta.h"
 
 // Constructor
@@ -32,6 +36,4 @@ TransformerDeltaDelta::TransformerDeltaDelta(const std::string& symbol, const st
 }
 
 // Destructor
-TransformerDeltaDelta::~TransformerDeltaDelta() {
-    std::cout << "Transformer Delta-Delta object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+TransformerDeltaDelta::~TransformerDeltaDelta() = default;

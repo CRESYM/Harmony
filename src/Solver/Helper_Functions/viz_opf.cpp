@@ -1,9 +1,14 @@
-﻿#include "viz_opf.h"
+/**
+ * @file viz_opf.cpp
+ * @brief Implementation of Standalone OPF network visualization interface.
+ */
+#include "viz_opf.h"
 #include<matplot/matplot.h>
 #include <cmath>
 #include <utility>
 #include <thread>
 #include<unordered_set>
+#include <unordered_map>
 #include <algorithm>
 #include <iomanip>
 
@@ -97,22 +102,45 @@ void viz_opf(const OPFVisualData& d) {
         }
     }
 
-    // 2. reorder dc data
+    // 2. reorder dc data — sequential unified ids (numBuses_ac+1 …) like AC buses
     int numBuses_dc = d.bus_dc.rows();
 
     Eigen::MatrixXd bus_dc_new = d.bus_dc;
-    bus_dc_new.col(0).array() += numBuses_ac;
+    std::map<int, int> mapping_dc;
+    for (int i = 0; i < numBuses_dc; ++i) {
+        const int oldBusIdx = static_cast<int>(d.bus_dc(i, 0));
+        const int newBusIdx = numBuses_ac + i + 1;
+        bus_dc_new(i, 0) = newBusIdx;
+        mapping_dc[oldBusIdx] = newBusIdx;
+    }
 
     Eigen::MatrixXd branch_dc_new = d.branch_dc;
     int numBranches_dc = d.branch_dc.rows();
 
-    branch_dc_new.leftCols<2>().array() += numBuses_ac;
+    for (int i = 0; i < numBranches_dc; ++i) {
+        const int oldFrom = static_cast<int>(d.branch_dc(i, 0));
+        const int oldTo = static_cast<int>(d.branch_dc(i, 1));
+        const auto itFrom = mapping_dc.find(oldFrom);
+        const auto itTo = mapping_dc.find(oldTo);
+        if (itFrom != mapping_dc.end()) {
+            branch_dc_new(i, 0) = itFrom->second;
+        }
+        if (itTo != mapping_dc.end()) {
+            branch_dc_new(i, 1) = itTo->second;
+        }
+    }
 
     // 3. reorder conv data
     int numConvs = d.conv_dc.rows();
 
     Eigen::MatrixXd conv_dc_new = d.conv_dc;
-    conv_dc_new.col(0).array() += numBuses_ac;
+    for (int i = 0; i < numConvs; ++i) {
+        const int oldDcBus = static_cast<int>(d.conv_dc(i, 0));
+        const auto itDc = mapping_dc.find(oldDcBus);
+        if (itDc != mapping_dc.end()) {
+            conv_dc_new(i, 0) = itDc->second;
+        }
+    }
 
     std::map<std::pair<int, int>, int> mapping_conv;
     for (int i = 0; i < numBuses_ac; ++i) {
@@ -232,6 +260,13 @@ void viz_opf(const OPFVisualData& d) {
     auto xs = g->x_data();
     auto ys = g->y_data();
 
+    // Matplot layout index i corresponds to sorted connected bus allNodes[i], not bus_id - 1.
+    std::unordered_map<int, size_t> busToLayout;
+    busToLayout.reserve(allNodes.size());
+    for (size_t li = 0; li < allNodes.size(); ++li) {
+        busToLayout[allNodes[li]] = li;
+    }
+
 
     /**************************************************
     * CONSTRUCT NETWORK GRAPH
@@ -240,14 +275,21 @@ void viz_opf(const OPFVisualData& d) {
     std::vector<size_t> idx_dc;
     idx_dc.reserve(dcNodes.size());
     for (int i = 0; i < dcNodes.size(); ++i) {
-        idx_dc.push_back(static_cast<size_t>(dcNodes(i) - 1));
+        const int busNum = dcNodes(i);
+        const auto it = busToLayout.find(busNum);
+        if (it != busToLayout.end()) {
+            idx_dc.push_back(it->second);
+        }
     }
 
     std::vector<size_t> idx_ac;
-    idx_ac.reserve(xs.size());
-    for (size_t i = 0; i < xs.size(); ++i) {
-        if (std::find(idx_dc.begin(), idx_dc.end(), i) == idx_dc.end())
-            idx_ac.push_back(i);
+    idx_ac.reserve(acNodes.size());
+    for (int i = 0; i < acNodes.size(); ++i) {
+        const int busNum = acNodes(i);
+        const auto it = busToLayout.find(busNum);
+        if (it != busToLayout.end()) {
+            idx_ac.push_back(it->second);
+        }
     }
 
     std::vector<double> x_ac, y_ac, x_dc, y_dc;
@@ -294,44 +336,36 @@ void viz_opf(const OPFVisualData& d) {
     }
 
 
-    Eigen::VectorXd voltMag_ac(xs.size());
-    voltMag_ac.setZero();
-    int idx = 0;
-    for (int ng = 0; ng < d.ngrids; ++ng) {
-        for (int i = 0; i < d.nbuses_ac[ng]; ++i) {
-            voltMag_ac(idx) = std::sqrt(d.vn2_ac_k[ng](i));
-            ++idx;
+    std::map<int, double> voltByBus;
+
+    // AC: vn2_ac_k[grid](local_i) follows bus_entire_ac row order within each area.
+    std::vector<int> gridRowCount(d.ngrids, 0);
+    for (int r = 0; r < numBuses_ac; ++r) {
+        const int ng = static_cast<int>(d.bus_entire_ac(r, numColsBuses_ac - 1)) - 1;
+        const int local_i = gridRowCount[ng]++;
+        const int unifiedBus = static_cast<int>(bus_entire_ac_new(r, 0));
+        if (ng >= 0 && ng < d.ngrids && local_i < d.vn2_ac_k[ng].size()) {
+            voltByBus[unifiedBus] = std::sqrt(d.vn2_ac_k[ng](local_i));
         }
     }
 
-    Eigen::VectorXd voltMag_dc(xs.size());
-    voltMag_dc.setZero();
-    for (int i = 0; i < d.nbuses_dc; ++i) {
-        size_t idx = static_cast<size_t>(d.bus_dc(i, 0) - 1);
-        voltMag_dc(idx) = std::sqrt(d.vn2_dc_k(i));
+    // DC: vn2_dc_k uses matrix index (original bus number - 1); converter i overrides at its DC bus.
+    for (int i = 0; i < numBuses_dc; ++i) {
+        const int unifiedBus = static_cast<int>(bus_dc_new(i, 0));
+        const int origBus = static_cast<int>(d.bus_dc(i, 0));
+        const Eigen::Index vnIdx = origBus - 1;
+        if (vnIdx >= 0 && vnIdx < d.vn2_dc_k.size()) {
+            voltByBus[unifiedBus] = std::sqrt(d.vn2_dc_k(vnIdx));
+        }
+        else if (i < d.vn2_dc_k.size()) {
+            voltByBus[unifiedBus] = std::sqrt(d.vn2_dc_k(i));
+        }
     }
-
-    std::unordered_map<int, int> acNodeToRow, dcNodeToRow;
-    for (int i = 0; i < acNodes.size(); ++i)
-        acNodeToRow[acNodes(i)] = i;
-    for (int i = 0; i < dcNodes.size(); ++i)
-        dcNodeToRow[dcNodes(i)] = i;
-
-    Eigen::VectorXd voltLabel(allNodes.size());
-    voltLabel.setZero();
-
-    for (int i = 0; i < allNodes.size(); ++i) {
-        int node = allNodes[i];
-        if (acNodeToRow.count(node)) {
-            int row = acNodeToRow[node];
-            voltLabel(i) = voltMag_ac(row);
-        }
-        else if (dcNodeToRow.count(node)) {
-            int row = dcNodeToRow[node];
-            voltLabel(i) = voltMag_dc(row);
-        }
-        else {
-            voltLabel(i) = 0.0;
+    for (int i = 0; i < d.nconvs_dc && i < d.vn2_dc_k.size(); ++i) {
+        const int origDcBus = static_cast<int>(d.conv_dc(i, 0));
+        const auto mapped = mapping_dc.find(origDcBus);
+        if (mapped != mapping_dc.end()) {
+            voltByBus[mapped->second] = std::sqrt(d.vn2_dc_k(i));
         }
     }
 
@@ -534,25 +568,39 @@ void viz_opf(const OPFVisualData& d) {
     /**************************************************
     * SET NODE LABEL, ORDER(#) AND VOLT (x.xx p.u.)
     **************************************************/
-    for (auto idx : idx_ac) {
-        std::string acNodeLabel = std::string("#") + std::to_string(orig_idx_ac[idx]);
-        text(xs[idx], ys[idx], acNodeLabel)
+    for (int r = 0; r < numBuses_ac; ++r) {
+        const int busNum = static_cast<int>(bus_entire_ac_new(r, 0));
+        const auto layoutIt = busToLayout.find(busNum);
+        if (layoutIt == busToLayout.end()) {
+            continue;
+        }
+        const size_t li = layoutIt->second;
+        std::string acNodeLabel = std::string("#") + std::to_string(orig_idx_ac[r]);
+        text(xs[li], ys[li], acNodeLabel)
             ->color({ 0.1f, 0.1f, 0.1f })
             .font_size(8);
     }
 
-    for (auto idx : idx_dc) {
-        int local_i = static_cast<int>(idx) - numBuses_ac;
-        std::string dcNodeLabel = std::string("#") + std::to_string(orig_idx_dc[local_i]);
-        text(xs[idx], ys[idx], dcNodeLabel)
+    for (int i = 0; i < numBuses_dc; ++i) {
+        const int busNum = static_cast<int>(bus_dc_new(i, 0));
+        const auto layoutIt = busToLayout.find(busNum);
+        if (layoutIt == busToLayout.end()) {
+            continue;
+        }
+        const size_t li = layoutIt->second;
+        std::string dcNodeLabel = std::string("#") + std::to_string(orig_idx_dc[i]);
+        text(xs[li], ys[li], dcNodeLabel)
             ->color({ 0.1f, 0.1f, 0.1f })
             .font_size(8);
     }
 
-    for (int i = 0; i < allNodes.size(); ++i) {
+    for (size_t li = 0; li < allNodes.size() && li < xs.size(); ++li) {
+        const int busNum = allNodes[li];
+        const auto voltIt = voltByBus.find(busNum);
+        const double vMag = voltIt != voltByBus.end() ? voltIt->second : 0.0;
         std::ostringstream oss;
-        oss << std::fixed << std::setprecision(3) << voltLabel(i) << " p.u.";
-        text(xs[i] + 4, ys[i] + 4, oss.str())
+        oss << std::fixed << std::setprecision(3) << vMag << " p.u.";
+        text(xs[li] + 4, ys[li] + 4, oss.str())
             ->color({ 0.0f, 0.0f, 0.0f })
             .font_size(8);
     }

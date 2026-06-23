@@ -1,4 +1,8 @@
-﻿#include "Element.h"
+/**
+ * @file Element.cpp
+ * @brief Implementation of Abstract base class for all electrical network components.
+ */
+#include "Element.h"
 #include "../Bus.h"
 
 // Helper functions

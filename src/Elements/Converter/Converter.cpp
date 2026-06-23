@@ -1,4 +1,19 @@
-﻿#include "Converter.h"
+/**
+ * @file Converter.cpp
+ * @brief Implementation of Base class for power electronic converters with state-space models.
+ */
+#include "Converter.h"
+
+
+Converter::~Converter() {
+    for (auto& [name, controller] : controls)
+        delete controller;
+    controls.clear();
+
+    for (auto& [name, filter] : filters)
+        delete filter;
+    filters.clear();
+}
 
 
 /**

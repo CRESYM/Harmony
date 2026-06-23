@@ -1,4 +1,14 @@
-﻿#ifndef CONSTANTS_H
+/**
+ * @file Constants.h
+ * @brief Central include hub for Harmony: third-party libraries, standard headers, and shared type aliases.
+ *
+ * Pulls in SymEngine (symbolic math), Eigen (dense/sparse linear algebra), GLFW/ImGui/Implot
+ * (visualization), SUNDIALS (time integration), and Gurobi (optimization). Defines common
+ * `using` aliases for SymEngine and Eigen types used across the codebase, and provides
+ * the `map2dense` helper for converting string-keyed tables to Eigen matrices.
+ */
+
+#ifndef CONSTANTS_H
 #define CONSTANTS_H
 
 // SymEngine library for symbolic mathematics
@@ -89,6 +99,17 @@ using namespace std;
 using namespace std::complex_literals;
 using namespace Eigen;
 
+/**
+ * @brief Convert a nested string-keyed table to a dense Eigen matrix.
+ *
+ * Row indices are parsed from the outer map keys via `std::stoi`. Column order follows
+ * @p colNames; missing entries default to 0.0.
+ *
+ * @tparam Table Nested map type: outer key is row id string, inner map is column name to value.
+ * @param tbl Source table.
+ * @param colNames Ordered column names defining matrix column layout.
+ * @return Dense matrix with shape (rows in tbl, cols in colNames).
+ */
 template<typename Table>
 Eigen::MatrixXd map2dense(const Table& tbl,
     const std::vector<std::string>& colNames)
@@ -133,5 +154,3 @@ Eigen::MatrixXd map2dense(const Table& tbl,
 #include <sunlinsol/sunlinsol_dense.h>
 
 #endif // CONSTANTS_H
-
-

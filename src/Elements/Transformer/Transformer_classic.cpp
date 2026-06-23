@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_classic.cpp
+ * @brief Implementation of Classic two-winding transformer with mutual inductance.
+ */
 #include "Transformer_classic.h"
 
 Transformer_classic::Transformer_classic(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)
@@ -33,6 +37,4 @@ Transformer_classic::Transformer_classic(const std::string& symbol, const std::s
     }
 }
 
-Transformer_classic::~Transformer_classic() {
-    std::cout << "Transformer object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+Transformer_classic::~Transformer_classic() = default;

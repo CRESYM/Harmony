@@ -1,13 +1,29 @@
 #ifndef TRANSMISSIONLINE_H
 #define TRANSMISSIONLINE_H
 
+/**
+ * @file Transmissionline.h
+ * @brief Lumped-parameter transmission line model with distributed R, L, G, C.
+ */
+
 #include "../Element.h"
 
 class Element; // Forward declaration of Element class
 
+/**
+ * @class TransmissionLine
+ * @brief Lumped transmission line with per-unit-length R, L, G, C parameters.
+ * @ingroup transmission
+ */
 class TransmissionLine : public Element {
 public:
-    // Parameterized constructor that calls the base class constructor
+    /**
+     * @brief Construct a transmission line from a parameter vector.
+     * @param symbol Element identifier.
+     * @param location Network area or location string.
+     * @param pins Number of pins (phases).
+     * @param values Per-unit-length R, L, G, C and line length values.
+     */
 	TransmissionLine(const std::string& symbol, const std::string& location, int pins, const std::vector<double>&);
 
     ~TransmissionLine() {}

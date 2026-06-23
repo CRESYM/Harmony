@@ -1,48 +1,73 @@
-﻿#include "Bus.h"
+/**
+ * @file network.cpp
+ * @brief Implementation of Top-level electrical network container: buses, elements, connections, and hierarchical grids.
+ */
+#include "Bus.h"
 #include "SubNetwork.h"
 #include "Include_components.h"
 
 
-Network::Network() : pins(0) {
-}
+Network::Network() = default;
 
 
 Network::~Network() {
-    // Delete all Bus objects in the network
-    for (std::unordered_map<std::string, Bus*>::iterator i = buses.begin(); i != buses.end(); i++)
-        delete i->second;
-    buses.clear();
-    // Delete all Element objects in the network
-    for (std::unordered_map<std::string, Element*>::iterator i = elements.begin(); i != elements.end(); i++)
-        delete i->second;
+    empty_areas();
+    ownedElements_.clear();
     elements.clear();
-    // Clear all connections
+    ownedBuses_.clear();
+    buses.clear();
     connections.clear();
 }
 
-// Function to add a bus to the network
-void Network::addBus(Bus* bus) {
-    buses[bus->getBusName()] = bus;
-    // Increment the total pin count if the bus is not ground
-    if (!bus->isGround())
-        pins += bus->getPinNumber();
-}
 
-// Function to add a bus to the network
-void Network::addBus(const std::string& busName, Bus* bus) {
+void Network::addBusView(const std::string& busName, Bus* bus) {
     buses[busName] = bus;
-    if (!bus->isGround())
+    if (bus && !bus->isGround()) {
         pins += bus->getPinNumber();
+    }
 }
 
-// Function to add an element to the network
-void Network::addElement(Element* elem) {
-    elements[elem->getElementSymbol()] = elem;
+
+void Network::addBus(const std::string& busName, std::unique_ptr<Bus> bus) {
+    Bus* raw = bus.get();
+    if (ownsResources_) {
+        ownedBuses_[busName] = std::move(bus);
+    }
+    addBusView(busName, raw);
 }
 
-// Function to add an element to the network
-void Network::addElement(const std::string& designator, Element* elem) {
+
+void Network::addBus(Bus* bus) {
+    addBus(bus->getBusName(), std::unique_ptr<Bus>(bus));
+}
+
+
+void Network::addBus(const std::string& busName, Bus* bus) {
+    addBus(busName, std::unique_ptr<Bus>(bus));
+}
+
+
+void Network::addElementView(const std::string& designator, Element* elem) {
     elements[designator] = elem;
+}
+
+
+void Network::addElement(const std::string& designator, std::unique_ptr<Element> elem) {
+    Element* raw = elem.get();
+    if (ownsResources_) {
+        ownedElements_[designator] = std::move(elem);
+    }
+    addElementView(designator, raw);
+}
+
+
+void Network::addElement(Element* elem) {
+    addElement(elem->getElementSymbol(), std::unique_ptr<Element>(elem));
+}
+
+
+void Network::addElement(const std::string& designator, Element* elem) {
+    addElement(designator, std::unique_ptr<Element>(elem));
 }
 
 // Function to connect an element to a bus
@@ -86,24 +111,47 @@ void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
 
 // Function to delete an element from the network
 void Network::deleteElement(const std::string& designator) {
-    if (elements.find(designator) != elements.end()) {
-        elements.erase(designator);
-    }
-    else {
+    auto it = elements.find(designator);
+    if (it == elements.end()) {
         throw std::invalid_argument("Element not found");
     }
+
+    Element* elem = it->second;
+
+    for (auto& [bus, elemList] : connections) {
+        elemList.erase(std::remove(elemList.begin(), elemList.end(), elem), elemList.end());
+    }
+
+    for (auto& [busName, bus] : buses) {
+        bus->detachElement(elem);
+    }
+
+    converters.erase(designator);
+    elements.erase(it);
+    ownedElements_.erase(designator);
 }
 
 // Function to delete a bus from the network
 void Network::deleteBus(const std::string& busName) {
-    if (buses.find(busName) != buses.end()) {
-        // Decrement the total pin count
-        pins -= buses[busName]->getPinNumber();
-        buses.erase(busName);
-    }
-    else {
+    auto it = buses.find(busName);
+    if (it == buses.end()) {
         throw std::invalid_argument("Bus not found");
     }
+
+    Bus* bus = it->second;
+
+    auto conn_it = connections.find(bus);
+    if (conn_it != connections.end() && !conn_it->second.empty()) {
+        throw std::invalid_argument("Cannot delete bus with connected elements");
+    }
+
+    connections.erase(bus);
+    if (!bus->isGround()) {
+        pins -= bus->getPinNumber();
+    }
+
+    buses.erase(it);
+    ownedBuses_.erase(busName);
 }
 
 // Function to print the connections between elements and buses
@@ -202,6 +250,16 @@ void Network::print_summary() const {
  *
  * @param net Pointer to the main Network object.
  */
+void Network::empty_areas() {
+    ownedGrids_.clear();
+    ac_grids.clear();
+    ac_grid_names.clear();
+    dc_grids.clear();
+    dc_grid_names.clear();
+    converters.clear();
+}
+
+
 void Network::add_areas() {
     // This function can be implemented to categorize and add AC and DC grids to the system
 
@@ -227,7 +285,9 @@ void Network::add_areas() {
 
         // Create subnetwork if not already existing
         if (grid_map.find(area) == grid_map.end()) {
-            grid_map[area] = new SubNetwork(area);
+            auto sub = std::make_unique<SubNetwork>(area);
+            grid_map[area] = sub.get();
+            ownedGrids_[area] = std::move(sub);
             grid_names.push_back(area);
         }
 
@@ -235,7 +295,7 @@ void Network::add_areas() {
         SubNetwork* sub = grid_map[area];
 
         // Add bus to the SubNetwork
-        sub->addBus(bus);
+        sub->addBusView(bus->getBusName(), bus);
 
         // Add connected elements
         auto conn_it = connections.find(bus);
@@ -267,10 +327,14 @@ void Network::add_areas() {
 
                         // Ensure both grids exist
                         if (ac_grids.find(ac_area) == ac_grids.end()) {
-                            ac_grids[ac_area] = new SubNetwork(ac_area);
+                            auto sub = std::make_unique<SubNetwork>(ac_area);
+                            ac_grids[ac_area] = sub.get();
+                            ownedGrids_[ac_area] = std::move(sub);
                         }
                         if (dc_grids.find(dc_area) == dc_grids.end()) {
-                            dc_grids[dc_area] = new SubNetwork(dc_area);
+                            auto sub = std::make_unique<SubNetwork>(dc_area);
+                            dc_grids[dc_area] = sub.get();
+                            ownedGrids_[dc_area] = std::move(sub);
                         }
 
                         // Identify converter terminal buses (AC and DC)
@@ -304,7 +368,7 @@ void Network::add_areas() {
                     }
                 }
                 else {
-                    sub->addElement(elem);
+                    sub->addElementView(elem->getElementSymbol(), elem);
 
                 }
 

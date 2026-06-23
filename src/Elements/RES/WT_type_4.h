@@ -1,11 +1,27 @@
 #ifndef _WT_TYPE_4_H_
 #define _WT_TYPE_4_H_
 
+/**
+ * @file WT_type_4.h
+ * @brief Type 4 full-converter wind turbine model.
+ */
+
 #include "RES_base.h"
 
+/**
+ * @class WTtype4
+ * @brief Type 4 wind turbine with full-scale back-to-back converter and filter.
+ * @ingroup res
+ */
 class WTtype4 : public RES_base {
 	friend class PowerFlow;
 public:
+	/**
+	 * @brief Construct a Type 4 wind turbine from a parameter vector.
+	 * @param symbol Element identifier.
+	 * @param location Network area or location string.
+	 * @param parameters Packed grid, control, filter, and reference parameters.
+	 */
 	WTtype4(const string& symbol, const std::string& location, const vector<double>& parameters);
 
 	~WTtype4() {}

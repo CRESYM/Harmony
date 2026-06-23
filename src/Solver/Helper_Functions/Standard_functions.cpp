@@ -1,3 +1,7 @@
+/**
+ * @file Standard_functions.cpp
+ * @brief Implementation of Standard numeric constants and matrix utility functions.
+ */
 #include "Standard_functions.h"
 
 // Constants

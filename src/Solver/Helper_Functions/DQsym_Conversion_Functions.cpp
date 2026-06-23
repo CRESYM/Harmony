@@ -1,3 +1,7 @@
+/**
+ * @file DQsym_Conversion_Functions.cpp
+ * @brief Implementation of Dynamic-phasor arithmetic and abc ↔ dqn domain conversions.
+ */
 #include "DQsym_Conversion_Functions.h"
 #include "Standard_functions.h"
 

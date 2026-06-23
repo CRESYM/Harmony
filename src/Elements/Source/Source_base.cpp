@@ -1,3 +1,7 @@
+/**
+ * @file Source_base.cpp
+ * @brief Implementation of Base class for AC and DC voltage sources and generators.
+ */
 #include "Source_base.h"
 
 // Power flow computations for AC and DC networks

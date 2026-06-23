@@ -1,0 +1,28 @@
+{
+    "simulation": {
+        "title": "wt_type_3",
+        "description": "JSON equivalent of example_WT_type_3.cpp — type-3 (DFIG) wind turbine Y-matrix.",
+        "output_directory": "./files",
+        "frequency_range": { "start": 1, "end": 1000, "points": 15 }
+    },
+    "buses": [
+        { "id": "bus1", "location": "AC1", "pins": 3, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "DFIG",
+            "location": "AC1",
+            "type": "wt_type_3",
+            "parameters": [
+                1080.0, 3.0, 6.44e-05, 0.0092, 3.0303030303030304, 0.0092, 0.0001356,
+                48.873, 3070.1, 564.1, -59.0, 0.052, 0.027, 0.00245, 5.8, -22.0,
+                1.452, 3384.0, 0.025, 152.3, 114.0, 0.0, 0.001, 50.0
+            ],
+            "connected_bus": { "bus_id": "bus1", "terminal": 1 },
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "y_matrix", "component_id": "DFIG" }
+    ]
+}

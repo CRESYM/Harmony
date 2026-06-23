@@ -1,10 +1,14 @@
-﻿#include "Examples.h"
+/**
+ * @file example_MMC.cpp
+ * @brief Runnable example: MMC equilibrium, ABCD, Y-matrix, and eigenvalue study.
+ */
+#include "Examples.h"
 
 #include "../network.h"
 #include "../Bus.h"
 #include "../Include_components.h"
 
-void example_MMC() {
+void example_MMC(bool plotting_enabled /*=true*/) {
 	//// Numerically computes the Jacobian matrices A = ∂f/∂x and B = ∂f/∂u at a specified operating point
 	double f = 50;
 	double omega = 2 * M_PI * f; // Nominal frequency in rad/s
@@ -132,10 +136,12 @@ void example_MMC() {
 
 	mmc2->printEigenvalues();
 
-	mmc2->plotParticipationFactors();
-	mmc1->plotEigenvalues();
-	mmc2->plotEigenvalues();
-	mmc2->plotYParameters(1, 1000, 500);
+	if (plotting_enabled){
+		mmc2->plotParticipationFactors();
+		mmc1->plotEigenvalues();
+		mmc2->plotEigenvalues();
+		mmc2->plotYParameters(1, 1000, 500);
+	}
 
 	cout << "Press Enter to continue...\n";
 	cin.get();

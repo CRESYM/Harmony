@@ -1,3 +1,7 @@
+/**
+ * @file Bus.cpp
+ * @brief Implementation of Electrical bus (node) representation with pin count, connections, and OPF metadata.
+ */
 #include "Bus.h"
 #include "./Elements/Element.h"
 
@@ -22,6 +26,12 @@ bool Bus::operator==(const char* name) {
 // Function to attach an element to the bus
 void Bus::attachElement(Element* elem) {
     connectedElements.push_back(elem);
+}
+
+void Bus::detachElement(Element* elem) {
+    connectedElements.erase(
+        std::remove(connectedElements.begin(), connectedElements.end(), elem),
+        connectedElements.end());
 }
 
 // Function to print the elements connected to the bus

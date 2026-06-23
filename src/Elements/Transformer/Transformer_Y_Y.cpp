@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_Y_Y.cpp
+ * @brief Implementation of Wye-wye (Y-Y) classic transformer topology.
+ */
 #include "Transformer_Y_Y.h"
 
 // Constructor
@@ -7,6 +11,4 @@ TransformerYY::TransformerYY(const std::string& symbol, const std::string& locat
 }
 
 // Destructor
-TransformerYY::~TransformerYY() {
-    std::cout << "Transformer Y-Y object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+TransformerYY::~TransformerYY() = default;

@@ -1,0 +1,53 @@
+name: Feature Request
+description: "Request new functionality"
+title: "<Short description>"
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before submitting the issue, please make sure to check previous issues and the project's [documentation](../../docs)
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        Describe feature request in as much detail as possible. Describe the problem you are trying to solve and how you would like the feature to work.  
+        Include any relevant error messages, logs, screenshots, or other context that may help.
+    validations:
+      required: true
+      
+  - type: input
+    id: harmony-version
+    attributes:
+      label: Harmony Version (git commit ID)
+      description: |
+        Let us know the git commit ID. You can find it by running `git rev-parse HEAD` from the Harmony directory in the terminal.
+      placeholder: e.g. 7a3b5c1...
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      placeholder: e.g., Ubuntu 22.04, Windows 11, MacOS 15.0
+  
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have checked existing issues (opened and closed).
+          required: true
+        - label: I have checked the [user manual]() and [project documentation]().
+          required: true
+        - label: I have provided a detailed description of the feature.
+          required: true
+        - label: I have added screenshots and code snippets where appropriate.
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        Thank you for contributing! We’ll review your issue as soon as possible.

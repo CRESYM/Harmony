@@ -45,4 +45,5 @@ TEST_F (TestMMC, TestYMatrix) {
 		complex<double>(0.001403957847627, 0.002111651402860), complex<double>(0.000962692543081, -0.000376228714279), complex<double>(0.000901726714724, -0.000314670340452);
 	EXPECT_TRUE(Y.isApprox(Y_expected, 1e-1));
 
+	delete mmc1;
 }
