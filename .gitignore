@@ -6,6 +6,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.DS_Store
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -285,3 +286,6 @@ install/Harmony/
 *.exe
 *.dll
 
+# Clang-UML output
+*.puml
+*.png
