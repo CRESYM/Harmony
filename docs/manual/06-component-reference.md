@@ -146,7 +146,9 @@ The most detailed converter model. Constructor variants accept:
 
 ### Controller blocks
 
-Named controllers include: `pll`, `dc_voltage`, `active_power`, `ac_voltage`, `reactive_power`, `energy`, `zcc`, `occ`, `ccc`, `droop`.
+Named controllers (in order): `pll`, `dc_voltage`, `active_power`, `ac_voltage`, `reactive_power`, `energy`, `zcc`, `occ`, `ccc`, `droop`.
+
+Each slot begins with an enable flag (`0` = off, `1` = on). Disabled controllers occupy one number; enabled controllers add type (`0` = PI, `1` = P), gains, output dimension, and reference value(s). In JSON, use per-controller enable names (e.g. `"pll_enable": 0.0`, `"active_power_enable": 1.0`) so it is clear which blocks are off — see [`mmc_named_params.json`](../../src/examples/json/mmc_named_params.json).
 
 Each enabled controller consumes a fixed-length parameter sub-vector in `controller_params`. See `example_MMC.cpp` and `example_stability_check.cpp` for tuned sets.
 

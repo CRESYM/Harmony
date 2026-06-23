@@ -410,3 +410,149 @@ TEST(JsonValidatorPins, PassiveTypesStillRequirePins) {
 	SimulationBuilder builder;
 	EXPECT_THROW(builder.validateJSON(bad), std::invalid_argument);
 }
+
+
+TEST(JsonParameters, ResolvesNamedValuesInPassives) {
+	const JSON config = JSON::parse(R"({
+		"simulation": { "title": "params" },
+		"parameters": { "R_val": 12.5, "L_val": 0.002 },
+		"buses": [
+			{ "id": "b1", "location": "AC1", "pins": 1 },
+			{ "id": "gnd", "location": "AC1", "pins": 1 }
+		],
+		"components": [{
+			"id": "R1", "type": "resistor", "location": "AC1", "pins": 1,
+			"values": ["R_val"],
+			"connected_buses": [
+				{ "bus_id": "b1", "terminal": 1 },
+				{ "bus_id": "gnd", "terminal": 2 }
+			]
+		}, {
+			"id": "L1", "type": "inductor", "location": "AC1", "pins": 1,
+			"values": ["L_val"],
+			"connected_buses": [
+				{ "bus_id": "b1", "terminal": 1 },
+				{ "bus_id": "gnd", "terminal": 2 }
+			]
+		}]
+	})");
+
+	SimulationBuilder builder;
+	EXPECT_NO_THROW(builder.validateJSON(config));
+	Network network;
+	EXPECT_NO_THROW(builder.buildFromJSON(config, network));
+}
+
+
+TEST(JsonParameters, MmcNamedParamsExampleValidates) {
+	const fs::path path = harmonyRoot() / "src" / "examples" / "json" / "mmc_named_params.json";
+	ASSERT_TRUE(fs::exists(path));
+
+	const JSON config = loadJsonFile(path);
+	SimulationBuilder builder;
+	EXPECT_NO_THROW(builder.validateJSON(config));
+}
+
+
+TEST(JsonParameters, RejectsUnknownParameterReference) {
+	const JSON bad = JSON::parse(R"({
+		"simulation": { "title": "params" },
+		"parameters": { "R_val": 10.0 },
+		"buses": [{ "id": "b1", "location": "AC1", "pins": 1 }],
+		"components": [{
+			"id": "R1", "type": "resistor", "location": "AC1", "pins": 1,
+			"values": ["missing_param"],
+			"connected_bus": { "bus_id": "b1", "terminal": 1 }
+		}]
+	})");
+
+	SimulationBuilder builder;
+	EXPECT_THROW(builder.validateJSON(bad), std::invalid_argument);
+}
+
+
+TEST(JsonParameters, LocalParametersOverrideRoot) {
+	const JSON config = JSON::parse(R"({
+		"simulation": { "title": "params" },
+		"parameters": { "R_val": 10.0 },
+		"buses": [{ "id": "b1", "location": "AC1", "pins": 1 }],
+		"components": [{
+			"id": "R1", "type": "resistor", "location": "AC1", "pins": 1,
+			"local_parameters": { "R_val": 99.0 },
+			"values": ["R_val"],
+			"connected_bus": { "bus_id": "b1", "terminal": 1 }
+		}]
+	})");
+
+	SimulationBuilder builder;
+	Network network;
+	ASSERT_NO_THROW(builder.buildFromJSON(config, network));
+}
+
+
+TEST(JsonExpressions, PassivesRlcExprExampleValidatesAndBuilds) {
+	const fs::path path = harmonyRoot() / "src" / "examples" / "json" / "passives_rlc_expr.json";
+	ASSERT_TRUE(fs::exists(path));
+
+	const JSON config = loadJsonFile(path);
+	SimulationBuilder builder;
+	EXPECT_NO_THROW(builder.validateJSON(config));
+	Network network;
+	EXPECT_NO_THROW(builder.buildFromJSON(config, network));
+}
+
+
+TEST(JsonExpressions, ParsesZexprForImpedance) {
+	const JSON config = JSON::parse(R"({
+		"simulation": { "title": "z" },
+		"parameters": { "R": 5.0, "L": 0.002 },
+		"buses": [
+			{ "id": "b1", "location": "AC1", "pins": 1 },
+			{ "id": "gnd", "location": "AC1", "pins": 1 }
+		],
+		"components": [{
+			"id": "Z1", "type": "impedance", "location": "AC1", "pins": 1,
+			"z_expr": "R + s*L",
+			"connected_buses": [
+				{ "bus_id": "b1", "terminal": 1 },
+				{ "bus_id": "gnd", "terminal": 2 }
+			]
+		}]
+	})");
+
+	SimulationBuilder builder;
+	EXPECT_NO_THROW(builder.validateJSON(config));
+}
+
+
+TEST(JsonExpressions, RejectsUnresolvedSymbol) {
+	const JSON bad = JSON::parse(R"({
+		"simulation": { "title": "bad" },
+		"buses": [{ "id": "b1", "location": "AC1", "pins": 1 }],
+		"components": [{
+			"id": "R1", "type": "resistor", "location": "AC1", "pins": 1,
+			"y_expr": "1/unknown_R",
+			"connected_bus": { "bus_id": "b1", "terminal": 1 }
+		}]
+	})");
+
+	SimulationBuilder builder;
+	EXPECT_THROW(builder.validateJSON(bad), std::invalid_argument);
+}
+
+
+TEST(JsonExpressions, RejectsValuesAndYexprTogether) {
+	const JSON bad = JSON::parse(R"({
+		"simulation": { "title": "bad" },
+		"buses": [{ "id": "b1", "location": "AC1", "pins": 1 }],
+		"components": [{
+			"id": "R1", "type": "resistor", "location": "AC1", "pins": 1,
+			"values": [10.0],
+			"y_expr": "1/10",
+			"connected_bus": { "bus_id": "b1", "terminal": 1 }
+		}]
+	})");
+
+	SimulationBuilder builder;
+	EXPECT_THROW(builder.validateJSON(bad), std::invalid_argument);
+}

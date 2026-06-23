@@ -18,7 +18,7 @@ Best for developers integrating or extending Harmony.
 - Class/method reference from `src/` (including `src/json/`)
 - Module pages: Elements, Solvers, Control, Network
 - Inheritance diagrams for `Element` hierarchy
-- CMake `doxygen_add_docs` target + optional GitHub Pages CI
+- CMake `doxygen_add_docs` target + CI artifact (`harmony-api-docs`); public site in separate Pages repo
 
 ### User manual (Markdown → PDF or web)
 
@@ -50,5 +50,7 @@ Suggested chapters:
 3. **Doxygen API docs** — [`doxygen/README.md`](doxygen/README.md) (done — build with `-DBUILD_DOCS=ON`)
 4. Expand manual (figures, MMC parameter tables, PDF export)
 5. JSON Schema + MMC/RES JSON builders
+
+**API docs CI:** Doxygen + Graphviz class diagrams are built in [`.github/workflows/docs.yml`](../.github/workflows/docs.yml); download artifact `harmony-api-docs` or build locally, then copy HTML into the separate GitHub Pages repository (see [`doxygen/README.md`](doxygen/README.md)).
 
 Ask which items to implement next.

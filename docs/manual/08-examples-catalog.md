@@ -117,11 +117,13 @@ JSON equivalents of bundled C++ demos are in `src/examples/json/`:
 | `cable.json` | `example_cable` | Cable model |
 | `ohl.json` | `example_OHL` | Overhead line |
 | `mmc.json` | `example_MMC` | MMC (MMC1 parameters) |
+| `mmc_named_params.json` | `example_MMC` | Same MMC case with named `parameters` / controller refs |
 | `pv_plant.json` | `example_PV_plant` | PV plant |
 | `wt_type_3.json` | `example_WT_type_3` | Type-3 wind turbine |
 | `wt_type_4.json` | `example_WT_type_4` | Type-4 wind turbine |
 | `state_space.json` | `example_state_space` | RLC network (build only) |
 | `passives_rlc.json` | — | R/L/C passives demo |
+| `passives_rlc_expr.json` | — | RLC with SymEngine `y_expr` / `z_expr` + named parameters |
 | `opf_csv.json` | `example_OPF_csv` | CSV OPF via `solve_opf` (`ac5` + `mtdc3`); stub network is ignored |
 | `dqsym_mmc.json` | `example_DQsym_Simple_MMC` | DQsym time-domain MMC with sources |
 | `stability_check.json` | `example_stability_check` | Full hybrid OPF + stability + Y-matrix plots |

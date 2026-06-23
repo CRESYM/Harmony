@@ -94,6 +94,23 @@ function (link_implot TARGET_NAME)
             ${TARGET_NAME}
             PRIVATE
             ${IMGUI_BACKEND_SOURCES})
+    elseif(UNIX AND NOT APPLE)
+        message(STATUS "Linux detected: Adding ImGui backend source files to build")
+        list(APPEND IMGUI_BACKEND_SOURCES 
+            ${IMGUI_BACKEND_DIR}/imgui_impl_glfw.cpp
+            ${IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp)
+        target_sources(
+            ${TARGET_NAME}
+            PRIVATE
+            ${IMGUI_BACKEND_SOURCES})
+    endif()
+
+    # Tell the ImGui OpenGL backend how to load GL entry points.
+    if(NOT APPLE)
+        target_compile_definitions(${TARGET_NAME} PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLEW)
+        if(MSVC)
+            target_compile_definitions(${TARGET_NAME} PRIVATE GLEW_STATIC)
+        endif()
     endif()
 
     # Link implot and all its dependencies
@@ -104,18 +121,16 @@ function (link_implot TARGET_NAME)
         implot::implot
         glfw
         ${OPENGL_LIBRARIES}
-        GLEW::GLEW
     )
-    if(APPLE)
-        target_link_libraries(${TARGET_NAME} PRIVATE "-framework Cocoa" "-framework IOKit" "-framework CoreFoundation")
+    if(GLEW_FOUND)
+        target_link_libraries(${TARGET_NAME} PRIVATE GLEW::GLEW)
     endif()
-
-    # Tell the ImGui OpenGL backend to use GLEW
-    target_compile_definitions(${TARGET_NAME} PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLEW)
-
-    # If using Conda GLEW on Windows, link statically
-    if(MSVC)
-        target_compile_definitions(${TARGET_NAME} PRIVATE GLEW_STATIC)
+    if(APPLE)
+        target_link_libraries(${TARGET_NAME} PRIVATE
+            "-framework Cocoa"
+            "-framework IOKit"
+            "-framework CoreFoundation"
+            "-framework OpenGL")
     endif()
 
     if(EXISTS "${HARMONY_IMGUI_FONT_PATH}")

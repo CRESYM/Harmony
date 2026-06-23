@@ -297,8 +297,8 @@ CliOptions parseCli(int argc, char* argv[]) {
 void printCliHelp() {
 	printHarmonyBanner(std::cout);
 	std::cout <<
-		"Harmony — hybrid AC/DC power-system framework\n\n"
-		"HarmonyUI — graphical launcher with example picker, optional plots, and PNG export.\n"
+		"Harmony - hybrid AC/DC power-system framework\n\n"
+		"HarmonyUI - graphical launcher with example picker, optional plots, and PNG export.\n"
 		"  Run HarmonyUI from your build output (developer CLI below is unchanged).\n\n"
 		"Usage:\n"
 		"  Harmony --cpp <example>     Run a C++ example program\n"
@@ -314,7 +314,7 @@ void printCliHelp() {
 		"Default JSON search paths (when HARMONY_JSON_PATH is unset):\n"
 		"  src/examples, src/examples/json, src/json, examples, .\n\n"
 		"Override defaults for all runs:\n"
-		"  set HARMONY_JSON_PATH=D:\\\\cases;D:\\\\other   (Windows)\n"
+		"  set HARMONY_JSON_PATH=D:\\cases;D:\\other   (Windows)\n"
 		"  export HARMONY_JSON_PATH=/cases:/other         (Linux/macOS)\n\n"
 		"Examples:\n"
 		"  Harmony --cpp stability_check\n"
@@ -484,7 +484,7 @@ void printJsonNotFoundHelp(
 		std::cerr << "Repository root: " << root->generic_string() << "\n";
 	}
 	else {
-		std::cerr << "Repository root: (not detected — run from the Harmony repo or use a full path)\n";
+		std::cerr << "Repository root: (not detected - run from the Harmony repo or use a full path)\n";
 	}
 
 	std::cerr << "Current directory: "

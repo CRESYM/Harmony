@@ -128,7 +128,7 @@ Copy and modify this file when starting a new hybrid study.
 After assembly, invoke solvers ([Chapter 7](07-analysis-workflows.md)) or run a bundled example that matches your study:
 
 ```bash
-Harmony --cpp stability_check    # hybrid AC–DC with OPF + stability
+Harmony --cpp stability_check    # hybrid AC-DC with OPF + stability
 Harmony --cpp mmc --no-plot      # MMC Y-matrix sweep
 Harmony --json my_case.json      # JSON-defined case
 ```

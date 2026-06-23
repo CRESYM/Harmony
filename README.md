@@ -1,5 +1,6 @@
 ![Windows build & test](https://github.com/CRESYM/Harmony/actions/workflows/windows_build_and_test.yml/badge.svg?branch=main) ![Linux build & test](https://github.com/CRESYM/Harmony/actions/workflows/linux_build_and_test.yml/badge.svg?branch=main) ![macOS build & test](https://github.com/CRESYM/Harmony/actions/workflows/macos_build_and_test.yml/badge.svg?branch=main)   
-![Windows run examples](https://github.com/CRESYM/Harmony/actions/workflows/windows_run_examples.yml/badge.svg?branch=main) ![Linux run examples](https://github.com/CRESYM/Harmony/actions/workflows/linux_run_examples.yml/badge.svg?branch=main) ![macOS run examples](https://github.com/CRESYM/Harmony/actions/workflows/macos_run_examples.yml/badge.svg?branch=main)
+![Windows run examples](https://github.com/CRESYM/Harmony/actions/workflows/windows_run_examples.yml/badge.svg?branch=main) ![Linux run examples](https://github.com/CRESYM/Harmony/actions/workflows/linux_run_examples.yml/badge.svg?branch=main) ![macOS run examples](https://github.com/CRESYM/Harmony/actions/workflows/macos_run_examples.yml/badge.svg?branch=main)  
+![Build API docs](https://github.com/CRESYM/Harmony/actions/workflows/docs.yml/badge.svg?branch=main)
 
 # Harmony $~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~$    ![alt text](cresym.png?raw=true)  
 
@@ -24,7 +25,7 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 
 ## Installation and Usage
 
-See the [detailed installation instructions](docs/installation.md), [**Running Harmony**](docs/running-harmony.md), the [User Manual](docs/manual/README.md), and the [API documentation (Doxygen)](docs/doxygen/README.md).
+See the [detailed installation instructions](docs/installation.md), [**Running Harmony**](docs/running-harmony.md), the [User Manual](docs/manual/README.md), and the [API documentation (Doxygen)](docs/doxygen/README.md) (CI builds HTML; publish via your separate GitHub Pages project).
 
 ### Prerequisites 
 Harmony can be compiled on Windows. The requirements are:
@@ -52,7 +53,7 @@ conda activate harmony
 mkdir build
 cd build
 cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" 
-# e.g. cmake .. -DGUROBI_PATH="C:\gurobi1202\win64" 
+# e.g. cmake .. -DGUROBI_PATH="C:/gurobi1202/win64"
 
 # Compile Harmony
 # Replace 4 with the number of CPU cores you wish to use for parallel compilation
@@ -119,7 +120,7 @@ conda activate harmony
 mkdir build
 cd build
 cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" 
-# e.g. cmake .. -DGUROBI_PATH="C:\gurobi1202\win64"
+# e.g. cmake .. -DGUROBI_PATH="C:/gurobi1202/win64"
 
 # Compile the tests
 cmake --build . --config Release

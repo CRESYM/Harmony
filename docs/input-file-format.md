@@ -29,8 +29,73 @@ Full run instructions: [**Running Harmony**](running-harmony.md). By default Har
 | `buses` | yes | Electrical nodes |
 | `components` | yes | Devices connected to buses |
 | `computations` | no | Post-build analysis steps |
+| `parameters` | no | Named numeric constants referenced from components |
 
-See [`src/examples/example.json`](../src/examples/example.json) for a working minimal case.
+See [`src/examples/example.json`](../src/examples/example.json) for a working minimal case. See [`src/examples/json/mmc_named_params.json`](../src/examples/json/mmc_named_params.json) for named MMC/ controller parameters.
+
+## Named parameters (Type A)
+
+Define reusable numbers once at the top of the file:
+
+```json
+"parameters": {
+  "omega_0": 314.159,
+  "V_dc": 200000.0,
+  "zcc_kp": 19.93,
+  "zcc_ki": 4500.0
+}
+```
+
+Reference them anywhere a **numeric array** or scalar is accepted — passives `"values"`, MMC `converter_params`, `controller_params`, `filter_params`, RES `"parameters"`, transformer object fields, `voltage`, etc.:
+
+```json
+"values": ["R_ohm"],
+"converter_params": ["omega_0", "P_nom", "Q_nom", ...],
+"controller_params": ["pll_enable", "dc_voltage_enable", "active_power_enable", "pi_type", "pac_kp", "pac_ki", "n_outputs_1", "pac_ref", "ac_voltage_enable", "reactive_power_enable", ...]
+```
+
+MMC controllers are fixed-order slots: `pll`, `dc_voltage`, `active_power`, `ac_voltage`, `reactive_power`, `energy`, `zcc`, `occ`, `ccc`, `droop`. Each slot starts with an enable flag (`0`/`1` or a named parameter such as `"ac_voltage_enable": 0.0`). Disabled slots use a single entry; enabled slots continue with controller type, gains, output count, and references. See [`mmc_named_params.json`](../src/examples/json/mmc_named_params.json).
+
+Rules:
+
+- Parameter names are strings; array entries are either a **number** or a **parameter name**.
+- Unknown names are rejected at validation.
+- Optional per-component overrides: `"local_parameters": { "R_val": 99.0 }` (merged over root `parameters` for that component only).
+- RES components keep the field name `"parameters"` for the plant vector; root definitions use the top-level `"parameters"` object (different JSON levels, no conflict).
+
+Literal numbers still work — existing JSON files are unchanged.
+
+## SymEngine expressions (Type B)
+
+Define frequency-domain admittance or impedance with SymEngine strings. Numeric names from `"parameters"` are substituted; **`w`**, **`omega`**, and **`s`** stay symbolic for Y-matrix sweeps (`s = j*w` in Harmony).
+
+| Field | Component types | Meaning |
+|-------|-----------------|--------|
+| `y_expr` | `resistor`, `inductor`, `capacitor`, `admittance` | Admittance \(Y(s)\) — passives are built as symbolic `admittance` internally |
+| `y_exprs` | `admittance` | Array of \(Y(s)\) expressions (same layouts as numeric `values`) |
+| `z_expr` | `impedance` | Impedance \(Z(s)\); element stores \(Y = 1/Z\) |
+
+Examples:
+
+```json
+"parameters": { "R_ohm": 10.0, "L_H": 0.001, "C_F": 1e-6 },
+"components": [
+  { "type": "resistor", "y_expr": "1/R_ohm", ... },
+  { "type": "inductor", "y_expr": "1/(s*L_H)", ... },
+  { "type": "capacitor", "y_expr": "s*C_F", ... },
+  { "type": "impedance", "z_expr": "R_ohm + s*L_H", ... },
+  { "type": "admittance", "y_expr": "s*C_F + 1/R_ohm", ... }
+]
+```
+
+Rules:
+
+- Use **`values`** *or* expression fields — not both on the same component.
+- Allowed symbols after substitution: **`w`**, **`omega`**, **`s`** only.
+- Parser constants: `w`, `omega`, `s`, `j`, `pi`, `I` (imaginary unit).
+- See [`src/examples/json/passives_rlc_expr.json`](../src/examples/json/passives_rlc_expr.json).
+
+MMC / RES / controller vectors remain **Type A** (numeric arrays and name references). Structured controller objects are not part of Type B.
 
 ## `simulation` object
 

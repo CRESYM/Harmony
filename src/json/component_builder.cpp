@@ -11,32 +11,48 @@
 
 namespace {
 
-std::map<std::string, double> readOpfInfo(const JSON& comp) {
+std::map<std::string, double> readOpfInfo(const JSON& comp, const JsonParameterTable& params) {
 	std::map<std::string, double> info;
 	if (!comp.contains("opf_info") || !comp.at("opf_info").is_object()) {
 		return info;
 	}
 	for (auto it = comp.at("opf_info").begin(); it != comp.at("opf_info").end(); ++it) {
-		if (!it.value().is_number()) {
-			throw std::invalid_argument("ERROR: opf_info['" + it.key() + "'] must be numeric.\n");
-		}
-		info[it.key()] = it.value().get<double>();
+		info[it.key()] = params.resolveScalar(it.value(), "opf_info");
 	}
 	return info;
 }
 
-void applyOpfInfo(Element* element, const JSON& comp) {
+void applyOpfInfo(Element* element, const JSON& comp, const JsonParameterTable& params) {
 	if (!comp.contains("opf_info")) {
 		return;
 	}
-	auto info = readOpfInfo(comp);
+	auto info = readOpfInfo(comp, params);
 	if (!info.empty()) {
 		element->setOPFInfo(info);
 	}
 }
 
 } // namespace
-std::unique_ptr<Element> ComponentBuilder::buildFromJSON(const JSON& comp, const unsigned int i) {
+
+
+Admittance* ComponentBuilder::buildSymbolicAdmittance(
+	const JSON& comp,
+	const JsonParameterTable& params,
+	const char* exprField)
+{
+	const auto y = JsonExpression::parseAdmittance(
+		comp.at(exprField).get<std::string>(), params, exprField);
+	DenseMatrix matrix(1, 1);
+	matrix.set(0, 0, y);
+	return new Admittance(comp["id"], comp["location"], comp["pins"], matrix);
+}
+
+
+std::unique_ptr<Element> ComponentBuilder::buildFromJSON(
+	const JSON& comp,
+	const unsigned int i,
+	const JsonParameterTable& params)
+{
 	std::string comptype = "unknown";
 
 	try {
@@ -48,33 +64,54 @@ std::unique_ptr<Element> ComponentBuilder::buildFromJSON(const JSON& comp, const
 			[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
 		Element* raw = nullptr;
-		if (comptype == "load") { raw = buildLoad(comp); }
-		else if (comptype == "load_pq") { raw = buildLoadPQ(comp); }
-		else if (comptype == "ac_source") { raw = buildACSource(comp); }
-		else if (comptype == "generator") { raw = buildGenerator(comp); }
-		else if (comptype == "dc_source") { raw = buildDCSource(comp); }
-		else if (comptype == "capacitor") { raw = buildCapacitor(comp); }
-		else if (comptype == "inductor") { raw = buildInductor(comp); }
-		else if (comptype == "resistor") { raw = buildResistor(comp); }
-		else if (comptype == "impedance") { raw = buildImpedance(comp); }
-		else if (comptype == "admittance") { raw = buildAdmittance(comp); }
+		if (comptype == "load") { raw = buildLoad(comp, params); }
+		else if (comptype == "load_pq") { raw = buildLoadPQ(comp, params); }
+		else if (comptype == "ac_source") { raw = buildACSource(comp, params); }
+		else if (comptype == "generator") { raw = buildGenerator(comp, params); }
+		else if (comptype == "dc_source") { raw = buildDCSource(comp, params); }
+		else if (comptype == "capacitor") {
+			if (comp.contains("y_expr")) {
+				raw = buildSymbolicAdmittance(comp, params, "y_expr");
+			}
+			else {
+				raw = buildCapacitor(comp, params);
+			}
+		}
+		else if (comptype == "inductor") {
+			if (comp.contains("y_expr")) {
+				raw = buildSymbolicAdmittance(comp, params, "y_expr");
+			}
+			else {
+				raw = buildInductor(comp, params);
+			}
+		}
+		else if (comptype == "resistor") {
+			if (comp.contains("y_expr")) {
+				raw = buildSymbolicAdmittance(comp, params, "y_expr");
+			}
+			else {
+				raw = buildResistor(comp, params);
+			}
+		}
+		else if (comptype == "impedance") { raw = buildImpedance(comp, params); }
+		else if (comptype == "admittance") { raw = buildAdmittance(comp, params); }
 		else if (comptype == "switch") { raw = buildSwitch(comp); }
-		else if (comptype == "transmission_line") { raw = buildTransmissionLine(comp); }
-		else if (comptype == "cable") { raw = buildCable(comp); }
-		else if (comptype == "overhead_line") { raw = buildOverheadLine(comp); }
-		else if (comptype == "mmc") { raw = buildMMC(comp); }
-		else if (comptype == "wt_type_3") { raw = buildWTtype3(comp); }
-		else if (comptype == "wt_type_4") { raw = buildWTtype4(comp); }
-		else if (comptype == "wp_plant") { raw = buildWPplant(comp); }
-		else if (comptype == "pv_plant") { raw = buildPVplant(comp); }
-		else if (comptype == "transformer_real") { raw = buildTransformerReal(comp); }
-		else if (comptype == "transformer_classic") { raw = buildTransformerClassic(comp); }
-		else if (comptype == "transformer_yy") { raw = buildTransformerYY(comp); }
-		else if (comptype == "transformer_yy_real") { raw = buildTransformerYYReal(comp); }
-		else if (comptype == "transformer_deltay") { raw = buildTransformerDeltaY(comp); }
-		else if (comptype == "transformer_deltay_real") { raw = buildTransformerDeltaYReal(comp); }
-		else if (comptype == "transformer_ydelta") { raw = buildTransformerYDelta(comp); }
-		else if (comptype == "transformer_deltadelta") { raw = buildTransformerDeltaDelta(comp); }
+		else if (comptype == "transmission_line") { raw = buildTransmissionLine(comp, params); }
+		else if (comptype == "cable") { raw = buildCable(comp, params); }
+		else if (comptype == "overhead_line") { raw = buildOverheadLine(comp, params); }
+		else if (comptype == "mmc") { raw = buildMMC(comp, params); }
+		else if (comptype == "wt_type_3") { raw = buildWTtype3(comp, params); }
+		else if (comptype == "wt_type_4") { raw = buildWTtype4(comp, params); }
+		else if (comptype == "wp_plant") { raw = buildWPplant(comp, params); }
+		else if (comptype == "pv_plant") { raw = buildPVplant(comp, params); }
+		else if (comptype == "transformer_real") { raw = buildTransformerReal(comp, params); }
+		else if (comptype == "transformer_classic") { raw = buildTransformerClassic(comp, params); }
+		else if (comptype == "transformer_yy") { raw = buildTransformerYY(comp, params); }
+		else if (comptype == "transformer_yy_real") { raw = buildTransformerYYReal(comp, params); }
+		else if (comptype == "transformer_deltay") { raw = buildTransformerDeltaY(comp, params); }
+		else if (comptype == "transformer_deltay_real") { raw = buildTransformerDeltaYReal(comp, params); }
+		else if (comptype == "transformer_ydelta") { raw = buildTransformerYDelta(comp, params); }
+		else if (comptype == "transformer_deltadelta") { raw = buildTransformerDeltaDelta(comp, params); }
 		else {
 			throw std::invalid_argument("unknown type '" + comptype + "'");
 		}
@@ -89,14 +126,22 @@ std::unique_ptr<Element> ComponentBuilder::buildFromJSON(const JSON& comp, const
 }
 
 
-std::vector<double> ComponentBuilder::readNumericArray(const JSON& comp, const std::string& key) {
-	findNonEmptyNumericArray(key, comp);
-	return comp.at(key).get<std::vector<double>>();
+std::vector<double> ComponentBuilder::readNumericArray(
+	const JSON& comp,
+	const std::string& key,
+	const JsonParameterTable& params)
+{
+	findNumericOrReferenceArray(key, comp, params);
+	return params.resolveArray(comp.at(key), ("'" + key + "'").c_str());
 }
 
 
-DenseMatrix ComponentBuilder::readDenseMatrixValues(const JSON& comp, const std::string& key) {
-	const auto values = readNumericArray(comp, key);
+DenseMatrix ComponentBuilder::readDenseMatrixValues(
+	const JSON& comp,
+	const std::string& key,
+	const JsonParameterTable& params)
+{
+	const auto values = readNumericArray(comp, key, params);
 	DenseMatrix matrix(1, static_cast<unsigned>(values.size()));
 	for (size_t i = 0; i < values.size(); ++i) {
 		matrix.set(0, static_cast<unsigned>(i), real_double(values[i]));
@@ -105,33 +150,51 @@ DenseMatrix ComponentBuilder::readDenseMatrixValues(const JSON& comp, const std:
 }
 
 
-std::vector<double> ComponentBuilder::readVoltageVector(const JSON& comp) {
-	if (comp.at("voltage").is_number()) {
-		return { comp.at("voltage").get<double>() };
+double ComponentBuilder::readScalarField(
+	const JSON& comp,
+	const std::string& key,
+	const JsonParameterTable& params)
+{
+	findScalar(key, comp, params);
+	return params.resolveScalar(comp.at(key), ("'" + key + "'").c_str());
+}
+
+
+std::vector<double> ComponentBuilder::readVoltageVector(const JSON& comp, const JsonParameterTable& params) {
+	if (comp.at("voltage").is_number() || JsonParameterTable::isReference(comp.at("voltage"))) {
+		return { readScalarField(comp, "voltage", params) };
 	}
 	if (comp.at("voltage").is_array()) {
-		return comp.at("voltage").get<std::vector<double>>();
+		findNumericOrReferenceArray("voltage", comp, params);
+		return params.resolveArray(comp.at("voltage"), "'voltage'");
 	}
-	throw std::invalid_argument("ERROR: 'voltage' must be a number or numeric array.\n");
+	throw std::invalid_argument("ERROR: 'voltage' must be a number, parameter name, or numeric array.\n");
 }
 
 
-Capacitor* ComponentBuilder::buildCapacitor(const JSON& comp) {
-	return new Capacitor(comp["id"], comp["location"], comp["pins"], readNumericArray(comp, "values"));
+Capacitor* ComponentBuilder::buildCapacitor(const JSON& comp, const JsonParameterTable& params) {
+	return new Capacitor(comp["id"], comp["location"], comp["pins"], readNumericArray(comp, "values", params));
 }
 
-Inductor* ComponentBuilder::buildInductor(const JSON& comp) {
-	return new Inductor(comp["id"], comp["location"], comp["pins"], readNumericArray(comp, "values"));
+Inductor* ComponentBuilder::buildInductor(const JSON& comp, const JsonParameterTable& params) {
+	return new Inductor(comp["id"], comp["location"], comp["pins"], readNumericArray(comp, "values", params));
 }
 
-Resistor* ComponentBuilder::buildResistor(const JSON& comp) {
-	return new Resistor(comp["id"], comp["location"], comp["pins"], readNumericArray(comp, "values"));
+Resistor* ComponentBuilder::buildResistor(const JSON& comp, const JsonParameterTable& params) {
+	return new Resistor(comp["id"], comp["location"], comp["pins"], readNumericArray(comp, "values", params));
 }
 
-Impedance* ComponentBuilder::buildImpedance(const JSON& comp) {
+Impedance* ComponentBuilder::buildImpedance(const JSON& comp, const JsonParameterTable& params) {
 	const int pins = comp["pins"].get<int>();
+	if (comp.contains("z_expr")) {
+		const auto z = JsonExpression::parseImpedance(
+			comp.at("z_expr").get<std::string>(), params, "z_expr");
+		DenseMatrix matrix(1, 1);
+		matrix.set(0, 0, z);
+		return new Impedance(comp["id"], comp["location"], pins, matrix);
+	}
 	if (comp.contains("complex")) {
-		const auto z = readNumericArray(comp, "complex");
+		const auto z = readNumericArray(comp, "complex", params);
 		if (z.size() != 2) {
 			throw std::invalid_argument("impedance 'complex' must contain [R, X]");
 		}
@@ -140,59 +203,67 @@ Impedance* ComponentBuilder::buildImpedance(const JSON& comp) {
 			std::complex<double>(z[0], z[1]));
 	}
 
-	const auto values = readNumericArray(comp, "values");
+	const auto values = readNumericArray(comp, "values", params);
 	if (values.size() == 1u) {
 		return new Impedance(comp["id"], comp["location"], pins, values[0]);
 	}
 	return new Impedance(comp["id"], comp["location"], pins, values);
 }
 
-Admittance* ComponentBuilder::buildAdmittance(const JSON& comp) {
-	return new Admittance(comp["id"], comp["location"], comp["pins"], readDenseMatrixValues(comp, "values"));
+Admittance* ComponentBuilder::buildAdmittance(const JSON& comp, const JsonParameterTable& params) {
+	if (comp.contains("y_expr")) {
+		return buildSymbolicAdmittance(comp, params, "y_expr");
+	}
+	if (comp.contains("y_exprs")) {
+		const auto exprs = JsonExpression::parseArray(comp.at("y_exprs"), params, "y_exprs");
+		return new Admittance(
+			comp["id"], comp["location"], comp["pins"],
+			JsonExpression::toRowMatrix(exprs));
+	}
+	return new Admittance(comp["id"], comp["location"], comp["pins"], readDenseMatrixValues(comp, "values", params));
 }
 
-Load* ComponentBuilder::buildLoad(const JSON& comp) {
-	return new Load(comp["id"], comp["location"], comp["pins"], readNumericArray(comp, "values"));
+Load* ComponentBuilder::buildLoad(const JSON& comp, const JsonParameterTable& params) {
+	return new Load(comp["id"], comp["location"], comp["pins"], readNumericArray(comp, "values", params));
 }
 
-LoadPQ* ComponentBuilder::buildLoadPQ(const JSON& comp) {
-	return new LoadPQ(comp["id"], comp["location"], comp["pins"], readNumericArray(comp, "values"));
+LoadPQ* ComponentBuilder::buildLoadPQ(const JSON& comp, const JsonParameterTable& params) {
+	return new LoadPQ(comp["id"], comp["location"], comp["pins"], readNumericArray(comp, "values", params));
 }
 
-AC_source* ComponentBuilder::buildACSource(const JSON& comp) {
-	findNumber("voltage", comp);
-	const auto values = readNumericArray(comp, "values");
+AC_source* ComponentBuilder::buildACSource(const JSON& comp, const JsonParameterTable& params) {
+	findScalar("voltage", comp, params);
+	const auto values = readNumericArray(comp, "values", params);
+	const double voltage = readScalarField(comp, "voltage", params);
 	AC_source* src = nullptr;
 	if (values.size() == 1u) {
-		src = new AC_source(
-			comp["id"], comp["location"], comp["pins"],
-			comp["voltage"].get<double>(), values[0]);
+		src = new AC_source(comp["id"], comp["location"], comp["pins"], voltage, values[0]);
 	}
 	else {
-		src = new AC_source(
-			comp["id"], comp["location"], comp["pins"],
-			comp["voltage"].get<double>(), values);
+		src = new AC_source(comp["id"], comp["location"], comp["pins"], voltage, values);
 	}
-	applyOpfInfo(src, comp);
+	applyOpfInfo(src, comp, params);
 	return src;
 }
 
-Generator* ComponentBuilder::buildGenerator(const JSON& comp) {
-	findNumber("voltage", comp);
-	const auto values = readNumericArray(comp, "values");
+Generator* ComponentBuilder::buildGenerator(const JSON& comp, const JsonParameterTable& params) {
+	findScalar("voltage", comp, params);
+	const auto values = readNumericArray(comp, "values", params);
 	Generator* gen = new Generator(
 		comp["id"], comp["location"], comp["pins"],
-		comp["voltage"].get<double>(), values);
-	applyOpfInfo(gen, comp);
+		readScalarField(comp, "voltage", params), values);
+	applyOpfInfo(gen, comp, params);
 	return gen;
 }
 
-DC_source* ComponentBuilder::buildDCSource(const JSON& comp) {
-	const auto voltages = readVoltageVector(comp);
-	const double resistance = comp.value("resistance", 0.0);
+DC_source* ComponentBuilder::buildDCSource(const JSON& comp, const JsonParameterTable& params) {
+	const auto voltages = readVoltageVector(comp, params);
+	const double resistance = comp.contains("resistance")
+		? readScalarField(comp, "resistance", params)
+		: 0.0;
 	if (voltages.size() == 1) {
 		if (comp.contains("values")) {
-			const auto z = readNumericArray(comp, "values");
+			const auto z = readNumericArray(comp, "values", params);
 			if (z.size() == 1) {
 				return new DC_source(comp["id"], comp["location"], comp["pins"], voltages[0], z[0]);
 			}
@@ -201,7 +272,7 @@ DC_source* ComponentBuilder::buildDCSource(const JSON& comp) {
 		return new DC_source(comp["id"], comp["location"], comp["pins"], voltages[0], resistance);
 	}
 	if (comp.contains("values")) {
-		const auto z = readNumericArray(comp, "values");
+		const auto z = readNumericArray(comp, "values", params);
 		if (z.size() == 1) {
 			return new DC_source(comp["id"], comp["location"], comp["pins"], voltages, z[0]);
 		}
@@ -226,193 +297,213 @@ Switch* ComponentBuilder::buildSwitch(const JSON& comp) {
 	return new Switch(comp["id"], comp["location"], pinCount, state);
 }
 
-TransmissionLine* ComponentBuilder::buildTransmissionLine(const JSON& comp) {
-	return new TransmissionLine(comp["id"], comp["location"], comp["pins"], readNumericArray(comp, "values"));
+TransmissionLine* ComponentBuilder::buildTransmissionLine(const JSON& comp, const JsonParameterTable& params) {
+	return new TransmissionLine(comp["id"], comp["location"], comp["pins"], readNumericArray(comp, "values", params));
 }
 
-Cable* ComponentBuilder::buildCable(const JSON& comp) {
+Cable* ComponentBuilder::buildCable(const JSON& comp, const JsonParameterTable& params) {
 	std::map<string, Cable::Conductor*> conductors;
 	for (const auto& c : comp.at("conductors")) {
 		const std::string key = c.at("id").get<std::string>();
 		conductors[key] = new Cable::Conductor(
-			c.value("ri", 0.0),
-			c.value("ro", 0.0),
-			c.value("resistivity", 0.0),
-			c.value("permeability", 1.0),
-			c.value("area", 0.0));
+			params.resolveScalar(c.value("ri", JSON(0.0)), "cable conductor ri"),
+			params.resolveScalar(c.value("ro", JSON(0.0)), "cable conductor ro"),
+			params.resolveScalar(c.value("resistivity", JSON(0.0)), "cable conductor resistivity"),
+			params.resolveScalar(c.value("permeability", JSON(1.0)), "cable conductor permeability"),
+			params.resolveScalar(c.value("area", JSON(0.0)), "cable conductor area"));
 	}
 
 	std::map<string, Cable::Insulator*> insulators;
 	for (const auto& ins : comp.at("insulators")) {
 		const std::string key = ins.at("id").get<std::string>();
 		insulators[key] = new Cable::Insulator(
-			ins.value("ri", 0.0),
-			ins.value("ro", 0.0),
-			ins.value("permittivity", 1.0),
-			ins.value("permeability", 1.0),
-			ins.value("inner_semiconductor_outer_radius", 0.0),
-			ins.value("outer_semiconductor_inner_radius", 0.0));
+			params.resolveScalar(ins.value("ri", JSON(0.0)), "cable insulator ri"),
+			params.resolveScalar(ins.value("ro", JSON(0.0)), "cable insulator ro"),
+			params.resolveScalar(ins.value("permittivity", JSON(1.0)), "cable insulator permittivity"),
+			params.resolveScalar(ins.value("permeability", JSON(1.0)), "cable insulator permeability"),
+			params.resolveScalar(ins.value("inner_semiconductor_outer_radius", JSON(0.0)), "cable insulator inner_semiconductor_outer_radius"),
+			params.resolveScalar(ins.value("outer_semiconductor_inner_radius", JSON(0.0)), "cable insulator outer_semiconductor_inner_radius"));
 	}
 
 	const auto& earthArr = comp.at("earth");
 	std::tuple<double, double, double> earth = {
-		earthArr.at(0).get<double>(),
-		earthArr.at(1).get<double>(),
-		earthArr.at(2).get<double>()
+		params.resolveScalar(earthArr.at(0), "cable earth"),
+		params.resolveScalar(earthArr.at(1), "cable earth"),
+		params.resolveScalar(earthArr.at(2), "cable earth")
 	};
 
 	std::vector<std::pair<double, double>> positions;
 	for (const auto& pos : comp.at("positions")) {
-		positions.emplace_back(pos.at(0).get<double>(), pos.at(1).get<double>());
+		positions.emplace_back(
+			params.resolveScalar(pos.at(0), "cable position"),
+			params.resolveScalar(pos.at(1), "cable position"));
 	}
 
 	return new Cable(
-		comp["id"], comp["location"], comp.value("pins", 1),
+		comp["id"], comp["location"],
+		comp.contains("pins") ? static_cast<int>(readScalarField(comp, "pins", params)) : 1,
 		comp.at("cable_type").get<std::string>(),
-		comp.at("length").get<double>(),
+		readScalarField(comp, "length", params),
 		earth, conductors, insulators, positions);
 }
 
-Overhead_Line* ComponentBuilder::buildOverheadLine(const JSON& comp) {
+Overhead_Line* ComponentBuilder::buildOverheadLine(const JSON& comp, const JsonParameterTable& params) {
 	const auto& earthArr = comp.at("earth");
 	const std::tuple<double, double, double> earth = {
-		earthArr.at(0).get<double>(),
-		earthArr.at(1).get<double>(),
-		earthArr.at(2).get<double>()
+		params.resolveScalar(earthArr.at(0), "overhead_line earth"),
+		params.resolveScalar(earthArr.at(1), "overhead_line earth"),
+		params.resolveScalar(earthArr.at(2), "overhead_line earth")
 	};
 
 	const JSON& cond = comp.at("conductor");
-	std::vector<int> numbers = cond.at("number_bundles").get<std::vector<int>>();
-	std::vector<double> geometry = cond.at("geometry").get<std::vector<double>>();
+	params.validateNumericOrReferenceArray(cond.at("number_bundles"), "overhead_line conductor number_bundles");
+	params.validateNumericOrReferenceArray(cond.at("geometry"), "overhead_line conductor geometry");
+	const auto numbers = params.resolveArray(cond.at("number_bundles"), "overhead_line conductor number_bundles");
+	std::vector<int> numbersInt;
+	numbersInt.reserve(numbers.size());
+	for (double n : numbers) {
+		numbersInt.push_back(static_cast<int>(n));
+	}
+	const auto geometry = params.resolveArray(cond.at("geometry"), "overhead_line conductor geometry");
 	const auto conductor = std::make_tuple(
 		cond.at("organization").get<std::string>(),
-		numbers,
+		numbersInt,
 		geometry,
-		cond.value("ybc", 0.0),
-		cond.value("delta_ybc", 0.0),
-		cond.value("delta_xbc", 0.0),
-		cond.value("delta_tilde_xbc", 0.0));
+		params.resolveScalar(cond.value("ybc", JSON(0.0)), "overhead_line ybc"),
+		params.resolveScalar(cond.value("delta_ybc", JSON(0.0)), "overhead_line delta_ybc"),
+		params.resolveScalar(cond.value("delta_xbc", JSON(0.0)), "overhead_line delta_xbc"),
+		params.resolveScalar(cond.value("delta_tilde_xbc", JSON(0.0)), "overhead_line delta_tilde_xbc"));
 
 	const JSON& gw = comp.at("groundwire");
-	std::vector<double> gwGeo = gw.value("geometry", std::vector<double>{});
+	std::vector<double> gwGeo;
+	if (gw.contains("geometry")) {
+		params.validateNumericOrReferenceArray(gw.at("geometry"), "overhead_line groundwire geometry");
+		gwGeo = params.resolveArray(gw.at("geometry"), "overhead_line groundwire geometry");
+	}
 	const auto groundwire = std::make_tuple(
-		gw.at("count").get<int>(),
+		static_cast<int>(params.resolveScalar(gw.at("count"), "overhead_line groundwire count")),
 		gwGeo,
-		gw.value("delta_xg", 0.0));
+		params.resolveScalar(gw.value("delta_xg", JSON(0.0)), "overhead_line delta_xg"));
 
 	return new Overhead_Line(
 		comp["id"],
 		comp.value("location", "AC1"),
-		comp.at("length_km").get<double>(),
+		readScalarField(comp, "length_km", params),
 		earth, conductor, groundwire);
 }
 
-MMC* ComponentBuilder::buildMMC(const JSON& comp) {
-	const auto converterParams = readNumericArray(comp, "converter_params");
+MMC* ComponentBuilder::buildMMC(const JSON& comp, const JsonParameterTable& params) {
+	const auto converterParams = readNumericArray(comp, "converter_params", params);
 	if (comp.contains("filter_params")) {
 		return new MMC(
 			comp["id"], comp["location"], converterParams,
-			readNumericArray(comp, "controller_params"),
-			readNumericArray(comp, "filter_params"));
+			readNumericArray(comp, "controller_params", params),
+			readNumericArray(comp, "filter_params", params));
 	}
 	if (comp.contains("controller_params")) {
 		return new MMC(
 			comp["id"], comp["location"], converterParams,
-			readNumericArray(comp, "controller_params"));
+			readNumericArray(comp, "controller_params", params));
 	}
 	return new MMC(comp["id"], comp["location"], converterParams);
 }
 
-WTtype3* ComponentBuilder::buildWTtype3(const JSON& comp) {
-	return new WTtype3(comp["id"], comp["location"], readNumericArray(comp, "parameters"));
+WTtype3* ComponentBuilder::buildWTtype3(const JSON& comp, const JsonParameterTable& params) {
+	return new WTtype3(comp["id"], comp["location"], readNumericArray(comp, "parameters", params));
 }
 
-WTtype4* ComponentBuilder::buildWTtype4(const JSON& comp) {
-	return new WTtype4(comp["id"], comp["location"], readNumericArray(comp, "parameters"));
+WTtype4* ComponentBuilder::buildWTtype4(const JSON& comp, const JsonParameterTable& params) {
+	return new WTtype4(comp["id"], comp["location"], readNumericArray(comp, "parameters", params));
 }
 
-WPplant* ComponentBuilder::buildWPplant(const JSON& comp) {
+WPplant* ComponentBuilder::buildWPplant(const JSON& comp, const JsonParameterTable& params) {
 	return new WPplant(
 		comp["id"], comp["location"],
-		comp.at("turbine_type").get<int>(),
-		comp.at("number_wt").get<int>(),
-		readNumericArray(comp, "parameters"));
+		static_cast<int>(readScalarField(comp, "turbine_type", params)),
+		static_cast<int>(readScalarField(comp, "number_wt", params)),
+		readNumericArray(comp, "parameters", params));
 }
 
-PVplant* ComponentBuilder::buildPVplant(const JSON& comp) {
-	return new PVplant(comp["id"], comp["location"], readNumericArray(comp, "parameters"));
+PVplant* ComponentBuilder::buildPVplant(const JSON& comp, const JsonParameterTable& params) {
+	return new PVplant(comp["id"], comp["location"], readNumericArray(comp, "parameters", params));
 }
 
-std::vector<double> ComponentBuilder::readTransformerClassicValues(const JSON& comp) {
+std::vector<double> ComponentBuilder::readTransformerClassicValues(
+	const JSON& comp,
+	const JsonParameterTable& params)
+{
 	if (!comp.contains("values") || !comp["values"].is_object()) {
 		throw std::invalid_argument("ERROR: transformer requires object 'values'.\n");
 	}
 	const JSON& v = comp["values"];
-	findNumber("R_primary", v);
-	findNumber("L_primary", v);
-	findNumber("R_secondary", v);
-	findNumber("L_secondary", v);
-	findNumber("M", v);
+	findScalar("R_primary", v, params);
+	findScalar("L_primary", v, params);
+	findScalar("R_secondary", v, params);
+	findScalar("L_secondary", v, params);
+	findScalar("M", v, params);
 	return {
-		v["R_primary"].get<double>(),
-		v["L_primary"].get<double>(),
-		v["R_secondary"].get<double>(),
-		v["L_secondary"].get<double>(),
-		v["M"].get<double>()
+		readScalarField(v, "R_primary", params),
+		readScalarField(v, "L_primary", params),
+		readScalarField(v, "R_secondary", params),
+		readScalarField(v, "L_secondary", params),
+		readScalarField(v, "M", params)
 	};
 }
 
-std::vector<double> ComponentBuilder::readTransformerRealValues(const JSON& comp) {
+std::vector<double> ComponentBuilder::readTransformerRealValues(
+	const JSON& comp,
+	const JsonParameterTable& params)
+{
 	if (!comp.contains("values") || !comp["values"].is_object()) {
 		throw std::invalid_argument("ERROR: transformer requires object 'values'.\n");
 	}
 	const JSON& v = comp["values"];
-	findNumber("R_primary", v);
-	findNumber("L_primary", v);
-	findNumber("R_secondary", v);
-	findNumber("L_secondary", v);
-	findNumber("turns_ratio", v);
-	findNumber("phase_shift", v);
+	findScalar("R_primary", v, params);
+	findScalar("L_primary", v, params);
+	findScalar("R_secondary", v, params);
+	findScalar("L_secondary", v, params);
+	findScalar("turns_ratio", v, params);
+	findScalar("phase_shift", v, params);
 	return {
-		v["R_primary"].get<double>(),
-		v["L_primary"].get<double>(),
-		v["R_secondary"].get<double>(),
-		v["L_secondary"].get<double>(),
-		v["turns_ratio"].get<double>(),
-		v["phase_shift"].get<double>()
+		readScalarField(v, "R_primary", params),
+		readScalarField(v, "L_primary", params),
+		readScalarField(v, "R_secondary", params),
+		readScalarField(v, "L_secondary", params),
+		readScalarField(v, "turns_ratio", params),
+		readScalarField(v, "phase_shift", params)
 	};
 }
 
-Transformer_real* ComponentBuilder::buildTransformerReal(const JSON& comp) {
-	return new Transformer_real(comp["id"], comp["location"], comp["pins"], readTransformerRealValues(comp));
+Transformer_real* ComponentBuilder::buildTransformerReal(const JSON& comp, const JsonParameterTable& params) {
+	return new Transformer_real(comp["id"], comp["location"], comp["pins"], readTransformerRealValues(comp, params));
 }
 
-Transformer_classic* ComponentBuilder::buildTransformerClassic(const JSON& comp) {
-	return new Transformer_classic(comp["id"], comp["location"], comp["pins"], readTransformerClassicValues(comp));
+Transformer_classic* ComponentBuilder::buildTransformerClassic(const JSON& comp, const JsonParameterTable& params) {
+	return new Transformer_classic(comp["id"], comp["location"], comp["pins"], readTransformerClassicValues(comp, params));
 }
 
-TransformerYY* ComponentBuilder::buildTransformerYY(const JSON& comp) {
-	return new TransformerYY(comp["id"], comp["location"], comp["pins"], readTransformerClassicValues(comp));
+TransformerYY* ComponentBuilder::buildTransformerYY(const JSON& comp, const JsonParameterTable& params) {
+	return new TransformerYY(comp["id"], comp["location"], comp["pins"], readTransformerClassicValues(comp, params));
 }
 
-TransformerYY_real* ComponentBuilder::buildTransformerYYReal(const JSON& comp) {
-	return new TransformerYY_real(comp["id"], comp["location"], comp["pins"], readTransformerRealValues(comp));
+TransformerYY_real* ComponentBuilder::buildTransformerYYReal(const JSON& comp, const JsonParameterTable& params) {
+	return new TransformerYY_real(comp["id"], comp["location"], comp["pins"], readTransformerRealValues(comp, params));
 }
 
-TransformerDeltaY* ComponentBuilder::buildTransformerDeltaY(const JSON& comp) {
-	return new TransformerDeltaY(comp["id"], comp["location"], comp["pins"], readTransformerClassicValues(comp));
+TransformerDeltaY* ComponentBuilder::buildTransformerDeltaY(const JSON& comp, const JsonParameterTable& params) {
+	return new TransformerDeltaY(comp["id"], comp["location"], comp["pins"], readTransformerClassicValues(comp, params));
 }
 
-TransformerDeltaY_real* ComponentBuilder::buildTransformerDeltaYReal(const JSON& comp) {
-	return new TransformerDeltaY_real(comp["id"], comp["location"], comp["pins"], readTransformerRealValues(comp));
+TransformerDeltaY_real* ComponentBuilder::buildTransformerDeltaYReal(const JSON& comp, const JsonParameterTable& params) {
+	return new TransformerDeltaY_real(comp["id"], comp["location"], comp["pins"], readTransformerRealValues(comp, params));
 }
 
-TransformerYDelta* ComponentBuilder::buildTransformerYDelta(const JSON& comp) {
-	return new TransformerYDelta(comp["id"], comp["location"], comp["pins"], readTransformerClassicValues(comp));
+TransformerYDelta* ComponentBuilder::buildTransformerYDelta(const JSON& comp, const JsonParameterTable& params) {
+	return new TransformerYDelta(comp["id"], comp["location"], comp["pins"], readTransformerClassicValues(comp, params));
 }
 
-TransformerDeltaDelta* ComponentBuilder::buildTransformerDeltaDelta(const JSON& comp) {
-	return new TransformerDeltaDelta(comp["id"], comp["location"], comp["pins"], readTransformerClassicValues(comp));
+TransformerDeltaDelta* ComponentBuilder::buildTransformerDeltaDelta(const JSON& comp, const JsonParameterTable& params) {
+	return new TransformerDeltaDelta(comp["id"], comp["location"], comp["pins"], readTransformerClassicValues(comp, params));
 }
 
 void ComponentBuilder::findNumber(const std::string& key, const JSON& j) {
@@ -421,11 +512,28 @@ void ComponentBuilder::findNumber(const std::string& key, const JSON& j) {
 	}
 }
 
+
+void ComponentBuilder::findScalar(const std::string& key, const JSON& j, const JsonParameterTable& params) {
+	if (!j.contains(key)) {
+		throw std::invalid_argument("ERROR: missing '" + key + "' in component.\n");
+	}
+	const JSON& value = j.at(key);
+	if (value.is_number()) {
+		return;
+	}
+	if (JsonParameterTable::isReference(value) && params.contains(value.get<std::string>())) {
+		return;
+	}
+	throw std::invalid_argument("ERROR: missing or invalid '" + key + "' in component.\n");
+}
+
+
 void ComponentBuilder::findNonEmptyString(const std::string& key, const JSON& j) {
 	if (!j.contains(key) || !j[key].is_string() || j[key].get<std::string>().empty()) {
 		throw std::invalid_argument("ERROR: missing, invalid or empty '" + key + "' in component.\n");
 	}
 }
+
 
 void ComponentBuilder::findNonEmptyNumericArray(const std::string& key, const JSON& j, int arraysize) {
 	if (!j.contains(key) || !j[key].is_array() || j[key].empty()) {
@@ -441,4 +549,17 @@ void ComponentBuilder::findNonEmptyNumericArray(const std::string& key, const JS
 		throw std::runtime_error(
 			"ERROR: '" + key + "' must have exactly " + std::to_string(arraysize) + " elements.");
 	}
+}
+
+
+void ComponentBuilder::findNumericOrReferenceArray(
+	const std::string& key,
+	const JSON& j,
+	const JsonParameterTable& params,
+	int arraysize)
+{
+	if (!j.contains(key)) {
+		throw std::invalid_argument("ERROR: missing '" + key + "' in component.\n");
+	}
+	params.validateNumericOrReferenceArray(j.at(key), ("'" + key + "'").c_str(), arraysize);
 }

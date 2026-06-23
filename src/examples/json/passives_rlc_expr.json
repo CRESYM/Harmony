@@ -1,0 +1,74 @@
+{
+    "simulation": {
+        "title": "passives_rlc_expr",
+        "description": "RLC network using SymEngine y_expr and named parameters (Type A + B).",
+        "output_directory": "./files",
+        "frequency_range": { "start": 10, "end": 10000, "points": 15 }
+    },
+    "parameters": {
+        "R_ohm": 10.0,
+        "L_H": 0.001,
+        "C_F": 1e-6
+    },
+    "buses": [
+        { "id": "bus1", "location": "AC1", "pins": 1, "enabled": true },
+        { "id": "bus2", "location": "AC1", "pins": 1, "enabled": true },
+        { "id": "gnd", "location": "AC1", "pins": 1, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "R1",
+            "location": "AC1",
+            "type": "resistor",
+            "pins": 1,
+            "y_expr": "1/R_ohm",
+            "connected_buses": [
+                { "bus_id": "bus1", "terminal": 1 },
+                { "bus_id": "bus2", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "L1",
+            "location": "AC1",
+            "type": "inductor",
+            "pins": 1,
+            "y_expr": "1/(s*L_H)",
+            "connected_buses": [
+                { "bus_id": "bus2", "terminal": 1 },
+                { "bus_id": "gnd", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "C1",
+            "location": "AC1",
+            "type": "capacitor",
+            "pins": 1,
+            "y_expr": "s*C_F",
+            "connected_buses": [
+                { "bus_id": "bus2", "terminal": 1 },
+                { "bus_id": "gnd", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "Zseries",
+            "location": "AC1",
+            "type": "impedance",
+            "pins": 1,
+            "z_expr": "R_ohm + s*L_H",
+            "connected_buses": [
+                { "bus_id": "bus1", "terminal": 1 },
+                { "bus_id": "gnd", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "print_connections" },
+        { "type": "y_matrix", "component_id": "R1" },
+        { "type": "y_matrix", "component_id": "L1" },
+        { "type": "y_matrix", "component_id": "Zseries" }
+    ]
+}

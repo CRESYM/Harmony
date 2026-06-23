@@ -1,0 +1,37 @@
+name: 'Build Doxygen API docs'
+description: 'Generate Harmony HTML API reference with Graphviz class diagrams (artifact only; no Pages deploy)'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install conda and doc tools
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        activate-environment: harmony
+        auto-activate-base: false
+
+    - name: Install Doxygen and Graphviz
+      shell: bash -l {0}
+      run: conda env update -n harmony -f environment.yml
+
+    - name: Verify Graphviz (class diagrams)
+      shell: bash -l {0}
+      run: |
+        doxygen --version
+        dot -V
+
+    - name: Generate Doxygen HTML
+      shell: bash -l {0}
+      run: |
+        set -euo pipefail
+        root="${{ github.workspace }}"
+        out="${root}/build/docs"
+        mkdir -p "${root}/build"
+        sed \
+          -e "s|@CMAKE_SOURCE_DIR@|${root}|g" \
+          -e "s|@DOXYGEN_OUTPUT_DIR@|${out}|g" \
+          "${root}/docs/Doxyfile.in" > "${root}/build/Doxyfile"
+        doxygen "${root}/build/Doxyfile"
+        test -f "${out}/html/index.html"
+        touch "${out}/html/.nojekyll"
+        echo "Doxygen output: ${out}/html"

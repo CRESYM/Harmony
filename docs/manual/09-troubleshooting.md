@@ -87,6 +87,13 @@ Or set `"output_directory"` in JSON simulation section.
 - Disable plots from the CLI: `Harmony --cpp stability_check --no-plot`
 - JSON plots need `"plot": true` or `"plot_result": true` in the computation block
 
+### HarmonyUI / ImGui blank window or immediate exit (Linux / macOS)
+
+- Install system OpenGL/GLFW packages (see [`../installation.md`](../installation.md)): on Ubuntu, `libgl1-mesa-dev`, `libx11-dev`, `libglfw3-dev`, and `libglew-dev`.
+- Run from a local desktop session with a GPU/display (`echo $DISPLAY` set on Linux; not SSH without X forwarding).
+- Rebuild after updating Harmony — Linux/macOS need OpenGL 3.x context hints and `glewInit()` on non-Apple platforms; macOS must not use the GLEW ImGui loader with a core-profile context.
+- Use `--no-plot` on headless CI machines; GitHub Actions only **compile** HarmonyUI, they do not run the GUI.
+
 ### No charts in HarmonyUI
 
 - Check **Plot** on the Launcher tab before clicking **Run** (default is off)

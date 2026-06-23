@@ -1,0 +1,90 @@
+{
+    "simulation": {
+        "title": "mmc_named_params",
+        "description": "MMC example (example_MMC.cpp) with named parameters. controller_params order: pll, dc_voltage, active_power, ac_voltage, reactive_power, energy, zcc, occ, ccc, droop. Disabled controllers: pll, dc_voltage, ac_voltage, reactive_power, droop.",
+        "output_directory": "./files",
+        "frequency_range": { "start": 1, "end": 1000, "points": 15 }
+    },
+    "parameters": {
+        "omega_0": 314.1592653589793,
+        "P_nom": 100000000.0,
+        "Q_nom": 0.0,
+        "theta_nom": 0.0,
+        "V_ac": 100000.0,
+        "P_dc": 100000000.0,
+        "V_dc": 200000.0,
+        "L_arm": 0.05,
+        "R_arm": 1.07,
+        "C_arm": 0.01,
+        "N_sm": 400.0,
+        "L_reactor": 0.06,
+        "R_reactor": 0.535,
+        "t_delay": 0.00015,
+        "enable_off": 0.0,
+        "enable_on": 1.0,
+        "pi_type": 0.0,
+        "n_outputs_1": 1.0,
+        "n_outputs_2": 2.0,
+        "ref_zero": 0.0,
+        "pll_enable": 0.0,
+        "dc_voltage_enable": 0.0,
+        "active_power_enable": 1.0,
+        "ac_voltage_enable": 0.0,
+        "reactive_power_enable": 0.0,
+        "energy_enable": 1.0,
+        "zcc_enable": 1.0,
+        "occ_enable": 1.0,
+        "ccc_enable": 1.0,
+        "droop_enable": 0.0,
+        "pac_kp": 6.6667e-07,
+        "pac_ki": 0.00033333,
+        "pac_ref": 100000000.0,
+        "energy_kp": 120.0,
+        "energy_ki": 400.0,
+        "zcc_kp": 19.93,
+        "zcc_ki": 4500.0,
+        "zcc_ref": 166.67,
+        "occ_kp": 117.93,
+        "occ_ki": 85000.0,
+        "occ_ref_d": 666.67,
+        "occ_ref_q": 0.0,
+        "ccc_kp": 19.93,
+        "ccc_ki": 4500.0
+    },
+    "buses": [
+        { "id": "ac_bus", "location": "AC1", "pins": 3, "enabled": true },
+        { "id": "dc_bus", "location": "DC1", "pins": 2, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "MMC1",
+            "location": "AC1_DC1",
+            "type": "mmc",
+            "converter_params": [
+                "omega_0", "P_nom", "Q_nom", "theta_nom", "V_ac", "P_dc", "V_dc",
+                "L_arm", "R_arm", "C_arm", "N_sm", "L_reactor", "R_reactor", "t_delay"
+            ],
+            "controller_params": [
+                "pll_enable",
+                "dc_voltage_enable",
+                "active_power_enable", "pi_type", "pac_kp", "pac_ki", "n_outputs_1", "pac_ref",
+                "ac_voltage_enable",
+                "reactive_power_enable",
+                "energy_enable", "pi_type", "energy_kp", "energy_ki", "n_outputs_1", "ref_zero",
+                "zcc_enable", "pi_type", "zcc_kp", "zcc_ki", "n_outputs_1", "zcc_ref",
+                "occ_enable", "pi_type", "occ_kp", "occ_ki", "n_outputs_2", "occ_ref_d", "occ_ref_q",
+                "ccc_enable", "pi_type", "ccc_kp", "ccc_ki", "n_outputs_2", "ref_zero", "ref_zero",
+                "droop_enable"
+            ],
+            "connected_buses": [
+                { "bus_id": "ac_bus", "terminal": 1 },
+                { "bus_id": "dc_bus", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "print_connections" },
+        { "type": "y_matrix", "component_id": "MMC1" }
+    ]
+}

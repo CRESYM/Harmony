@@ -436,7 +436,7 @@ cmake --build . --target harmony-docs
 
 
 
-Open `build/docs/html/index.html`. Requires Doxygen and optionally Graphviz — both are listed in [`environment.yml`](../../environment.yml). See [`../doxygen/README.md`](../doxygen/README.md).
+Open `build/docs/html/index.html`. Requires Doxygen and Graphviz (class diagrams) — both are in [`environment.yml`](../../environment.yml). See [`../doxygen/README.md`](../doxygen/README.md) for CI builds and how to copy HTML into your separate GitHub Pages project.
 
 
 

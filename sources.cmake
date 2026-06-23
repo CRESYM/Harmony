@@ -208,6 +208,7 @@ set(Solver_Helper_Functions_Source_Files
     src/Solver/Helper_Functions/Differential_equations.cpp
     src/Solver/Helper_Functions/Symbolic_functions.cpp
     src/Solver/Helper_Functions/Visualization.cpp
+    src/ui/harmony_glfw_setup.cpp
     src/Solver/Helper_Functions/Writer.cpp
     src/Solver/Helper_Functions/DQsym_Conversion_Functions.cpp
 )
@@ -234,12 +235,16 @@ set(Source_Files
 set(Json_Source_Files
     src/json/component_builder.cpp
     src/json/computation_runner.cpp
+    src/json/json_parameters.cpp
+    src/json/json_expression.cpp
     src/json/json_validator.cpp
     src/json/simulation_builder.cpp
 )
 set(Json_Header_Files
     src/json/component_builder.h
     src/json/computation_runner.h
+    src/json/json_parameters.h
+    src/json/json_expression.h
     src/json/json_validator.h
     src/json/simulation_builder.h
 )

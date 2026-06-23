@@ -5,6 +5,7 @@
 #include "Constants.h"
 #include "Visualization.h"
 #include "ui/harmony_banner_gui.h"
+#include "ui/harmony_glfw_setup.h"
 
 // stb_image_write — single-header PNG/BMP writer (no external lib required).
 // Drop stb_image_write.h into your source tree from https://github.com/nothings/stb
@@ -224,11 +225,8 @@ static void init_gui()
 
 #ifdef __APPLE__
     glsl_version = "#version 150";
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
+    harmonyConfigureGlfwOpenGLHints();
 
     int vizWidth = 1500;
     int vizHeight = 900;
@@ -244,6 +242,9 @@ static void init_gui()
         throw std::runtime_error("Failed to create window");
 
     glfwMakeContextCurrent(g_window);
+    if (!harmonyInitOpenGLLoader()) {
+        throw std::runtime_error("OpenGL loader init failed");
+    }
     glfwSwapInterval(1);
 
     IMGUI_CHECKVERSION();

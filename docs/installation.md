@@ -93,10 +93,10 @@ cd build
 
 # 4.3 Generate the VS Solution or makefile
 #     CMake will look for CMakeLists.txt in the parent directory of the build folder (indicated by ..)
-#     Specify the path yo your Gurobi installation, for example:
-#     - Windows: -DGUROBI_PATH="C:\gurobi1202\win64
-#     - Linux: -DGUROBI_PATH="/opt/gurobi1301/linux64"
-#     - MacOS: -DGUROBI_PATH="/Library/gurobi1200/macos_universal2"
+#     Specify the path to your Gurobi installation, for example:
+#     Windows:  cmake .. -DGUROBI_PATH="C:/gurobi1202/win64"
+#     Linux:    cmake .. -DGUROBI_PATH="/opt/gurobi1301/linux64"
+#     macOS:    cmake .. -DGUROBI_PATH="/Library/gurobi1200/macos_universal2"
 
 cmake .. -DGUROBI_PATH="gurobi_installation_dir_config"
 ```
@@ -132,18 +132,18 @@ cd ..    # repository root (from build/)
 # Build HarmonyUI (optional; included in a full build)
 cmake --build build --config Release --target HarmonyUI
 
-# Windows — graphical launcher
+# Windows (graphical launcher)
 build\Release\HarmonyUI.exe
 
-# Windows — CLI
+# Windows (CLI)
 build\Release\Harmony.exe --help
 build\Release\Harmony.exe --cpp stability_check
 build\Release\Harmony.exe --json src/examples/json/stability_check.json
 
-# Linux / macOS — graphical launcher
+# Linux / macOS (graphical launcher)
 ./build/HarmonyUI
 
-# Linux / macOS — CLI
+# Linux / macOS (CLI)
 ./build/Harmony --help
 ./build/Harmony --cpp stability_check
 ./build/Harmony --json src/examples/json/stability_check.json

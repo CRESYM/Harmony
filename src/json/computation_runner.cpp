@@ -53,7 +53,7 @@ void runYMatrix(const JSON& calc, Network& network, const JSON& defaultRange, co
 			continue;
 		}
 		std::cout << "Computing Y-matrix for '" << id << "' ("
-			<< range.start << "–" << range.end << " Hz, "
+			<< range.start << "-" << range.end << " Hz, "
 			<< range.points << " points)\n";
 		elem->writeFile(range.start, range.end, range.points);
 		if (jsonPlotRequested(calc, plottingEnabled)) {

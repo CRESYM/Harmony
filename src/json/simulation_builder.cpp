@@ -6,6 +6,7 @@
 
 #include "computation_runner.h"
 #include "json_validator.h"
+#include "json_parameters.h"
 
 #include "../Bus.h"
 
@@ -16,6 +17,11 @@ void SimulationBuilder::buildFromJSON(const JSON& sim, Network& network) {
 	JsonValidator::validateRoot(sim);
 	simulationConfig_ = sim["simulation"];
 
+	JsonParameterTable rootParams;
+	if (sim.contains("parameters")) {
+		rootParams.mergeFromObject(sim.at("parameters"), "parameters");
+	}
+
 	buildBusesFromJSON(sim, network);
 
 	unsigned int i = 0;
@@ -25,7 +31,14 @@ void SimulationBuilder::buildFromJSON(const JSON& sim, Network& network) {
 			continue;
 		}
 
-		auto elem = ComponentBuilder::buildFromJSON(comp, i);
+		JsonParameterTable compParams = rootParams;
+		if (comp.contains("local_parameters")) {
+			compParams.mergeFromObject(
+				comp.at("local_parameters"),
+				("local_parameters of component '" + comp.at("id").get<std::string>() + "'").c_str());
+		}
+
+		auto elem = ComponentBuilder::buildFromJSON(comp, i, compParams);
 		network.addElement(comp["id"].get<std::string>(), std::move(elem));
 		++i;
 	}
