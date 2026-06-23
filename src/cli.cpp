@@ -581,10 +581,15 @@ int runJsonSimulation(
 	network.printElements();
 
 	try {
-		builder.runComputations(config, network, plot);
+		const int failures = builder.runComputationsWithStatus(config, network, plot);
+		if (failures > 0) {
+			std::cerr << failures << " computation step(s) failed.\n";
+			return EXIT_FAILURE;
+		}
 	}
 	catch (const std::exception& e) {
-		std::cerr << "[WARN] Computation step failed: " << e.what() << "\n";
+		std::cerr << "Computation failed: " << e.what() << "\n";
+		return EXIT_FAILURE;
 	}
 
 	if (verbose) {

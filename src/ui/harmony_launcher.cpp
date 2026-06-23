@@ -282,7 +282,7 @@ void startRun(LauncherState& state) {
 					resolved = resolveJsonPath(jsonPath.generic_string(), searchPaths);
 				}
 				if (!std::filesystem::exists(resolved)) {
-					appendLogLine(state, "JSON file not found: " + jsonPath.generic_string());
+					printJsonNotFoundHelp(jsonPath.generic_string(), searchPaths);
 					exitCode = EXIT_FAILURE;
 				}
 				else {
@@ -298,11 +298,13 @@ void startRun(LauncherState& state) {
 		}
 
 		if (plot && visualization_has_tabs()) {
-			appendLogLine(state, "Plots ready — open the Plots tab.");
+			appendLogLine(state, "Plots ready - open the Plots tab.");
 			state.switchToPlotsTab = true;
 		}
 		else if (plot) {
-			appendLogLine(state, "Plot was checked but no visualization tabs were created.");
+			appendLogLine(state,
+				"Plot was checked but no visualization tabs were created "
+				"(JSON needs \"plot\": true on the computation step).");
 		}
 
 		appendLogLine(state, exitCode == EXIT_SUCCESS ? "Finished successfully." : "Finished with errors.");
@@ -318,7 +320,7 @@ void drawLauncherContent(LauncherState& state) {
 		ImGui::TextDisabled("Repo: %s", root->generic_string().c_str());
 	}
 	else {
-		ImGui::TextDisabled("Repo: (not detected — use full paths or run from repo root)");
+		ImGui::TextDisabled("Repo: (not detected - use full paths or run from repo root)");
 	}
 
 	ImGui::Separator();
@@ -342,7 +344,7 @@ void drawLauncherContent(LauncherState& state) {
 
 	ImGui::Checkbox("Plot", &state.plot);
 	ImGui::SameLine();
-	ImGui::TextDisabled("(visualization only when checked)");
+	ImGui::TextDisabled("(requires Plot checked and JSON \"plot\": true)");
 	ImGui::Checkbox("Verbose log", &state.verbose);
 
 	ImGui::InputText("PNG output directory", state.outputDir, IM_ARRAYSIZE(state.outputDir));
@@ -355,6 +357,11 @@ void drawLauncherContent(LauncherState& state) {
 	if (ImGui::Button("Run")) {
 		startRun(state);
 	}
+	if (state.running.load()) {
+		ImGui::EndDisabled();
+		ImGui::SameLine();
+		ImGui::Text("Running...");
+	}
 	ImGui::SameLine();
 	if (ImGui::Button("Validate JSON") && state.sourceKind == SourceKind::Json) {
 		clearLog(state);
@@ -362,24 +369,27 @@ void drawLauncherContent(LauncherState& state) {
 		if (!std::filesystem::exists(resolved)) {
 			resolved = resolveJsonPath(state.jsonPathInput, state.searchPaths);
 		}
-		std::string error;
-		if (validateJsonFile(resolved, error)) {
-			appendLogLine(state, "Validation OK: " + resolved.generic_string());
+		if (!std::filesystem::exists(resolved)) {
+			StreamCapture capture([&state](const std::string& line) {
+				appendLogLine(state, line);
+			});
+			printJsonNotFoundHelp(state.jsonPathInput, state.searchPaths);
 		}
 		else {
-			appendLogLine(state, "Validation failed: " + error);
+			std::string error;
+			if (validateJsonFile(resolved, error)) {
+				appendLogLine(state, "Validation OK: " + resolved.generic_string());
+			}
+			else {
+				appendLogLine(state, "Validation failed: " + error);
+			}
 		}
 	}
-	if (state.running.load()) {
-		ImGui::EndDisabled();
-		ImGui::SameLine();
-		ImGui::Text("Running…");
-	}
-	else if (state.lastExitCode.load() != 0) {
+	if (!state.running.load() && state.lastExitCode.load() != 0) {
 		ImGui::SameLine();
 		ImGui::TextColored(ImVec4(1.f, 0.45f, 0.45f, 1.f), "Last run failed (%d)", state.lastExitCode.load());
 	}
-	else if (!state.logText.empty()) {
+	if (!state.running.load() && !state.logText.empty() && state.lastExitCode.load() == 0) {
 		ImGui::SameLine();
 		ImGui::TextColored(ImVec4(0.45f, 1.f, 0.55f, 1.f), "Last run OK");
 	}
@@ -388,7 +398,8 @@ void drawLauncherContent(LauncherState& state) {
 void drawPlotsContent(LauncherState& state) {
 	if (!visualization_has_tabs()) {
 		ImGui::TextWrapped(
-			"Enable Plot on the Launcher tab and run a case that produces charts.");
+			"Enable Plot on the Launcher tab, set \"plot\": true in the JSON computation, "
+			"and run a case that produces charts.");
 		return;
 	}
 

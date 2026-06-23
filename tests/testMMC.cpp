@@ -12,18 +12,16 @@ TEST_F (TestMMC, TestYMatrix) {
 	double f = 50;
 	double omega = 2 * M_PI * f; // Nominal frequency in rad/s
 	double Vdc = 200e3; // DC voltage in Volts
-	std::vector<double> converter_params = { omega, 100.0e6, 0, 0.0, 100.0e3, 100e6, Vdc, 50e-3, 1.07, 0.01, 400, 0.06, 0.535, 0.00 };
+	std::vector<double> converter_params = { omega, 100.0e6, 0, 0.0, 100.0e3, 100e6, Vdc, 50e-3, 1.07, 0.01, 400, 0.06, 0.535, 150e-6 };
 	std::vector<double> controller_params = {
-		0, // PLL controller parameters
-		0, // DC voltage controller parameters
-		1, 0, 6.6667e-07, 3.3333e-04, 1, 100e6, // active power
-		0, // AC voltage
-		1, 0, 6.6667e-07, 3.3333e-04, 1, 0, // reactive power
-		1, 0, 120, 400, 1, 0, // energy controller parameters 
-		1, 0, 19.93, 4500, 1, 166.67, // zcc controller parameters 
-		1, 0, 117.93, 8.5e4, 2, 666.67, 0, // occ controller parameters
-		1, 0, 19.93, 4500, 2, 0, 0, // ccc controller parameters
-		0 // droop control
+		0, 0,
+		1, 0, 6.6667e-07, 3.3333e-04, 1, 100e6,
+		0, 0,
+		1, 0, 120, 400, 1, 0,
+		1, 0, 19.93, 4500, 1, 166.67,
+		1, 0, 117.93, 8.5e4, 2, 666.67, 0,
+		1, 0, 19.93, 4500, 2, 0, 0,
+		0
 	};
 
 

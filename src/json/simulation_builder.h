@@ -39,6 +39,9 @@ public:
 	 */
 	void runComputations(const JSON& simJSON, Network& network, bool plottingEnabled = true) const;
 
+	/** @return Number of failed computation steps (0 if none or no computations section). */
+	int runComputationsWithStatus(const JSON& simJSON, Network& network, bool plottingEnabled = true) const;
+
 	/** @brief Return the parsed `simulation` configuration object. */
 	const JSON& getSimulationConfig() const { return simulationConfig_; }
 

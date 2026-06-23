@@ -17,7 +17,8 @@ public:
 
 	explicit ComputationRunner(bool plottingEnabled = true);
 
-	void runAll(const JSON& sim, Network& network, const JSON& simulationConfig) const;
+	/** @return Number of computation steps that failed or used an unknown type. */
+	int runAll(const JSON& sim, Network& network, const JSON& simulationConfig) const;
 
 private:
 	bool plottingEnabled_;

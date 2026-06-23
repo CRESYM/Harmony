@@ -1,0 +1,41 @@
+name: 'Run Harmony tests (ctest)'
+description: 'Run ctest with Gurobi on PATH and failure output'
+inputs:
+  gurobi_path:
+    description: 'Path to the Gurobi installation'
+    required: true
+  ctest_args:
+    description: 'Extra ctest arguments (e.g. -E TestExamples or -R TestExamples)'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run ctest
+      shell: bash -l {0}
+      run: |
+        set -euo pipefail
+        GUROBI="${{ inputs.gurobi_path }}"
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          GUROBI_BIN="${GUROBI}\\bin"
+          if command -v cygpath >/dev/null 2>&1; then
+            GUROBI_BIN=$(cygpath "$GUROBI/bin")
+          else
+            GUROBI_BIN=$(echo "$GUROBI" | sed 's|\\|/|g;s|^\([A-Za-z]\):|/\L\1|')/bin
+          fi
+          export PATH="${GUROBI_BIN}:$PATH"
+          cd tests/build
+          ctest -C Release --output-on-failure -j1 ${{ inputs.ctest_args }}
+        elif [ "${{ runner.os }}" = "Linux" ]; then
+          export PATH="${GUROBI}/bin:$PATH"
+          export LD_LIBRARY_PATH="${GUROBI}/lib:${LD_LIBRARY_PATH:-}"
+          export GRB_LICENSE_FILE=/opt/gurobi/gurobi.lic
+          cd tests/build
+          ctest --output-on-failure -j1 ${{ inputs.ctest_args }}
+        else
+          export PATH="${GUROBI}/bin:$PATH"
+          export DYLD_LIBRARY_PATH="${GUROBI}/lib:${DYLD_LIBRARY_PATH:-}"
+          export GRB_LICENSE_FILE=/Library/gurobi/gurobi.lic
+          cd tests/build
+          ctest --output-on-failure -j1 ${{ inputs.ctest_args }}
+        fi

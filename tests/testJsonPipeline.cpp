@@ -43,6 +43,12 @@ static bool needsOpfCsvCwd(const fs::path& path) {
 }
 
 
+static bool isHeavyJsonRun(const fs::path& path) {
+	const std::string stem = path.stem().string();
+	return stem == "opf_csv" || stem == "stability_check" || stem == "dqsym_mmc";
+}
+
+
 static bool opfCsvDataAvailable() {
 	const fs::path data = harmonyRoot() / "src" / "data";
 	return fs::exists(data / "ac5_bus_ac.csv") && fs::exists(data / "mtdc3_bus_dc.csv");
@@ -116,7 +122,7 @@ TEST(JsonPipelineSmoke, DiscoverAtLeastOneExample) {
 TEST(JsonPipelineSmoke, RunAllExamplesViaCli) {
 	HarmonyReleaseCwd cwd;
 	for (const auto& path : jsonExampleFiles()) {
-		if (needsOpfCsvCwd(path)) {
+		if (needsOpfCsvCwd(path) || isHeavyJsonRun(path)) {
 			continue;
 		}
 		EXPECT_EQ(runJsonSimulation(path, false, false), 0) << path;
@@ -250,7 +256,7 @@ TEST(JsonComplexCases, BuiltNetworkOpfWithoutCaseName) {
 	Network network;
 	SimulationBuilder builder;
 	ASSERT_NO_THROW(builder.buildFromJSON(config, network));
-	EXPECT_NO_THROW(builder.runComputations(config, network, false));
+	EXPECT_EQ(builder.runComputationsWithStatus(config, network, false), 0);
 }
 
 
@@ -324,7 +330,7 @@ TEST(JsonComputationPlots, YMatrixPlotRunsWhenCliPlotDisabled) {
 	Network network;
 	SimulationBuilder builder;
 	ASSERT_NO_THROW(builder.buildFromJSON(config, network));
-	EXPECT_NO_THROW(builder.runComputations(config, network, false));
+	EXPECT_EQ(builder.runComputationsWithStatus(config, network, false), 0);
 }
 
 

@@ -67,8 +67,10 @@ void example_MMC(bool plotting_enabled /*=true*/) {
 	std::cout << "Relative error B: " << err2 << "\n";  // should be < 1e-6
 	std::cout << "Relative error C: " << err3 << "\n";  // should be < 1e-6
 
-	cout << "Press enter to continue...\n";
-	cin.get();	
+	if (plotting_enabled) {
+		cout << "Press enter to continue...\n";
+		cin.get();
+	}
 
 	//mmc1->printElementValues();  // Print MMC parameters, together with the reference values for the controllers
 

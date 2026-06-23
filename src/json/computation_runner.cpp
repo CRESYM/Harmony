@@ -251,13 +251,13 @@ void ComputationRunner::registerBuiltins() {
 }
 
 
-void ComputationRunner::runAll(
+int ComputationRunner::runAll(
 	const JSON& sim,
 	Network& network,
 	const JSON& simulationConfig) const
 {
 	if (!sim.contains("computations") || !sim.at("computations").is_array()) {
-		return;
+		return 0;
 	}
 
 	const std::string outputDir = simulationConfig.value("output_directory", "./files");
@@ -265,9 +265,11 @@ void ComputationRunner::runAll(
 		std::filesystem::create_directories(outputDir);
 	}
 
+	int failures = 0;
 	for (const auto& calc : sim.at("computations")) {
 		if (!calc.contains("type")) {
 			std::cerr << "[WARN] Skipping computation without 'type'.\n";
+			++failures;
 			continue;
 		}
 
@@ -276,6 +278,7 @@ void ComputationRunner::runAll(
 		if (it == handlers_.end()) {
 			std::cerr << "[WARN] Unknown computation type '" << type
 				<< "'. Register handlers in ComputationRunner.\n";
+			++failures;
 			continue;
 		}
 
@@ -283,7 +286,9 @@ void ComputationRunner::runAll(
 			it->second(calc, network, simulationConfig);
 		}
 		catch (const std::exception& e) {
-			std::cerr << "[WARN] Computation '" << type << "' failed: " << e.what() << "\n";
+			std::cerr << "[WARN] Computation '" << type << "' failed: " << e.what() << '\n';
+			++failures;
 		}
 	}
+	return failures;
 }

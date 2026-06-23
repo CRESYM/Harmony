@@ -140,6 +140,15 @@ void SimulationBuilder::runComputations(
 	Network& network,
 	const bool plottingEnabled) const
 {
+	(void)runComputationsWithStatus(sim, network, plottingEnabled);
+}
+
+
+int SimulationBuilder::runComputationsWithStatus(
+	const JSON& sim,
+	Network& network,
+	const bool plottingEnabled) const
+{
 	ComputationRunner runner(plottingEnabled);
-	runner.runAll(sim, network, simulationConfig_);
+	return runner.runAll(sim, network, simulationConfig_);
 }

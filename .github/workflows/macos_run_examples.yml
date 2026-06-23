@@ -45,9 +45,8 @@ jobs:
           cmake .. -DGUROBI_PATH="/Library/gurobi1301/macos_universal2"
           cmake --build . --config Release -j4
 
-      # Run the tests (all except examples)
       - name: Run the tests (examples only)
-        shell: bash -l {0}
-        run: |
-          cd tests/build
-          ctest -R TestExamples -j4
+        uses: ./.github/actions/run-ctest
+        with:
+          gurobi_path: /Library/gurobi1301/macos_universal2
+          ctest_args: '-R TestExamples'

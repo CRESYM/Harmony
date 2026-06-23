@@ -94,15 +94,6 @@ function (link_implot TARGET_NAME)
             ${TARGET_NAME}
             PRIVATE
             ${IMGUI_BACKEND_SOURCES})
-    elseif(UNIX AND NOT APPLE)
-        message(STATUS "Linux detected: Adding ImGui backend source files to build")
-        list(APPEND IMGUI_BACKEND_SOURCES 
-            ${IMGUI_BACKEND_DIR}/imgui_impl_glfw.cpp
-            ${IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp)
-        target_sources(
-            ${TARGET_NAME}
-            PRIVATE
-            ${IMGUI_BACKEND_SOURCES})
     endif()
 
     # Tell the ImGui OpenGL backend how to load GL entry points.
