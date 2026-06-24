@@ -169,8 +169,8 @@ void example_OPF_1(bool plotting_enabled /*=true*/) {
     Generator* gen1_ac1 = new Generator("AC1GEN01", "AC1", 3, 345.0e3 * 1.000, gen1_ac1_params);
     net.connectElementToBus(gen1_ac1, 1, bus1_ac1);
     map<string, double> gen1_ac1_info = {
-        {"Pmax", 250.0}, {"Pmin", 10.0},
-        {"Qmax", 300.0}, {"Qmin", -300.0},
+        {"Pmax", 500.0}, {"Pmin", 0.0},
+        {"Qmax", 500.0}, {"Qmin", -500.0},
         {"c2", 0.110000}, {"c1", 5.0},
         {"c0", 150.0}, {"Ref", 1}, {"Vg", 345.0 * 1.000}
     };
@@ -181,8 +181,8 @@ void example_OPF_1(bool plotting_enabled /*=true*/) {
     Generator* gen2_ac1 = new Generator("AC1GEN02", "AC1", 3, 345.0e3 * 1.000, gen2_ac1_params);
     net.connectElementToBus(gen2_ac1, 1, bus2_ac1);
     map<string, double> gen2_ac1_info = {
-        {"Pmax", 300.0}, {"Pmin", 10.0},
-        {"Qmax", 300.0}, {"Qmin", -300.0},
+        {"Pmax", 500.0}, {"Pmin", 0.0},
+        {"Qmax", 500.0}, {"Qmin", -500.0},
         {"c2", 0.085000}, {"c1", 1.2},
         {"c0", 600.0}, {"Vg", 345.0 * 1.000}
     };
@@ -193,8 +193,8 @@ void example_OPF_1(bool plotting_enabled /*=true*/) {
     Generator* gen3_ac1 = new Generator("AC1GEN03", "AC1", 3, 345.0e3 * 1.000, gen3_ac1_params);
     net.connectElementToBus(gen3_ac1, 1, bus3_ac1);
     map<string, double> gen3_ac1_info = {
-        {"Pmax", 270.0}, {"Pmin", 10.0},
-        {"Qmax", 300.0}, {"Qmin", -300.0},
+        {"Pmax", 500.0}, {"Pmin", 0.0},
+        {"Qmax", 500.0}, {"Qmin", -500.0},
         {"c2", 0.122500}, {"c1", 1.0},
         {"c0", 335.0}, {"Vg", 345.0 * 1.000}
     };
@@ -209,7 +209,7 @@ void example_OPF_1(bool plotting_enabled /*=true*/) {
     net.connectElementToBus(gen1_ac2, 1, bus1_ac2);
     map<string, double> gen1_ac2_info = {
         {"Pmax", 332.4}, {"Pmin", 0.0},
-        {"Qmax", 10.0}, {"Qmin", 0.0},
+        {"Qmax", 300.0}, {"Qmin", -300.0},
         {"c2", 0.043029}, {"c1", 20.0},
         {"c0", 0.0}, {"Ref", 1}, {"Vg", 345.0 * 1.060}
     };
@@ -220,8 +220,8 @@ void example_OPF_1(bool plotting_enabled /*=true*/) {
     Generator* gen2_ac2 = new Generator("AC2GEN02", "AC2", 3, 345.0e3 * 1.045, gen2_ac2_params);
     net.connectElementToBus(gen2_ac2, 1, bus2_ac2);
     map<string, double> gen2_ac2_info = {
-        {"Pmax", 140.0}, {"Pmin", 0.0},
-        {"Qmax", 50.0}, {"Qmin", -40.0},
+        {"Pmax", 300.0}, {"Pmin", 0.0},
+        {"Qmax", 300.0}, {"Qmin", -300.0},
         {"c2", 0.250000}, {"c1", 20.0},
         {"c0", 0.0}, {"Vg", 345.0 * 1.045}
     };
@@ -232,8 +232,8 @@ void example_OPF_1(bool plotting_enabled /*=true*/) {
     Generator* gen3_ac2 = new Generator("AC2GEN03", "AC2", 3, 345.0e3 * 1.010, gen3_ac2_params);
     net.connectElementToBus(gen3_ac2, 1, bus3_ac2);
     map<string, double> gen3_ac2_info = {
-        {"Pmax", 100.0}, {"Pmin", 0.0},
-        {"Qmax", 40.0}, {"Qmin", 0.0},
+        {"Pmax", 300.0}, {"Pmin", 0.0},
+        {"Qmax", 300.0}, {"Qmin", -300.0},
         {"c2", 0.010000}, {"c1", 40.0},
         {"c0", 0.0}, {"Vg", 345.0 * 1.010}
     };
@@ -244,8 +244,8 @@ void example_OPF_1(bool plotting_enabled /*=true*/) {
     Generator* gen4_ac2 = new Generator("AC2GEN04", "AC2", 3, 345.0e3 * 1.070, gen4_ac2_params);
     net.connectElementToBus(gen4_ac2, 1, bus6_ac2);
     map<string, double> gen4_ac2_info = {
-        {"Pmax", 100.0}, {"Pmin", 0.0},
-        {"Qmax", 24.0}, {"Qmin", -6.0},
+        {"Pmax", 300.0}, {"Pmin", 0.0},
+        {"Qmax", 300.0}, {"Qmin", -300.0},
         {"c2", 0.010000}, {"c1", 40.0},
         {"c0", 0.0}, {"Vg", 345.0 * 1.070}
     };
@@ -256,8 +256,8 @@ void example_OPF_1(bool plotting_enabled /*=true*/) {
     Generator* gen5_ac2 = new Generator("AC2GEN05", "AC2", 3, 345.0e3 * 1.090, gen5_ac2_params);
     net.connectElementToBus(gen5_ac2, 1, bus8_ac2);
     map<string, double> gen5_ac2_info = {
-        {"Pmax", 100.0}, {"Pmin", 0.0},
-        {"Qmax", 24.0}, {"Qmin", -6.0},
+        {"Pmax", 300.0}, {"Pmin", 0.0},
+        {"Qmax", 300.0}, {"Qmin", -300.0},
         {"c2", 0.010000}, {"c1", 40.0},
         {"c0", 0.0}, {"Vg", 345.0 * 1.090}
     };
@@ -531,90 +531,89 @@ void example_OPF_1(bool plotting_enabled /*=true*/) {
     net.connectElementToBus(br3_dc, 2, bus3_dc);
 
     ///* ------- 2.3 Add MMC Converters ----- */
+    const double omega_nom = 2 * M_PI * 50;
+    const double v_ac = 345.0 * 1e3;
+    const double v_dc = 500.0 * 1e3;
+    const double p_rect = 60.0 * 1e6;
+    const double q_rect = 40.0 * 1e6;
+    const double p_inv = 35.0 * 1e6;
+    const double q_inv = 5.0 * 1e6;
 
- // MMC 1: DC bus 1 - AC1 bus 2
-    MMC* mmc1 = new MMC(
-        "MMC1",
-        "AC1",
-        1000.0,
-        -60.0 * 1e6,          // P in W
-        -40.0 * 1e6,          // Q in Var
-        0.0,
-        345.0 * 1e3,          // AC voltage in V
-        60.0 * 1e6,           // DC power in W
-        500.0 * 1e3,          // DC voltage in V
-        0.05,
-        1.07,
-        0.01,
-        400,
-        0.0005,
-        0.0001,
-        0.00015
-    );
+    // MMC1 — rectifier (DC bus 1 ↔ AC1 bus 2): DC P + AC Q control
+    std::vector<double> converter_params1 = {
+        omega_nom, -p_rect, -q_rect, 0.0, v_ac, p_rect, v_dc,
+        0.05, 1.07, 0.01, 400, 0.0005, 0.0001, 0.0
+    };
+    std::vector<double> controller_params1 = {
+        1, 0, 0.001103374, 0.00073, 1, 0, // PLL
+        0, // dc_voltage
+        1, 0, 6.6667e-07, 3.3333e-04, 1, p_rect, // active_power (DC P)
+        0, // ac_voltage
+        1, 0, 6.6667e-07, 3.3333e-04, 1, -q_rect, // reactive_power (AC Q)
+        1, 0, 120, 400, 1, 0, // energy
+        1, 0, 19.93, 4500, 1, 200.0, // zcc
+        1, 0, 117.93, 8.5e4, 2, 800.0, 0, // occ
+        1, 0, 19.93, 4500, 2, 0, 0, // ccc
+        0 // droop
+    };
+    MMC* mmc1 = new MMC("MMC1", "AC1", converter_params1, controller_params1);
     net.connectElementToBus(mmc1, 1, bus2_ac1);
     net.connectElementToBus(mmc1, 2, bus1_dc);
-
     map<string, double> mmc1_info = {
         {"type_dc", 1},
-        {"type_ac", 1}
+        {"type_ac", 1},
     };
     mmc1->setOPFInfo(mmc1_info);
 
-
-    // MMC 2: DC bus 2 - AC1 bus 5
-    MMC* mmc2 = new MMC(
-        "MMC2",
-        "AC1",
-        1000.0,
-        0.0 * 1e6,            // P in W
-        0.0 * 1e6,            // Q in Var
-        0.0,
-        345.0 * 1e3,          // AC voltage in V
-        0.0 * 1e6,            // DC power in W
-        500.0 * 1e3,          // DC voltage in V
-        0.05,
-        1.07,
-        0.01,
-        400,
-        0.0005,
-        0.0001,
-        0.00015
-    );
+    // MMC2 — DC slack (DC bus 2 ↔ AC1 bus 5): Vdc + AC voltage control
+    std::vector<double> converter_params2 = {
+        omega_nom, 0.0, 0.0, 0.0, v_ac, 0.0, v_dc,
+        0.05, 1.07, 0.01, 400, 0.0005, 0.0001, 0.0
+    };
+    std::vector<double> controller_params2 = {
+        1, 0, 0.001103374, 0.00073, 1, 0, // PLL
+        1, 0, 2, 82, 2, 0, v_dc, // dc_voltage
+        0, // active_power
+        0, // ac_voltage
+        1, 0, 6.6667e-07, 3.3333e-04, 1, 0.0, // reactive_power (OPF AC-V via type_ac=2)
+        1, 0, 120, 400, 1, 0, // energy
+        1, 0, 19.93, 4500, 1, 0.0, // zcc
+        1, 0, 117.93, 8.5e4, 2, 0.0, 0, // occ
+        1, 0, 19.93, 4500, 2, 0, 0, // ccc
+        0 // droop
+    };
+    MMC* mmc2 = new MMC("MMC2", "AC1", converter_params2, controller_params2);
     net.connectElementToBus(mmc2, 1, bus5_ac1);
     net.connectElementToBus(mmc2, 2, bus2_dc);
-
     map<string, double> mmc2_info = {
         {"type_dc", 2},
-        {"type_ac", 2}
+        {"type_ac", 2},
     };
     mmc2->setOPFInfo(mmc2_info);
 
-
-    // MMC 3: DC bus 3 - AC2 bus 5
-    MMC* mmc3 = new MMC(
-        "MMC3",
-        "AC2",
-        1000.0,
-        35.0 * 1e6,           // P in W
-        5.0 * 1e6,            // Q in Var
-        0.0,
-        345.0 * 1e3,          // AC voltage in V
-        -35.0 * 1e6,          // DC power in W
-        500.0 * 1e3,          // DC voltage in V
-        0.05,
-        1.07,
-        0.01,
-        400,
-        0.0005,
-        0.0001,
-        0.00015
-    );
+    // MMC3 — inverter (DC bus 3 ↔ AC2 bus 5): DC P + AC Q control
+    std::vector<double> converter_params3 = {
+        omega_nom, p_inv, q_inv, 0.0, v_ac, -p_inv, v_dc,
+        0.05, 1.07, 0.01, 400, 0.0005, 0.0001, 0.0
+    };
+    std::vector<double> controller_params3 = {
+        1, 0, 0.001103374, 0.00073, 1, 0, // PLL
+        0, // dc_voltage
+        1, 0, 6.6667e-07, 3.3333e-04, 1, p_inv, // active_power (DC P)
+        0, // ac_voltage
+        1, 0, 6.6667e-07, 3.3333e-04, 1, q_inv, // reactive_power (AC Q)
+        1, 0, 120, 400, 1, 0, // energy
+        1, 0, 19.93, 4500, 1, -29.16, // zcc
+        1, 0, 117.93, 8.5e4, 2, -62.8, 0, // occ
+        1, 0, 19.93, 4500, 2, 0, 0, // ccc
+        0 // droop
+    };
+    MMC* mmc3 = new MMC("MMC3", "AC2", converter_params3, controller_params3);
     net.connectElementToBus(mmc3, 1, bus5_ac2);
     net.connectElementToBus(mmc3, 2, bus3_dc);
-
     map<string, double> mmc3_info = {
         {"type_dc", 1},
-        {"type_ac", 2}
+        {"type_ac", 1},
     };
     mmc3->setOPFInfo(mmc3_info);
 
@@ -633,7 +632,7 @@ void example_OPF_1(bool plotting_enabled /*=true*/) {
     global_dict["DCZbase"] =
         global_dict["DCbaseKV"] * global_dict["DCbaseKV"] / global_dict["baseMVA"];
 
-    pf.make_OPF(&net, global_dict, false, false, plotting_enabled, true);
+    pf.make_OPF(&net, global_dict, true, false, plotting_enabled, true);
 
     cout << "Press Enter to continue...\n";
     cin.get();

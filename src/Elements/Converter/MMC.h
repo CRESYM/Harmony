@@ -121,22 +121,32 @@ public:
 
         // DC side type_dc(1 = constant DC power control (i.e. active power), 2 = constant DC voltage control, 3 = DC droop control)
         if (controls.count("active_power")) {
-            data["type_dc"] = 1;
+            if (!element_OPF_info.count("type_dc"))
+                data["type_dc"] = 1;
 		}
         else if (controls.count("dc_voltage")) {
+            if (!element_OPF_info.count("type_dc"))
 			data["type_dc"] = 2;
 		}
         else if (controls.count("droop")) {
+            if (!element_OPF_info.count("type_dc"))
 			data["type_dc"] = 3;
         }
         
         // AC side control type_ac (1 = constant AC voltage control, 2 = constant reactive power control)
         if (controls.count("ac_voltage")) {
+            if (!element_OPF_info.count("type_ac"))
 			data["type_ac"] = 1;
         }
         else if (controls.count("reactive_power")) {
-            data["type_ac"] = 2;
+            if (!element_OPF_info.count("type_ac"))
+                data["type_ac"] = 2;
         }
+
+        if (element_OPF_info.count("type_dc"))
+            data["type_dc"] = element_OPF_info.at("type_dc");
+        if (element_OPF_info.count("type_ac"))
+            data["type_ac"] = element_OPF_info.at("type_ac");
     }
 
     // One MMC arm-voltage time step
@@ -205,6 +215,21 @@ private:
     int n_plant_states_ = 12;   // will be overwritten in constructor with actual value
     // add18/5=== END plant state count ===
 
+    // Open-loop feedforward used when outer controllers (occ/zcc) are absent.
+    bool open_loop_modulation_ = false;
+    double ol_vMDelta_d_ref_ = 0.0;
+    double ol_vMDelta_q_ref_ = 0.0;
+    double ol_vMSigma_z_ref_ = 0.0;
+    Eigen::VectorXd equilibrium_guess_;
+
+    void computeOpenLoopArmRefs(
+        double Id, double Iq, double Vdc, double iSigma_z,
+        double& vMDelta_d, double& vMDelta_q, double& vMSigma_z) const;
+    void initializeDelayStates(
+        Eigen::VectorXd& x0, double Vdc,
+        double vMDelta_d, double vMDelta_q, double vMSigma_z) const;
+    void seedPlantStateGuess(
+        Eigen::VectorXd& x0, double Id, double Iq, double iSigma_z) const;
     
 };
 

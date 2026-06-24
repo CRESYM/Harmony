@@ -265,6 +265,8 @@ private:
 
     std::vector<Element*> conv_point;
 
+    double opf_user_base_mva_ = 100.0;
+
 };
 
 #endif // POWERFLOW_H

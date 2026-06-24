@@ -439,6 +439,122 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     Eigen::Matrix2d I_2theta = Eigen::Matrix2d::Identity();
 
     i = 0;
+    const int plant_base = number_of_states - 12;
+    const int ndelay = t_delay ? 5 * pade_order : 0;
+    const int delay_start = plant_base - ndelay;
+
+    if (open_loop_modulation_) {
+        if (equilibrium_guess_.size() != number_of_states) {
+            throw std::runtime_error("Open-loop equilibrium requires a pinned state guess.");
+        }
+
+        for (int k = 0; k < delay_start; ++k) {
+            F(k) = x(k) - equilibrium_guess_(k);
+        }
+
+        const double theta_c = theta;
+        const double cos_theta = std::cos(theta_c);
+        const double sin_theta = std::sin(theta_c);
+        T_theta << cos_theta, -sin_theta, sin_theta, cos_theta;
+        I_theta << cos_theta, sin_theta, -sin_theta, cos_theta;
+        const double cos_2theta = std::cos(-2 * theta_c);
+        const double sin_2theta = std::sin(-2 * theta_c);
+        T_2theta << cos_2theta, -sin_2theta, sin_2theta, cos_2theta;
+        I_2theta << cos_2theta, sin_2theta, -sin_2theta, cos_2theta;
+
+        Eigen::Vector2d Vg = T_theta * Eigen::Vector2d(u[1], u[2]);
+        Vgd = Vg(0);
+        Vgq = Vg(1);
+
+        Eigen::Vector2d i_delta_vec = T_theta * Eigen::Vector2d(iDelta_d, iDelta_q);
+        Eigen::Vector2d i_sigma_vec = T_2theta * Eigen::Vector2d(iSigma_d, iSigma_q);
+        iDelta_d = i_delta_vec(0);
+        iDelta_q = i_delta_vec(1);
+        iSigma_d = i_sigma_vec(0);
+        iSigma_q = i_sigma_vec(1);
+
+        vMDelta_d_ref = ol_vMDelta_d_ref_;
+        vMDelta_q_ref = ol_vMDelta_q_ref_;
+        vMSigma_z_ref = ol_vMSigma_z_ref_;
+
+        last_vMDelta_d_ref_ = vMDelta_d_ref;
+        last_vMDelta_q_ref_ = vMDelta_q_ref;
+        last_vMSigma_d_ref_ = vMSigma_d_ref;
+        last_vMSigma_q_ref_ = vMSigma_q_ref;
+        last_vMSigma_z_ref_ = vMSigma_z_ref;
+
+        Eigen::VectorXd m_input(7);
+        m_input << -2 * vMDelta_d_ref / Vdc, -2 * vMDelta_q_ref / Vdc, -2 * vMDelta_Zd_ref / Vdc, -2 * vMDelta_Zq_ref / Vdc,
+            2 * vMSigma_d_ref / Vdc, 2 * vMSigma_q_ref / Vdc, 2 * vMSigma_z_ref / Vdc;
+
+        double mDelta_d = m_input(0);
+        double mDelta_q = m_input(1);
+        double mDelta_Zd = m_input(2);
+        double mDelta_Zq = m_input(3);
+        double mSigma_d = m_input(4);
+        double mSigma_q = m_input(5);
+        double mSigma_z = m_input(6);
+
+        i = delay_start;
+        if (t_delay) {
+            Eigen::VectorXd m(5);
+            m << mDelta_d, mDelta_q, mSigma_d, mSigma_q, mSigma_z;
+            Eigen::VectorXd xdelay = x.segment(i, ndelay);
+            F.segment(i, ndelay) = Adelay * xdelay + Bdelay * m;
+            Eigen::VectorXd mdelay = Cdelay * xdelay + Ddelay * m;
+            i += ndelay;
+            mDelta_d = mdelay(0);
+            mDelta_q = mdelay(1);
+            mSigma_d = mdelay(2);
+            mSigma_q = mdelay(3);
+            mSigma_z = mdelay(4);
+        }
+
+        double vMDelta_d = (mDelta_q * vCSigma_q) / 4 - (mDelta_d * vCSigma_z) / 2 - (mDelta_d * vCSigma_d) / 4 - (mDelta_Zd * vCSigma_d) / 4
+            + (mDelta_Zq * vCSigma_q) / 4 - (mSigma_d * vCDelta_d) / 4 - (mSigma_z * vCDelta_d) / 2 + (mSigma_q * vCDelta_q) / 4 - (mSigma_d * vCDelta_Zd) / 4 + (mSigma_q * vCDelta_Zq) / 4;
+        double vMDelta_q = (mDelta_d * vCSigma_q) / 4 + (mDelta_q * vCSigma_d) / 4 - (mDelta_q * vCSigma_z) / 2 - (mDelta_Zd * vCSigma_q) / 4
+            - (mDelta_Zq * vCSigma_d) / 4 + (mSigma_d * vCDelta_q) / 4 + (mSigma_q * vCDelta_d) / 4 - (mSigma_z * vCDelta_q) / 2 - (mSigma_d * vCDelta_Zq) / 4 - (mSigma_q * vCDelta_Zd) / 4;
+        double vMDelta_Zd = -(mDelta_d * vCSigma_d) / 4 - (mDelta_q * vCSigma_q) / 4 - (mDelta_Zd * vCSigma_z) / 2 - (mSigma_d * vCDelta_d) / 4 - (mSigma_q * vCDelta_q) / 4 - (mSigma_z * vCDelta_Zd) / 2;
+        double vMDelta_Zq = (mDelta_d * vCSigma_q) / 4 - (mDelta_q * vCSigma_d) / 4 - (mDelta_Zq * vCSigma_z) / 2 - (mSigma_d * vCDelta_q) / 4 + (mSigma_q * vCDelta_d) / 4 - (mSigma_z * vCDelta_Zq) / 2;
+
+        double vMSigma_d = (mDelta_d * vCDelta_d) / 4 - (mDelta_q * vCDelta_q) / 4 + (mDelta_d * vCDelta_Zd) / 4 + (mDelta_Zd * vCDelta_d) / 4
+            + (mDelta_q * vCDelta_Zq) / 4 + (mDelta_Zq * vCDelta_q) / 4 + (mSigma_d * vCSigma_z) / 2 + (mSigma_z * vCSigma_d) / 2;
+        double vMSigma_q = (mDelta_q * vCDelta_Zd) / 4 - (mDelta_q * vCDelta_d) / 4 - (mDelta_d * vCDelta_Zq) / 4 - (mDelta_d * vCDelta_q) / 4
+            + (mDelta_Zd * vCDelta_q) / 4 - (mDelta_Zq * vCDelta_d) / 4 + (mSigma_q * vCSigma_z) / 2 + (mSigma_z * vCSigma_q) / 2;
+        double vMSigma_z = (mDelta_d * vCDelta_d) / 4 + (mDelta_q * vCDelta_q) / 4 + (mDelta_Zd * vCDelta_Zd) / 4 + (mDelta_Zq * vCDelta_Zq) / 4
+            + (mSigma_d * vCSigma_d) / 4 + (mSigma_q * vCSigma_q) / 4 + (mSigma_z * vCSigma_z) / 2;
+
+        double diDeltad_dt = -(Vgd - vMDelta_d + Reqac * iDelta_d + Leqac * iDelta_q * w) / Leqac;
+        double diDeltaq_dt = -(Vgq - vMDelta_q + Reqac * iDelta_q - Leqac * iDelta_d * w) / Leqac;
+        double diSigmad_dt = -(vMSigma_d + R_arm * iSigma_d - 2 * L_arm * iSigma_q * w) / L_arm;
+        double diSigmaq_dt = -(vMSigma_q + R_arm * iSigma_q + 2 * L_arm * iSigma_d * w) / L_arm;
+        double diSigmaz_dt = -(vMSigma_z - Vdc / 2 + R_arm * iSigma_z) / L_arm;
+
+        double dvCSigmad_dt = (N * (iSigma_d * mSigma_z + iSigma_z * mSigma_d + iDelta_d * (mDelta_d / 4 + mDelta_Zd / 4)
+            - iDelta_q * (mDelta_q / 4 - mDelta_Zq / 4) + (4 * C_arm * vCSigma_q * w) / N)) / (2 * C_arm);
+        double dvCSigmaq_dt = -(N * (iDelta_q * (mDelta_d / 4 - mDelta_Zd / 4) - iSigma_z * mSigma_q - iSigma_q * mSigma_z
+            + iDelta_d * (mDelta_q / 4 + mDelta_Zq / 4) + (4 * C_arm * vCSigma_d * w) / N)) / (2 * C_arm);
+        double dvCSigmaz_dt = (N * (iDelta_d * mDelta_d + iDelta_q * mDelta_q + 2 * iSigma_d * mSigma_d + 2 * iSigma_q * mSigma_q + 4 * iSigma_z * mSigma_z)) / (8 * C_arm);
+
+        double dvCDeltad_dt = (N * (iSigma_z * mDelta_d - (iDelta_q * mSigma_q) / 4 + iSigma_d * (mDelta_d / 2 + mDelta_Zd / 2) - iSigma_q * (mDelta_q / 2 + mDelta_Zq / 2)
+            + iDelta_d * (mSigma_d / 4 + mSigma_z / 2) - (2 * C_arm * vCDelta_q * w) / N)) / (2 * C_arm);
+        double dvCDeltaq_dt = -(N * ((iDelta_d * mSigma_q) / 4 - iSigma_z * mDelta_q + iSigma_q * (mDelta_d / 2 - mDelta_Zd / 2) + iSigma_d * (mDelta_q / 2 - mDelta_Zq / 2)
+            + iDelta_q * (mSigma_d / 4 - mSigma_z / 2) - (2 * C_arm * vCDelta_d * w) / N)) / (2 * C_arm);
+        double dvCDeltaZd_dt = (N * (iDelta_d * mSigma_d + 2 * iSigma_d * mDelta_d + iDelta_q * mSigma_q + 2 * iSigma_q * mDelta_q + 4 * iSigma_z * mDelta_Zd)) / (8 * C_arm) - 3 * vCDelta_Zq * w;
+        double dvCDeltaZq_dt = 3 * vCDelta_Zd * w + (N * (iDelta_q * mSigma_d - iDelta_d * mSigma_q + 2 * iSigma_d * mDelta_q - 2 * iSigma_q * mDelta_d + 4 * iSigma_z * mDelta_Zq)) / (8 * C_arm);
+
+        F(i++) = diDeltad_dt; F(i++) = diDeltaq_dt; F(i++) = diSigmaz_dt; F(i++) = diSigmad_dt; F(i++) = diSigmaq_dt;
+        F(i++) = dvCDeltad_dt; F(i++) = dvCDeltaq_dt; F(i++) = dvCDeltaZd_dt; F(i++) = dvCDeltaZq_dt;
+        F(i++) = dvCSigmad_dt; F(i++) = dvCSigmaq_dt; F(i++) = dvCSigmaz_dt;
+
+        for (int j = 0; j < F.size(); ++j) {
+            if (std::isnan(F(j)) || std::isinf(F(j))) {
+                throw std::runtime_error("State derivative contains NaN or Inf.");
+            }
+        }
+        return F;
+    }
+
     if (controls.count("pll")) {
         double theta_c = x(i + 1);
         const double cos_theta = std::cos(theta_c);
@@ -635,6 +751,12 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         i += 2;
     }
 
+    // Algebraic feedforward bypasses inner loops when closed-loop KINSOL fails to converge.
+    if (open_loop_modulation_) {
+        vMDelta_d_ref = ol_vMDelta_d_ref_;
+        vMDelta_q_ref = ol_vMDelta_q_ref_;
+        vMSigma_z_ref = ol_vMSigma_z_ref_;
+    }
 
     //add18/5 === BEGIN DQsym side-channel: expose modulation refs ===
     last_vMDelta_d_ref_ = vMDelta_d_ref;
@@ -1136,13 +1258,72 @@ void MMC::computeABCD_analytical()
 }
 
 
+void MMC::computeOpenLoopArmRefs(
+    double Id, double Iq, double Vdc, double iSigma_z,
+    double& vMDelta_d, double& vMDelta_q, double& vMSigma_z) const
+{
+    const double Leqac = L_arm / 2.0 + L_reactor;
+    const double Reqac = R_arm / 2.0 + R_reactor;
+    const double w = omega_0;
+    const double Vgd = V_m * std::cos(theta);
+    const double Vgq = -V_m * std::sin(theta);
+
+    // Steady-state arm voltages from diDelta/dt = 0 and diSigma_z/dt = 0.
+    vMDelta_d = Vgd + Reqac * Id + Leqac * Iq * w;
+    vMDelta_q = Vgq + Reqac * Iq - Leqac * Id * w;
+    vMSigma_z = Vdc / 2.0 - R_arm * iSigma_z;
+}
+
+void MMC::initializeDelayStates(
+    Eigen::VectorXd& x0, double Vdc,
+    double vMDelta_d, double vMDelta_q, double vMSigma_z) const
+{
+    if (!t_delay) {
+        return;
+    }
+
+    const int nd = 5 * pade_order;
+    const int delay_start = number_of_states - 12 - nd;
+    if (delay_start < 0 || delay_start + nd > x0.size()) {
+        return;
+    }
+
+    const double mDelta_d = -2.0 * vMDelta_d / Vdc;
+    const double mDelta_q = -2.0 * vMDelta_q / Vdc;
+    const double mSigma_d = 0.0;
+    const double mSigma_q = 0.0;
+    const double mSigma_z = 2.0 * vMSigma_z / Vdc;
+    Eigen::VectorXd m(5);
+    m << mDelta_d, mDelta_q, mSigma_d, mSigma_q, mSigma_z;
+
+    Eigen::VectorXd xdelay = -Adelay.colPivHouseholderQr().solve(Bdelay * m);
+    x0.segment(delay_start, nd) = xdelay;
+}
+
+void MMC::seedPlantStateGuess(
+    Eigen::VectorXd& x0, double Id, double Iq, double iSigma_z) const
+{
+    const int p = number_of_states - 12;
+    const double Vgd = V_m * std::cos(theta);
+    const double Vgq = -V_m * std::sin(theta);
+
+    x0(p + 0) = Id;
+    x0(p + 1) = Iq;
+    x0(p + 2) = iSigma_z;
+    x0(p + 3) = 0.0;
+    x0(p + 4) = 0.0;
+    x0(p + 5) = Vgd * m_1;
+    x0(p + 6) = Vgq * m_1;
+    x0(p + 11) = V_dc;
+}
+
 /**
  * @brief Solve for the steady-state operating point x using Newton-Raphson.
  */
 void MMC::solveEquilibrium() {
     const int n = number_of_states;
+    const bool has_occ = controls.count("occ") > 0;
 
-    // Initial guess
     Eigen::VectorXd x0 = 0.01 * Eigen::VectorXd::Ones(n);
     const double Vgd = V_m * std::cos(theta);
     const double Vgq = -V_m * std::sin(theta);
@@ -1154,34 +1335,115 @@ void MMC::solveEquilibrium() {
 
     const double Id = (2.0 / 3.0) * (Vgd * P + Vgq * Q) / denom;
     const double Iq = (2.0 / 3.0) * (Vgq * P - Vgd * Q) / denom;
+    const double iSigma_z = (std::abs(V_dc) > 1e-3) ? P_dc / (3.0 * V_dc) : 0.0;
 
     if (controls.count("pll") && n >= 2) {
         x0(1) = theta;
     }
 
-    const int p = n - 12;
-	x0(p + 0) = Id; // iDelta_d
-	x0(p + 1) = Iq; // iDelta_q
-	x0(p + 2) = P_dc / 3.0 / V_dc; // iSigma_z
-	x0(p + 3) = 0; // iSigma_d
-	x0(p + 4) = 0; // iSigma_q
-    x0(p + 5) = Vgd * m_1; // vCDelta_d
-    x0(p + 6) = Vgq * m_1; // vCDelta_q
-    x0(p + 11) = V_dc; // vCSigma_z
-	
+    seedPlantStateGuess(x0, Id, Iq, iSigma_z);
 
     const Eigen::Vector3d u = makeOperatingInput(
         V_dc, P_dc, controls.count("dc_voltage") > 0, V_m, theta);
     if (controls.count("dc_voltage")) {
-		x0(vdc_index) = V_dc;
+        x0(vdc_index) = V_dc;
     }
+
+    double vMDelta_d = 0.0;
+    double vMDelta_q = 0.0;
+    double vMSigma_z = V_dc / 2.0;
+    computeOpenLoopArmRefs(Id, Iq, V_dc, iSigma_z, vMDelta_d, vMDelta_q, vMSigma_z);
+    ol_vMDelta_d_ref_ = vMDelta_d;
+    ol_vMDelta_q_ref_ = vMDelta_q;
+    ol_vMSigma_z_ref_ = vMSigma_z;
+    initializeDelayStates(x0, V_dc, vMDelta_d, vMDelta_q, vMSigma_z);
+    equilibrium_guess_ = x0;
 
     RHSFunc rhs = [this](double t, const Eigen::VectorXd& x, const Eigen::VectorXd& u_in) {
         return computeStateDerivatives(x, u_in);
-        };
+    };
 
+    auto refreshOpenLoopRefs = [&](double Id_l, double Iq_l, double iSigma_z_l) {
+        computeOpenLoopArmRefs(Id_l, Iq_l, V_dc, iSigma_z_l,
+            vMDelta_d, vMDelta_q, vMSigma_z);
+        ol_vMDelta_d_ref_ = vMDelta_d;
+        ol_vMDelta_q_ref_ = vMDelta_q;
+        ol_vMSigma_z_ref_ = vMSigma_z;
+        initializeDelayStates(x0, V_dc, vMDelta_d, vMDelta_q, vMSigma_z);
+    };
 
-    equilibrium_state = findEquilibriumRobust(rhs, x0, u);
+    auto homotopySolve = [&](bool open_loop) -> Eigen::VectorXd {
+        const bool saved_ol = open_loop_modulation_;
+        open_loop_modulation_ = open_loop;
+
+        const double saved_P = P;
+        const double saved_Q = Q;
+        const double saved_Pdc = P_dc;
+
+        bool solved = false;
+        Eigen::VectorXd x_work = x0;
+        for (double lambda : {0.2, 0.4, 0.6, 0.8, 1.0}) {
+            x0 = x_work;
+            P = saved_P * lambda;
+            Q = saved_Q * lambda;
+            P_dc = saved_Pdc * lambda;
+
+            seedPlantStateGuess(x0, Id * lambda, Iq * lambda, iSigma_z * lambda);
+            refreshOpenLoopRefs(Id * lambda, Iq * lambda, iSigma_z * lambda);
+            equilibrium_guess_ = x0;
+
+            try {
+                x_work = findEquilibriumRobust(rhs, x0, u);
+                solved = true;
+            }
+            catch (const std::exception&) {
+                if (lambda >= 1.0) {
+                    break;
+                }
+            }
+        }
+
+        P = saved_P;
+        Q = saved_Q;
+        P_dc = saved_Pdc;
+        open_loop_modulation_ = saved_ol;
+
+        if (!solved) {
+            throw std::runtime_error(
+                "[MMC::solveEquilibrium] Open-loop homotopy failed to converge.");
+        }
+        return x_work;
+    };
+
+    open_loop_modulation_ = !has_occ;
+    try {
+        equilibrium_state = findEquilibriumRobust(rhs, x0, u);
+        open_loop_modulation_ = false;
+        return;
+    }
+    catch (const std::exception&) {
+        // Closed-loop failed: ramp power with algebraic modulation feedforward.
+        try {
+            equilibrium_state = homotopySolve(true);
+        }
+        catch (const std::exception&) {
+            open_loop_modulation_ = false;
+            throw std::runtime_error(
+                "[MMC::solveEquilibrium] All solver strategies failed (open-loop homotopy included).");
+        }
+
+        if (has_occ) {
+            open_loop_modulation_ = false;
+            x0 = equilibrium_state;
+            try {
+                equilibrium_state = findEquilibriumRobust(rhs, x0, u);
+            }
+            catch (const std::exception&) {
+                // Keep the open-loop equilibrium if closed-loop refinement fails.
+            }
+        }
+        open_loop_modulation_ = false;
+    }
 }
 
 /**

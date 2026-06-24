@@ -84,6 +84,8 @@ void PowerFlow::solve_opf(
         // Load parameters based on input type
         if (dataOPF) {
             // Load from data structure
+            sys_dc.opf_user_base_mva_ = opf_user_base_mva_;
+            sys_ac.opf_user_base_mva_ = opf_user_base_mva_;
             sys_dc.load_params_dc("", *dataOPF);
             sys_ac.load_params_ac("", *dataOPF);
         }
@@ -1175,19 +1177,19 @@ DCBusResult PowerFlow::getDCBusResult(const std::string& dcBusName,
     r.busName = dcBusName;
     r.busIndex = i;
     r.vn = std::sqrt(vn2_dc_k(i)) * global_params.at("DCbaseKV");
-    r.pn = pn_dc_k(i) * global_params.at("baseMVA");
+    r.pn = pn_dc_k(i) * baseMW_dc;
 
     auto safePick = [&](const Eigen::VectorXd& v) -> double {
         if (i >= 0 && i < v.size()) return v(i);
         return 0.0;
         };
 
-    r.ps = safePick(ps_dc_k) * global_params.at("baseMVA");
-    r.qs = safePick(qs_dc_k) * global_params.at("baseMVA");
+    r.ps = safePick(ps_dc_k) * baseMW_dc;
+    r.qs = safePick(qs_dc_k) * baseMW_dc;
     r.thetas = safePick(theta_s_k) * 3.141592653 / 180;
     r.vs = std::sqrt(safePick(v2s_dc_k)) * global_params.at("ACbaseKV");
-    r.pc = safePick(pc_dc_k) * global_params.at("baseMVA");;
-    r.qc = safePick(qc_dc_k) * global_params.at("baseMVA");
+    r.pc = safePick(pc_dc_k) * baseMW_dc;
+    r.qc = safePick(qc_dc_k) * baseMW_dc;
     r.thetac = safePick(theta_c_k) * 3.141592653 / 180;
     r.vc = std::sqrt(safePick(v2c_dc_k)) * global_params.at("ACbaseKV");
 

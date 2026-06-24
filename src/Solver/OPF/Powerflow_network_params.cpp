@@ -918,6 +918,7 @@ void PowerFlow::make_Load(Element* element, std::map<std::string, double>& globa
 void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_params, bool vscControl,
     bool writeTxt, bool plotResult, bool print_info)
 {
+    opf_user_base_mva_ = global_params.count("baseMVA") ? global_params["baseMVA"] : 100.0;
 
     // Initialize specific elements of the data map
    
@@ -926,7 +927,7 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
     data["source_version"]["0.0.0"]["0"] = 0;
     data["per_unit"]["true"]["0"] = 1;
     data["dcpol"]["2"]["0"] = 2;
-    data["baseMVA"]["100"]["0"] = 100;
+    data["baseMVA"][std::to_string(static_cast<int>(opf_user_base_mva_))]["0"] = opf_user_base_mva_;
 
 
     // Initialize empty elements of the data map
@@ -1096,10 +1097,10 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
             // Retrieve OPF results
             double Vm_kV = std::sqrt(v2s_dc_k(i)) * global_params["ACbaseKV"];
             double theta_deg = theta_s_k(i)/ M_PI * 180;
-            double Pac_MW = ps_dc_k(i) * global_params["baseMVA"];
-            double Qac_MVar = qs_dc_k(i) * global_params["baseMVA"];
+            double Pac_MW = ps_dc_k(i) * baseMW_dc;
+            double Qac_MVar = qs_dc_k(i) * baseMW_dc;
             double Vdc_kV = std::sqrt(vn2_dc_k(i)) * global_params["DCbaseKV"];
-            double Pdc_MW = pn_dc_k(i) * global_params["baseMVA"];
+            double Pdc_MW = pn_dc_k(i) * baseMW_dc;
 
             // Convert units
             double Vm_V = Vm_kV * 1e3;
@@ -1579,7 +1580,7 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
     }
     else {
         // From OPF input map
-        baseMVA_ac = 100.0;  // or dataOPF["baseMVA"](0, 0) if available
+        baseMVA_ac = opf_user_base_mva_;
         bus_entire_ac = dataOPF.at("busAC");
         branch_entire_ac = dataOPF.at("branchAC");
         gen_entire_ac = dataOPF.at("generator");
@@ -1759,7 +1760,7 @@ void PowerFlow::load_params_dc(const std::string& dcgrid_name, const std::unorde
     }
     else {
         // Load DC grid from OPF dictionary
-        baseMW_dc = 100.0;  // Default base
+        baseMW_dc = opf_user_base_mva_;
         pol_dc = 1.0;
         bus_dc = dataOPF.at("busDC");
         branch_dc = dataOPF.at("branchDC");
