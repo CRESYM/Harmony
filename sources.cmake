@@ -208,7 +208,6 @@ set(Solver_Helper_Functions_Source_Files
     src/Solver/Helper_Functions/Differential_equations.cpp
     src/Solver/Helper_Functions/Symbolic_functions.cpp
     src/Solver/Helper_Functions/Visualization.cpp
-    src/ui/harmony_glfw_setup.cpp
     src/Solver/Helper_Functions/Writer.cpp
     src/Solver/Helper_Functions/DQsym_Conversion_Functions.cpp
 )

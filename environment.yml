@@ -9,5 +9,4 @@ dependencies:
   - doxygen
   - graphviz
   - implot
-  - glew # needed by implot
   - sundials

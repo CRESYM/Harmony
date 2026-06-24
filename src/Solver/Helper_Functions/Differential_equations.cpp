@@ -89,6 +89,34 @@ static int kinsol_jac_cb(N_Vector u, N_Vector, SUNMatrix J, void* ud,
     return 0;
 }
 
+static int kinsol_fd_jac_cb(N_Vector u, N_Vector, SUNMatrix J, void* ud,
+    N_Vector, N_Vector) {
+    auto* d = static_cast<KINSOLUserData*>(ud);
+    auto [A, B] = computeJacobians(*d->rhs, nv2eigen(u, d->n), d->u, 0.0);
+    (void)B;
+    eigen2sun(J, A);
+    return 0;
+}
+
+static KINSOLConfig withAutoScaling(
+    const KINSOLConfig& cfg,
+    const RHSFunc& rhs,
+    const Eigen::VectorXd& x0,
+    const Eigen::VectorXd& u)
+{
+    KINSOLConfig scaled = cfg;
+    if (scaled.x_scale.size() != x0.size()) {
+        scaled.x_scale = x0.unaryExpr([](double v) {
+            return std::max(1.0, std::abs(v));
+        });
+    }
+    if (scaled.f_scale.size() != x0.size()) {
+        const Eigen::VectorXd f0 = rhs(0.0, x0, u);
+        scaled.f_scale = f0.cwiseAbs().cwiseMax(1.0);
+    }
+    return scaled;
+}
+
 
 // ===================================================================
 //  KINSOL single-strategy solve (internal)
@@ -134,7 +162,10 @@ static Eigen::VectorXd kinsolSolve(
         A = SUNDenseMatrix(static_cast<sunindextype>(n), static_cast<sunindextype>(n), ctx);
         LS = SUNLinSol_Dense(y, A, ctx);
         KINSetLinearSolver(kin, LS, A);
-        if (cfg.use_analytical_jac && jac) KINSetJacFn(kin, kinsol_jac_cb);
+        if (cfg.use_analytical_jac && jac)
+            KINSetJacFn(kin, kinsol_jac_cb);
+        else
+            KINSetJacFn(kin, kinsol_fd_jac_cb);
     }
 
     int strat;
@@ -199,46 +230,75 @@ Eigen::VectorXd findEquilibriumRobust(
     if (x0.size() == 0 || u.size() == 0)
         throw std::invalid_argument("x0 and u must be non-empty.");
 
-    // 1. LineSearch
+    // 1. LineSearch (auto-scaled state/residual vectors)
     try {
-        KINSOLConfig c; c.strategy = KINSOLStrategy::LineSearch; c.max_iter = 300;
+        KINSOLConfig c;
+        c.strategy = KINSOLStrategy::LineSearch;
+        c.max_iter = 300;
+        c = withAutoScaling(c, rhs, x0, u);
         std::cout << "[Robust] LineSearch...\n";
         return kinsolSolve(rhs, x0, u, c, jac);
     }
-    catch (...) {}
+    catch (const std::exception& e) {
+        std::cout << "[Robust] LineSearch failed: " << e.what() << "\n";
+    }
 
     // 2. Newton
     try {
-        KINSOLConfig c; c.strategy = KINSOLStrategy::Newton; c.max_iter = 300;
+        KINSOLConfig c;
+        c.strategy = KINSOLStrategy::Newton;
+        c.max_iter = 300;
+        c = withAutoScaling(c, rhs, x0, u);
         std::cout << "[Robust] Newton...\n";
         return kinsolSolve(rhs, x0, u, c, jac);
     }
-    catch (...) {}
+    catch (const std::exception& e) {
+        std::cout << "[Robust] Newton failed: " << e.what() << "\n";
+    }
 
     // 3. Relaxed warmup → tight
     try {
-        KINSOLConfig cw; cw.strategy = KINSOLStrategy::LineSearch;
-        cw.ftol = 1e-4; cw.stol = 1e-4; cw.max_iter = 500;
+        KINSOLConfig cw;
+        cw.strategy = KINSOLStrategy::LineSearch;
+        cw.ftol = 1e-4;
+        cw.stol = 1e-4;
+        cw.max_iter = 500;
+        cw = withAutoScaling(cw, rhs, x0, u);
         std::cout << "[Robust] Relaxed warmup...\n";
         auto xw = kinsolSolve(rhs, x0, u, cw, jac);
 
-        KINSOLConfig ct; ct.strategy = KINSOLStrategy::Newton; ct.max_iter = 200;
+        KINSOLConfig ct;
+        ct.strategy = KINSOLStrategy::Newton;
+        ct.max_iter = 200;
+        ct = withAutoScaling(ct, rhs, xw, u);
         std::cout << "[Robust] Tight finish...\n";
         return kinsolSolve(rhs, xw, u, ct, jac);
     }
-    catch (...) {}
+    catch (const std::exception& e) {
+        std::cout << "[Robust] Warmup/Newton failed: " << e.what() << "\n";
+    }
 
     // 4. Damped Picard → Newton
     try {
-        KINSOLConfig cp; cp.strategy = KINSOLStrategy::Picard;
-        cp.damping = 0.5; cp.max_iter = 2000; cp.ftol = 1e-8; cp.stol = 1e-8;
+        KINSOLConfig cp;
+        cp.strategy = KINSOLStrategy::Picard;
+        cp.damping = 0.5;
+        cp.max_iter = 2000;
+        cp.ftol = 1e-8;
+        cp.stol = 1e-8;
+        cp = withAutoScaling(cp, rhs, x0, u);
         std::cout << "[Robust] Damped Picard...\n";
         auto xp = kinsolSolve(rhs, x0, u, cp, jac);
 
-        KINSOLConfig ct; ct.strategy = KINSOLStrategy::Newton; ct.max_iter = 100;
+        KINSOLConfig ct;
+        ct.strategy = KINSOLStrategy::Newton;
+        ct.max_iter = 100;
+        ct = withAutoScaling(ct, rhs, xp, u);
         return kinsolSolve(rhs, xp, u, ct, jac);
     }
-    catch (...) {}
+    catch (const std::exception& e) {
+        std::cout << "[Robust] Picard/Newton failed: " << e.what() << "\n";
+    }
 
     throw std::runtime_error("[KINSOL] All strategies exhausted.");
 }

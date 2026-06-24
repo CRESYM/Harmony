@@ -67,7 +67,6 @@ function (link_implot TARGET_NAME)
     find_package(implot REQUIRED)
     find_package(glfw3 REQUIRED)
     find_package(OpenGL REQUIRED)
-    find_package(GLEW) # Optional on Mac, but good for Win/Linux
 
     # ImGui (needed by Implot)
     include(FetchContent)
@@ -96,14 +95,6 @@ function (link_implot TARGET_NAME)
             ${IMGUI_BACKEND_SOURCES})
     endif()
 
-    # Tell the ImGui OpenGL backend how to load GL entry points.
-    if(NOT APPLE)
-        target_compile_definitions(${TARGET_NAME} PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLEW)
-        if(MSVC)
-            target_compile_definitions(${TARGET_NAME} PRIVATE GLEW_STATIC)
-        endif()
-    endif()
-
     # Link implot and all its dependencies
     target_link_libraries(
         ${TARGET_NAME}
@@ -113,9 +104,6 @@ function (link_implot TARGET_NAME)
         glfw
         ${OPENGL_LIBRARIES}
     )
-    if(GLEW_FOUND)
-        target_link_libraries(${TARGET_NAME} PRIVATE GLEW::GLEW)
-    endif()
     if(APPLE)
         target_link_libraries(${TARGET_NAME} PRIVATE
             "-framework Cocoa"

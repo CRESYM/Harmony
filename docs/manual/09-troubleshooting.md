@@ -89,9 +89,9 @@ Or set `"output_directory"` in JSON simulation section.
 
 ### HarmonyUI / ImGui blank window or immediate exit (Linux / macOS)
 
-- Install system OpenGL/GLFW packages (see [`../installation.md`](../installation.md)): on Ubuntu, `libgl1-mesa-dev`, `libx11-dev`, `libglfw3-dev`, and `libglew-dev`.
+- Install system OpenGL/GLFW packages (see [`../installation.md`](../installation.md)): on Ubuntu, `libgl1-mesa-dev`, `libx11-dev`, and `libglfw3-dev`.
 - Run from a local desktop session with a GPU/display (`echo $DISPLAY` set on Linux; not SSH without X forwarding).
-- Rebuild after updating Harmony — Linux/macOS need OpenGL 3.x context hints and `glewInit()` on non-Apple platforms; macOS must not use the GLEW ImGui loader with a core-profile context.
+- Rebuild after updating Harmony — Linux/macOS use OpenGL 3.x context hints before creating the GLFW window.
 - Use `--no-plot` on headless CI machines; GitHub Actions only **compile** HarmonyUI, they do not run the GUI.
 
 ### No charts in HarmonyUI

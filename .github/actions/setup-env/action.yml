@@ -93,7 +93,7 @@ runs:
       shell: bash -l {0}
       run: |
         sudo apt-get update
-        sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libx11-dev libglfw3-dev libglew-dev
+        sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libx11-dev libglfw3-dev
 
     # ---------------------------
     #     MACOS ONLY STEPS
@@ -125,4 +125,4 @@ runs:
     - name: Install Implot/ImGui system dependencies
       if: runner.os == 'macOS'
       shell: bash -l {0}
-      run: brew install glfw glew
+      run: brew install glfw

@@ -1109,6 +1109,7 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
             double Vdc_V = Vdc_kV * 1e3;
             double Pdc_W = Pdc_MW * 1e6;
 
+
             // Update the MMC
             mmc->update_MMC(Vm_V, theta_rad, Pac_W, Qac_Var, Vdc_V, Pdc_W);
 

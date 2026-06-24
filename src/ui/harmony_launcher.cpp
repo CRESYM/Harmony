@@ -7,7 +7,6 @@
 #include "Constants.h"
 #include "cli.h"
 #include "ui/harmony_banner_gui.h"
-#include "ui/harmony_glfw_setup.h"
 #include "log_capture.h"
 #include "Solver/Helper_Functions/Visualization.h"
 
@@ -523,7 +522,15 @@ int runHarmonyLauncher(int argc, char* argv[]) {
 #else
 	const char* glslVersion = "#version 130";
 #endif
-	harmonyConfigureGlfwOpenGLHints();
+#ifdef __APPLE__
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#else
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#endif
 
 	GLFWwindow* window = nullptr;
 	int initialWidth = 1500;
@@ -543,12 +550,6 @@ int runHarmonyLauncher(int argc, char* argv[]) {
 	}
 
 	glfwMakeContextCurrent(window);
-	if (!harmonyInitOpenGLLoader()) {
-		std::cerr << "HarmonyUI: OpenGL loader init failed\n";
-		glfwDestroyWindow(window);
-		glfwTerminate();
-		return EXIT_FAILURE;
-	}
 	glfwSwapInterval(1);
 
 	IMGUI_CHECKVERSION();

@@ -26,6 +26,20 @@
  */
 // -----------------------------------------------------------------------------
 
+static Eigen::Vector3d makeOperatingInput(
+    double V_dc, double P_dc, bool dc_voltage_control,
+    double V_m, double theta)
+{
+    const double Vgd = V_m * std::cos(theta);
+    const double Vgq = -V_m * std::sin(theta);
+    Eigen::Vector3d u;
+    if (dc_voltage_control)
+        u << P_dc / V_dc, Vgd, Vgq;
+    else
+        u << V_dc, Vgd, Vgq;
+    return u;
+}
+
 /**
  * @brief MMC constructor with explicit parameters.
  * @param symbol Element symbol/name.
@@ -719,14 +733,8 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
  */
 void MMC::computeABCD() {
     const Eigen::VectorXd& x0 = equilibrium_state;
-    Eigen::VectorXd u0(3);
-    // Define input vector u0 (DC voltage and AC voltages)
-    if (controls.count("dc_voltage")) {
-        u0 << P_dc / V_dc, V_m* cos(omega_0), V_m* sin(omega_0);
-    }
-    else {
-        u0 << V_dc, V_m* cos(omega_0), V_m* sin(omega_0);
-    }
+    const Eigen::Vector3d u0 = makeOperatingInput(
+        V_dc, P_dc, controls.count("dc_voltage") > 0, V_m, theta);
 
     //// Bind the member function computeStateDerivatives as a lambda
     //auto f = [&](const Eigen::VectorXd& x, const Eigen::VectorXd& u) {
@@ -1042,11 +1050,8 @@ Eigen::MatrixXd MMC::computePlantJacobian(
 void MMC::computeABCD_analytical()
 {
     const Eigen::VectorXd& x0 = equilibrium_state;
-    Eigen::VectorXd u0(3);
-    if (controls.count("dc_voltage"))
-        u0 << P_dc / V_dc, V_m* cos(omega_0), V_m* sin(omega_0);
-    else
-        u0 << V_dc, V_m* cos(omega_0), V_m* sin(omega_0);
+    const Eigen::Vector3d u0 = makeOperatingInput(
+        V_dc, P_dc, controls.count("dc_voltage") > 0, V_m, theta);
 
     // --- Evaluate modulation signals at operating point ---
     Eigen::VectorXd F0 = computeStateDerivatives(x0, u0);
@@ -1150,26 +1155,29 @@ void MMC::solveEquilibrium() {
     const double Id = (2.0 / 3.0) * (Vgd * P + Vgq * Q) / denom;
     const double Iq = (2.0 / 3.0) * (Vgq * P - Vgd * Q) / denom;
 
-	x0(n - 12) = Id; // iDelta_d
-	x0(n - 11) = Iq; // iDelta_q
-	x0(n - 10) = P_dc / 3.0 / V_dc; // iSigma_z
-	x0(n - 9) = 0; // iSigma_d
-	x0(n - 8) = 0; // iSigma_q
-    x0(n - 1) = V_dc;
+    if (controls.count("pll") && n >= 2) {
+        x0(1) = theta;
+    }
+
+    const int p = n - 12;
+	x0(p + 0) = Id; // iDelta_d
+	x0(p + 1) = Iq; // iDelta_q
+	x0(p + 2) = P_dc / 3.0 / V_dc; // iSigma_z
+	x0(p + 3) = 0; // iSigma_d
+	x0(p + 4) = 0; // iSigma_q
+    x0(p + 5) = Vgd * m_1; // vCDelta_d
+    x0(p + 6) = Vgq * m_1; // vCDelta_q
+    x0(p + 11) = V_dc; // vCSigma_z
 	
 
-    // Define input vector u (DC voltage and AC voltages)
-    Eigen::VectorXd u(3);
+    const Eigen::Vector3d u = makeOperatingInput(
+        V_dc, P_dc, controls.count("dc_voltage") > 0, V_m, theta);
     if (controls.count("dc_voltage")) {
-        u << P_dc/V_dc, V_m* cos(omega_0), V_m* sin(omega_0);
 		x0(vdc_index) = V_dc;
-    } 
-    else {
-        u << V_dc, V_m * cos(omega_0), V_m * sin(omega_0); 
-	}
+    }
 
-    RHSFunc rhs = [this](double t, const Eigen::VectorXd& x, const Eigen::VectorXd& u) {
-        return computeStateDerivatives(x, u);
+    RHSFunc rhs = [this](double t, const Eigen::VectorXd& x, const Eigen::VectorXd& u_in) {
+        return computeStateDerivatives(x, u_in);
         };
 
 
