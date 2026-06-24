@@ -137,6 +137,7 @@ std::map<std::string, ExampleFn> exampleRegistry() {
 
 	add("opf", example_OPF);
 	add("opf_csv", example_OPF_csv);
+	add("opf_ac", example_OPF_ac);
 	add("opf_1", example_OPF_1);
 	add("opf_csv_1", example_OPF_csv_1);
 	add("opf_pv", example_OPF_PV);

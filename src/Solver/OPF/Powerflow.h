@@ -150,6 +150,15 @@ public:
      * @param print_info Print diagnostic information (default false).
      */
     void make_OPF(Network* net, std::map<std::string, double>& global_params, bool vscControl = true, bool writeTxt = false,
+        bool plotResult = false, bool print_info = false, bool include_dc = true);
+
+    /**
+     * @brief Builds AC-only OPF data from a Harmony network and runs the solver.
+     *
+     * Same as make_OPF with include_dc=false; DC buses, branches, and converters
+     * are excluded from the optimization (hybrid elements in the network are ignored).
+     */
+    void make_AC_OPF(Network* net, std::map<std::string, double>& global_params, bool writeTxt = false,
         bool plotResult = false, bool print_info = false);
 
     /**

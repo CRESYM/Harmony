@@ -16,6 +16,9 @@ extern void example_OPF(bool plotting_enabled = true);
 /** @brief OPF case driven by CSV network data. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_OPF_csv(bool plotting_enabled = true);
 
+/** @brief AC-only OPF from bundled CSV case data. @param plotting_enabled Enable result plots. @ingroup examples */
+extern void example_OPF_ac(bool plotting_enabled = true);
+
 /** @brief Extended hybrid OPF demonstration. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_OPF_1(bool plotting_enabled = true);
 

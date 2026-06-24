@@ -1,0 +1,2 @@
+Test project C:/Users/alekic/Documents/GitHub/CRESYM/Harmony/build
+No tests were found!!!

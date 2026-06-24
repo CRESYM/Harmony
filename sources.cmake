@@ -250,6 +250,7 @@ set(Json_Header_Files
 set(Examples_Source_files
     src/examples/example_OPF.cpp
     src/examples/example_OPF_csv.cpp
+    src/examples/example_OPF_ac.cpp
     src/examples/example_OPF_1.cpp
     src/examples/example_OPF_csv_1.cpp
     src/examples/example_OPF_PV.cpp

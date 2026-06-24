@@ -26,3 +26,20 @@ TEST(OPFSmoke, MakeOPFOnEmptyNetworkDoesNotCrash) {
 
 	EXPECT_NO_THROW(pf.make_OPF(&net, globalParams, true, false, false, false));
 }
+
+TEST(OPFSmoke, SolveAcOnlyOpfFromCsvDoesNotCrash) {
+	PowerFlow pf;
+	EXPECT_NO_THROW(pf.solve_opf("", "ac5", nullptr, false, false, false, false));
+}
+
+TEST(OPFSmoke, MakeAcOPFOnEmptyNetworkDoesNotCrash) {
+	Network net;
+	PowerFlow pf;
+
+	std::map<std::string, double> globalParams;
+	globalParams["baseMVA"] = 100.0;
+	globalParams["ACbaseKV"] = 345.0;
+	globalParams["DCbaseKV"] = 400.0;
+
+	EXPECT_NO_THROW(pf.make_AC_OPF(&net, globalParams, false, false, false));
+}

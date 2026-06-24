@@ -915,9 +915,16 @@ void PowerFlow::make_Load(Element* element, std::map<std::string, double>& globa
 }
 
 
-void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_params, bool vscControl,
+void PowerFlow::make_AC_OPF(Network* net, std::map<std::string, double>& global_params,
     bool writeTxt, bool plotResult, bool print_info)
 {
+    make_OPF(net, global_params, false, writeTxt, plotResult, print_info, false);
+}
+
+void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_params, bool vscControl,
+    bool writeTxt, bool plotResult, bool print_info, bool include_dc)
+{
+    conv_point.clear();
     opf_user_base_mva_ = global_params.count("baseMVA") ? global_params["baseMVA"] : 100.0;
 
     // Initialize specific elements of the data map
@@ -960,8 +967,10 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
     for (Bus* b : acBuses)
         addBusAC(dict_ac, b, global_params, print_info);
 
-    for (Bus* b : dcBuses)
-        addBusDC(dict_dc, b, global_params, print_info);
+    if (include_dc) {
+        for (Bus* b : dcBuses)
+            addBusDC(dict_dc, b, global_params, print_info);
+    }
 
 	// Process elements: loads, generators, which contribute to the buses data    
     auto& elements = net->getElements();
@@ -991,13 +1000,14 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
                 make_BranchAC(element, global_params, print_info);
             }
             else if (element->getInputPins() == 2) {
-                make_BranchDC(element, global_params, print_info);
+                if (include_dc)
+                    make_BranchDC(element, global_params, print_info);
             }
             else {
                 throw std::runtime_error("[make_OPF] Error: Unsupported branch pin number.");
             }
         }
-        else if (dynamic_cast<MMC*>(element)) {
+        else if (include_dc && dynamic_cast<MMC*>(element)) {
             make_Converter(element, global_params, print_info);
         }
     }
@@ -1758,13 +1768,21 @@ void PowerFlow::load_params_dc(const std::string& dcgrid_name, const std::unorde
         branch_dc = network_dc["branch"];
         conv_dc = network_dc["converter"];
     }
-    else {
+    else if (dataOPF.count("busDC") && dataOPF.count("branchDC") && dataOPF.count("converter")) {
         // Load DC grid from OPF dictionary
         baseMW_dc = opf_user_base_mva_;
         pol_dc = 1.0;
         bus_dc = dataOPF.at("busDC");
         branch_dc = dataOPF.at("branchDC");
         conv_dc = dataOPF.at("converter");
+    }
+    else {
+        // AC-only OPF: no DC subsystem
+        baseMW_dc = opf_user_base_mva_;
+        pol_dc = 1.0;
+        bus_dc = Eigen::MatrixXd(0, 13);
+        branch_dc = Eigen::MatrixXd(0, 13);
+        conv_dc = Eigen::MatrixXd(0, 26);
     }
 
     /// debug
@@ -1788,18 +1806,27 @@ void PowerFlow::load_params_dc(const std::string& dcgrid_name, const std::unorde
         << " x " << conv_dc.cols() << ") ===\n";
     std::cout << conv_dc.format(fmt) << "\n";
 
-    basekV_dc = conv_dc.col(13);
-
     // Sizes
     nbuses_dc = bus_dc.rows();
     nbranches_dc = branch_dc.rows();
     nconvs_dc = conv_dc.rows();
 
-    fbus_dc = branch_dc.col(0).cast<int>();
-    tbus_dc = branch_dc.col(1).cast<int>();
+    fbus_dc = branch_dc.rows() > 0 ? branch_dc.col(0).cast<int>() : Eigen::VectorXi();
+    tbus_dc = branch_dc.rows() > 0 ? branch_dc.col(1).cast<int>() : Eigen::VectorXi();
 
     Y_dc = makeYbus(baseMW_dc, bus_dc, branch_dc);
     y_dc = absoluteSparseMatrix(Y_dc);
+
+    if (nconvs_dc == 0) {
+        basekV_dc = Eigen::VectorXd();
+        rtf_dc = xtf_dc = bf_dc = rc_dc = xc_dc = Eigen::VectorXd();
+        ztfc_dc = Eigen::VectorXcd();
+        gtfc_dc = btfc_dc = aloss_dc = bloss_dc = closs_dc = Eigen::VectorXd();
+        convState_dc = Eigen::VectorXi();
+        return;
+    }
+
+    basekV_dc = conv_dc.col(13);
 
     rtf_dc = conv_dc.col(8);
     xtf_dc = conv_dc.col(9);
