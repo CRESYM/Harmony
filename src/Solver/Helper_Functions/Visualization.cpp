@@ -1175,12 +1175,11 @@ void viz_opf(const OPFVisualData& d)
                 voltMag_ac(row++) = std::sqrt(d.vn2_ac_k[ng](i));
     }
 
-    Eigen::VectorXd voltMag_dc = Eigen::VectorXd::Zero(N);
+    Eigen::VectorXd voltMag_dc = Eigen::VectorXd::Zero(numBuses_dc);
     for (int i = 0; i < numBuses_dc; ++i)
     {
-        size_t gi = static_cast<size_t>(dcNodesVec(i) - 1);
-        if (gi < static_cast<size_t>(N))
-            voltMag_dc(gi) = std::sqrt(d.vn2_dc_k(i));
+        if (i < d.vn2_dc_k.size())
+            voltMag_dc(i) = std::sqrt(d.vn2_dc_k(i));
     }
 
     std::vector<double> voltLabel(N, 0.0);
