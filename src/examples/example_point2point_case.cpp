@@ -19,8 +19,10 @@ void example_point2point_case() {
     ///* ---------- 1.1 Create AC Buses ---------- */
     Bus* bus1_ac = new Bus("ACBUS01", "AC1", 3);
     Bus* bus2_ac = new Bus("ACBUS02", "AC1", 3);
-    Bus* bus3_ac = new Bus("ACBUS03", "AC2", 3);
-    Bus* bus4_ac = new Bus("ACBUS04", "AC2", 3); // 
+    Bus* bus3_ac = new Bus("ACBUS03", "AC1", 3); 
+    Bus* bus4_ac = new Bus("ACBUS04", "AC2", 3); 
+    Bus* bus5_ac = new Bus("ACBUS05", "AC2", 3); 
+    Bus* bus6_ac = new Bus("ACBUS06", "AC2", 3); 
 
     ///*  ---------- 1.2 Add AC Loads  ---------- */
 
@@ -29,7 +31,7 @@ void example_point2point_case() {
     Load* load2 = new Load("LOAD02", "AC2", 3, load_params2);
     // using PQ load model
     // LoadPQ* load2 = new LoadPQ("LOAD02", "AC2", 3, { 50e6, 5e6 });
-    net.connectElementToBus(load2, 1, bus4_ac);
+    net.connectElementToBus(load2, 1, bus6_ac);
 
     ///*  ---------- 1.3 Add AC Generators  ---------- */
 
@@ -64,8 +66,25 @@ void example_point2point_case() {
     double ACR2 = 5 ; double ACX2 = 140 ;
     std::complex<double> ACZ2(ACR2, ACX2);
     Impedance* br2_ac = new Impedance("br2_ac", "AC2", 3, ACZ2);
-    net.connectElementToBus(br2_ac, /*terminal=*/1, bus3_ac);
-    net.connectElementToBus(br2_ac, /*terminal=*/2, bus4_ac);
+    net.connectElementToBus(br2_ac, /*terminal=*/1, bus5_ac);
+    net.connectElementToBus(br2_ac, /*terminal=*/2, bus6_ac);
+
+    ///*  ---------- 1.5 Add Converter Transformers  ---------- */
+    std::vector<double> tr_values = {
+        0.01,   // Primary winding resistance
+        0.01,   // Primary winding inductance
+        0.01,   // Secondary winding resistance
+        0.01,   // Secondary winding inductance
+        0.009   // Mutual inductance
+    };
+
+    Transformer_classic* tr1 = new Transformer_classic("TR1", "AC1", 3, tr_values);
+    net.connectElementToBus(tr1, 1, bus2_ac);
+    net.connectElementToBus(tr1, 2, bus3_ac);
+
+    Transformer_classic* tr2 = new Transformer_classic("TR2", "AC2", 3, tr_values);
+    net.connectElementToBus(tr2, 1, bus4_ac);
+    net.connectElementToBus(tr2, 2, bus5_ac);
 
     ///*  ---------- 2.1 Create DC Buses  ---------- */
     Bus* bus1_dc = new Bus("DCBUS01", "DC1", 2);
@@ -107,7 +126,7 @@ void example_point2point_case() {
         0 // droop control
     };
     MMC* mmc1 = new MMC("MMC1", "AC1_DC1", converter_params1, controller_params1);
-    net.connectElementToBus(mmc1, 1, bus2_ac);
+    net.connectElementToBus(mmc1, 1, bus3_ac);
     net.connectElementToBus(mmc1, 2, bus1_dc);
 
     vector<double> converter_params2 = {
@@ -139,7 +158,7 @@ void example_point2point_case() {
         0  // droop control
     };
     MMC* mmc2 = new MMC("MMC2", "AC2_DC1", converter_params2, controller_params2);
-    net.connectElementToBus(mmc2, 1, bus3_ac);
+    net.connectElementToBus(mmc2, 1, bus4_ac);
     net.connectElementToBus(mmc2, 2, bus2_dc);
 
     ///*----- 3 OPF Implementatiopn ----- */
