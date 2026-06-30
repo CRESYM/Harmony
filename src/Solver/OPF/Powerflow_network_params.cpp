@@ -1409,50 +1409,35 @@ static void extendGenAC(
     Network* net,
     std::map<std::string, double>& global_params)
 {
-    // Iterate over all AC_source
-    for (auto& elem_pair : net->getElements()) {
-        Element* elem = elem_pair.second;
-        AC_source* src = dynamic_cast<AC_source*>(elem);
-        if (!src) continue;
+    if (data.find("acsrcMeta") == data.end()) return;
 
-        // find the bus that AC_source connected with
-        Bus* connectedBus = nullptr;
-        for (auto& kv : elem->getConnections()) {
-            if (kv.second == 1) { connectedBus = kv.first; break; }
-        }
-        if (!connectedBus) continue;
+    for (const auto& [metaKey, meta] : data["acsrcMeta"]) {
+        const int old_bus_id = static_cast<int>(meta.at("bus1_id"));
+        const int new_bus_id = static_cast<int>(meta.at("new_bus_id"));
+        const int grid = static_cast<int>(meta.at("grid"));
 
-        std::string bus_name = connectedBus->getBusName();
-        int old_bus_id = -1;
-        int grid = -1;
-
-        for (auto& [key, busRow] : data["busAC"]) {
-            int id = static_cast<int>(busRow.at("bus_i"));
-            if (std::abs(id - std::stoi(bus_name.substr(bus_name.size() - 1))) < 1e-6) {
-                old_bus_id = id;
-                grid = static_cast<int>(busRow.at("grid"));
-                break;
-            }
-        }
-        if (grid == -1) continue;
-
-        // find the new added bus order in the grid
-        int max_bus_in_grid = 0;
-        for (auto& [key, busRow] : data["busAC"]) {
-            if (static_cast<int>(busRow.at("grid")) == grid) {
-                int id = static_cast<int>(busRow.at("bus_i"));
-                if (id > max_bus_in_grid) max_bus_in_grid = id;
-            }
-        }
-
-        // Mapping oldBus -> newBus
-        int new_bus_id = max_bus_in_grid;
-
+        bool moved_slack_generator = false;
         for (auto& [key, genRow] : data["genAC"]) {
             int gen_bus = static_cast<int>(genRow.at("bus"));
             int gen_grid = static_cast<int>(genRow.at("grid"));
             if (gen_bus == old_bus_id && gen_grid == grid) {
                 genRow["bus"] = new_bus_id;
+                moved_slack_generator = true;
+            }
+        }
+
+        if (!moved_slack_generator) continue;
+
+        for (auto& [key, busRow] : data["busAC"]) {
+            int bus_id = static_cast<int>(busRow.at("bus_i"));
+            int bus_grid = static_cast<int>(busRow.at("grid"));
+            if (bus_grid != grid) continue;
+
+            if (bus_id == old_bus_id && busRow["type"] == 3.0) {
+                busRow["type"] = 1.0;
+            }
+            else if (bus_id == new_bus_id) {
+                busRow["type"] = 3.0;
             }
         }
     }

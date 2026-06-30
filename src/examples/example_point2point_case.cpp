@@ -57,13 +57,13 @@ void example_point2point_case() {
 
     ///*  ---------- 1.4 Add Branches  ---------- */
 
-    double ACR1 = 1 ; double ACX1 = 40 ;
+    double ACR1 = 5 ; double ACX1 = 110 ;
     std::complex<double> ACZ1(ACR1, ACX1);
     Impedance* br1_ac = new Impedance("br1_ac", "AC1", 3, ACZ1);
     net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
 
-    double ACR2 = 1 ; double ACX2 = 40 ;
+    double ACR2 = 5 ; double ACX2 = 110 ;
     std::complex<double> ACZ2(ACR2, ACX2);
     Impedance* br2_ac = new Impedance("br2_ac", "AC2", 3, ACZ2);
     net.connectElementToBus(br2_ac, /*terminal=*/1, bus5_ac);
