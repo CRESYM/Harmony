@@ -48,8 +48,8 @@ Most plotting examples accept `bool plotting_enabled = true`. Use `--no-plot` in
 
 | Example | `--cpp` name | File | Description |
 |---------|--------------|------|-------------|
-| `example_OPF()` | `opf` | `example_OPF.cpp` | Basic hybrid OPF |
-| `example_OPF_1()` | `opf_1` | `example_OPF_1.cpp` | Extended OPF case |
+| `example_OPF_single_area()` | `opf_single_area` | `example_OPF_single_area.cpp` | Single-area hybrid OPF |
+| `example_OPF_double_area()` | `opf_double_area` | `example_OPF_double_area.cpp` | Double-area hybrid OPF |
 | `example_OPF_csv()` | `opf_csv` | `example_OPF_csv.cpp` | OPF from CSV data |
 | `example_OPF_csv_1()` | `opf_csv_1` | `example_OPF_csv_1.cpp` | Variant CSV OPF |
 | `example_point2point_case()` | `point2point_case` | `example_point2point_case.cpp` | Point-to-point HVDC-style case |

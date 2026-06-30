@@ -1,5 +1,5 @@
 /**
- * @file example_OPF_1.cpp
+ * @file example_OPF_double_area.cpp
  * @brief Runnable example: Extended hybrid OPF demonstration.
  */
 #include "Examples.h"
@@ -10,7 +10,7 @@
 #include "../Solver/OPF/Powerflow.h"
 
 
-void example_OPF_1(bool plotting_enabled /*=true*/) {
+void example_OPF_double_area(bool plotting_enabled /*=true*/) {
 
     ///* ---------- 0 Set Network Object ---------- */
     Network net;

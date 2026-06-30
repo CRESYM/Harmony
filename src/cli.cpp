@@ -135,10 +135,10 @@ std::map<std::string, ExampleFn> exampleRegistry() {
 	std::map<std::string, ExampleFn> registry;
 	auto add = [&](const char* name, ExampleFn fn) { registry[name] = std::move(fn); };
 
-	add("opf", example_OPF);
+	add("opf_single_area", example_OPF_single_area);
 	add("opf_csv", example_OPF_csv);
 	add("opf_ac", example_OPF_ac);
-	add("opf_1", example_OPF_1);
+	add("opf_double_area", example_OPF_double_area);
 	add("opf_csv_1", example_OPF_csv_1);
 	add("opf_pv", example_OPF_PV);
 	add("opf_wt", example_OPF_WT);

@@ -10,8 +10,8 @@
  * Most functions accept @p plotting_enabled to suppress GUI output in CI.
  */
 
-/** @brief Basic hybrid AC–DC optimal power flow case. @param plotting_enabled Enable result plots. @ingroup examples */
-extern void example_OPF(bool plotting_enabled = true);
+/** @brief Single-area hybrid AC–DC optimal power flow case. @param plotting_enabled Enable result plots. @ingroup examples */
+extern void example_OPF_single_area(bool plotting_enabled = true);
 
 /** @brief OPF case driven by CSV network data. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_OPF_csv(bool plotting_enabled = true);
@@ -19,8 +19,8 @@ extern void example_OPF_csv(bool plotting_enabled = true);
 /** @brief AC-only OPF from bundled CSV case data. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_OPF_ac(bool plotting_enabled = true);
 
-/** @brief Extended hybrid OPF demonstration. @param plotting_enabled Enable result plots. @ingroup examples */
-extern void example_OPF_1(bool plotting_enabled = true);
+/** @brief Double-area hybrid OPF demonstration. @param plotting_enabled Enable result plots. @ingroup examples */
+extern void example_OPF_double_area(bool plotting_enabled = true);
 
 /** @brief Variant OPF case from CSV data. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_OPF_csv_1(bool plotting_enabled = true);

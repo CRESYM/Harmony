@@ -1,5 +1,5 @@
 /**
- * @file example_OPF.cpp
+ * @file example_OPF_single_area.cpp
  * @brief Runnable example: Basic hybrid AC–DC optimal power flow case.
  */
 #include "Examples.h"
@@ -10,7 +10,7 @@
 #include "../Solver/OPF/Powerflow.h"
 
 
-void example_OPF(bool plotting_enabled /*=true*/) {
+void example_OPF_single_area(bool plotting_enabled /*=true*/) {
     ///* ---------- 0 Set Network Object ---------- */
     Network net;
 
