@@ -147,7 +147,7 @@ void example_stability_check(bool plotting_enabled /*=true*/) {
     global_params["omega"] = omega;
     global_params["baseMVA"] = 100;
     global_params["ACbaseKV"] = 345.0; // Base voltage in kV, can be adjusted as needed
-    global_params["DCbaseKV"] = 400.0; // Base voltage for DC, can be adjusted as needed
+    global_params["DCbaseKV"] = 440.0; // Base voltage for DC, can be adjusted as needed
     global_params["ACZbase"] =
         global_params["ACbaseKV"] * global_params["ACbaseKV"]
         / global_params["baseMVA"];
