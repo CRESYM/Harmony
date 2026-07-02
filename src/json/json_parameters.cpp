@@ -8,6 +8,7 @@
 
 #include <symengine/basic.h>
 #include <symengine/number.h>
+#include <symengine/real_double.h>
 #include <symengine/symbol.h>
 
 
