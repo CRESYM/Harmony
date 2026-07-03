@@ -24,7 +24,7 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 ![alt text](/install/res/HARMONY_figure.png?raw=true) 
 
 If you use this repository, please cite the following publication.
-``
+```
 @misc{lekic2026harmony,
   title         = {Advanced Simulation Framework for AC/MTDC Power Systems},
   author        = {Aleksandra Leki{\'c} and Azadeh Kermansaravi and Haixiao Li and Yasel Quintero Lares and Saif Alsarayreh and Robert Dimitrovski},
@@ -34,7 +34,7 @@ If you use this repository, please cite the following publication.
   primaryClass  = {eess.SY},
   url           = {https://arxiv.org/abs/2606.09406}
 }
-``
+```
 
 ## Installation and Usage
 
