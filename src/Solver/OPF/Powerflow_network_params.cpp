@@ -1093,42 +1093,65 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
 
     
     // Update each MMC element with OPF results
-    if (!conv_point.empty()) {
+    if (!conv_point.empty() && opf_solved_
+        && nconvs_dc > 0
+        && static_cast<int>(conv_point.size()) == nconvs_dc
+        && conv_dc.rows() == nconvs_dc
+        && v2s_dc_k.size() == nconvs_dc
+        && ps_dc_k.size() == nconvs_dc
+        && qs_dc_k.size() == nconvs_dc
+        && theta_s_k.size() == nconvs_dc
+        && vn2_dc_k.size() > 0
+        && pn_dc_k.size() == vn2_dc_k.size()) {
         std::cout << "\n=== Updating " << conv_point.size()
             << " MMC elements with OPF results ===" << std::endl;
 
-        for (size_t i = 0; i < conv_point.size(); ++i) {
-            Element* elem = conv_point[i];
+        for (size_t k = 0; k < conv_point.size(); ++k) {
+            Element* elem = conv_point[k];
             if (!elem) continue;
 
             auto* mmc = dynamic_cast<MMC*>(elem);
             if (!mmc) continue;
 
-            // Retrieve OPF results
-            double Vm_kV = std::sqrt(v2s_dc_k(i)) * global_params["ACbaseKV"];
-            double theta_deg = theta_s_k(i)/ M_PI * 180;
-            double Pac_MW = ps_dc_k(i) * baseMW_dc;
-            double Qac_MVar = qs_dc_k(i) * baseMW_dc;
-            double Vdc_kV = std::sqrt(vn2_dc_k(i)) * global_params["DCbaseKV"];
-            double Pdc_MW = pn_dc_k(i) * baseMW_dc;
+            const int dc_bus_idx = static_cast<int>(conv_dc(k, 0)) - 1;
+            if (dc_bus_idx < 0 || dc_bus_idx >= vn2_dc_k.size()) {
+                std::cerr << "[make_OPF] Skip MMC update: invalid DC bus index "
+                    << dc_bus_idx << " for converter " << k << std::endl;
+                continue;
+            }
+
+            // Converter-indexed OPF quantities
+            const double Vm_kV = std::sqrt(std::max(0.0, v2s_dc_k(k))) * global_params["ACbaseKV"];
+            const double theta_rad = theta_s_k(k);
+            const double Pac_MW = ps_dc_k(k) * baseMW_dc;
+            const double Qac_MVar = qs_dc_k(k) * baseMW_dc;
+            // DC bus-indexed OPF quantities
+            const double Vdc_kV = std::sqrt(std::max(0.0, vn2_dc_k(dc_bus_idx))) * global_params["DCbaseKV"];
+            const double Pdc_MW = pn_dc_k(dc_bus_idx) * baseMW_dc;
 
             // Convert units
-            double Vm_V = Vm_kV * 1e3;
-            double theta_rad = theta_deg * M_PI / 180.0;
-            double Pac_W = Pac_MW * 1e6;
-            double Qac_Var = Qac_MVar * 1e6;
-            double Vdc_V = Vdc_kV * 1e3;
-            double Pdc_W = Pdc_MW * 1e6;
+            const double Vm_V = Vm_kV * 1e3;
+            const double Pac_W = Pac_MW * 1e6;
+            const double Qac_Var = Qac_MVar * 1e6;
+            const double Vdc_V = Vdc_kV * 1e3;
+            const double Pdc_W = Pdc_MW * 1e6;
 
 
             // Update the MMC
             mmc->update_MMC(Vm_V, theta_rad, Pac_W, Qac_Var, Vdc_V, Pdc_W);
 
             // Solve equilibrium and compute state-space matrices
-            mmc->solveEquilibrium();         
-            mmc->computeABCD();
+            try {
+                mmc->solveEquilibrium();
+                mmc->computeABCD();
+            }
+            catch (const std::exception& e) {
+                std::cerr << "[make_OPF] MMC equilibrium failed for "
+                    << elem->getElementSymbol() << ": " << e.what() << std::endl;
+            }
 
             if (print_info) {
+                const double theta_deg = theta_rad * 180.0 / M_PI;
                 std::cout << "[Updated MMC] " << elem->getElementSymbol()
                     << " | Vm=" << Vm_kV << " kV, theta=" << theta_deg
                     << " deg, Pac=" << Pac_MW << " MW, Qac=" << Qac_MVar
@@ -1138,6 +1161,9 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
                 std::cout << "Equilibrium state:\n" << x_eq.tail(12).transpose() << "\n";
             }
         }
+    }
+    else if (!conv_point.empty() && !opf_solved_) {
+        std::cerr << "[make_OPF] OPF did not succeed; skipping MMC updates.\n";
     }
 
 }

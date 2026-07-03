@@ -76,6 +76,7 @@ void PowerFlow::solve_opf(
     bool plotResult,
     bool plot_info) {
 
+    opf_solved_ = false;
     auto start = std::chrono::high_resolution_clock::now();
     try {
         PowerFlow sys_dc;
@@ -1148,6 +1149,7 @@ void PowerFlow::solve_opf(
             this->convState_dc = convState_dc;
             this->fbus_dc = fbus_dc;
             this->tbus_dc = tbus_dc;
+            this->opf_solved_ = true;
         }
 
 

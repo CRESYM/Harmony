@@ -210,6 +210,9 @@ public:
     DCBusResult getDCBusResult(const std::string& dcBusName,
         const std::map<std::string, double>& global_params) const;
 
+    /** @brief True when the most recent @ref solve_opf completed with a usable solution. */
+    bool opfSolved() const { return opf_solved_; }
+
 private:
     std::unordered_map<std::string, Eigen::MatrixXd> network_ac;
     double baseMVA_ac;
@@ -275,6 +278,7 @@ private:
     std::vector<Element*> conv_point;
 
     double opf_user_base_mva_ = 100.0;
+    bool opf_solved_ = false;
 
 };
 
