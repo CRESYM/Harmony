@@ -3,11 +3,11 @@
 This document describes how to set up a development environment that allows you to compile and run Harmony.   
 
 Sections:
-* [Prerequisites]()
-* [Compiling]()
-* [Running]()
-* [Testing]()
-* [Related documentation]()
+* [Prerequisites](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#prerequisites)
+* [Compiling](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#compiling-harmony)
+* [Running](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#running-harmony)
+* [Testing](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#testing)
+* [Related documentation](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#related-documentation)
 
 ## Prerequisites 
 Harmony can be compiled on Windows, Linux (tested in Ubuntu 22.04.5), and macOS (tested in Tahoe 26.5). The requirements for each operating system are:
@@ -164,6 +164,35 @@ cd <path-to-harmony>/build
 ./HarmonyUI
 ```
 
+## Testing
+
+Harmony has a set of tests that helps ensure the code behaves as expected and produces the desired results. The procedure to compile and run the tests is very similar to the one used to compile Harmony. 
+
+To run the tests, execute the following commands, starting from the *root level* of the repository, with the harmony conda environment activated:
+
+```bash
+# Open the tests directory
+cd tests
+
+# Create a build directory
+mkdir build
+cd build
+
+# Configure the CMake project specifying the path to your Gurobi installation, for example:
+#   Windows:  cmake .. -DGUROBI_PATH="C:/gurobi1202/win64"
+#   Linux:    cmake .. -DGUROBI_PATH="/opt/gurobi1301/linux64"
+#   MacOS:    cmake .. -DGUROBI_PATH="/Library/gurobi1200/macos_universal2"
+cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" 
+
+# Compile the tests. 
+# Replace 4 with the number of CPU cores you wish to use for parallel compilation
+cmake --build . --config Release -j 4
+
+# Run the tests
+ctest -j 4
+```
+
+
 ## Related Documentation
 
 After completing the steps above, you may find the following documentation helpful:
@@ -171,9 +200,7 @@ After completing the steps above, you may find the following documentation helpf
 * [Guide for developers](developer-guide.md)
 * [Guide for maintainers](maintainer-guide.md)
 
-## Testing
 
-Harmony 
 
 <!-- This part is commented-off
 
