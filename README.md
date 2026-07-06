@@ -45,7 +45,7 @@ Harmony can be compiled on Windows, Linux and macOS. The requirements for each o
     - Linux: GNU C and C++ compilers (tested version with 11.4.0) and GNU make
     - MacOS: Apple Clang C and C++ compilers (tested with version 21.0.0) and GNU make
     - Windows: [Visual Studio](https://visualstudio.microsoft.com) - version 2022 or newer, with a "Desktop Development for C++" workload installed (See [installation docs.](https://learn.microsoft.com/en-us/visualstudio/install/install-visual-studio?view=vs-2022))
-- [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python, and a few other packages. (You can also use Anaconda if it's already installed on your machine.)
+- [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python, and a few other packages. Select **Add to path** during installation to allow miniconda to be used from Visual Studio.
 - [Gurobi](https://www.gurobi.com/product/download-center/optimizer-software) - optimization software (license required, free for academics).
 - Additional system packages (Linux only):
     - ```bash
@@ -53,10 +53,6 @@ Harmony can be compiled on Windows, Linux and macOS. The requirements for each o
       sudo apt update
       sudo apt install libgl1-mesa-dev libx11-dev libglfw3-dev
       ```
-
-> [!WARNING]
-> When installing miniconda, make sure you select the option **Add to path**. This will allow you to use miniconda from Visual Studio, Git Bash, etc. If you forgot this, have a look at Step 3 in [this blog post](https://eduand-alvarez.medium.com/setting-up-anaconda-on-your-windows-pc-6e39800c1afb), which shows how to add miniconda to your path. Alternatively, you may reinstall miniconda.
-
 
 ### Building
 
@@ -114,57 +110,39 @@ To use Harmony's graphical user interface, execute the following command from th
 
 **Using the command-line interface**
 
-To use Harmony's command-line interface, run this command from the `build` directory:"
+To use Harmony's command-line interface, run one of the following commands from the `build` directory:"
 ```bash
-# Run HarmonyUI (Windows)
+# Windows
 ./Release/Harmony.exe <option>
 
-# Run HarmonyUI (Linux and MacOS)
+# Linux and MacOS
 ./Harmony <option>
 ```
 
-Replace `<option>` with the actual option you would like to use. The available options are described in the [detailed running instructions](docs/running-harmony.md).
+Replace `<option>` with one or more of the options listed below.
 
+| Option | Description |
+|----------|-----------|
+| `--help -h` | Display the help message. |
+| `--cpp <example-name>` | Run one of the built-in examples. |
+| `--json <path-to-file>` | Run a simulation from a JSON input file. |
+| `--json-path <directory>` | Set the directory used to search for JSON input files. |
+| `--list-cpp` | List all available examples. |
+| `--list-json` | List all JSON input files in the current search path. |
+| `--no-plot` | Disable plotting (applies to examples only). |
+| `--search-path <directory>` | Add a directory to the search path for JSON input files. |
+| `--verbose` `-v` | Enable verbose output. |
 
-
-<!-- This part is commented-off
-
-```bash
-conda activate harmony
-cd ..                              # repository root (from build/)
-
-# Windows
-build\Release\Harmony.exe --help
-build\Release\Harmony.exe --list-cpp
-build\Release\Harmony.exe --cpp stability_check
-build\Release\Harmony.exe --json src/examples/json/stability_check.json
-
-# Linux / macOS
-./build/Harmony --help
-./build/Harmony --cpp stability_check
-./build/Harmony --json src/examples/json/stability_check.json
-```
-
-| Goal | HarmonyUI | Harmony (CLI) |
-|------|-----------|---------------|
-| Interactive runs | Launcher → **Run** | `Harmony --cpp <name>` or `--json <file>` |
-| List examples | Dropdown menus | `--list-cpp`, `--list-json` |
-| No plots | Leave **Plot** unchecked | add `--no-plot` |
-| More output | **Verbose log** checkbox | add `--verbose` |
-
-See [User Manual — HarmonyUI](docs/manual/11-harmony-ui.md) for the full GUI guide.
-
--->
 
 ### Building and running the tests
 
-The procedure to compile the tests is very similar to the one used to compile Harmomy. To run the tests, execute the following commands, starting from the *root level* of the repository, with the harmony conda environment activated:
+The test suite is built in much the same way as Harmony. Starting from the *root directory* of the repository, with the `harmony` Conda environment activated, run:
 
 ```bash
-# Open the tests directory
+# Enter the tests directory
 cd tests
 
-# Create a build directory
+# Create and enter the build directory
 mkdir build
 cd build
 
@@ -174,13 +152,28 @@ cd build
 #   MacOS:    cmake .. -DGUROBI_PATH="/Library/gurobi1200/macos_universal2"
 cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" 
 
-# Compile the tests. 
-# Replace 4 with the number of CPU cores you wish to use for parallel compilation
+# Compile the test suite. 
+# Replace 4 with the number of CPU cores you wish to use for parallel compilation.
 cmake --build . --config Release -j 4
 
-# Run the tests
+# Run the tests.
+# Replace 4 with the desired level of parallelism.
 ctest -j 4
 ```
+
+## Documentation
+
+The project's documentation is available in the [docs](docs/) directory. It includes detailed guides for:
+
+* [Installation](docs/installation.md) - instructions for setting up an environment to build and run Harmony.
+* [Running](docs/running-harmony.md) - instructions for running Harmony.
+* [Input file format](docs/input-file-format.md) - description of the format for JSON input files.
+* [Developers](docs/developer-guide.md) - information for those extending Harmony's functionality, including adding new elements, solvers and tests.
+* [Maintainers](docs/maintainer-guide.md) - information for project maintainers, including CMake structure, adding dependencies and GitHub Actions workflows.
+
+Additional documentation:
+* [User Manual](docs/manual/README.md) - a comprehensive guide to using Harmony, including tutorials and examples.
+* [API documentation (Doxygen)](docs/doxygen/README.md) - reference documentation for the Harmony C++ API.
 
 
 ## Contributors
