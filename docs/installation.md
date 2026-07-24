@@ -1,8 +1,13 @@
 # Installation Instructions
 
-This document describes how to set up a development environment that allows you to compile and run Harmony.
+This document describes how to set up a development environment that allows you to compile and run Harmony.   
 
-After building, see [**Running Harmony**](running-harmony.md) for command-line usage (`--cpp`, `--json`, flags, and troubleshooting).
+Sections:
+* [Prerequisites](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#prerequisites)
+* [Compiling](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#compiling-harmony)
+* [Running](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#running-harmony)
+* [Testing](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#testing)
+* [Related documentation](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#related-documentation)
 
 ## Prerequisites 
 Harmony can be compiled on Windows, Linux (tested in Ubuntu 22.04.5), and macOS (tested in Tahoe 26.5). The requirements for each operating system are:
@@ -43,7 +48,7 @@ Set-ExecutionPolicy RemoteSigned
 </details>
 
 
-## Installation
+## Compiling Harmony
 
 **Linux and MacOS:** open the terminal.
 
@@ -83,7 +88,7 @@ If the environment was correctly activated, `(harmony)` should be displayed to t
 ![Screenshot 2025-05-05 at 21 14 39](https://github.com/user-attachments/assets/2c430c03-0438-4afa-95f9-75d697d7642a)  
 *Example: Windows terminal.*
 
-**4. Use CMake** to create the Harmony Visual Studio Solution on Windows or the Harmony makefile on Linux and MacOS. The file [CMakeLists.txt](../CMakeLists.txt) contains the instructions to create the VS Solution and makefile.
+**4. Use CMake** to create the Harmony *Visual Studio Solution* on Windows or the Harmony *makefile* on Linux and MacOS. The file [CMakeLists.txt](../CMakeLists.txt) contains the instructions to create the VS Solution and makefile.
 ```bash
 # 4.1 Create a directory called build
 mkdir build
@@ -101,7 +106,7 @@ cd build
 cmake .. -DGUROBI_PATH="gurobi_installation_dir_config"
 ```
 
-The VS Solution or makefile will be inside the `build` directory. The VS Solution or makefile needs to be regenerated every time you make changes to `CMakeLists.txt`. These changes can include, for example: adding a new `.h` or `.cpp` file to the project or adding a dependency on a third-party library. To regenerate the solution or makefile, re-run the `cmake .. -DGUROBI_PATH="gurobi_installation_dir_config"` command from the `build` folder.
+The VS Solution or makefile will be generated inside the `build` directory. The VS Solution or makefile needs to be regenerated every time you make changes to any CMake files, including `sources.cmake` or `CMakeLists.txt`. These changes can include, for example: adding a new `.h` or `.cpp` file to the project or adding a dependency on a third-party library. To regenerate the solution or makefile, re-run the `cmake .. -DGUROBI_PATH="gurobi_installation_dir_config"` command from the `build` folder.
 
 **5.** (Optional, Windows) Open the VS Solution created in the previous step. Do so by selecting File->Open->Project/Solution on the top menu. Choose the file `<path-to-harmony/build/Harmony.sln>`. Carry out your development as usual, making changes to the project's source files and saving them.
 
@@ -116,14 +121,88 @@ cmake --build . --config Release -j <num-cores>
 
 Windows users: You may also use the VS Build button or select Build->Solution from the menu at the top. The output files *Harmony.exe* and *HarmonyUI.exe* are created in the `build/Release` directory (or `build/Debug` in Debug mode).
 
-**7. Execute Harmony.**
 
-Building Harmony produces two executables:
+## Running Harmony
 
-| Executable | Build target | Use |
-|------------|--------------|-----|
-| **HarmonyUI** | `HarmonyUI` | Graphical launcher (recommended for interactive use) |
-| **Harmony** | `Harmony` | Command-line interface for developers and scripts |
+After following the steps above, you will have two Harmony executables in the `build` (Linux and MacOS), or `build/Release` (Windows), directories:
+
+| Executable |  Use |
+|------------|--------------|
+| **HarmonyUI** | Run simulations via a graphical user interface (GUI). Simulations are configured via JSON input files. |
+| **Harmony** | Run simulations from the command-line interface (CLI). Simulations are configured via JSON input files or C++ scripts. |
+
+### Running Harmony (CLI)
+
+To use Harmony's command-line interface, execute the following commands. 
+* Make sure the `harmony` conda environment is activated (see step 3 above).
+* Replace `<option>` with the actual option you would like to use. See [running-harmony.md](running-harmony.md) for a full list of options.
+```bash
+# Open the build directory
+cd <path-to-harmony>/build
+
+# Run Harmony (Windows)
+./Release/Harmony.exe <option>
+
+# Run Harmony (Linux and MacOS)
+./Harmony <option>
+```
+
+### Running HarmonyUI (GUI)
+
+To use Harmony's graphical user interface, execute the following command.
+* Make sure the `harmony` conda environment is activated (see step 3 above).
+* Unlike `Harmony`, `HarmonyUI` takes no options.
+
+```bash
+# Open the build directory
+cd <path-to-harmony>/build
+
+# Run Harmony (Windows)
+./Release/HarmonyUI.exe
+
+# Run Harmony (Linux and MacOS)
+./HarmonyUI
+```
+
+## Testing
+
+Harmony has a set of tests that helps ensure the code behaves as expected and produces the desired results. The procedure to compile and run the tests is very similar to the one used to compile Harmony. 
+
+To run the tests, execute the following commands, starting from the *root level* of the repository, with the harmony conda environment activated:
+
+```bash
+# Open the tests directory
+cd tests
+
+# Create a build directory
+mkdir build
+cd build
+
+# Configure the CMake project specifying the path to your Gurobi installation, for example:
+#   Windows:  cmake .. -DGUROBI_PATH="C:/gurobi1202/win64"
+#   Linux:    cmake .. -DGUROBI_PATH="/opt/gurobi1301/linux64"
+#   MacOS:    cmake .. -DGUROBI_PATH="/Library/gurobi1200/macos_universal2"
+cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" 
+
+# Compile the tests. 
+# Replace 4 with the number of CPU cores you wish to use for parallel compilation
+cmake --build . --config Release -j 4
+
+# Run the tests
+ctest -j 4
+```
+
+
+## Related Documentation
+
+After completing the steps above, you may find the following documentation helpful:
+* [Detailed Running Instructions](running-harmony.md)
+* [Guide for developers](developer-guide.md)
+* [Guide for maintainers](maintainer-guide.md)
+
+
+
+<!-- This part is commented-off
 
 ```bash
 conda activate harmony
@@ -159,3 +238,5 @@ build\Release\Harmony.exe --json src/examples/json/stability_check.json
 Full details: [Running Harmony](running-harmony.md), [User Manual — HarmonyUI](manual/11-harmony-ui.md).
 
 **Visual Studio:** Set **HarmonyUI** as the startup project for the GUI, or **Harmony** for CLI debugging. Set **Working Directory** to the repository root. For **Harmony**, add **Command Arguments** such as `--cpp stability_check --no-plot` or `--json src/examples/json/stability_check.json`. See [Running Harmony — Visual Studio](running-harmony.md#visual-studio).
+
+-->

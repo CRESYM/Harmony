@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21534064.svg)](https://doi.org/10.5281/zenodo.21534064)
+
 ![Windows build & test](https://github.com/CRESYM/Harmony/actions/workflows/windows_build_and_test.yml/badge.svg?branch=main) ![Linux build & test](https://github.com/CRESYM/Harmony/actions/workflows/linux_build_and_test.yml/badge.svg?branch=main) ![macOS build & test](https://github.com/CRESYM/Harmony/actions/workflows/macos_build_and_test.yml/badge.svg?branch=main)   
 ![Windows run examples](https://github.com/CRESYM/Harmony/actions/workflows/windows_run_examples.yml/badge.svg?branch=main) ![Linux run examples](https://github.com/CRESYM/Harmony/actions/workflows/linux_run_examples.yml/badge.svg?branch=main) ![macOS run examples](https://github.com/CRESYM/Harmony/actions/workflows/macos_run_examples.yml/badge.svg?branch=main)  
 ![Build API docs](https://github.com/CRESYM/Harmony/actions/workflows/docs.yml/badge.svg?branch=main)
@@ -23,22 +25,44 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 
 ![alt text](/install/res/HARMONY_figure.png?raw=true) 
 
+If you use this repository, please cite the following publication.
+```
+@misc{lekic2026harmony,
+  title         = {Advanced Simulation Framework for AC/MTDC Power Systems},
+  author        = {Aleksandra Leki{\'c} and Azadeh Kermansaravi and Haixiao Li and Yasel Quintero Lares and Saif Alsarayreh and Robert Dimitrovski},
+  year          = {2026},
+  eprint        = {2606.09406},
+  archivePrefix = {arXiv},
+  primaryClass  = {eess.SY},
+  url           = {https://arxiv.org/abs/2606.09406}
+}
+```
+
 ## Installation and Usage
 
-See the [detailed installation instructions](docs/installation.md), [**Running Harmony**](docs/running-harmony.md), the [User Manual](docs/manual/README.md), and the [API documentation (Doxygen)](docs/doxygen/README.md) (CI builds HTML; publish via your separate GitHub Pages project).
-
 ### Prerequisites 
-Harmony can be compiled on Windows. The requirements are:
-- [Gurobi Optimizer](https://www.gurobi.com/downloads/gurobi-software/?_gl=1*nfc3bz*_up*MQ..*_ga*Mzk5NjUzMDE0LjE3NDk3NDM5OTU.*_ga_RTTPP25C8N*czE3NDk3NDM5OTQkbzEkZzEkdDE3NDk3NDQxMTIkajYwJGwwJGgxNzI0MDAwOTc3) - requires a license (free for academics).
-- [Visual Studio](https://visualstudio.microsoft.com) - version 2022 or newer, with a "Desktop Development for C++" workload installed (See [installation docs.](https://learn.microsoft.com/en-us/visualstudio/install/install-visual-studio?view=vs-2022))
-- [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python, and a few other packages. (You can also use Anaconda if it is already installed on your machine.)
-  
-> [!WARNING]
-> When installing miniconda, make sure you select the option **'Add to path'**. This will allow you to use miniconda from Visual Studio, Git Bash, etc. If you forgot this, have a look at Step 3 in [this blog post](https://eduand-alvarez.medium.com/setting-up-anaconda-on-your-windows-pc-6e39800c1afb), which shows how to add miniconda to your path. Alternatively, you may reinstall miniconda.
 
+Harmony can be compiled on Windows, Linux and macOS. The requirements for each operating system are:
+- Compilers and build tools for C and C++
+    - Linux: GNU C and C++ compilers (tested version with 11.4.0) and GNU make
+    - MacOS: Apple Clang C and C++ compilers (tested with version 21.0.0) and GNU make
+    - Windows: [Visual Studio](https://visualstudio.microsoft.com) - version 2022 or newer, with a "Desktop Development for C++" workload installed (See [installation docs.](https://learn.microsoft.com/en-us/visualstudio/install/install-visual-studio?view=vs-2022))
+- [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python, and a few other packages. Select **Add to path** during installation to allow miniconda to be used from Visual Studio.
+- [Gurobi](https://www.gurobi.com/product/download-center/optimizer-software) - optimization software (license required, free for academics).
+- Additional system packages (Linux only):
+    - ```bash
+      # Install the OpenGL, X11, and GLFW development libraries
+      sudo apt update
+      sudo apt install libgl1-mesa-dev libx11-dev libglfw3-dev
+      ```
 
-### Build and Run
-To build and run Harmony, open Visual Studio and select "Continue without code" on the welcome dialogue. From the top menu, select View->Terminal. This will open the Visual Studio Developer Command Prompt. From there, type the following commands:
+### Building
+
+See the [detailed installation instructions](docs/installation.md) for a comprehensive, step-by-step guide to building Harmomy.   
+
+To build and run Harmony:
+* Linux and MacOS: open the terminal and type the commands below.
+* Windows: open Visual Studio and select "Continue without code" on the welcome dialogue. From the top menu, select View->Terminal. This will open the Visual Studio Developer Command Prompt. From there, type the following commands.
 
 ```bash
 # Download the repository
@@ -49,11 +73,15 @@ cd Harmony
 conda env create -f environment.yml
 conda activate harmony
 
-# Configure the project
+# Create a build directory for compilation
 mkdir build
 cd build
-cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" 
-# e.g. cmake .. -DGUROBI_PATH="C:/gurobi1202/win64"
+
+# Configure the CMake project specifying the path to your Gurobi installation, for example:
+#   Windows:  cmake .. -DGUROBI_PATH="C:/gurobi1202/win64"
+#   Linux:    cmake .. -DGUROBI_PATH="/opt/gurobi1301/linux64"
+#   MacOS:    cmake .. -DGUROBI_PATH="/Library/gurobi1200/macos_universal2"
+cmake .. -DGUROBI_PATH="gurobi_installation_dir_config"
 
 # Compile Harmony
 # Replace 4 with the number of CPU cores you wish to use for parallel compilation
@@ -63,71 +91,91 @@ cmake --build . --config Release -j 4
 > [!TIP]
 > Adding the `-j` flag enables parallel compilation on Linux and macOS using the specified number of cores. For Windows, Harmony is already configured to automatically detect and use the maximum number of available cores for parallel compilation.
 
-### Running Harmony
+### Running
 
-After building, run studies from the **repository root** with the conda environment active. Full details: [**Running Harmony**](docs/running-harmony.md).
+See the [detailed running instructions](docs/running-harmony.md) for a for a comprehensive guide to running Harmony.   
 
-**HarmonyUI** (graphical launcher — pick examples, optional plots, log panel):
+Compiling Harmony produces two executables:
+* **HarmonyUI**: Run simulations via a graphical user interface (GUI). Simulations are configured via JSON input files.
+* **Harmony**: Run simulations from the command-line interface (CLI). Simulations are configured via JSON input files or C++ scripts.
 
+**Using the graphical user interface**   
+
+To use Harmony's graphical user interface, execute the following command from the `build` directory:
 ```bash
-conda activate harmony
-cmake --build build --config Release --target HarmonyUI
+# Run HarmonyUI (Windows)
+./Release/HarmonyUI.exe
 
-# Windows
-build\Release\HarmonyUI.exe
-
-# Linux / macOS
-./build/HarmonyUI
+# Run HarmonyUI (Linux and MacOS)
+./HarmonyUI
 ```
 
-**Harmony** (CLI — scripts, CI, developers):
+**Using the command-line interface**
 
+To use Harmony's command-line interface, run one of the following commands from the `build` directory:"
 ```bash
-conda activate harmony
-cd ..                              # repository root (from build/)
-
 # Windows
-build\Release\Harmony.exe --help
-build\Release\Harmony.exe --list-cpp
-build\Release\Harmony.exe --cpp stability_check
-build\Release\Harmony.exe --json src/examples/json/stability_check.json
+./Release/Harmony.exe <option>
 
-# Linux / macOS
-./build/Harmony --help
-./build/Harmony --cpp stability_check
-./build/Harmony --json src/examples/json/stability_check.json
+# Linux and MacOS
+./Harmony <option>
 ```
 
-| Goal | HarmonyUI | Harmony (CLI) |
-|------|-----------|---------------|
-| Interactive runs | Launcher → **Run** | `Harmony --cpp <name>` or `--json <file>` |
-| List examples | Dropdown menus | `--list-cpp`, `--list-json` |
-| No plots | Leave **Plot** unchecked | add `--no-plot` |
-| More output | **Verbose log** checkbox | add `--verbose` |
+Replace `<option>` with one or more of the options listed below.
 
-See [User Manual — HarmonyUI](docs/manual/11-harmony-ui.md) for the full GUI guide.
+| Option | Description |
+|----------|-----------|
+| `--help -h` | Display the help message. |
+| `--cpp <example-name>` | Run one of the built-in examples. |
+| `--json <path-to-file>` | Run a simulation from a JSON input file. |
+| `--json-path <directory>` | Set the directory used to search for JSON input files. |
+| `--list-cpp` | List all available examples. |
+| `--list-json` | List all JSON input files in the current search path. |
+| `--no-plot` | Disable plotting (applies to examples only). |
+| `--search-path <directory>` | Add a directory to the search path for JSON input files. |
+| `--verbose` `-v` | Enable verbose output. |
 
-### Run the tests
-To run the tests, you should follow a similar procedure to building and running the code.
+
+### Building and running the tests
+
+The test suite is built in much the same way as Harmony. Starting from the *root directory* of the repository, with the `harmony` Conda environment activated, run:
+
 ```bash
-# Open the tests directory
+# Enter the tests directory
 cd tests
 
-# Activate the harmony conda environment
-conda activate harmony
-
-# Configure the project
+# Create and enter the build directory
 mkdir build
 cd build
+
+# Configure the CMake project specifying the path to your Gurobi installation, for example:
+#   Windows:  cmake .. -DGUROBI_PATH="C:/gurobi1202/win64"
+#   Linux:    cmake .. -DGUROBI_PATH="/opt/gurobi1301/linux64"
+#   MacOS:    cmake .. -DGUROBI_PATH="/Library/gurobi1200/macos_universal2"
 cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" 
-# e.g. cmake .. -DGUROBI_PATH="C:/gurobi1202/win64"
 
-# Compile the tests
-cmake --build . --config Release
+# Compile the test suite. 
+# Replace 4 with the number of CPU cores you wish to use for parallel compilation.
+cmake --build . --config Release -j 4
 
-# Run the tests
-ctest
+# Run the tests.
+# Replace 4 with the desired level of parallelism.
+ctest -j 4
 ```
+
+## Documentation
+
+The project's documentation is available in the [docs](docs/) directory. It includes detailed guides for:
+
+* [Installation](docs/installation.md) - instructions for setting up an environment to build and run Harmony.
+* [Running](docs/running-harmony.md) - instructions for running Harmony.
+* [Input file format](docs/input-file-format.md) - description of the format for JSON input files.
+* [Developers](docs/developer-guide.md) - information for those extending Harmony's functionality, including adding new elements, solvers and tests.
+* [Maintainers](docs/maintainer-guide.md) - information for project maintainers, including CMake structure, adding dependencies and GitHub Actions workflows.
+
+Additional documentation:
+* [User Manual](docs/manual/README.md) - a comprehensive guide to using Harmony, including tutorials and examples.
+* [API documentation (Doxygen)](docs/doxygen/README.md) - reference documentation for the Harmony C++ API.
 
 
 ## Contributors
@@ -141,7 +189,7 @@ ctest
 
 
 
- The development of the Harmony was supported by the [Digital Competence Centre](https://www.tudelft.nl/index.php?id=67120&L=1/), Delft University of Technology.
+ The development of the Harmony was supported by the [Digital Competence Centre](https://dcc.tudelft.nl/), Delft University of Technology.
 
  ## Technical Foundations
 
