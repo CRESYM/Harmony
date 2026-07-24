@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21534064.svg)](https://doi.org/10.5281/zenodo.21534064)
+
 ![Windows build & test](https://github.com/CRESYM/Harmony/actions/workflows/windows_build_and_test.yml/badge.svg?branch=main) ![Linux build & test](https://github.com/CRESYM/Harmony/actions/workflows/linux_build_and_test.yml/badge.svg?branch=main) ![macOS build & test](https://github.com/CRESYM/Harmony/actions/workflows/macos_build_and_test.yml/badge.svg?branch=main)   
 ![Windows run examples](https://github.com/CRESYM/Harmony/actions/workflows/windows_run_examples.yml/badge.svg?branch=main) ![Linux run examples](https://github.com/CRESYM/Harmony/actions/workflows/linux_run_examples.yml/badge.svg?branch=main) ![macOS run examples](https://github.com/CRESYM/Harmony/actions/workflows/macos_run_examples.yml/badge.svg?branch=main)  
 ![Build API docs](https://github.com/CRESYM/Harmony/actions/workflows/docs.yml/badge.svg?branch=main)
