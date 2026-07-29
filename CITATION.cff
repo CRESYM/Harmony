@@ -21,6 +21,6 @@ authors:
   orcid: "https://orcid.org/0000-0002-8037-8665"
 title: "Harmony - HARMONic stabilitY assessment of PE-penetrated power systems"
 version: 1.0.0
-doi: no doi yet
-date-released: 2025-07-30
+doi: https://doi.org/10.5281/zenodo.21534064
+date-released: 2026-07-30
 url: "https://github.com/CRESYM/Harmony"
