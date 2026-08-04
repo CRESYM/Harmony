@@ -54,7 +54,9 @@ Reference them anywhere a **numeric array** or scalar is accepted — passives `
 "controller_params": ["pll_enable", "dc_voltage_enable", "active_power_enable", "pi_type", "pac_kp", "pac_ki", "n_outputs_1", "pac_ref", "ac_voltage_enable", "reactive_power_enable", ...]
 ```
 
-MMC controllers are fixed-order slots: `pll`, `dc_voltage`, `active_power`, `ac_voltage`, `reactive_power`, `energy`, `zcc`, `occ`, `ccc`, `droop`. Each slot starts with an enable flag (`0`/`1` or a named parameter such as `"ac_voltage_enable": 0.0`). Disabled slots use a single entry; enabled slots continue with controller type, gains, output count, and references. See [`mmc_named_params.json`](../src/examples/json/mmc_named_params.json).
+MMC controllers are fixed-order slots: `pll`, `dc_voltage`, `active_power`, `ac_voltage`, `reactive_power`, `energy`, `zcc`, `occ`, `ccc`, `droop`, optional trailing `gfm`. Each slot starts with an enable flag (`0`/`1` or a named parameter such as `"ac_voltage_enable": 0.0`). Disabled slots use a single entry; enabled slots continue with controller type, gains, output count, and references. Legacy packs may omit `gfm` (treated as disabled). See [`mmc_named_params.json`](../src/examples/json/mmc_named_params.json).
+
+GFM pack (when enabled): `1, 0, Kdroop_P, Kdroop_Q, 4, Tf_P, Tf_Q, Rvirt, Lvirt`. Disable `pll`, outer `active_power` / `reactive_power` / `ac_voltage` / `dc_voltage`, and `occ` when using GFM (GFM sets `vMDelta` directly).
 
 Rules:
 

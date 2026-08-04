@@ -149,6 +149,7 @@ std::map<std::string, ExampleFn> exampleRegistry() {
 	add("state_space", [](bool) { example_state_space(); });
 	add("generator", example_generator);
 	add("mmc", example_MMC);
+	add("mmc_gfm", example_MMC_gfm);
 	add("wt_type_3", example_WT_type_3);
 	add("wt_type_4", example_WT_type_4);
 	add("pv_plant", example_PV_plant);

@@ -258,6 +258,7 @@ set(Examples_Source_files
     src/examples/example_DQsym_math_operations.cpp
     src/examples/example_generator.cpp
     src/examples/example_MMC.cpp
+    src/examples/example_MMC_gfm.cpp
     src/examples/example_WT_type_3.cpp
     src/examples/example_WT_type_4.cpp
     src/examples/example_PV_plant.cpp

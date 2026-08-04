@@ -210,6 +210,10 @@ private:
 	// State variables
     int number_of_states = 12;
 	int vdc_index = 0; // Index for DC voltage in state vector
+	int gfm_index_ = -1; // Start index of GFM states (theta, Pac_f, Qac_f); -1 if disabled
+	double gfm_E_ref_ = 0.0; // GFM internal voltage magnitude reference
+	/// When true, GFM residuals use power-normalized form for KINSOL conditioning.
+	bool gfm_scale_eq_residual_ = false;
 
     // add18/5=== BEGIN plant state count (captured at construction, before non-plant states added) ===
     int n_plant_states_ = 12;   // will be overwritten in constructor with actual value

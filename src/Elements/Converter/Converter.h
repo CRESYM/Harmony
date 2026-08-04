@@ -148,8 +148,8 @@ protected:
 	// List of controller and filter names, it can be changed only by developers
 	const std::vector<std::string> controller_list = {
 		"pll",  "dc_voltage", "active_power", "ac_voltage", "reactive_power", "energy", "zcc", "occ", "ccc",
-		"droop"
-	}; // List of controller names
+		"droop", "gfm"
+	}; // List of controller names (gfm appended — omit trailing 0 in legacy packs; init skips missing slots)
 	const std::vector<std::string> filter_list = {
 		"ac_voltage_dq", "ac_voltage", "active_power", "reactive_power", "dc_voltage"
 	}; // List of filter names

@@ -55,6 +55,9 @@ extern void example_generator(bool plotting_enabled = true);
 /** @brief MMC equilibrium, ABCD, Y-matrix, and eigenvalue study. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_MMC(bool plotting_enabled = true);
 
+/** @brief GFM MMC control mode with StabilityEstimate reuse. @param plotting_enabled Enable result plots. @ingroup examples */
+extern void example_MMC_gfm(bool plotting_enabled = true);
+
 /** @brief Type-3 wind-turbine model demonstration. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_WT_type_3(bool plotting_enabled = true);
 

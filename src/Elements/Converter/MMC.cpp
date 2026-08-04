@@ -197,10 +197,13 @@ MMC::MMC(const std::string& symbol, const std::string& location, const std::vect
  * @param controller_params Vector of controller parameters.
  */
 void MMC::init_Controller(const std::vector<double>& controller_params) {
-    for (int i = 0; i < controller_params.size(); ) {
+    for (int i = 0; i < static_cast<int>(controller_params.size()); ) {
         for (auto& controller_name : controller_list) {
+            if (i >= static_cast<int>(controller_params.size())) {
+                break; // Trailing slots (e.g. gfm) may be omitted in legacy packs
+            }
 			if (static_cast<bool>(controller_params[i])) { // If the controller is active
-                if ((i + 3) >= controller_params.size()) {
+                if ((i + 3) >= static_cast<int>(controller_params.size())) {
                     throw std::invalid_argument("Insufficient parameters for controller initialization.");
                 }
                 // First read the controller type
@@ -209,14 +212,14 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
                
                 if (controller_type == 0) { // PI controller
 					// Check if there are enough parameters for PI controller; at least 4 are expected for Kp, Ki, number_of_values, and references
-                    if ((i + 3) >= controller_params.size()) {
+                    if ((i + 3) >= static_cast<int>(controller_params.size())) {
                         throw std::invalid_argument("Insufficient parameters for PI controller initialization.");
                     }
                     std::vector<double> values = { controller_params[++i], controller_params[++i] };
 					number_of_values = static_cast<int>(controller_params[++i]);
                     //cout << number_of_values << i << endl;
                     std::vector<double> refs;
-                    if ((i + number_of_values) < controller_params.size()) {
+                    if ((i + number_of_values) < static_cast<int>(controller_params.size())) {
                         refs = std::vector<double>(controller_params.begin() + i + 1, controller_params.begin() + i + 1 + number_of_values);
                         i++;
                     }
@@ -227,14 +230,14 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
                 }
                 else if (controller_type == 1) { // P controller
 					// Check if there are enough parameters for P controller; at least 3 are expected for Kp, number_of_values, and references
-                    if ((i + 2) >= controller_params.size()) {
+                    if ((i + 2) >= static_cast<int>(controller_params.size())) {
                         throw std::invalid_argument("Insufficient parameters for P controller initialization.");
                     }
 					std::vector<double> values = { controller_params[++i] };
 					number_of_values = static_cast<int>(controller_params[++i]);
                     //cout << number_of_values << " " << i << endl;
                     std::vector<double> refs;
-                    if ((i + number_of_values) < controller_params.size()) {
+                    if ((i + number_of_values) < static_cast<int>(controller_params.size())) {
                         refs = std::vector<double>(controller_params.begin() + i + 1, controller_params.begin() + i + 1 + number_of_values);
                         i++;
                     }
@@ -268,6 +271,15 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
                     double Kdroop = (controls["droop"]->getParameters())[0];
                     controls["droop"]->setParameters({ 1.0 / Kdroop });
                 }
+                else if (controller_name == "gfm") {
+                    // GFM packs: Kp=Kdroop_P, Ki=Kdroop_Q, refs={Tf_P, Tf_Q, Rvirt, Lvirt}
+                    if (number_of_values < 4) {
+                        throw std::invalid_argument(
+                            "GFM controller requires 4 references: Tf_P, Tf_Q, Rvirt, Lvirt.");
+                    }
+                    gfm_index_ = number_of_states - 12;
+                    number_of_states += 3; // theta_gfm, Pac_f, Qac_f
+                }
                 else 
                     number_of_states += number_of_values; // Update the number of states based on the number of values
                 
@@ -286,6 +298,12 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
         throw std::invalid_argument("Droop controller, and DC voltage and/or active power controllers cannot be used together in MMC.");
 	if (controls.count("ac_voltage") && controls.count("reactive_power"))
 		throw std::invalid_argument("AC voltage and reactive power controllers cannot be used together in MMC.");
+    if (controls.count("gfm") && controls.count("pll"))
+        throw std::invalid_argument("GFM and PLL cannot be enabled together on the same MMC.");
+    if (controls.count("gfm") && (controls.count("active_power") || controls.count("reactive_power")
+            || controls.count("ac_voltage") || controls.count("dc_voltage") || controls.count("occ")))
+        throw std::invalid_argument(
+            "GFM mode replaces outer P/Q/V and OCC loops; disable active_power, reactive_power, ac_voltage, dc_voltage, and occ.");
 }
 
 /**
@@ -358,6 +376,16 @@ void MMC::update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc
     // Set OCC controller reference (dq current)
     if (controls.count("occ")) {
         controls["occ"]->setReference({ Id, Iq });
+    }
+
+    if (controls.count("gfm")) {
+        double vMd = 0.0, vMq = 0.0, vMz = V_dc / 2.0;
+        const double iSigma_z = (std::abs(V_dc) > 1e-3) ? P_dc / (3.0 * V_dc) : 0.0;
+        computeOpenLoopArmRefs(Id, Iq, V_dc, iSigma_z, vMd, vMq, vMz);
+        gfm_E_ref_ = std::hypot(vMd, vMq);
+        ol_vMDelta_d_ref_ = vMd;
+        ol_vMDelta_q_ref_ = vMq;
+        ol_vMSigma_z_ref_ = vMz;
     }
 
     // DC voltage control has priority over active power
@@ -579,13 +607,62 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         i += 2;
     }
 
-    // Apply dq transformations (reuse matrices)
-    Eigen::Vector2d i_delta_vec = T_theta * Eigen::Vector2d(iDelta_d, iDelta_q);
-    Eigen::Vector2d i_sigma_vec = T_2theta * Eigen::Vector2d(iSigma_d, iSigma_q);
-    iDelta_d = i_delta_vec(0);
-    iDelta_q = i_delta_vec(1);
-    iSigma_d = i_sigma_vec(0);
-    iSigma_q = i_sigma_vec(1);
+    const bool has_gfm = controls.count("gfm") > 0;
+    double gfm_vMDelta_d = 0.0;
+    double gfm_vMDelta_q = 0.0;
+    if (has_gfm) {
+        if (gfm_index_ < 0) {
+            throw std::runtime_error("GFM enabled but gfm_index_ is unset.");
+        }
+        // GFM forms E∠θ in the grid dq frame (unlike PLL, no measurement-frame rotation).
+        const double theta_gfm = x(gfm_index_);
+        const double Pac_f = x(gfm_index_ + 1);
+        const double Qac_f = x(gfm_index_ + 2);
+
+        Pac = 1.5 * (Vgd * iDelta_d + Vgq * iDelta_q);
+        Qac = 1.5 * (-Vgd * iDelta_q + Vgq * iDelta_d);
+
+        const auto* gfm = controls.at("gfm");
+        const double Kdroop_P = gfm->getParameters()[0];
+        const double Kdroop_Q = gfm->getParameters()[1];
+        const auto gfm_refs = gfm->getReference();
+        const double Tf_P = std::max(gfm_refs[0], 1e-6);
+        const double Tf_Q = std::max(gfm_refs[1], 1e-6);
+        const double Rvirt = gfm_refs[2];
+        const double Lvirt = gfm_refs[3];
+        const double Pac_ref = P;
+        const double Qac_ref = Q;
+        const double E_ref = (gfm_E_ref_ > 0.0) ? gfm_E_ref_
+            : std::hypot(ol_vMDelta_d_ref_, ol_vMDelta_q_ref_);
+
+        if (gfm_scale_eq_residual_) {
+            // Equivalent zeros to the dynamic equations, but O(1) residuals for KINSOL.
+            const double S = std::max(std::abs(Pac_ref), 1.0e6);
+            F(gfm_index_) = (Pac_f - Pac_ref) / S;
+            F(gfm_index_ + 1) = (Pac - Pac_f) / S;
+            F(gfm_index_ + 2) = (Qac - Qac_f) / S;
+        } else {
+            F(gfm_index_) = Kdroop_P * (Pac_f - Pac_ref);
+            F(gfm_index_ + 1) = (Pac - Pac_f) / Tf_P;
+            F(gfm_index_ + 2) = (Qac - Qac_f) / Tf_Q;
+        }
+
+        const double Vgfm = E_ref + Kdroop_Q * (Qac_f - Qac_ref);
+        const double e_d = Vgfm * std::cos(theta_gfm);
+        const double e_q = Vgfm * std::sin(theta_gfm);
+        gfm_vMDelta_d = e_d - Rvirt * iDelta_d - w * Lvirt * iDelta_q;
+        gfm_vMDelta_q = e_q - Rvirt * iDelta_q + w * Lvirt * iDelta_d;
+    }
+
+    // Apply dq transformations (reuse matrices) — identity under GFM (grid-frame control).
+    if (!has_gfm) {
+        Eigen::Vector2d i_delta_vec = T_theta * Eigen::Vector2d(iDelta_d, iDelta_q);
+        Eigen::Vector2d i_sigma_vec = T_2theta * Eigen::Vector2d(iSigma_d, iSigma_q);
+        iDelta_d = i_delta_vec(0);
+        iDelta_q = i_delta_vec(1);
+        iSigma_d = i_sigma_vec(0);
+        iSigma_q = i_sigma_vec(1);
+    }
 
     // Filter and controller blocks (cache existence)
     bool has_ac_voltage_dq_filter = filters.count("ac_voltage_dq");
@@ -703,7 +780,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         i += 1;
     }
 
-    if (has_occ) {
+    if (has_occ && !has_gfm) {
         vector<double> refs = controls["occ"]->getReference();
         if (!has_active_power_ctrl || !has_dc_voltage_ctrl) {
             Eigen::Vector2d i_delta_ref_vec = T_theta * Eigen::Vector2d(refs[0], refs[1]);
@@ -725,6 +802,9 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         vMDelta_q_ref = vM_ref(1);
         controls["occ"]->setReference(refs);
         i += 2;
+    } else if (has_gfm) {
+        vMDelta_d_ref = gfm_vMDelta_d;
+        vMDelta_q_ref = gfm_vMDelta_q;
     }
 
     if (controls.count("ccc")) {
@@ -749,6 +829,16 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         vMSigma_q_ref = vM_sigma_ref(1);
         controls["ccc"]->setReference(refs);
         i += 2;
+    }
+
+    // GFM states are allocated after other controllers; skip them before delay/plant.
+    if (has_gfm) {
+        if (i != gfm_index_) {
+            throw std::runtime_error(
+                "GFM state index mismatch (controller walk landed at "
+                + std::to_string(i) + ", expected " + std::to_string(gfm_index_) + ").");
+        }
+        i += 3;
     }
 
     // Algebraic feedforward bypasses inner loops when closed-loop KINSOL fails to converge.
@@ -1323,6 +1413,7 @@ void MMC::seedPlantStateGuess(
 void MMC::solveEquilibrium() {
     const int n = number_of_states;
     const bool has_occ = controls.count("occ") > 0;
+    const bool has_gfm = controls.count("gfm") > 0;
 
     Eigen::VectorXd x0 = 0.01 * Eigen::VectorXd::Ones(n);
     const double Vgd = V_m * std::cos(theta);
@@ -1343,6 +1434,20 @@ void MMC::solveEquilibrium() {
 
     seedPlantStateGuess(x0, Id, Iq, iSigma_z);
 
+    // GFM: do not seed arm capacitor voltages to the open-loop phasor map.
+    // That seed makes scheduled Id look like an equilibrium and hides the
+    // capacitor–modulation voltage drop that MATLAB's ODE settles through.
+    if (has_gfm) {
+        const int p = number_of_states - 12;
+        x0(p + 5) = 0.0;  // vCDelta_d
+        x0(p + 6) = 0.0;  // vCDelta_q
+        x0(p + 7) = 0.0;  // vCDelta_Zd
+        x0(p + 8) = 0.0;  // vCDelta_Zq
+        x0(p + 9) = 0.0;  // vCSigma_d
+        x0(p + 10) = 0.0; // vCSigma_q
+        x0(p + 11) = V_dc; // vCSigma_z
+    }
+
     const Eigen::Vector3d u = makeOperatingInput(
         V_dc, P_dc, controls.count("dc_voltage") > 0, V_m, theta);
     if (controls.count("dc_voltage")) {
@@ -1356,6 +1461,14 @@ void MMC::solveEquilibrium() {
     ol_vMDelta_d_ref_ = vMDelta_d;
     ol_vMDelta_q_ref_ = vMDelta_q;
     ol_vMSigma_z_ref_ = vMSigma_z;
+    if (has_gfm) {
+        gfm_E_ref_ = std::hypot(vMDelta_d, vMDelta_q);
+        if (gfm_index_ >= 0) {
+            x0(gfm_index_) = std::atan2(vMDelta_q, vMDelta_d);
+            x0(gfm_index_ + 1) = P;
+            x0(gfm_index_ + 2) = Q;
+        }
+    }
     initializeDelayStates(x0, V_dc, vMDelta_d, vMDelta_q, vMSigma_z);
     equilibrium_guess_ = x0;
 
@@ -1369,6 +1482,14 @@ void MMC::solveEquilibrium() {
         ol_vMDelta_d_ref_ = vMDelta_d;
         ol_vMDelta_q_ref_ = vMDelta_q;
         ol_vMSigma_z_ref_ = vMSigma_z;
+        if (has_gfm) {
+            gfm_E_ref_ = std::hypot(vMDelta_d, vMDelta_q);
+            if (gfm_index_ >= 0) {
+                x0(gfm_index_) = std::atan2(vMDelta_q, vMDelta_d);
+                x0(gfm_index_ + 1) = P;
+                x0(gfm_index_ + 2) = Q;
+            }
+        }
         initializeDelayStates(x0, V_dc, vMDelta_d, vMDelta_q, vMSigma_z);
     };
 
@@ -1389,6 +1510,16 @@ void MMC::solveEquilibrium() {
             P_dc = saved_Pdc * lambda;
 
             seedPlantStateGuess(x0, Id * lambda, Iq * lambda, iSigma_z * lambda);
+            if (has_gfm && !open_loop) {
+                const int p = number_of_states - 12;
+                x0(p + 5) = 0.0;
+                x0(p + 6) = 0.0;
+                x0(p + 7) = 0.0;
+                x0(p + 8) = 0.0;
+                x0(p + 9) = 0.0;
+                x0(p + 10) = 0.0;
+                x0(p + 11) = V_dc;
+            }
             refreshOpenLoopRefs(Id * lambda, Iq * lambda, iSigma_z * lambda);
             equilibrium_guess_ = x0;
 
@@ -1415,7 +1546,39 @@ void MMC::solveEquilibrium() {
         return x_work;
     };
 
-    open_loop_modulation_ = !has_occ;
+    open_loop_modulation_ = !has_occ && !has_gfm;
+    if (has_gfm) {
+        // GFM Watt-based droop gains are ~1e-8; use power-normalized residuals for
+        // the nonlinear solve, and never accept open-loop modulation as the answer
+        // (that path ignores E∠θ and forces scheduled Id = 2P/3V).
+        gfm_scale_eq_residual_ = true;
+        open_loop_modulation_ = false;
+        try {
+            try {
+                equilibrium_state = findEquilibriumRobust(rhs, x0, u);
+            }
+            catch (const std::exception&) {
+                // Ramp power with GFM closed-loop (not algebraic open-loop feedforward).
+                equilibrium_state = homotopySolve(false);
+                x0 = equilibrium_state;
+                if (gfm_index_ >= 0) {
+                    x0(gfm_index_ + 1) = P;
+                    x0(gfm_index_ + 2) = Q;
+                }
+                equilibrium_state = findEquilibriumRobust(rhs, x0, u);
+            }
+            gfm_scale_eq_residual_ = false;
+            open_loop_modulation_ = false;
+            return;
+        }
+        catch (const std::exception& ex) {
+            gfm_scale_eq_residual_ = false;
+            open_loop_modulation_ = false;
+            throw std::runtime_error(
+                std::string("[MMC::solveEquilibrium] GFM closed-loop equilibrium failed: ")
+                + ex.what());
+        }
+    }
     try {
         equilibrium_state = findEquilibriumRobust(rhs, x0, u);
         open_loop_modulation_ = false;

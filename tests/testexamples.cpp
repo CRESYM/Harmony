@@ -43,6 +43,10 @@ TEST_F(TestExamples, MMC) {
     std::filesystem::remove("files/MMC1.csv");
 }
 
+TEST_F(TestExamples, MMC_GFM) {
+    EXPECT_NO_THROW(example_MMC_gfm(false));
+}
+
 TEST_F(TestExamples, WT_type_3) {
     EXPECT_NO_THROW(example_WT_type_3(false));
     EXPECT_TRUE(std::filesystem::exists("files/DFIG.csv"));

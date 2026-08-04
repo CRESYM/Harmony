@@ -84,6 +84,7 @@ void Converter::plotParticipationFactors() {
     for (auto control : controls) {
 		int n = control.second->getNumberOfSignals();
 		if (control.first == "pll") n = 2; // PLL has always 2 states
+		if (control.first == "gfm") n = 3; // theta, Pac_f, Qac_f
         for (int i = 0; i < n; ++i) {
             state_labels.push_back(control.first + "_" + to_string(i + 1));
         } 

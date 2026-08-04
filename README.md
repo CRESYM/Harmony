@@ -183,6 +183,7 @@ Additional documentation:
 - **Robert Dimitrovski**, dynamic phasor formulation, development of a core of DQsym, funding acquisition and supervision
 - **Haixiao Li**, design of the power flow strategy, and formulation of the power flow solution
 - **Saif Alsarayreh**, dynamic phasor formulation, model design, and implementation
+- **Muhammad Noman Ashraf**, GFM control
 - **Azadeh Kermansaravi**, programming of the part of the toolbox
 - **Yasel Quintero**, documentation, installation setup, cross-platform compatibility, testing, issuing, release
 

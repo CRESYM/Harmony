@@ -104,7 +104,50 @@ TEST_F(TestMMC, TestYMatrix) {
 	EXPECT_TRUE(Y.isApprox(Y_ref, 1e-9))
 		<< "compute_y_parameters must match the ABCD frequency response.";
 
-	// Repeatability at the same frequency.
 	const MatrixXcd Y_repeat = vectorToMatrix(mmc.compute_y_parameters(f));
 	EXPECT_TRUE(Y.isApprox(Y_repeat, 1e-12));
+}
+
+TEST_F(TestMMC, TestGfmModeEquilibrium) {
+	const double omega = 2.0 * M_PI * 50.0;
+	const double Vdc = 240e3;
+	const double Vm = 100e3;
+	const double Pac = 100e6;
+	const double Kdroop_P = 2.0 * M_PI * 0.5 / 100e6;
+	const double Kdroop_Q = 0.02 * 100e3 / 50e6;
+
+	std::vector<double> converter_params = {
+		omega, Pac, 0.0, 0.0, Vm, Pac, Vdc,
+		50e-3, 1.07, 0.01, 50, 0.06, 0.535, 0.0
+	};
+	std::vector<double> controller_params = {
+		0, 0, 0, 0, 0,
+		0, // energy off
+		1, 0, 19.93, 4500, 1, Pac / (3.0 * Vdc),
+		0, // occ off
+		0, // ccc off
+		0,
+		1, 0, Kdroop_P, Kdroop_Q, 4, 20e-3, 20e-3, 0.0, 0.0
+	};
+
+	MMC mmc("MMC_GFM", "AC1_DC1", converter_params, controller_params);
+	ASSERT_NO_THROW(mmc.solveEquilibrium());
+	const Eigen::VectorXd x_eq = mmc.getEquilibriumState();
+	EXPECT_GT(x_eq.size(), 15u);
+	EXPECT_TRUE(x_eq.allFinite());
+
+	ASSERT_NO_THROW(mmc.computeABCD());
+	EXPECT_TRUE(mmc.getA().allFinite());
+
+	const auto u = operatingInput(Vdc, Vm, 0.0);
+	const Eigen::VectorXd dx = mmc.computeStateDerivatives(x_eq, u);
+	EXPECT_TRUE(dx.allFinite());
+	EXPECT_LT(dx.lpNorm<Eigen::Infinity>(), 1e-2)
+		<< "GFM closed-loop equilibrium residual too large";
+	const int plant = static_cast<int>(x_eq.size()) - 12;
+	const double Id_h = x_eq(plant);
+	const double Iq_h = x_eq(plant + 1);
+	// True GFM SS (MATLAB t→∞): Pac=Pref ⇒ Id=2P/(3V) when Vgq=0; Iq ≠ 0 from Q-V droop / plant.
+	EXPECT_NEAR(Id_h, (2.0 / 3.0) * Pac / Vm, 1e-3);
+	EXPECT_NEAR(Iq_h, 8.3256, 0.05);
 }
