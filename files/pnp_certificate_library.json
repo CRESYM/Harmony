@@ -6,7 +6,7 @@
       "device_type": "MMC_GFM",
       "f_max_Hz": 1000.0,
       "f_min_Hz": 1.0,
-      "notes": "BLOCK 'MMC_CERT': passivity(worst nu=-0.0194423) eigenphase(worst=133.177deg)",
+      "notes": "BLOCK 'MMC_CERT': passivity(worst ν=-0.0194423) phase(worst=133.177deg)",
       "phase_limit_deg": 90.0,
       "worst_passivity": -0.019442296550992503,
       "worst_phase_deg": 133.17746152067787,

@@ -1,3 +1,3 @@
 device_id,device_type,allow,worst_passivity,worst_phase_deg,worst_shifted,notes
-MMC_CERT,MMC_GFM,0,-0.0194423,133.177,-0.0194423,"BLOCK 'MMC_CERT': passivity(worst nu=-0.0194423) eigenphase(worst=133.177deg)"
+MMC_CERT,MMC_GFM,0,-0.0194423,133.177,-0.0194423,"BLOCK 'MMC_CERT': passivity(worst ν=-0.0194423) phase(worst=133.177deg)"
 LINE_PASSIVE,Impedance,1,0,179.965,0,"ALLOW interconnect of 'LINE_PASSIVE'"
