@@ -79,8 +79,11 @@ std::vector<std::complex<double>> numericalRangeBoundary(
 		const double theta = 2.0 * M_PI * k / N;
 		const std::complex<double> e = std::polar(1.0, -theta);
 		const Eigen::MatrixXcd H = hermitianPart(e * A);
-		const double lam = lambdaMaxHermitian(H);
-		boundary[static_cast<size_t>(k)] = std::polar(lam, theta);
+		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXcd> es(H);
+		// Boundary point = Rayleigh quotient of the max-eigendirection of Her(e^{-iθ} A).
+		// (e^{iθ} λ_max is only the support value, not the contact point on ∂W.)
+		const Eigen::VectorXcd v = es.eigenvectors().col(es.eigenvalues().size() - 1);
+		boundary[static_cast<size_t>(k)] = (v.adjoint() * A * v)(0);
 	}
 	return boundary;
 }
