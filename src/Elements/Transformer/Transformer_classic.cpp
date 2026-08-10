@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_classic.cpp
+ * @brief Implementation of Classic two-winding transformer with mutual inductance.
+ */
 #include "Transformer_classic.h"
 
 Transformer_classic::Transformer_classic(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)
@@ -22,7 +26,7 @@ Transformer_classic::Transformer_classic(const std::string& symbol, const std::s
     RCP<const Basic> Y_11 = div(Z_s, denominator);
     RCP<const Basic> Y_12 = div(neg(Z_m), denominator);
     RCP<const Basic> Y_21 = Y_12;
-    RCP<const Basic> Y_22 = div(Z_s, denominator);
+    RCP<const Basic> Y_22 = div(Z_p, denominator);
 
     // Compute Y-parameters
     for (int i = 0; i < pins; i++) {
@@ -33,6 +37,4 @@ Transformer_classic::Transformer_classic(const std::string& symbol, const std::s
     }
 }
 
-Transformer_classic::~Transformer_classic() {
-    std::cout << "Transformer object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+Transformer_classic::~Transformer_classic() = default;

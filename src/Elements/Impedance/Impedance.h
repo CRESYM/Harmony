@@ -1,46 +1,48 @@
+/**
+ * @file Impedance.h
+ * @brief Generic multi-phase series impedance element with symbolic or numeric Z values.
+ * @ingroup impedance
+ */
+
 #ifndef _IMPEDANCE_H_
 #define _IMPEDANCE_H_
 
 #include "Impedance_base.h"
 
-/*
-Creates impedance with specified number of input/output pins which represent phases.
-The admittance expression has to be given in Omega and can have both numerical and
-symbolic value (example: `z = s-2`). Depending on the provided vector of impedance values,
-we differ two cases. Namely, we create only series impedance for each phase with values:
--In the case of 1×1 vector, impedance value is given to all diagonal impedance entries.
--In the case of `pins` elements, they are representing diagonal entries of impedance.
-*/
-
-
+/**
+ * @class Impedance
+ * @brief Series impedance for each phase with diagonal (or matrix) Z entries.
+ *
+ * Accepts SymEngine @c DenseMatrix, per-phase vectors, scalars, or complex values.
+ * Used for AC branches (R+jX) and DC resistive links.
+ */
 class Impedance : public Impedance_base {
 public:
-    /*
-     * Constructor: Impedance
-     *
-     * Constructs the impedance model with the given symbolic name, number of pins (phases),
-     * and a matrix of impedance values. It calculates the admittance matrix based on these values.
-     *
-     * Parameters:
-     * - symbol: Symbolic identifier for the impedance element (e.g., Z1, Z2)
-     * - pins: Number of input/output pins (phases)
-     * - values: DenseMatrix representing the impedance values
+    /**
+     * @brief Construct from a symbolic dense impedance matrix.
+     * @param symbol Element designator.
+     * @param location Grid area tag (e.g. @c AC1, @c DC1).
+     * @param pins Number of phases / conductors.
+     * @param values SymEngine matrix of impedance entries.
      */
     Impedance(const std::string& symbol, const std::string& location, int pins, DenseMatrix values);
-    
+
+    /**
+     * @brief Construct from per-phase real impedance values.
+     * @param values One value (all diagonals) or @p pins diagonal entries.
+     */
     Impedance(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values);
 
-	Impedance(const std::string& symbol, const std::string& location, int pins, const double values);
+    /** @brief Single scalar impedance applied to all diagonal entries. */
+    Impedance(const std::string& symbol, const std::string& location, int pins, const double values);
 
+    /** @brief Per-phase complex impedance vector. */
     Impedance(const std::string& symbol, const std::string& location, int pins, const std::vector<complex<double>>& values);
 
+    /** @brief Single complex impedance for all diagonal entries. */
     Impedance(const std::string& symbol, const std::string& location, int pins, const complex<double> values);
 
-    // Destructor to handle any clean-up tasks
     ~Impedance();
-
-
-
 
 private:
 };

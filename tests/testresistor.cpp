@@ -1,4 +1,4 @@
-﻿#include <gtest/gtest.h>
+#include <gtest/gtest.h>
 #include "Resistor.h"
 #include "Bus.h"
 #include "Constants.h"

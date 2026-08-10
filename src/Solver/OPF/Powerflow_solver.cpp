@@ -1,5 +1,9 @@
-#include "powerflow.h"
-#include "viz_opf.h"
+/**
+ * @file Powerflow_solver.cpp
+ * @brief Implementation of the PowerFlow OPF solver algorithms.
+ */
+#include "Powerflow.h"
+#include "../Helper_Functions/Helper_Functions.h"
 #include "../../Bus.h"   
 
 using namespace std;
@@ -72,6 +76,7 @@ void PowerFlow::solve_opf(
     bool plotResult,
     bool plot_info) {
 
+    opf_solved_ = false;
     auto start = std::chrono::high_resolution_clock::now();
     try {
         PowerFlow sys_dc;
@@ -80,6 +85,8 @@ void PowerFlow::solve_opf(
         // Load parameters based on input type
         if (dataOPF) {
             // Load from data structure
+            sys_dc.opf_user_base_mva_ = opf_user_base_mva_;
+            sys_ac.opf_user_base_mva_ = opf_user_base_mva_;
             sys_dc.load_params_dc("", *dataOPF);
             sys_ac.load_params_ac("", *dataOPF);
         }
@@ -519,6 +526,7 @@ void PowerFlow::solve_opf(
                 pm_ac(index) += pgen_ac[ng](i);
                 qm_ac(index) += qgen_ac[ng](i);
             }
+
             for (int i = 0; i < nconvs_dc; ++i) {
                 if (static_cast<int>(conv_dc(i, 2)) == ng + 1) {
                     int index = static_cast<int>(conv_dc(i, 1)) - 1;
@@ -526,6 +534,13 @@ void PowerFlow::solve_opf(
                     qm_ac(index) -= qs_dc(i);
                 }
             }
+
+            for (int i = 0; i < nress_ac[ng]; ++i) {
+                int index = static_cast<int>(res_ac[ng](i, 0)) - 1;
+                pm_ac(index) += pres_ac[ng](i);
+                qm_ac(index) += qres_ac[ng](i);
+            }
+
             for (int i = 0; i < nbuses_ac[ng]; ++i) {
                 model.addConstr(pn_ac[ng](i) == pm_ac(i) - pd_ac[ng](i));
                 model.addConstr(qn_ac[ng](i) == qm_ac(i) - qd_ac[ng](i));
@@ -555,16 +570,16 @@ void PowerFlow::solve_opf(
             //}
         }
        
-        std::cout << "\n[Debug] Printing voltage limits for each bus:\n";
-        for (int ng = 0; ng < ngrids; ++ng) {
-            std::cout << "=== AC Grid " << ng + 1 << " ===\n";
-            for (int i = 0; i < nbuses_ac[ng]; ++i) {
-                std::cout << "Bus " << std::setw(3) << i + 1
-                    << "  Vmax(col11)=" << std::setw(8) << bus_ac[ng](i, 11)
-                    << "  Vmin(col12)=" << std::setw(8) << bus_ac[ng](i, 12)
-                    << std::endl;
-            }
-        }
+        //std::cout << "\n[Debug] Printing voltage limits for each bus:\n";
+        //for (int ng = 0; ng < ngrids; ++ng) {
+        //    std::cout << "=== AC Grid " << ng + 1 << " ===\n";
+        //    for (int i = 0; i < nbuses_ac[ng]; ++i) {
+        //        std::cout << "Bus " << std::setw(3) << i + 1
+        //            << "  Vmax(col11)=" << std::setw(8) << bus_ac[ng](i, 11)
+        //            << "  Vmin(col12)=" << std::setw(8) << bus_ac[ng](i, 12)
+        //            << std::endl;
+        //    }
+        //}
 
         /**************************************************
         * SET OPTIMIZATION OBJECTIVE
@@ -734,7 +749,7 @@ void PowerFlow::solve_opf(
             for (int ng = 0; ng < ngrids; ++ng) {
                 int ref_bus = -1;
 
-                // ---- ¦È_ac ----
+                // ---- ï¿½ï¿½_ac ----
                 if (ng >= recRef.size()) continue;
 
                 if (!recRef[ng].empty() && recRef[ng][0] > 0) {
@@ -791,7 +806,7 @@ void PowerFlow::solve_opf(
                 theta_ac_k[ng] = theta;
             }
 
-            // ---- ¦È_s ----
+            // ---- ï¿½ï¿½_s ----
             for (int i = 0; i < nconvs_dc; ++i) {
                 int k = static_cast<int>(conv_dc(i, 2)) - 1;  // AC grid index
                 int j = static_cast<int>(conv_dc(i, 1)) - 1;  // PCC bus number
@@ -806,7 +821,7 @@ void PowerFlow::solve_opf(
 
 
 
-            // ---- ¦È_c ----
+            // ---- ï¿½ï¿½_c ----
             for (int i = 0; i < nconvs_dc; ++i) {
                 double dtheta_sc = std::atan2(Stc_dc_k(i, 0), Ctc_dc_k(i, 0));
                 theta_c_k(i) = theta_s_k(i) - dtheta_sc;
@@ -836,8 +851,19 @@ void PowerFlow::solve_opf(
             OPF_OUT << "\n-----   -----  ------------------  --------  ---------  -------  -------   ---------  -----------";
 
             for (int ng = 0; ng < ngrids; ++ng) {
-                const auto& genidx = generator_ac[ng].col(0);
-                const auto& residx = res_ac[ng].col(0);
+                bool has_gen = generator_ac[ng].rows() > 0 && generator_ac[ng].cols() > 0;
+                bool has_res = res_ac[ng].rows() > 0 && res_ac[ng].cols() > 0;
+
+                Eigen::VectorXd genidx;
+                Eigen::VectorXd residx;
+
+                if (has_gen) {
+                    genidx = generator_ac[ng].col(0);
+                }
+
+                if (has_res) {
+                    residx = res_ac[ng].col(0);
+                }
 
                 for (int i = 0; i < nbuses_ac[ng]; ++i) {
                     double vmag = std::sqrt(vn2_ac_k[ng](i));
@@ -855,7 +881,7 @@ void PowerFlow::solve_opf(
                         OPF_OUT << " ";
                     }
 
-                    bool is_generator = (genidx.array() == i + 1).any();
+                    bool is_generator = has_gen && (genidx.array() == i + 1).any();
                     if (is_generator) {
                         int gen_idx = -1;
                         for (int j = 0; j < genidx.size(); ++j) {
@@ -886,7 +912,7 @@ void PowerFlow::solve_opf(
                     }
 
 
-                    bool is_res = (residx.array() == i + 1).any();
+                    bool is_res = has_res && (residx.array() == i + 1).any();
                     if (is_res) {
                         int res_idx = -1;
                         for (int j = 0; j < residx.size(); ++j) {
@@ -911,7 +937,7 @@ void PowerFlow::solve_opf(
             double GenCostResUSA = model.get(GRB_DoubleAttr_ObjVal);;
             double GenCostResEURO = GenCostResUSA / 1.08;
             OPF_OUT << "\n The total generation cost is $" << std::fixed << std::setprecision(2)
-                << GenCostResUSA << "/MWh (€" << GenCostResEURO << "/MWh)";
+                << GenCostResUSA << "/MWh (\u20AC" << GenCostResEURO << "/MWh)";
             OPF_OUT << "\n\n";
 
             OPF_OUT << "\n===========================================================================================";
@@ -1123,6 +1149,7 @@ void PowerFlow::solve_opf(
             this->convState_dc = convState_dc;
             this->fbus_dc = fbus_dc;
             this->tbus_dc = tbus_dc;
+            this->opf_solved_ = true;
         }
 
 
@@ -1152,19 +1179,19 @@ DCBusResult PowerFlow::getDCBusResult(const std::string& dcBusName,
     r.busName = dcBusName;
     r.busIndex = i;
     r.vn = std::sqrt(vn2_dc_k(i)) * global_params.at("DCbaseKV");
-    r.pn = pn_dc_k(i) * global_params.at("baseMVA");
+    r.pn = pn_dc_k(i) * baseMW_dc;
 
     auto safePick = [&](const Eigen::VectorXd& v) -> double {
         if (i >= 0 && i < v.size()) return v(i);
         return 0.0;
         };
 
-    r.ps = safePick(ps_dc_k) * global_params.at("baseMVA");
-    r.qs = safePick(qs_dc_k) * global_params.at("baseMVA");
+    r.ps = safePick(ps_dc_k) * baseMW_dc;
+    r.qs = safePick(qs_dc_k) * baseMW_dc;
     r.thetas = safePick(theta_s_k) * 3.141592653 / 180;
     r.vs = std::sqrt(safePick(v2s_dc_k)) * global_params.at("ACbaseKV");
-    r.pc = safePick(pc_dc_k) * global_params.at("baseMVA");;
-    r.qc = safePick(qc_dc_k) * global_params.at("baseMVA");
+    r.pc = safePick(pc_dc_k) * baseMW_dc;
+    r.qc = safePick(qc_dc_k) * baseMW_dc;
     r.thetac = safePick(theta_c_k) * 3.141592653 / 180;
     r.vc = std::sqrt(safePick(v2c_dc_k)) * global_params.at("ACbaseKV");
 

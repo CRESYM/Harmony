@@ -1,9 +1,13 @@
-﻿#include "Examples.h"
+/**
+ * @file example_point2point_case.cpp
+ * @brief Runnable example: Point-to-point HVDC-style OPF case.
+ */
+#include "Examples.h"
 
 #include "../network.h"
 #include "../Bus.h"
 #include "../Include_components.h"
-#include "../Solver/OPF/powerflow.h"
+#include "../Solver/OPF/Powerflow.h"
 #include "../Solver/Stability_Estimate/Stability_estimate.h"
 
 
@@ -15,19 +19,24 @@ void example_point2point_case() {
     ///* ---------- 1.1 Create AC Buses ---------- */
     Bus* bus1_ac = new Bus("ACBUS01", "AC1", 3);
     Bus* bus2_ac = new Bus("ACBUS02", "AC1", 3);
-    Bus* bus3_ac = new Bus("ACBUS03", "AC2", 3);
-    Bus* bus4_ac = new Bus("ACBUS04", "AC2", 3); // 
+    Bus* bus3_ac = new Bus("ACBUS03", "AC1", 3); 
+    Bus* bus4_ac = new Bus("ACBUS04", "AC2", 3); 
+    Bus* bus5_ac = new Bus("ACBUS05", "AC2", 3); 
+    Bus* bus6_ac = new Bus("ACBUS06", "AC2", 3); 
 
     ///*  ---------- 1.2 Add AC Loads  ---------- */
 
-    std::vector<double> load_params2 = { 2380.5, 18.9, 0 };
+    // using RLC model
+    std::vector<double> load_params2 = { 2.28e3, 1.457, 0 };
     Load* load2 = new Load("LOAD02", "AC2", 3, load_params2);
-    net.connectElementToBus(load2, 1, bus4_ac);
+    // using PQ load model
+    // LoadPQ* load2 = new LoadPQ("LOAD02", "AC2", 3, { 50e6, 5e6 });
+    net.connectElementToBus(load2, 1, bus6_ac);
 
     ///*  ---------- 1.3 Add AC Generators  ---------- */
 
     /// Generator 1
-    double Zsrc = 0.1; 
+    double Zsrc = 5; 
     AC_source* src1 = new AC_source("SRC01", "AC1", 3, 345e3, Zsrc);
     net.connectElementToBus(src1, 1, bus1_ac);
     map<string, double> src_info1 = {
@@ -41,32 +50,49 @@ void example_point2point_case() {
         {"c1", 5.0},       // Linear coefficient of the generation cost function
         {"c0", 150},       // Constant term of the generation cost function (fixed operation cost)
 
-        {"Vmax", 1.0},    // Maximum voltage limit (p.u.)
-		{"Vmin", 1.0},    // Minimum voltage limit (p.u.)
-        {"Ref", 1}         // Reference bus flag (1 = set as slack/reference bus)
+        {"Ref", 1},         // Reference bus flag (1 = set as slack/reference bus)
+        {"Vg", 345 * 1.06} // Generator terminal voltage reference
     };
     src1->setOPFInfo(src_info1);
 
     ///*  ---------- 1.4 Add Branches  ---------- */
-    double ACR1 = 1e-1; double ACX1 = 1*10;
+
+    double ACR1 = 5 ; double ACX1 = 110 ;
     std::complex<double> ACZ1(ACR1, ACX1);
     Impedance* br1_ac = new Impedance("br1_ac", "AC1", 3, ACZ1);
     net.connectElementToBus(br1_ac, /*terminal=*/1, bus1_ac);
     net.connectElementToBus(br1_ac, /*terminal=*/2, bus2_ac);
 
-    double ACR2 = 1e-1; double ACX2 = 1*10;
+    double ACR2 = 5 ; double ACX2 = 110 ;
     std::complex<double> ACZ2(ACR2, ACX2);
     Impedance* br2_ac = new Impedance("br2_ac", "AC2", 3, ACZ2);
-    net.connectElementToBus(br2_ac, /*terminal=*/1, bus3_ac);
-    net.connectElementToBus(br2_ac, /*terminal=*/2, bus4_ac);
+    net.connectElementToBus(br2_ac, /*terminal=*/1, bus5_ac);
+    net.connectElementToBus(br2_ac, /*terminal=*/2, bus6_ac);
+
+    ///*  ---------- 1.5 Add Converter Transformers  ---------- */
+    std::vector<double> tr_values = {
+        0.01,   // Primary winding resistance
+        0.01,   // Primary winding inductance
+        0.01,   // Secondary winding resistance
+        0.01,   // Secondary winding inductance
+        0.009   // Mutual inductance
+    };
+
+    Transformer_classic* tr1 = new Transformer_classic("TR1", "AC1", 3, tr_values);
+    net.connectElementToBus(tr1, 1, bus2_ac);
+    net.connectElementToBus(tr1, 2, bus3_ac);
+
+    Transformer_classic* tr2 = new Transformer_classic("TR2", "AC2", 3, tr_values);
+    net.connectElementToBus(tr2, 1, bus4_ac);
+    net.connectElementToBus(tr2, 2, bus5_ac);
 
     ///*  ---------- 2.1 Create DC Buses  ---------- */
-    Bus* bus1_dc = new Bus("DCBUS01", "DC1", 1);
-    Bus* bus2_dc = new Bus("DCBUS02", "DC1", 1);
+    Bus* bus1_dc = new Bus("DCBUS01", "DC1", 2);
+    Bus* bus2_dc = new Bus("DCBUS02", "DC1", 2);
 
     ///*  ---------- 2.2 Create DC Buses  ---------- */
-    double DCR1 = 0.05;
-    Impedance* br1_dc = new Impedance("br1_dc", "DC1", 1, DCR1);
+    double DCR1 = 20 ;
+    Impedance* br1_dc = new Impedance("br1_dc", "DC1", 2, DCR1);
     net.connectElementToBus(br1_dc, /*terminal=*/1, bus1_dc);
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
 
@@ -100,7 +126,7 @@ void example_point2point_case() {
         0 // droop control
     };
     MMC* mmc1 = new MMC("MMC1", "AC1_DC1", converter_params1, controller_params1);
-    net.connectElementToBus(mmc1, 1, bus2_ac);
+    net.connectElementToBus(mmc1, 1, bus3_ac);
     net.connectElementToBus(mmc1, 2, bus1_dc);
 
     vector<double> converter_params2 = {
@@ -132,7 +158,7 @@ void example_point2point_case() {
         0  // droop control
     };
     MMC* mmc2 = new MMC("MMC2", "AC2_DC1", converter_params2, controller_params2);
-    net.connectElementToBus(mmc2, 1, bus3_ac);
+    net.connectElementToBus(mmc2, 1, bus4_ac);
     net.connectElementToBus(mmc2, 2, bus2_dc);
 
     ///*----- 3 OPF Implementatiopn ----- */
@@ -144,8 +170,14 @@ void example_point2point_case() {
     global_params["omega"] = omega;
     global_params["baseMVA"] = 100;
     global_params["ACbaseKV"] = 345.0; // Base voltage in kV, can be adjusted as needed
-    global_params["DCbaseKV"] = 400.0; // Base voltage for DC, can be adjusted as needed
-    global_params["Z_base"] = global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"]; // Base impedance, can be adjusted as needed
+    global_params["DCbaseKV"] = 440.0; // Base voltage for DC, can be adjusted as needed
+    global_params["ACZbase"] =
+        global_params["ACbaseKV"] * global_params["ACbaseKV"] / global_params["baseMVA"];
+    global_params["DCZbase"] =
+        global_params["DCbaseKV"] * global_params["DCbaseKV"] / global_params["baseMVA"];
 
     pf.make_OPF(&net, global_params, false, false, false, true);
+
+    cout << "Press Enter to continue...\n";
+    cin.get();
 }

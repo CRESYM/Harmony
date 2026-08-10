@@ -1,0 +1,41 @@
+{
+    "simulation": {
+        "title": "cable",
+        "description": "JSON equivalent of example_cable.cpp — underground/aerial cable Y-matrix.",
+        "output_directory": "./files",
+        "frequency_range": { "start": 1, "end": 1000, "points": 15 }
+    },
+    "buses": [
+        { "id": "bus1", "location": "DC1", "pins": 1, "enabled": true },
+        { "id": "bus2", "location": "DC1", "pins": 1, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "cable",
+            "location": "DC1",
+            "type": "cable",
+            "cable_type": "aerial",
+            "length": 100000.0,
+            "earth": [1.0, 1.0, 1.0],
+            "conductors": [
+                { "id": "C1", "ri": 0.0, "ro": 0.02425, "resistivity": 1.72e-8 },
+                { "id": "C2", "ri": 0.04175, "ro": 0.04625, "resistivity": 2.2e-8 },
+                { "id": "C3", "ri": 0.04975, "ro": 0.06055, "resistivity": 1.8e-8, "permeability": 10.0 }
+            ],
+            "insulators": [
+                { "id": "I1", "ri": 0.02425, "ro": 0.04175, "permittivity": 2.3 },
+                { "id": "I2", "ri": 0.04625, "ro": 0.04975, "permittivity": 2.3 },
+                { "id": "I3", "ri": 0.06055, "ro": 0.06575, "permittivity": 2.3 }
+            ],
+            "positions": [[0.0, 1.0]],
+            "connected_buses": [
+                { "bus_id": "bus1", "terminal": 1 },
+                { "bus_id": "bus2", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "y_matrix", "component_id": "cable" }
+    ]
+}

@@ -1,38 +1,47 @@
-﻿#include "network.h"
-#include "Bus.h"
-#include "Include_components.h"
-#include "examples/Examples.h"
-
 /**
- * @brief Main entry point for the circuit simulation program.
- *
- * This function initializes and runs various examples to demonstrate the
- * capabilities of the circuit analysis library.
- *
- * @return 0 on successful execution.
+ * @file main.cpp
+ * @brief Unified Harmony entry point: C++ examples and JSON simulations.
  */
-int main() {
+#include "cli.h"
 
-	// example_WT_type_3();
-	// example_WT_type_4();
-	// example_PV_plant();
-	//example_MMC();
-	// example_OHL();
-	// example_cable();
-	//example_transformer();
-	// example_generator();
-	//example_point2point_case();
+#include <filesystem>
+#include <iostream>
 
-	// Solver examples
-	//example_OPF();
-	//example_OPF_1();
-	//example_OPF_csv();
-	//example_OPF_csv_1();
-	// example_DQsym_math_operations();
-	// example_visuals();
-	 example_stability_check();
-	// example_admittance_parameters();
 
-	return 0;
+int main(int argc, char* argv[]) {
+	if (argc > 0) {
+		initCliPaths(argv[0]);
+	}
 
+	const CliOptions opts = parseCli(argc, argv);
+
+	switch (opts.mode) {
+	case CliOptions::Mode::Help:
+		printCliHelp();
+		return opts.target.empty() && argc == 1 ? EXIT_SUCCESS : EXIT_FAILURE;
+
+	case CliOptions::Mode::ListCpp:
+		listCppExamples();
+		return EXIT_SUCCESS;
+
+	case CliOptions::Mode::ListJson:
+		listJsonFiles(opts.searchPaths);
+		return EXIT_SUCCESS;
+
+	case CliOptions::Mode::Cpp:
+		return runCppExample(opts.target, opts.plot, opts.verbose);
+
+	case CliOptions::Mode::Json: {
+		const auto path = resolveJsonPath(opts.target, opts.searchPaths);
+		if (!std::filesystem::exists(path)) {
+			printJsonNotFoundHelp(opts.target, opts.searchPaths);
+			return EXIT_FAILURE;
+		}
+		return runJsonSimulation(path, opts.verbose, opts.plot);
+	}
+
+	default:
+		printCliHelp();
+		return EXIT_FAILURE;
+	}
 }

@@ -1,40 +1,134 @@
-﻿#include "powerflow.h"
+/**
+ * @file Powerflow_network_params.cpp
+ * @brief Implementation of PowerFlow network parameter assembly.
+ */
+#include "Powerflow.h"
 #include "../Helper_Functions/Helper_Functions.h"
 
 #include "../../network.h"
 #include "../../Bus.h"
 #include "../../Include_components.h"
 #include "../../Elements/Converter/MMC.h"
+#include "../../Elements/RES/PV_plant.h"
+#include "../../Elements/RES/WT_type_3.h"
+#include "../../Elements/RES/WT_type_4.h"
 
 #include <map>
 #include <unordered_map>
 #include <vector>
 #include <iostream>
 
-
-static void
-reNumberBusAC(Eigen::MatrixXd& busAC,
+/**
+ * @brief Renumber AC buses to ensure consistent indexing across all components.
+ *
+ * This function renumbers the AC bus indices so that the
+ * `busAC`, `branchAC`, `genAC`, `gencostAC`, and `convDC` matrices share
+ * consistent and continuous bus numbering for subsequent optimal power flow.
+ *
+ * @param busAC       Matrix of AC bus data.
+ * @param branchAC    Matrix of AC branch data.
+ * @param genAC       Matrix of AC generator data.
+ * @param gencostAC   Matrix of generator cost data.
+ * @param convDC      Matrix of DC converter data associated with AC buses.
+ */
+static void reNumberBusAC(Eigen::MatrixXd& busAC,
     Eigen::MatrixXd& branchAC,
     Eigen::MatrixXd& genAC,
     Eigen::MatrixXd& gencostAC,
     Eigen::MatrixXd& convDC);
 
+
+/**
+ * @brief Extend AC bus data from the input map into the network structure.
+ *
+ * This function parses AC bus-related parameters from the hierarchical
+ * `data` structure and appends or initializes corresponding bus elements
+ * within the network model `net`. Global parameters may be used to fill
+ * missing fields or apply scaling factors.
+ *
+ * @param data           Nested map containing parsed AC data.
+ * @param net            Pointer to the Network object to be extended.
+ * @param global_params  Map of global system parameters.
+ */
 static void extendBusAC(std::map<std::string,
     std::map<std::string, std::map<std::string, double>>>& data,
     Network* net,
     std::map<std::string, double>& global_params);
 
+
+/**
+ * @brief Extend the AC branch dataset by adding new lines that 
+ *        connect newly created buses or converter terminals.
+ *
+ * This function processes the hierarchical AC data map (`data["branchAC"]`)
+ * and extends the branch list based on network topology changes introduced
+ * by `extendBusAC()`. The function ensures proper connectivity between new 
+ * and existing buses and may assign default line parameters (resistance,
+ * reactance, susceptance, rate limits).
+ *
+ * @param data           Nested map containing parsed AC network data.
+ * @param net            Pointer to the Network object to be extended.
+ * @param global_params  Map of global parameters for base values or scaling.
+ */
 static void extendBranchAC(std::map<std::string,
     std::map<std::string, std::map<std::string, double>>>& data,
     Network* net,
     std::map<std::string, double>& global_params);
 
+
+/**
+ * @brief Extend the AC generator dataset by adding generation units or
+ *        converter-linked power sources associated with new buses.
+ *
+ * This function reads and augments the generator-related data
+ * (`data["genAC"]`) to include generation units associated with
+ * newly added AC buses. It ensures that generator attributes (e.g., 
+ * active/reactive power limits, cost coefficients, grid ID) are
+ * properly initialized and consistent with the extended network topology.
+ *
+ * @param data           Nested map containing parsed AC generation data.
+ * @param net            Pointer to the Network object to be extended.
+ * @param global_params  Map of global parameters used for initialization.
+ */
 static void extendGenAC(
 std::map<std::string,
     std::map<std::string, std::map<std::string, double>>>& data,
     Network* net,
     std::map<std::string, double>& global_params);
 
+/**
+ * @brief Ensure generator availability when only RES units exist.
+ *
+ * This function checks whether the AC generator dataset
+ * (`data["genAC"]`) is empty. If no generator exists
+ * but RES units are available (`data["resAC"]`), a virtual
+ * zero-output generator is automatically created at the RES-
+ * connected bus.
+ *
+ * The virtual generator is introduced only to satisfy OPF
+ * formulation requirements (e.g., generator data structure,
+ * generation cost data structure, and reference bus assignment).
+ * The generated unit has zero active and reactive power limits
+ * and therefore does not participate in optimization dispatch.
+ *
+ * @param data  Nested map containing parsed AC network data.
+ */
+static void ensureRESGen(
+    std::map<std::string,
+    std::map<std::string, std::map<std::string, double>>>& data);
+
+
+/**
+ * @brief Add an AC bus entry to the system data table.
+ *
+ * Creates a new AC bus in `data["busAC"]`, initializes default parameters,
+ * and updates the bus dictionary `dict_ac` and mapping `busName2Id_`.
+ *
+ * @param dict_ac        AC bus dictionary.
+ * @param bus            Pointer to the Bus object.
+ * @param global_params  Global parameters.
+ * @param print_info     If true, print formatted bus data.
+ */
 void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     Bus* bus, std::map<std::string, double>& global_params, bool print_info /* =false*/)
 {
@@ -51,37 +145,26 @@ void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     busRow["Qd"] = 0.0;
     busRow["Gs"] = 0.0;
     busRow["Bs"] = 0.0;
-	// busRow["area"] = 1; // Default, but bus can overwrite it
-	busRow["Vm"] = 1.0; // Default, but bus can overwrite it
+	// busRow["area"] = 1; 
+	busRow["Vm"] = 1.0; 
     busRow["Va"] = 0.0;
     busRow["baseKV"] = global_params["ACbaseKV"];
     busRow["zone"] = 1.0;
     busRow["Vmax"] = 1.1; // Default, but bus can overwrite it    
 	busRow["Vmin"] = 0.9; // Default, but bus can overwrite it
-    // busRow["grid"] = 1; // Default, but bus can overwrite it
+    // busRow["grid"] = 1; 
 
 	bus->computePowerFlowAC(busRow, global_params);
 
 	string area_id = std::to_string(busRow["area"]);
 	double v_upper = busRow["Vmax"];
+    string v_upper_str = std::to_string(v_upper);
 	double v_lower = busRow["Vmin"];
+    string v_lower_str = std::to_string(v_upper);
 	double rated_kv = busRow["baseKV"];
 	string rated_kv_str = std::to_string(rated_kv);
 	double base_mw = global_params["baseMVA"];
 	string base_mw_str = std::to_string(base_mw);
-
-    bool is_pu = (v_upper <= 2.0 && v_lower <= 2.0);
-
-    double v_upper_pu, v_lower_pu;
-
-    if (is_pu) {
-        v_upper_pu = v_upper;
-        v_lower_pu = v_lower;
-    }
-    else {
-        v_upper_pu = v_upper / rated_kv;
-        v_lower_pu = v_lower / rated_kv;
-    }
 
     auto exists = std::any_of(dict_ac.begin(), dict_ac.end(),
         [&](const auto& row) { return row[0] == bus_name; });
@@ -94,9 +177,9 @@ void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
        area_id,
        base_mw_str,
        rated_kv_str,
-       std::to_string(v_upper_pu),
-       std::to_string(v_lower_pu)
-        });
+       v_upper_str,
+       v_lower_str
+    });
 
     busName2Id_[bus_name] = id;
 
@@ -121,6 +204,18 @@ void PowerFlow::addBusAC(std::vector<std::vector<std::string>>& dict_ac,
     }
 }
 
+
+/**
+ * @brief Add a DC bus entry to the system data table.
+ *
+ * Creates and initializes a new DC bus in `data["busDC"]` with default parameters,
+ * The function also updates the DC bus dictionary `dict_dc` and mapping `busName2Id_`.
+ *
+ * @param dict_dc        DC bus dictionary.
+ * @param bus            Pointer to the Bus object.
+ * @param global_params  Global parameters.
+ * @param print_info     If true, print formatted DC bus data.
+ */
 void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
     Bus* bus, std::map<std::string, double>& global_params,
     bool  print_info /* =false*/)
@@ -143,37 +238,20 @@ void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
     busDCRow["Va"] = 0.0;
     busDCRow["baseKV"] = global_params["DCbaseKV"];
     busDCRow["zone"] = 1.0 ;
-    busDCRow["Vmax"] = 1.1 * global_params["DCbaseKV"] / global_params["ACbaseKV"];
-    busDCRow["Vmin"] = 0.9 * global_params["DCbaseKV"] / global_params["ACbaseKV"];
+    busDCRow["Vmax"] = 1.1 ; 
+    busDCRow["Vmin"] = 0.9 ;
 
     bus->computePowerFlowDC(busDCRow, global_params);
 
     string area_id = std::to_string(busDCRow["area"]);
     double v_upper = busDCRow["Vmax"];
+    string v_upper_str = std::to_string(v_upper);
     double v_lower = busDCRow["Vmin"];
+    string v_lower_str = std::to_string(v_lower);
     double rated_kv = busDCRow["baseKV"];
     string rated_kv_str = std::to_string(rated_kv);
     double base_mw = global_params["baseMVA"];
     string base_mw_str = std::to_string(base_mw);
-
-    bool is_pu = (v_upper <= 2.0 && v_lower <= 2.0);
-
-    double v_upper_pu, v_lower_pu;
-
-    if (is_pu) {
-        v_upper_pu = v_upper;
-        v_lower_pu = v_lower;
-    }
-    else {
-        v_upper_pu = v_upper / rated_kv;
-        v_lower_pu = v_lower / rated_kv;
-    }
-
-    if (v_lower_pu > v_upper_pu) {
-        std::cerr << "[addBusDC] Error: voltage_lower (" << v_lower_pu
-            << " pu) is greater than voltage_upper (" << v_upper_pu << " pu) for bus "
-            << bus_name << ".\n";
-    }
 
     auto exists = std::any_of(dict_dc.begin(), dict_dc.end(),
         [&](const auto& row) { return row[0] == bus_name; });
@@ -184,12 +262,11 @@ void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
       bus_id,
       bus_name,
       rated_kv_str,
-      std::to_string(v_upper_pu),
-      std::to_string(v_lower_pu)
-        });
+      v_upper_str,
+      v_lower_str
+    });
 
     busName2Id_[bus_name] = id;
-
 
     if (print_info)
     {
@@ -214,6 +291,22 @@ void PowerFlow::addBusDC(std::vector<std::vector<std::string>>& dict_dc,
 }
 
 
+/**
+ * @brief Add an AC branch entry to the system data table.
+ *
+ * Creates and initializes one new AC branch row in `data["branchAC"]` with default values,
+ * then fills branch electrical parameters by calling `element->computePowerFlow(...)`.
+ * The function identifies the from-bus and to-bus IDs using `busName2Id_` based on the
+ * two terminal buses returned by `element->getBuses()`.
+ *
+ * If `print_info` is true, the function prints the formatted `data["branchAC"]` table.
+ *
+ * @param element        Pointer to the branch element object (should connect exactly two buses).
+ * @param global_params  Global parameters used in power flow calculations (e.g., baseMVA, baseKV).
+ * @param print_info     If true, print the formatted AC branch data table.
+ *
+ * @throw std::runtime_error If the element is not connected to exactly two buses.
+ */
 void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
@@ -275,13 +368,28 @@ void PowerFlow::make_BranchAC(Element* element, std::map<std::string, double>& g
         }
         std::cout << std::endl;
     }
-
-    if (print_info) {
-        std::cout << "Branch '" << branch_name << "' successfully added.\n";
-	}
 }
 
 
+/**
+ * @brief Add a DC branch entry to the system data table.
+ *
+ * Creates and initializes one new DC branch row in `data["branchDC"]` with default values,
+ * then computes the branch electrical parameters by calling
+ * `element->computePowerFlow(...)`.
+ *
+ * The function assumes that the DC branch element connects exactly two DC buses.
+ * The from-bus and to-bus indices are obtained via `busName2Id_` using the bus names
+ * returned by `element->getBuses()`.
+ *
+ * If `print_info` is enabled, the formatted DC branch data table is printed to stdout.
+ *
+ * @param element        Pointer to the DC branch element object (must connect exactly two DC buses).
+ * @param global_params  Global parameters used in DC power flow calculations.
+ * @param print_info     If true, print the formatted DC branch data table.
+ *
+ * @throw std::runtime_error If the branch element is not connected to exactly two buses.
+ */
 void PowerFlow::make_BranchDC(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 
@@ -342,11 +450,29 @@ void PowerFlow::make_BranchDC(Element* element, std::map<std::string, double>& g
         std::cout << std::endl;
     }
 
-    if (print_info) {
-        std::cout << "Branch '" << branch_name << "' successfully added.\n";
-    }
 }
 
+
+/**
+ * @brief Add a converter entry to the system data table.
+ *
+ * Creates and initializes one new converter row in `data["conv"]` with default parameters,
+ * then updates converter electrical parameters by calling `element->computePowerFlow(...)`.
+ *
+ * The function requires the converter element to connect exactly two buses: one AC bus and one DC bus.
+ * It identifies the AC/DC bus by `Bus::getPinNumber()` (pin = 3 treated as AC bus in current logic),
+ * maps bus names to indices using `busName2Id_`, and writes `busac_i` / `busdc_i` into the converter row.
+ *
+ * The converter element pointer is also stored in `conv_point` for later use. If `print_info` is enabled,
+ * the function prints the formatted `data["conv"]` table.
+ *
+ * @param element        Pointer to the converter element object (must connect exactly one AC bus and one DC bus).
+ * @param global_params  Global parameters used in converter power flow calculations (e.g., baseKV, baseMVA).
+ * @param print_info     If true, print the formatted converter data table.
+ *
+ * @throw std::runtime_error If the converter is not connected to exactly two buses.
+ * @throw std::runtime_error If the two buses cannot be identified as one AC bus and one DC bus.
+ */
 void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& global_params,
     bool print_info /*=false*/)
 {
@@ -362,7 +488,7 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
      "droop","Pdcset","Vdcset","dvdcset"
     };
     for (const auto& key : keys) {
-        convRow[key] = 0.0; // Initialize all keys to 0.0
+        convRow[key] = 0.0; 
 	}
 
 	// convRow["gridac"] = 1; // Default grid area for AC
@@ -440,6 +566,25 @@ void PowerFlow::make_Converter(Element* element, std::map<std::string, double>& 
 
 }
 
+
+/**
+ * @brief Add a generator entry and its cost entry to the system data tables.
+ *
+ * Creates and initializes one generator row in `data["genAC"]` and one cost row in
+ * `data["genCostAC"]`, then updates parameters using `element->computePowerFlow(...)`
+ * and OPF data from `element->getOPFInfo()`.
+ *
+ * The generator is assumed to be connected to one AC bus and ground. The non-ground bus
+ * is mapped to an internal bus index via `busName2Id_`. Bus voltage limits and bus type
+ * (PV or SLACK) may be updated according to OPF information.
+ *
+ * @param element        Pointer to the generator element object.
+ * @param global_params  Global parameters used in power flow and OPF data construction.
+ * @param print_info     If true, print the formatted generator and cost tables.
+ *
+ * @throw std::runtime_error    If the generator is not properly connected to a bus.
+ * @throw std::invalid_argument If generator power limits are inconsistent.
+ */
 void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
@@ -460,7 +605,7 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
         throw std::runtime_error("[make_Generator] Error: Bus name unknown");
     int bus_id = idIt->second;
 
-    /* ---------- Write data["genAC"] ---------- */
+
     std::string rowGen = std::to_string(data["genAC"].size());
     auto& gRow = data["genAC"][rowGen];
     std::vector<std::string> keys = {
@@ -469,7 +614,7 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
             "ramp_agc","ramp_10","ramp_30","ramp_q","apf","grid"
     };
     for (const auto& key : keys) {
-        gRow[key] = 0; // Empty structure for each
+        gRow[key] = 0; 
     }
 
     std::string rowCost = std::to_string(data["genCostAC"].size());
@@ -478,12 +623,12 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
         "model","startup","shutdown","n","c2","c1","c0","grid"
 	};
     for (const auto& key : cost_keys) {
-        cRow[key] = 0; // Empty structure for each
+        cRow[key] = 0; 
     }
 
     gRow["bus"] = bus_id;
     gRow["Vg"] = 1.0;
-    gRow["mBase"] = 100.0;
+    gRow["mBase"] = 100.0; // Default setting, can be changed
     gRow["status"] = 1.0;
 
 	element->computePowerFlow(gRow, global_params); // Sets grid, area, Vg and Zsrc
@@ -590,6 +735,139 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
     }
 }
 
+
+/**
+ * @brief Add a renewable energy source entry to the system data table.
+ *
+ * This function registers a renewable energy source (RES), such as a PV plant
+ * or a type-3/type-4 wind turbine, in `data["resAC"]`. The RES is assumed to be
+ * connected to one AC bus and ground. The non-ground bus is identified and mapped
+ * to its internal bus index through `busName2Id_`.
+ *
+ * The function first obtains the grid ID from the corresponding `busAC` entry,
+ * then determines the rated active power of the RES according to its specific
+ * component type. If multiple RES units are connected to the same bus, their
+ * maximum active power capacities are aggregated into a single `resAC` row.
+ * Otherwise, a new RES row is created with default cost and capacity parameters.
+ *
+ * @param element        Pointer to the RES element object.
+ * @param global_params  Global parameters used in power flow and OPF data construction.
+ * @param print_info     If true, print the formatted RES data table.
+ *
+ * @throw std::runtime_error If the RES is not connected to any bus.
+ * @throw std::runtime_error If the connected bus cannot be found in `data["busAC"]`.
+ * @throw std::runtime_error If the RES type is not supported.
+ */
+void PowerFlow::make_RES(Element* element, std::map<std::string, double>& global_params,
+    bool print_info /* = false */)
+{
+    // Step 1. connected with bus
+    Bus* attachedBus = nullptr;
+    for (Bus* b : element->getBuses()) {
+        if (b->getBusName() != "gnd")
+            attachedBus = b;
+    }
+
+    if (!attachedBus)
+        throw std::runtime_error("[make_RES] Error: RES not connected to any bus.");
+
+    const std::string& bus_name = attachedBus->getBusName();
+    int bus_id = busName2Id_.at(bus_name);
+    std::string bus_row_key = std::to_string(bus_id - 1);
+
+    // Step 2. Read the associated grid from the busAC table
+    if (!data["busAC"].count(bus_row_key))
+        throw std::runtime_error("[make_RES] Cannot find bus " + bus_name + " in busAC.");
+
+    double grid_id = data["busAC"][bus_row_key]["grid"];
+
+    // Step 3. Parse the type and rated power
+    double Presmax = 0.0;
+    if (auto* pv = dynamic_cast<PVplant*>(element))
+        Presmax = pv->P_pv / 1e6;
+    else if (auto* wt3 = dynamic_cast<WTtype3*>(element))
+        Presmax = wt3->p / 1e6;
+    else if (auto* wt4 = dynamic_cast<WTtype4*>(element))
+        Presmax = wt4->Pwt / 1e6;
+    else
+        throw std::runtime_error("[make_RES] Unknown RES type detected.");
+
+    // Step 4. Write to resAC (same structure as genAC)
+    std::string found_key;
+    bool found = false;
+
+    for (const auto& [k, r] : data["resAC"]) {
+        auto it = r.find("bus");
+        if (it != r.end() && static_cast<int>(it->second) == bus_id) {
+            found_key = k;
+            found = true;
+            break;
+        }
+    }
+
+    if (found) {
+        // Update existing row (sum Presmax)
+        auto& row = data["resAC"][found_key];
+        row["Presmax"] += Presmax;
+        row["Sresmax"] = 1.1 * row["Presmax"];
+        row["grid"] = grid_id;   
+        row["vm"] = 1.0;
+    }
+    else {
+        // Create new row
+        std::string key = std::to_string(data["resAC"].size());
+        auto& row = data["resAC"][key];
+
+        row["bus"] = static_cast<double>(bus_id);
+        row["Presmax"] = Presmax;
+        row["Sresmax"] = 1.1 * Presmax;
+        row["model"] = 2.0;
+        row["startup"] = 0.0;
+        row["shutdown"] = 0.0;
+        row["n"] = 3.0;
+        row["c2"] = 0.0;
+        row["c1"] = 0.0;
+        row["c0"] = 0.0;
+        row["vm"] = 1.0;
+        row["grid"] = grid_id;
+    }
+
+    if (print_info)
+    {
+        std::cout << "[make_RES] Element: " << element->getElementSymbol()
+            << ", attachedBus=" << bus_name
+            << ", bus_id=" << bus_id
+            << ", grid=" << grid_id
+            << ", Presmax=" << Presmax << std::endl;
+
+        constexpr const char* colOrder[11] = {
+            "bus","Presmax","Sresmax","model","startup","shutdown","n","c2","c1","c0","grid"
+        };
+
+        std::cout << "\n[data.resAC]  (" << data["resAC"].size() << " × 11)\n";
+        for (const auto& [key, row] : data["resAC"]) {
+            for (int c = 0; c < 11; ++c)
+                std::cout << std::setw(10) << row.at(colOrder[c]) << " ";
+            std::cout << '\n';
+        }
+        std::cout << std::endl;
+    }
+}
+
+
+/**
+ * @brief Register an AC load by updating the corresponding busAC entry.
+ *
+ * Identifies the non-ground bus connected to the load element and updates
+ * its load parameters in the `busAC` table via power flow computation.
+ *
+ * @param element        Pointer to the load element.
+ * @param global_params  Global parameters used in power flow calculation.
+ * @param print_info     If true, print the updated busAC table.
+ *
+ * @throw std::runtime_error
+ *        If no valid AC bus is connected or the bus entry is not found.
+ */
 void PowerFlow::make_Load(Element* element, std::map<std::string, double>& global_params,
     bool print_info /* = false */)
 {
@@ -637,9 +915,17 @@ void PowerFlow::make_Load(Element* element, std::map<std::string, double>& globa
 }
 
 
-void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_params, bool vscControl,
+void PowerFlow::make_AC_OPF(Network* net, std::map<std::string, double>& global_params,
     bool writeTxt, bool plotResult, bool print_info)
 {
+    make_OPF(net, global_params, false, writeTxt, plotResult, print_info, false);
+}
+
+void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_params, bool vscControl,
+    bool writeTxt, bool plotResult, bool print_info, bool include_dc)
+{
+    conv_point.clear();
+    opf_user_base_mva_ = global_params.count("baseMVA") ? global_params["baseMVA"] : 100.0;
 
     // Initialize specific elements of the data map
    
@@ -648,13 +934,18 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
     data["source_version"]["0.0.0"]["0"] = 0;
     data["per_unit"]["true"]["0"] = 1;
     data["dcpol"]["2"]["0"] = 2;
-    data["baseMVA"]["100"]["0"] = 100;
+    data["baseMVA"][std::to_string(static_cast<int>(opf_user_base_mva_))]["0"] = opf_user_base_mva_;
 
 
     // Initialize empty elements of the data map
     std::vector<std::string> keys = {
         "bus", "busdc", "shunt", "dcline", "storage", "switch",
-        "load", "branch", "branchDC", "gen", "convdc", "res"
+        "load", "branch", "gen", "convdc", "res",
+        // Canonical tables consumed below.  Initializing them explicitly is
+        // required for component-built AC-only networks, where no DC/RES
+        // element would otherwise create the corresponding map entry.
+        "busAC", "branchAC", "genAC", "genCostAC", "resAC",
+        "busDC", "branchDC", "conv"
     };
 
     for (const auto& key : keys) {
@@ -681,48 +972,56 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
     for (Bus* b : acBuses)
         addBusAC(dict_ac, b, global_params, print_info);
 
-    for (Bus* b : dcBuses)
-        addBusDC(dict_dc, b, global_params, print_info);
+    if (include_dc) {
+        for (Bus* b : dcBuses)
+            addBusDC(dict_dc, b, global_params, print_info);
+    }
 
 	// Process elements: loads, generators, which contribute to the buses data    
     auto& elements = net->getElements();
     for (const auto& [element_name, element] : elements)
     {
+		//cout << "[make_OPF] Checking element: " << element_name << endl;
         if (dynamic_cast<Load*>(element) || dynamic_cast<LoadPQ*>(element)) {
-            cout << "[make_OPF] Processing element: " << element_name << endl;
             make_Load(element, global_params, print_info);
         }
         else if (dynamic_cast<Source_base*>(element)) {
-            cout << "[make_OPF] Processing element: " << element_name << endl;
             make_Generator(element, global_params, print_info);
+        }
+        else if (dynamic_cast<PVplant*>(element) ||
+            dynamic_cast<WTtype3*>(element) ||
+            dynamic_cast<WTtype4*>(element)) {
+            make_RES(element, global_params, print_info);
         }
     }
 
 	// Process branches: AC and DC branches, i.e., transmission lines, impedances, etc.
     for (const auto& [element_name, element] : elements)
     {
-        if (dynamic_cast<Impedance*>(element)) {
+        if (dynamic_cast<Impedance*>(element) ||
+            dynamic_cast<Transformer_base*>(element)) {
+
             if (element->getInputPins() == 3) {
                 make_BranchAC(element, global_params, print_info);
             }
-            else if (element->getInputPins() == 1) {
-                make_BranchDC(element, global_params, print_info);
+            else if (element->getInputPins() == 2) {
+                if (include_dc)
+                    make_BranchDC(element, global_params, print_info);
             }
             else {
-                throw std::runtime_error("[make_OPF] Error: Unsupported impedance pin number.");
+                throw std::runtime_error("[make_OPF] Error: Unsupported branch pin number.");
             }
-
         }
-        else if (dynamic_cast<MMC*>(element)) {
+        else if (include_dc && dynamic_cast<MMC*>(element)) {
             make_Converter(element, global_params, print_info);
         }
-        else {
-        }
-	}
+    }
 
     extendBusAC(data, net, global_params);
     extendBranchAC(data, net, global_params);
     extendGenAC(data, net, global_params);
+
+    ensureRESGen(data);
 
 	cout << "[make_OPF] Finished processing elements.\n";
 
@@ -763,14 +1062,13 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
     MatrixXd gencostAC = map2dense(data.at("genCostAC"),
         { "model","startup","shutdown","n","c2","c1","c0","grid" });
 
+
     reNumberBusAC(busAC, branchAC, genAC, gencostAC, convDC);
 
-    // for debug
     Eigen::MatrixXd resAC;
-
     if (data.find("resAC") != data.end()) {
         resAC = map2dense(data.at("resAC"),
-            { "bus","Presmax","Sresmax","model","startup","shutdown","n","c2","c1","c0","grid" });
+            { "bus","Presmax","Sresmax","model","startup","shutdown","n","c2","c1","c0","vm","grid" });
     }
     else {
         // fallback to default
@@ -800,41 +1098,65 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
 
     
     // Update each MMC element with OPF results
-    if (!conv_point.empty()) {
+    if (!conv_point.empty() && opf_solved_
+        && nconvs_dc > 0
+        && static_cast<int>(conv_point.size()) == nconvs_dc
+        && conv_dc.rows() == nconvs_dc
+        && v2s_dc_k.size() == nconvs_dc
+        && ps_dc_k.size() == nconvs_dc
+        && qs_dc_k.size() == nconvs_dc
+        && theta_s_k.size() == nconvs_dc
+        && vn2_dc_k.size() > 0
+        && pn_dc_k.size() == vn2_dc_k.size()) {
         std::cout << "\n=== Updating " << conv_point.size()
             << " MMC elements with OPF results ===" << std::endl;
 
-        for (size_t i = 0; i < conv_point.size(); ++i) {
-            Element* elem = conv_point[i];
+        for (size_t k = 0; k < conv_point.size(); ++k) {
+            Element* elem = conv_point[k];
             if (!elem) continue;
 
             auto* mmc = dynamic_cast<MMC*>(elem);
             if (!mmc) continue;
 
-            // Retrieve OPF results
-            double Vm_kV = std::sqrt(v2s_dc_k(i)) * global_params["ACbaseKV"];
-            double theta_deg = theta_s_k(i)/ M_PI * 180;
-            double Pac_MW = ps_dc_k(i) * global_params["baseMVA"];
-            double Qac_MVar = qs_dc_k(i) * global_params["baseMVA"];
-            double Vdc_kV = std::sqrt(vn2_dc_k(i)) * global_params["ACbaseKV"];
-            double Pdc_MW = pn_dc_k(i) * global_params["baseMVA"];
+            const int dc_bus_idx = static_cast<int>(conv_dc(k, 0)) - 1;
+            if (dc_bus_idx < 0 || dc_bus_idx >= vn2_dc_k.size()) {
+                std::cerr << "[make_OPF] Skip MMC update: invalid DC bus index "
+                    << dc_bus_idx << " for converter " << k << std::endl;
+                continue;
+            }
+
+            // Converter-indexed OPF quantities
+            const double Vm_kV = std::sqrt(std::max(0.0, v2s_dc_k(k))) * global_params["ACbaseKV"];
+            const double theta_rad = theta_s_k(k);
+            const double Pac_MW = ps_dc_k(k) * baseMW_dc;
+            const double Qac_MVar = qs_dc_k(k) * baseMW_dc;
+            // DC bus-indexed OPF quantities
+            const double Vdc_kV = std::sqrt(std::max(0.0, vn2_dc_k(dc_bus_idx))) * global_params["DCbaseKV"];
+            const double Pdc_MW = pn_dc_k(dc_bus_idx) * baseMW_dc;
 
             // Convert units
-            double Vm_V = Vm_kV * 1e3;
-            double theta_rad = theta_deg * M_PI / 180.0;
-            double Pac_W = Pac_MW * 1e6;
-            double Qac_Var = Qac_MVar * 1e6;
-            double Vdc_V = Vdc_kV * 1e3;
-            double Pdc_W = Pdc_MW * 1e6;
+            const double Vm_V = Vm_kV * 1e3;
+            const double Pac_W = Pac_MW * 1e6;
+            const double Qac_Var = Qac_MVar * 1e6;
+            const double Vdc_V = Vdc_kV * 1e3;
+            const double Pdc_W = Pdc_MW * 1e6;
+
 
             // Update the MMC
             mmc->update_MMC(Vm_V, theta_rad, Pac_W, Qac_Var, Vdc_V, Pdc_W);
 
             // Solve equilibrium and compute state-space matrices
-            mmc->solveEquilibrium();         
-            mmc->computeABCD();
+            try {
+                mmc->solveEquilibrium();
+                mmc->computeABCD();
+            }
+            catch (const std::exception& e) {
+                std::cerr << "[make_OPF] MMC equilibrium failed for "
+                    << elem->getElementSymbol() << ": " << e.what() << std::endl;
+            }
 
             if (print_info) {
+                const double theta_deg = theta_rad * 180.0 / M_PI;
                 std::cout << "[Updated MMC] " << elem->getElementSymbol()
                     << " | Vm=" << Vm_kV << " kV, theta=" << theta_deg
                     << " deg, Pac=" << Pac_MW << " MW, Qac=" << Qac_MVar
@@ -845,12 +1167,39 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
             }
         }
     }
+    else if (!conv_point.empty() && !opf_solved_) {
+        std::cerr << "[make_OPF] OPF did not succeed; skipping MMC updates.\n";
+    }
 
 }
 
 /// ========================================== debug start
-static void
-reNumberBusAC(
+/**
+ * @brief Renumber AC buses within each grid and update associated data tables.
+ *
+ * This function renumbers the AC bus indices independently for each grid area
+ * so that the bus numbering becomes continuous and starts from one.
+ *
+ * A mapping from the original bus indices to the new local indices is first
+ * constructed for every grid. The mapping is then applied consistently to all
+ * related data structures, including:
+ * - `busAC` (bus indices),
+ * - `branchAC` (from-bus and to-bus indices),
+ * - `genAC` (generator connection buses), and
+ * - `convDC` (AC-side converter connection buses).
+ *
+ * This preprocessing step ensures that each AC subsystem has contiguous local
+ * bus numbering, which simplifies subsequent OPF model construction and matrix
+ * indexing operations.
+ *
+ * @param busAC       Matrix containing AC bus data.
+ * @param branchAC    Matrix containing AC branch data.
+ * @param genAC       Matrix containing AC generator data.
+ * @param gencostAC   Matrix containing AC generator cost data (kept for interface consistency).
+ * @param convDC      Matrix containing converter data whose AC-side bus indices
+ *                    need to be updated.
+ */
+static void reNumberBusAC(
     Eigen::MatrixXd& busAC,
     Eigen::MatrixXd& branchAC,
     Eigen::MatrixXd& genAC,
@@ -901,6 +1250,30 @@ reNumberBusAC(
 
 }
 
+/**
+ * @brief Extend the AC bus dataset by creating additional buses for AC sources.
+ *
+ * This function scans the network for `AC_source` elements and creates an
+ * additional internal AC bus for each detected source. The newly created bus
+ * represents the internal terminal of the voltage source, while the original
+ * bus remains as the external network connection point.
+ *
+ * The function first determines the maximum existing bus index within each
+ * grid area and assigns a new local bus index accordingly. The newly created
+ * bus is initialized with default electrical parameters and inherits the grid
+ * information from the original bus.
+ *
+ * In addition, metadata describing the relationship between the original bus
+ * and the newly created bus, together with the source impedance (`Zsrc`), is
+ * stored in `data["acsrcMeta"]`. This metadata is subsequently used by
+ * `extendBranchAC()` to create the equivalent source impedance branch and by
+ * `extendGenAC()` to relocate generators to the newly created buses.
+ *
+ * @param data           Nested map containing AC network data.
+ * @param net            Pointer to the network object.
+ * @param global_params  Global parameters used to initialize bus attributes
+ *                       (e.g., base voltage).
+ */
 static void extendBusAC(
     std::map<std::string,
     std::map<std::string, std::map<std::string, double>>>& data,
@@ -979,6 +1352,31 @@ static void extendBusAC(
     }
 }
 
+/**
+ * @brief Extend the AC branch dataset by adding equivalent source impedance branches.
+ *
+ * This function appends additional AC branches associated with `AC_source`
+ * elements. The required information, including the original bus index,
+ * the newly created internal bus index, the grid identifier, and the source
+ * impedance (`Zsrc`), is retrieved from `data["acsrcMeta"]`, which is
+ * generated by `extendBusAC()`.
+ *
+ * For each `AC_source`, an equivalent branch is created between the original
+ * network bus and the newly added internal bus. The branch reactance is
+ * obtained by converting the source impedance into the per-unit system using
+ * `ACZbase`, while the branch resistance is assumed to be zero. Default
+ * thermal limits, tap ratio, phase shift, and operating status are also
+ * assigned.
+ *
+ * The generated branches explicitly model the internal impedance of AC sources
+ * and are appended to `data["branchAC"]` for subsequent OPF formulation.
+ *
+ * @param data           Nested map containing AC network data.
+ * @param net            Pointer to the network object (currently reserved for
+ *                       interface consistency and future extensions).
+ * @param global_params  Map of global parameters used for per-unit conversion
+ *                       and branch initialization.
+ */
 static void extendBranchAC(
     std::map<std::string,
     std::map<std::string, std::map<std::string, double>>>& data,
@@ -1000,7 +1398,7 @@ static void extendBranchAC(
         br["fbus"] = fbus;
         br["tbus"] = tbus;
         br["r"] = 0.0;
-        br["x"] = zsrc/global_params["Z_base"];
+        br["x"] = zsrc/global_params["ACZbase"];
         br["b"] = 0.0;
         br["rateAC"] = 100.0;
         br["rateB"] = 100.0;
@@ -1015,63 +1413,184 @@ static void extendBranchAC(
 
 }
 
+/**
+ * @brief Relocate generators to the newly created internal AC source buses.
+ *
+ * This function updates the generator connection buses after the AC bus
+ * extension process. For each `AC_source` element, the original network bus
+ * is identified and matched with the corresponding newly created internal bus
+ * generated by `extendBusAC()`.
+ *
+ * The function then scans the generator dataset (`data["genAC"]`) and replaces
+ * the bus index of any generator connected to the original bus with the newly
+ * created bus index within the same grid. This effectively moves the generator
+ * behind the equivalent source impedance branch introduced by
+ * `extendBranchAC()`, resulting in a physically consistent network model for
+ * OPF analysis.
+ *
+ * @param data           Nested map containing AC network data.
+ * @param net            Pointer to the network object used to identify
+ *                       `AC_source` elements and their connections.
+ * @param global_params  Map of global parameters (currently unused, reserved
+ *                       for interface consistency and future extensions).
+ */
 static void extendGenAC(
     std::map<std::string,
     std::map<std::string, std::map<std::string, double>>>& data,
     Network* net,
     std::map<std::string, double>& global_params)
 {
-    // Iterate over all AC_source
-    for (auto& elem_pair : net->getElements()) {
-        Element* elem = elem_pair.second;
-        AC_source* src = dynamic_cast<AC_source*>(elem);
-        if (!src) continue;
+    if (data.find("acsrcMeta") == data.end()) return;
 
-        // find the bus that AC_source connected with
-        Bus* connectedBus = nullptr;
-        for (auto& kv : elem->getConnections()) {
-            if (kv.second == 1) { connectedBus = kv.first; break; }
-        }
-        if (!connectedBus) continue;
+    for (const auto& [metaKey, meta] : data["acsrcMeta"]) {
+        const int old_bus_id = static_cast<int>(meta.at("bus1_id"));
+        const int new_bus_id = static_cast<int>(meta.at("new_bus_id"));
+        const int grid = static_cast<int>(meta.at("grid"));
 
-        std::string bus_name = connectedBus->getBusName();
-        int old_bus_id = -1;
-        int grid = -1;
-
-        for (auto& [key, busRow] : data["busAC"]) {
-            int id = static_cast<int>(busRow.at("bus_i"));
-            if (std::abs(id - std::stoi(bus_name.substr(bus_name.size() - 1))) < 1e-6) {
-                old_bus_id = id;
-                grid = static_cast<int>(busRow.at("grid"));
-                break;
-            }
-        }
-        if (grid == -1) continue;
-
-        // find the new added bus order in the grid
-        int max_bus_in_grid = 0;
-        for (auto& [key, busRow] : data["busAC"]) {
-            if (static_cast<int>(busRow.at("grid")) == grid) {
-                int id = static_cast<int>(busRow.at("bus_i"));
-                if (id > max_bus_in_grid) max_bus_in_grid = id;
-            }
-        }
-
-        // Mapping oldBus -> newBus
-        int new_bus_id = max_bus_in_grid;
-
+        bool moved_slack_generator = false;
         for (auto& [key, genRow] : data["genAC"]) {
             int gen_bus = static_cast<int>(genRow.at("bus"));
             int gen_grid = static_cast<int>(genRow.at("grid"));
             if (gen_bus == old_bus_id && gen_grid == grid) {
                 genRow["bus"] = new_bus_id;
+                moved_slack_generator = true;
+            }
+        }
+
+        if (!moved_slack_generator) continue;
+
+        for (auto& [key, busRow] : data["busAC"]) {
+            int bus_id = static_cast<int>(busRow.at("bus_i"));
+            int bus_grid = static_cast<int>(busRow.at("grid"));
+            if (bus_grid != grid) continue;
+
+            if (bus_id == old_bus_id && busRow["type"] == 3.0) {
+                busRow["type"] = 1.0;
+            }
+            else if (bus_id == new_bus_id) {
+                busRow["type"] = 3.0;
             }
         }
     }
 }
 
+/**
+ * @brief Ensure the existence of at least one generator for OPF formulation.
+ *
+ * This function checks whether the AC generator dataset (`data["genAC"]`)
+ * is empty. If no generator exists but renewable energy source (RES)
+ * information is available in `data["resAC"]`, a virtual zero-output
+ * generator is automatically created at the first RES-connected bus.
+ *
+ * The virtual generator is introduced solely to satisfy the structural
+ * requirements of the OPF formulation, which assumes the existence of at
+ * least one generator and one reference (slack) bus. The generated unit
+ * has zero active and reactive power capability and zero generation cost,
+ * and therefore does not participate in the optimization dispatch.
+ *
+ * The corresponding RES-connected bus is assigned as the slack bus
+ * (`type = 3`), and a matching zero-cost entry is added to
+ * `data["genCostAC"]`.
+ *
+ * @param data  Nested map containing AC network, generator, and RES data.
+ *
+ * @throw std::runtime_error If neither generators nor RES units exist in the
+ *                           network.
+ * @throw std::runtime_error If the RES-connected bus cannot be found in
+ *                           `data["busAC"]`.
+ */
+static void ensureRESGen(
+    std::map<std::string,
+    std::map<std::string, std::map<std::string, double>>>& data)
+{
+    if (!data["genAC"].empty()) return;
+
+    if (data["resAC"].empty())
+        throw std::runtime_error("[ensureRESGen] No generator exists, and no RES bus is available.");
+
+    const auto& resRow = data["resAC"].begin()->second;
+
+    int bus_id = static_cast<int>(resRow.at("bus"));
+    int grid_id = static_cast<int>(resRow.at("grid"));
+
+    std::string bus_row_key = std::to_string(bus_id - 1);
+    if (!data["busAC"].count(bus_row_key))
+        throw std::runtime_error("[ensureRESGen] RES-connected bus not found in busAC.");
+
+    auto& busRow = data["busAC"][bus_row_key];
+    busRow["type"] = 3.0;
+
+    auto& gRow = data["genAC"]["0"];
+    gRow["bus"] = bus_id;
+    gRow["Pg"] = 0.0;
+    gRow["Qg"] = 0.0;
+    gRow["Qmax"] = 0.0;
+    gRow["Qmin"] = 0.0;
+    gRow["Vg"] = 1.0;
+    gRow["mBase"] = 100.0;
+    gRow["status"] = 1.0;
+    gRow["Pmax"] = 0.0;
+    gRow["Pmin"] = 0.0;
+    gRow["Pc1"] = 0.0;
+    gRow["Pc2"] = 0.0;
+    gRow["Qc1min"] = 0.0;
+    gRow["Qc1max"] = 0.0;
+    gRow["Qc2min"] = 0.0;
+    gRow["Qc2max"] = 0.0;
+    gRow["ramp_agc"] = 0.0;
+    gRow["ramp_10"] = 0.0;
+    gRow["ramp_30"] = 0.0;
+    gRow["ramp_q"] = 0.0;
+    gRow["apf"] = 0.0;
+    gRow["grid"] = grid_id;
+
+    auto& cRow = data["genCostAC"]["0"];
+    cRow["model"] = 2.0;
+    cRow["startup"] = 0.0;
+    cRow["shutdown"] = 0.0;
+    cRow["n"] = 3.0;
+    cRow["c2"] = 0.0;
+    cRow["c1"] = 0.0;
+    cRow["c0"] = 0.0;
+    cRow["grid"] = grid_id;
+
+    std::cout << "[ensureRESGen] Added a zero-output virtual generator at RES bus "
+        << bus_id << " in grid " << grid_id << ".\n";
+}
+
 
 /// ========================================== debug end
+/**
+ * @brief Load and preprocess AC network parameters for OPF formulation.
+ *
+ * This function loads AC-side network data either from a predefined AC test
+ * case or from an externally constructed OPF data map. The loaded data include
+ * AC bus, branch, generator, generator cost, and renewable energy source (RES)
+ * information.
+ *
+ * After loading the data, the function identifies the number of AC grids based
+ * on the grid identifier stored in the bus data. It then partitions the full
+ * AC network dataset into individual AC subsystems and initializes the
+ * corresponding member variables used by the OPF model.
+ *
+ * For each AC grid, the function extracts local buses, branches, generators,
+ * generation costs, RES units, active/reactive loads, branch terminal indices,
+ * reference bus information, and bus-index mapping. It also builds the AC bus
+ * admittance matrix and stores its real and imaginary parts for later use in
+ * the OPF constraints.
+ *
+ * @param acgrid_name  Name of the predefined AC grid case to be loaded when
+ *                     `dataOPF` is empty.
+ * @param dataOPF      Optional OPF input data map. If non-empty, AC data are
+ *                     loaded directly from this map instead of external files.
+ *
+ * @note The function assumes that the last column of `busAC` and `branchAC`
+ *       stores the AC grid identifier, that column 21 of `genAC` stores the
+ *       generator grid identifier, and that column 11 of `resAC` stores the
+ *       RES grid identifier.
+ *
+ * @note AC load values and RES capacities are normalized by `baseMVA_ac`.
+ */
 
 void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF) {
     // Load AC data
@@ -1087,7 +1606,7 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
     }
     else {
         // From OPF input map
-        baseMVA_ac = 100.0;  // or dataOPF["baseMVA"](0, 0) if available
+        baseMVA_ac = opf_user_base_mva_;
         bus_entire_ac = dataOPF.at("busAC");
         branch_entire_ac = dataOPF.at("branchAC");
         gen_entire_ac = dataOPF.at("generator");
@@ -1095,33 +1614,8 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
         res_entire_ac = dataOPF.at("res");
     }
 
-    /// debug
-    Eigen::IOFormat fmt(Eigen::StreamPrecision, 0, ", ", "\n", "[", "]");
 
-    std::cout << "\n=== baseMVA_ac ===\n";
-    std::cout << baseMVA_ac << "\n";
 
-    std::cout << "\n=== bus_entire_ac (" << bus_entire_ac.rows()
-        << " x " << bus_entire_ac.cols() << ") ===\n";
-    std::cout << bus_entire_ac.format(fmt) << "\n";
-
-    std::cout << "\n=== branch_entire_ac (" << branch_entire_ac.rows()
-        << " x " << branch_entire_ac.cols() << ") ===\n";
-    std::cout << branch_entire_ac.format(fmt) << "\n";
-
-    std::cout << "\n=== gen_entire_ac (" << gen_entire_ac.rows()
-        << " x " << gen_entire_ac.cols() << ") ===\n";
-    std::cout << gen_entire_ac.format(fmt) << "\n";
-
-    std::cout << "\n=== gencost_entire_ac (" << gencost_entire_ac.rows()
-        << " x " << gencost_entire_ac.cols() << ") ===\n";
-    std::cout << gencost_entire_ac.format(fmt) << "\n";
-
-    std::cout << "\n=== res_entire_ac (" << res_entire_ac.rows()
-        << " x " << res_entire_ac.cols() << ") ===\n";
-    std::cout << res_entire_ac.format(fmt) << "\n";
-
-    //Identify number of grids by unique area ID
     std::set<int> unique_areas;
     for (int i = 0; i < bus_entire_ac.rows(); ++i) {
         unique_areas.insert(static_cast<int>(bus_entire_ac(i, 13)));
@@ -1232,12 +1726,53 @@ void PowerFlow::load_params_ac(const std::string& acgrid_name, const std::unorde
         qd_ac[ng] = bus_ac[ng].col(3) / baseMVA_ac;
 
         // Normalize RES capacity
-        sres_ac[ng] = res_ac[ng].col(2) / baseMVA_ac;
+        if (res_ac[ng].size() == 0) {
+            sres_ac[ng] = Eigen::VectorXd::Zero(0);
+            // pres_ac[ng] = Eigen::VectorXd::Zero(0);
+            // qres_ac[ng] = Eigen::VectorXd::Zero(0);
+            continue;
+        }
+        else {
+            sres_ac[ng] = res_ac[ng].col(2) / baseMVA_ac;
+        }
 
         //// mapping from "busname" to "id"
 
     }
 }
+
+/**
+ * @brief Load and preprocess DC network parameters for OPF formulation.
+ *
+ * This function loads the DC-side network data either from a predefined
+ * DC test case or from an externally constructed OPF data map. The loaded
+ * data include DC buses, DC branches, and converter information.
+ *
+ * After loading the data, the function initializes the fundamental network
+ * dimensions and extracts key converter parameters, including transformer
+ * impedance, converter impedance, filter susceptance, and converter loss
+ * coefficients. It also constructs the DC bus admittance matrix and computes
+ * the corresponding conductance matrix used in the OPF formulation.
+ *
+ * Furthermore, the function determines the operating direction of each
+ * converter (rectifier or inverter) according to its active power injection
+ * and selects the corresponding converter loss coefficients. Finally, all
+ * converter loss parameters are normalized into the per-unit system.
+ *
+ * @param dcgrid_name  Name of the predefined DC grid case to be loaded when
+ *                     `dataOPF` is empty.
+ * @param dataOPF      Optional OPF input data map. If `dcgrid_name` is empty,
+ *                     the DC data are loaded directly from this map.
+ *
+ * @note The converter operating state (`convState_dc`) is determined from the
+ *       sign of the active power injection (`P_g`), where a non-negative value
+ *       denotes rectifier operation and a negative value denotes inverter
+ *       operation.
+ *
+ * @note The converter loss coefficients (`aloss_dc`, `bloss_dc`, and
+ *       `closs_dc`) are converted into the per-unit system using the system
+ *       base power and converter base voltage.
+ */
 
 void PowerFlow::load_params_dc(const std::string& dcgrid_name, const std::unordered_map<std::string, Eigen::MatrixXd>& dataOPF) {
     if (!dcgrid_name.empty()) {
@@ -1249,13 +1784,21 @@ void PowerFlow::load_params_dc(const std::string& dcgrid_name, const std::unorde
         branch_dc = network_dc["branch"];
         conv_dc = network_dc["converter"];
     }
-    else {
+    else if (dataOPF.count("busDC") && dataOPF.count("branchDC") && dataOPF.count("converter")) {
         // Load DC grid from OPF dictionary
-        baseMW_dc = 100.0;  // Default base
-        pol_dc = 2.0;
+        baseMW_dc = opf_user_base_mva_;
+        pol_dc = 1.0;
         bus_dc = dataOPF.at("busDC");
         branch_dc = dataOPF.at("branchDC");
         conv_dc = dataOPF.at("converter");
+    }
+    else {
+        // AC-only OPF: no DC subsystem
+        baseMW_dc = opf_user_base_mva_;
+        pol_dc = 1.0;
+        bus_dc = Eigen::MatrixXd(0, 13);
+        branch_dc = Eigen::MatrixXd(0, 13);
+        conv_dc = Eigen::MatrixXd(0, 26);
     }
 
     /// debug
@@ -1279,18 +1822,27 @@ void PowerFlow::load_params_dc(const std::string& dcgrid_name, const std::unorde
         << " x " << conv_dc.cols() << ") ===\n";
     std::cout << conv_dc.format(fmt) << "\n";
 
-    basekV_dc = conv_dc.col(13);
-
     // Sizes
     nbuses_dc = bus_dc.rows();
     nbranches_dc = branch_dc.rows();
     nconvs_dc = conv_dc.rows();
 
-    fbus_dc = branch_dc.col(0).cast<int>();
-    tbus_dc = branch_dc.col(1).cast<int>();
+    fbus_dc = branch_dc.rows() > 0 ? branch_dc.col(0).cast<int>() : Eigen::VectorXi();
+    tbus_dc = branch_dc.rows() > 0 ? branch_dc.col(1).cast<int>() : Eigen::VectorXi();
 
     Y_dc = makeYbus(baseMW_dc, bus_dc, branch_dc);
     y_dc = absoluteSparseMatrix(Y_dc);
+
+    if (nconvs_dc == 0) {
+        basekV_dc = Eigen::VectorXd();
+        rtf_dc = xtf_dc = bf_dc = rc_dc = xc_dc = Eigen::VectorXd();
+        ztfc_dc = Eigen::VectorXcd();
+        gtfc_dc = btfc_dc = aloss_dc = bloss_dc = closs_dc = Eigen::VectorXd();
+        convState_dc = Eigen::VectorXi();
+        return;
+    }
+
+    basekV_dc = conv_dc.col(13);
 
     rtf_dc = conv_dc.col(8);
     xtf_dc = conv_dc.col(9);

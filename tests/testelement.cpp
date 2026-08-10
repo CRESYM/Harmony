@@ -124,7 +124,7 @@ TEST_F(TestElement, TestWriteFile) {
     Load l1("l1", "AC1", 1, { 1, 1, 1 });
     l1.writeFile(1000, 2000, 100);
 
-    // Read data
+    // Read expected data
     std::string expected = readFile("../data/l1.csv");
 
     // Check file was created in the exepcted path and with the expected name

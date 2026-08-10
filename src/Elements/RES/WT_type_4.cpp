@@ -1,3 +1,7 @@
+/**
+ * @file WT_type_4.cpp
+ * @brief Implementation of Type 4 full-converter wind turbine model.
+ */
 #include "WT_type_4.h"
 
 #include "../../Constants.h"

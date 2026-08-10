@@ -1,0 +1,83 @@
+name: Bug report
+description: "Report incorrect results, crashes, unexpected behavior, or other bugs"
+title: "Bug: <add a short description>"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before submitting your issue, please make sure to check previous issues and the project's [documentation](../../docs)
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        Describe the bug in as much detail as possible. Let us know:
+        - What you were trying to do
+        - What you expected to happen
+        - What actually happened  
+            
+        Include any relevant error messages, logs, screenshots, or other context that may help.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: |
+        Provide the smallest set of steps needed to reproduce the issue. 
+        If the error is related to a simulation, include the simulation setup code or input file.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+      
+  - type: input
+    id: harmony-version
+    attributes:
+      label: Harmony Version (git commit ID)
+      description: |
+        Let us know the git commit ID. You can find it by running `git rev-parse HEAD` from the Harmony directory in the terminal.
+      placeholder: e.g. 7a3b5c1...
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      placeholder: e.g., Ubuntu 22.04, Windows 11, MacOS 15.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution-workaround
+    attributes:
+      label: Suggested Solution or Workaround
+      description: If you have any ideas for how to fix this bug or have found a workaround, please share them here.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have checked existing issues (opened and closed).
+          required: true
+        - label: I have checked the [user manual]() and [project documentation]().
+          required: true
+        - label: I have provided a detailed description of the error I encountered.
+          required: true
+        - label: I have provided enough information for others to reproduce the issue.
+          required: true
+        - label: I have added screenshots and code snippets where appropriate.
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        Thank you for contributing! We’ll review your issue as soon as possible.

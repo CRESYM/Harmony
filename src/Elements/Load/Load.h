@@ -1,29 +1,29 @@
 #ifndef _LOAD_H_
 #define _LOAD_H_
 
+/**
+ * @file Load.h
+ * @brief Series R-L-C load model for AC and DC networks.
+ */
+
 #include "Load_base.h"
 
-/*
-Creates load with resistive, inductive and capacitive components in series. Its constructor 
-gets information about pin number and furthermore, R, L, C values. These values can be given 
-as single value per each component R, L, C, and thus, input 3 values as vector. Or there can be
-a separate value per each component R, L, C per pin/phase and thus, it gets 3 * pins input 
-values.
-*/
+/**
+ * @class Load
+ * @brief Load with resistive, inductive, and capacitive components in series.
+ * @ingroup source
+ *
+ * R, L, and C may be specified as three uniform values or as 3 × pins phase-specific values.
+ */
 class Load : public Load_base {
 public:
-    /*
-    * Constructor: Load
-    *
-    * Constructs a Load element with the given symbol (name), number of pins (phases), and values for
-    * resistance (R), inductance (L), and capacitance (C). The values vector can contain either 3 values
-    * for uniform R, L, C across phases, or 3 * pins values for phase-specific R, L, and C.
-    *
-    * Parameters:
-    * - symbol: Symbolic identifier for the load element (e.g., Load1, Load2)
-    * - pins: Number of input/output pins (phases)
-    * - values: Vector of values containing either 3 entries or 3 * pins entries for R, L, and C.
-    */
+    /**
+     * @brief Construct a series R-L-C load.
+     * @param symbol Element identifier (e.g. Load1).
+     * @param location Network area or location string.
+     * @param pins Number of pins (phases).
+     * @param values Vector of 3 or 3 × pins values for R, L, and C.
+     */
     Load(const std::string& symbol, const std::string& location, int pins, std::vector<double> values);
 
 

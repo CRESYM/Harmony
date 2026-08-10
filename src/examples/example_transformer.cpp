@@ -1,3 +1,7 @@
+/**
+ * @file example_transformer.cpp
+ * @brief Runnable example: Transformer topologies and Y-parameters.
+ */
 #include "Examples.h"
 
 #include "../network.h"

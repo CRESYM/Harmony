@@ -1,0 +1,197 @@
+{
+    "simulation": {
+        "title": "stability_check",
+        "description": "JSON equivalent of example_stability_check.cpp — same network, OPF, and stability plots as the C++ example.",
+        "output_directory": "./files",
+        "frequency_range": { "start": 0.1, "end": 10000, "points": 100 },
+        "nominal_power": 100.0,
+        "nominal_voltage": 345.0,
+        "dc_nominal_voltage": 400.0,
+        "omega": 314.1592653589793
+    },
+    "buses": [
+        { "id": "ACBUS01", "location": "AC1", "pins": 3, "enabled": true },
+        { "id": "ACBUS02", "location": "AC1", "pins": 3, "enabled": true },
+        { "id": "ACBUS03", "location": "AC2", "pins": 3, "enabled": true },
+        { "id": "ACBUS04", "location": "AC2", "pins": 3, "enabled": true },
+        { "id": "DCBUS01", "location": "DC1", "pins": 2, "enabled": true },
+        { "id": "DCBUS02", "location": "DC1", "pins": 2, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "LOAD02",
+            "location": "AC2",
+            "type": "load",
+            "pins": 3,
+            "values": [3859.46, 2.047, 0.0],
+            "connected_bus": { "bus_id": "ACBUS04", "terminal": 1 },
+            "enabled": true
+        },
+        {
+            "id": "SRC01",
+            "location": "AC1",
+            "type": "ac_source",
+            "pins": 3,
+            "voltage": 345000.0,
+            "values": [0.1],
+            "opf_info": {
+                "Pmax": 250.0,
+                "Pmin": 0.0,
+                "Qmax": 10.0,
+                "Qmin": -10.0,
+                "c2": 0.11,
+                "c1": 5.0,
+                "c0": 150.0,
+                "Vmax": 1.06,
+                "Vmin": 1.06,
+                "Vg": 365.7,
+                "Ref": 1.0
+            },
+            "connected_bus": { "bus_id": "ACBUS01", "terminal": 1 },
+            "enabled": true
+        },
+        {
+            "id": "br1_ac",
+            "location": "AC1",
+            "type": "impedance",
+            "pins": 3,
+            "complex": [1.0, 40.0],
+            "connected_buses": [
+                { "bus_id": "ACBUS01", "terminal": 1 },
+                { "bus_id": "ACBUS02", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "br2_ac",
+            "location": "AC2",
+            "type": "impedance",
+            "pins": 3,
+            "complex": [1.0, 40.0],
+            "connected_buses": [
+                { "bus_id": "ACBUS03", "terminal": 1 },
+                { "bus_id": "ACBUS04", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "br1_dc",
+            "location": "DC1",
+            "type": "impedance",
+            "pins": 2,
+            "values": [10.0],
+            "connected_buses": [
+                { "bus_id": "DCBUS01", "terminal": 1 },
+                { "bus_id": "DCBUS02", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "MMC1",
+            "location": "AC1_DC1",
+            "type": "mmc",
+            "converter_params": [
+                314.1592653589793,
+                50000000.0,
+                0.0,
+                0.0,
+                345000.0,
+                50000000.0,
+                400000.0,
+                0.05,
+                1.07,
+                0.01,
+                400.0,
+                0.0005,
+                0.0001,
+                0.0
+            ],
+            "controller_params": [
+                1, 0, 0.001103374, 0.00073, 1, 0,
+                0,
+                1, 0, 6.6667e-07, 3.3333e-04, 1, 50000000.0,
+                0,
+                1, 0, 6.6667e-07, 3.3333e-04, 1, 0,
+                1, 0, 120.0, 400.0, 1, 0.0,
+                1, 0, 19.93, 4500.0, 1, 166.67,
+                1, 0, 117.93, 85000.0, 2, 666.67, 0.0,
+                1, 0, 19.93, 4500.0, 2, 0.0, 0.0,
+                0
+            ],
+            "connected_buses": [
+                { "bus_id": "ACBUS02", "terminal": 1 },
+                { "bus_id": "DCBUS01", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "MMC2",
+            "location": "AC2_DC1",
+            "type": "mmc",
+            "converter_params": [
+                314.1592653589793,
+                -50000000.0,
+                -10000000.0,
+                0.0,
+                345000.0,
+                -50000000.0,
+                400000.0,
+                0.05,
+                1.07,
+                0.01,
+                400.0,
+                0.0005,
+                0.0001,
+                0.0
+            ],
+            "controller_params": [
+                1, 0, 0.001103374, 0.00073, 1, 0,
+                1, 0, 2.0, 82.0, 2, 0.0, 400000.0,
+                0,
+                0,
+                1, 0, 6.6667e-07, 3.3333e-04, 1, -10000000.0,
+                1, 0, 120.0, 400.0, 1, 0.0,
+                1, 0, 19.93, 4500.0, 1, -41.66,
+                1, 0, 117.93, 85000.0, 2, -89.71, 0.0,
+                1, 0, 19.93, 4500.0, 2, 0.0, 0.0,
+                0
+            ],
+            "connected_buses": [
+                { "bus_id": "ACBUS03", "terminal": 1 },
+                { "bus_id": "DCBUS02", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        {
+            "type": "opf",
+            "vsc_control": false,
+            "write_txt": false,
+            "plot_result": false,
+            "print_info": true
+        },
+        {
+            "type": "stability_assessment",
+            "converter_id": "MMC2",
+            "location": "DC",
+            "frequency_range": { "start": 0.1, "end": 10000, "points": 100 },
+            "plot": true,
+            "plot_type": "bode"
+        },
+        {
+            "type": "stability_assessment",
+            "converter_id": "MMC2",
+            "location": "DC",
+            "frequency_range": { "start": 10, "end": 2000, "points": 200 },
+            "plot": true,
+            "plot_type": "nyquist"
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "MMC2",
+            "frequency_range": { "start": 1, "end": 1000, "points": 100 },
+            "plot": true
+        }
+    ]
+}

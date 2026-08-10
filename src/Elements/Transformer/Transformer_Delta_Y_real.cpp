@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_Delta_Y_real.cpp
+ * @brief Implementation of Delta-wye (Δ-Y) real transformer topology.
+ */
 #include "Transformer_Delta_Y_real.h"
 
 // Constructor
@@ -12,6 +16,7 @@ TransformerDeltaY_real::TransformerDeltaY_real(const std::string& symbol, const 
     auto M = DenseMatrix(3, 3, { integer(1), zero, integer(-1), integer(-1), integer(1), zero, zero, integer(-1), integer(1) });
     mul_dense_scalar(M, real_double(1.0 / sqrt(3)), M);
     auto Tv = DenseMatrix(3, 3, { one, minus_one, zero, zero, one, minus_one, minus_one, zero, one });
+    mul_dense_scalar(Tv, real_double(1.0 / sqrt(3)), Tv);
 
     // Build the matrices for multiplication
     auto N1 = createZeroMatrix(6, 6);
@@ -31,7 +36,5 @@ TransformerDeltaY_real::TransformerDeltaY_real(const std::string& symbol, const 
 }
 
 // Destructor
-TransformerDeltaY_real::~TransformerDeltaY_real() {
-    std::cout << "Transformer Delta Y object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+TransformerDeltaY_real::~TransformerDeltaY_real() = default;
 

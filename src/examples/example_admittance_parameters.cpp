@@ -1,3 +1,7 @@
+/**
+ * @file example_admittance_parameters.cpp
+ * @brief Runnable example: Equivalent admittance parameter utilities.
+ */
 #include "Examples.h"
 
 #include "../network.h"

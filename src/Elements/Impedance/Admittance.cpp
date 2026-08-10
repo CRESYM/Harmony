@@ -1,4 +1,8 @@
-﻿#include "Admittance.h"
+/**
+ * @file Admittance.cpp
+ * @brief Implementation of Generic multi-phase admittance element with symbolic or numeric values.
+ */
+#include "Admittance.h"
 
 /*
  * Admittance Constructor
@@ -34,7 +38,7 @@ Impedance_base(symbol, location, pins, pins) {
             }
             // Error: The number of values doesn't match any expected configuration
             else
-                throw invalid_argument("Invalid number of admittance vector entries: " + values.ncols());
+                throw invalid_argument("Invalid number of admittance vector entries: " + std::to_string(values.ncols()));
         }
     }
     else

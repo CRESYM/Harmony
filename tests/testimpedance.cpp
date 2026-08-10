@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "./Elements/Impedance/Impedance.h"
+#include "Impedance.h"
 
 class TestImpedance : public testing::Test {};
 
@@ -21,7 +21,7 @@ TEST_F(TestImpedance, TestConstructor) {
     // case: pins = 3 & values.ncols = 2
     EXPECT_THROW(Impedance("z", "AC1", 3, DenseMatrix(1, 2, { div(integer(1), mul(j, omega)), mul(j, omega) })), std::invalid_argument);
     // case: pins = 2 & values.ncols = 2
-    EXPECT_NO_THROW(Impedance("z", "AC1", 2, DenseMatrix(1, 2, { div(integer(1), mul(j, omega)), mul(j, omega) })), std::invalid_argument);
+    EXPECT_NO_THROW(Impedance("z", "AC1", 2, DenseMatrix(1, 2, { div(integer(1), mul(j, omega)), mul(j, omega) })));
 
     // Stop GTest capturing Harmony's output to std::cerr
     testing::internal::GetCapturedStderr();

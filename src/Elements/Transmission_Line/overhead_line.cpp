@@ -1,4 +1,8 @@
-﻿#include "overhead_line.h"
+/**
+ * @file overhead_line.cpp
+ * @brief Implementation of Overhead transmission line with conductor bundle and ground-wire geometry.
+ */
+#include "overhead_line.h"
 
 
 // Define constructors for Conductors
@@ -220,6 +224,14 @@ Overhead_Line::Groundwires::Groundwires(int ng, std::vector<double>& values, dou
 		y.push_back(deltaYg + ybc -2.0 / 3.0 * dgsag); 
 	}
 	positions = std::make_tuple(x, y);
+}
+
+
+Overhead_Line::~Overhead_Line() {
+	delete conductors;
+	conductors = nullptr;
+	delete groundwires;
+	groundwires = nullptr;
 }
 
 

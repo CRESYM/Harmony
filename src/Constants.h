@@ -1,4 +1,14 @@
-﻿#ifndef CONSTANTS_H
+/**
+ * @file Constants.h
+ * @brief Central include hub for Harmony: third-party libraries, standard headers, and shared type aliases.
+ *
+ * Pulls in SymEngine (symbolic math), Eigen (dense/sparse linear algebra), GLFW/ImGui/Implot
+ * (visualization), SUNDIALS (time integration), and Gurobi (optimization). Defines common
+ * `using` aliases for SymEngine and Eigen types used across the codebase, and provides
+ * the `map2dense` helper for converting string-keyed tables to Eigen matrices.
+ */
+
+#ifndef CONSTANTS_H
 #define CONSTANTS_H
 
 // SymEngine library for symbolic mathematics
@@ -26,7 +36,6 @@
 #include <symengine/polys/basic_conversions.h>
 #include <symengine/printers.h>  // Correct header for printing
 #include <symengine/real_mpfr.h>
-using SymEngine::RealMPFR;
 
 // Eigen library for linear algebra
 #include <Eigen/Dense>
@@ -60,9 +69,11 @@ using SymEngine::RealMPFR;
 #include <iomanip>
 #include <filesystem>
 #include <set>
+#include <mutex>
+#include <atomic>
+#include <deque>
+#include <cstdlib>
 
-#include<matplot/matplot.h>
-using namespace matplot;
 #include "gurobi_c++.h"
 
 using SymEngine::RCP;
@@ -73,11 +84,32 @@ using SymEngine::mul;
 using SymEngine::symbol;
 using SymEngine::one;
 using SymEngine::ComplexDouble;
+using SymEngine::map_basic_basic;
+using SymEngine::real_double;
+using SymEngine::minus_one;
+using SymEngine::zero;
+using SymEngine::I;
+using SymEngine::complex_double;
+using SymEngine::vec_uint;
+using SymEngine::Symbol;
+using SymEngine::SymEngineException;
+using SymEngine::RealMPFR;
+
 using namespace std;
 using namespace std::complex_literals;
-using namespace SymEngine; // Use the SymEngine namespace
 using namespace Eigen;
 
+/**
+ * @brief Convert a nested string-keyed table to a dense Eigen matrix.
+ *
+ * Row indices are parsed from the outer map keys via `std::stoi`. Column order follows
+ * @p colNames; missing entries default to 0.0.
+ *
+ * @tparam Table Nested map type: outer key is row id string, inner map is column name to value.
+ * @param tbl Source table.
+ * @param colNames Ordered column names defining matrix column layout.
+ * @return Dense matrix with shape (rows in tbl, cols in colNames).
+ */
 template<typename Table>
 Eigen::MatrixXd map2dense(const Table& tbl,
     const std::vector<std::string>& colNames)
@@ -98,5 +130,27 @@ Eigen::MatrixXd map2dense(const Table& tbl,
     return M;
 }
 
+
+// Cross-platform OpenGL headers configuration (for Implot)
+#ifdef __APPLE__
+    #define GLFW_INCLUDE_GLCOREARB
+#endif
+
+// Implot
+#include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <implot.h>
+
+
+// SUNDIALS v7
+#include <sundials/sundials_types.h>
+#include <sundials/sundials_context.h>
+#include <cvode/cvode.h>
+#include <kinsol/kinsol.h>
+#include <nvector/nvector_serial.h>
+#include <sunmatrix/sunmatrix_dense.h>
+#include <sunlinsol/sunlinsol_dense.h>
 
 #endif // CONSTANTS_H

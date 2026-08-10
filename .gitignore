@@ -6,6 +6,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.DS_Store
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -272,8 +273,12 @@ Harmony/.vs/Harmony/v15/.suo
 # Harmony output files
 src/files/
 
+# Legacy input_file build artifacts (module moved to src/json/)
+input_file/
+
 # Harmony build directory
 build/
+
 
 # Harmony installers
 install/Harmony/
@@ -281,3 +286,6 @@ install/Harmony/
 *.exe
 *.dll
 
+# Clang-UML output
+*.puml
+*.png

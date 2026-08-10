@@ -5,6 +5,8 @@ dependencies:
   - cmake
   - eigen
   - symengine
-  - casadi
   - nlohmann_json
   - doxygen
+  - graphviz
+  - implot
+  - sundials

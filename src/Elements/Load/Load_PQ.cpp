@@ -1,3 +1,7 @@
+/**
+ * @file Load_PQ.cpp
+ * @brief Implementation of Constant active and reactive power (PQ) load model.
+ */
 #include "Load_PQ.h"
 
 LoadPQ::LoadPQ(const std::string& symbol, const std::string& location, int pins, vector<double> values) : Load_base(symbol, location, pins, pins) {
@@ -22,8 +26,8 @@ void LoadPQ::computePowerFlow(std::map<std::string, double>& busAC,
     else if ((area[0] == 'A' || area[0] == 'a') && (area[1] == 'c' || area[1] == 'C')) { // AC network
         double Pd = P ;
         double Qd = Q ;
-        busAC["Pd"] += Pd;
-        busAC["Qd"] += Qd;
+        busAC["Pd"] += Pd/1e6;
+        busAC["Qd"] += Qd/1e6;
     }
     else {
         throw std::runtime_error("Invalid network type specified in global parameters.");

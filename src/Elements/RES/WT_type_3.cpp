@@ -1,3 +1,7 @@
+/**
+ * @file WT_type_3.cpp
+ * @brief Implementation of Type 3 doubly-fed induction generator (DFIG) wind turbine model.
+ */
 #include "WT_type_3.h"
 #include "../../Constants.h"
 

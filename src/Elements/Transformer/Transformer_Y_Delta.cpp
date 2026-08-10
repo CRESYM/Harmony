@@ -1,3 +1,7 @@
+/**
+ * @file Transformer_Y_Delta.cpp
+ * @brief Implementation of Wye-delta (Y-Δ) classic transformer topology.
+ */
 #include "Transformer_Y_Delta.h"
 
 // Constructor
@@ -12,6 +16,7 @@ TransformerYDelta::TransformerYDelta(const std::string& symbol, const std::strin
     auto M = DenseMatrix(3, 3, { integer(1), zero, integer(-1), integer(-1), integer(1), zero, zero, integer(-1), integer(1)});
     mul_dense_scalar(M, real_double(1.0 / sqrt(3)), M);
     auto Tv = DenseMatrix(3, 3, { one, minus_one, zero, zero, one, minus_one, minus_one, zero, one });
+    mul_dense_scalar(Tv, real_double(1.0 / sqrt(3)), Tv);
 
     // Build the matrices for multiplication
     auto N1 = createZeroMatrix(6, 6);
@@ -33,7 +38,5 @@ TransformerYDelta::TransformerYDelta(const std::string& symbol, const std::strin
 }
 
 // Destructor
-TransformerYDelta::~TransformerYDelta() {
-    std::cout << "Transformer Y Delta object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+TransformerYDelta::~TransformerYDelta() = default;
 

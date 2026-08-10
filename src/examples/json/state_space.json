@@ -1,0 +1,55 @@
+{
+    "simulation": {
+        "title": "state_space",
+        "description": "JSON equivalent of example_state_space.cpp — AC source, resistor, and capacitor network (build-only; run state-space via C++ API).",
+        "output_directory": "./files"
+    },
+    "buses": [
+        { "id": "gnd", "location": "AC1", "pins": 1, "enabled": true },
+        { "id": "1", "location": "AC1", "pins": 1, "enabled": true },
+        { "id": "2", "location": "AC1", "pins": 1, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "AC1",
+            "location": "AC1",
+            "type": "ac_source",
+            "pins": 1,
+            "voltage": 345000.0,
+            "values": [0.0],
+            "connected_buses": [
+                { "bus_id": "1", "terminal": 1 },
+                { "bus_id": "gnd", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "R1",
+            "location": "AC1",
+            "type": "resistor",
+            "pins": 1,
+            "values": [2.0],
+            "connected_buses": [
+                { "bus_id": "1", "terminal": 1 },
+                { "bus_id": "2", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "C1",
+            "location": "AC1",
+            "type": "capacitor",
+            "pins": 1,
+            "values": [1e-6],
+            "connected_buses": [
+                { "bus_id": "2", "terminal": 1 },
+                { "bus_id": "gnd", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "print_connections" },
+        { "type": "network_summary" }
+    ]
+}

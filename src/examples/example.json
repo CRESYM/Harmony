@@ -1,0 +1,74 @@
+{
+    "simulation": {
+        "title": "harmony_json_example",
+        "description": "Minimal AC network built from JSON: load + real transformer (see also src/examples/json/).",
+        "output_directory": "./files",
+        "frequency_range": {
+            "start": 10,
+            "end": 1000,
+            "step": 50
+        },
+        "nominal_power": 100.0,
+        "nominal_voltage": 345.0
+    },
+    "computations": [
+        {
+            "type": "print_connections"
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "l1",
+            "plot": true
+        },
+        {
+            "type": "network_summary"
+        }
+    ],
+    "buses": [
+        {
+            "id": "bus1",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "bus2",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        }
+    ],
+    "components": [
+        {
+            "id": "l1",
+            "location": "AC1",
+            "type": "load",
+            "pins": 3,
+            "values": [3859.46, 2047.0, 0.0],
+            "connected_bus": {
+                "bus_id": "bus2",
+                "terminal": 1
+            },
+            "enabled": true
+        },
+        {
+            "id": "transformer1",
+            "location": "AC1",
+            "type": "transformer_real",
+            "pins": 3,
+            "values": {
+                "R_primary": 1.0,
+                "L_primary": 0.04,
+                "R_secondary": 1.0,
+                "L_secondary": 0.04,
+                "turns_ratio": 1.0,
+                "phase_shift": 0.0
+            },
+            "connected_buses": [
+                { "bus_id": "bus1", "terminal": 1 },
+                { "bus_id": "bus2", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ]
+}

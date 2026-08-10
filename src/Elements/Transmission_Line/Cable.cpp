@@ -1,4 +1,8 @@
-﻿#include "Cable.h"
+/**
+ * @file Cable.cpp
+ * @brief Implementation of Underground or aerial multi-conductor cable with layered geometry.
+ */
+#include "Cable.h"
 
 /**
  * @brief Constructs a new Cable object.
@@ -271,7 +275,13 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
 
 // Destructor definition
 Cable::~Cable() {
-	// Implement the destructor if needed
+	for (auto& [key, conductor] : conductors)
+		delete conductor;
+	conductors.clear();
+
+	for (auto& [key, insulator] : insulators)
+		delete insulator;
+	insulators.clear();
 }
 
 std::vector<std::vector<complex<double>>> Cable::compute_y_parameters(double frequency)

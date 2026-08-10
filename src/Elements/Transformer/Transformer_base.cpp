@@ -1,4 +1,8 @@
-﻿#include "Transformer_base.h"
+/**
+ * @file Transformer_base.cpp
+ * @brief Implementation of Base class for transformer models with winding R-L parameters.
+ */
+#include "Transformer_base.h"
 
 Transformer_base::Transformer_base(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values)
 	: Element(symbol, location, pins, pins) {
@@ -6,12 +10,10 @@ Transformer_base::Transformer_base(const std::string& symbol, const std::string&
 }
 
 // Destructor
-Transformer_base::~Transformer_base() {
-    std::cout << "Transformer object for " << getElementSymbol() << " destroyed." << std::endl;
-}
+Transformer_base::~Transformer_base() = default;
 
 void Transformer_base::computePowerFlow(std::map<std::string, double>& branchData,
-    const std::map<std::string, double>& globalParams) const
+    std::map<std::string, double>& globalParams) const
 {
     using cd = std::complex<double>;
 
@@ -20,7 +22,7 @@ void Transformer_base::computePowerFlow(std::map<std::string, double>& branchDat
     if ((area[0] == 'D' || area[0] == 'd') && (area[1] == 'C' || area[1] == 'c')) { // DC network
         cd Y12 = substitute_symbol(Y_matrix.get(0, m_pins), omega, 0.0);
 
-        cd zs = -cd(1.0) / Y12 / globalParams.at("Z_base");
+        cd zs = -cd(1.0) / Y12 / globalParams.at("ACZbase");
 
         branchData["r"] = std::real(zs);
         branchData["x"] = 0.0;
@@ -39,7 +41,7 @@ void Transformer_base::computePowerFlow(std::map<std::string, double>& branchDat
         cd Ys = -Y12 * tap;
         cd Yc = Y22 - Ys;
 
-        cd Zs = cd(1.0) / Ys / globalParams.at("Z_base");
+        cd Zs = cd(1.0) / Ys / globalParams.at("ACZbase");
 
         branchData["transformer"] = 1;
         branchData["tap"] = tap;

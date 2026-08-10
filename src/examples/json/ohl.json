@@ -1,0 +1,43 @@
+{
+    "simulation": {
+        "title": "ohl",
+        "description": "JSON equivalent of example_OHL.cpp — overhead line Y-matrix sweep.",
+        "output_directory": "./files",
+        "frequency_range": { "start": 10, "end": 1000, "points": 15 }
+    },
+    "buses": [
+        { "id": "bus1", "location": "AC1", "pins": 1, "enabled": true },
+        { "id": "bus2", "location": "AC1", "pins": 1, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "ohl",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length_km": 227.0,
+            "earth": [1.0, 1.0, 1.0],
+            "conductor": {
+                "organization": "flat",
+                "number_bundles": [2, 2],
+                "geometry": [11.8, 27.5],
+                "ybc": 0.01436,
+                "delta_ybc": 0.06266,
+                "delta_xbc": 10.0,
+                "delta_tilde_xbc": 0.4572
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [0.9196, 0.0062, 10.0, 7.5, 6.5],
+                "delta_xg": 1.0
+            },
+            "connected_buses": [
+                { "bus_id": "bus1", "terminal": 1 },
+                { "bus_id": "bus2", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "y_matrix", "component_id": "ohl" }
+    ]
+}

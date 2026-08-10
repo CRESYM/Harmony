@@ -1,0 +1,26 @@
+{
+    "simulation": {
+        "title": "generator",
+        "description": "JSON equivalent of example_generator.cpp — generator Y-parameter sweep.",
+        "output_directory": "./files",
+        "frequency_range": { "start": 1, "end": 100, "points": 20 }
+    },
+    "buses": [
+        { "id": "bus1", "location": "AC1", "pins": 1, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "G1",
+            "location": "AC1",
+            "type": "generator",
+            "pins": 1,
+            "voltage": 345000.0,
+            "values": [0.0952, 0.5, 2.285],
+            "connected_bus": { "bus_id": "bus1", "terminal": 1 },
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "y_matrix", "component_id": "G1" }
+    ]
+}

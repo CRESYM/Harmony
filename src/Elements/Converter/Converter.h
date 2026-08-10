@@ -1,24 +1,44 @@
-﻿#ifndef _CONVERTER_H_
+#ifndef _CONVERTER_H_
 #define _CONVERTER_H_
 
+/**
+ * @file Converter.h
+ * @brief Base class for power electronic converters with state-space models.
+ */
 
 #include "../Element.h"
 #include "../../Include_control_blocks.h"
 
-
+/**
+ * @class Converter
+ * @brief Abstract power converter with ABCD matrices, controllers, and filters.
+ * @ingroup converter
+ */
 class Converter : public Element {
 public:
 
-	// Constructor
+	/**
+	 * @brief Construct a three-phase, two-terminal converter element.
+	 * @param symbol Element identifier.
+	 * @param location Network area string encoding AC and DC areas (e.g. AC1_DC1).
+	 */
 	Converter(const std::string& symbol, const std::string& location)
-		: Element(symbol, location, 3, 1) {
-	}
+		: Element(symbol, location, 3, 2) {}
 
-	//getter
+	virtual ~Converter();
+
+	// Continuous-time matrix getters  
 	Eigen::MatrixXd getA() const { return A_matrix; }
 	Eigen::MatrixXd getB() const { return B_matrix; }
 	Eigen::MatrixXd getC() const { return C_matrix; }
 	Eigen::MatrixXd getD() const { return D_matrix; }
+
+	// Discrete-time matrix getters
+	Eigen::MatrixXd getAd() const { return Ad_matrix; }
+	Eigen::MatrixXd getBd() const { return Bd_matrix; }
+	Eigen::MatrixXd getCd() const { return Cd_matrix; }
+	Eigen::MatrixXd getDd() const { return Dd_matrix; }
+
 	Eigen::VectorXd getEquilibriumState() const { return equilibrium_state; }
 	VectorXcd getEigenvalues() { return eigenvalues; }
 	VectorXcd getEigenvectors() { return eigenvectors; }
@@ -31,9 +51,14 @@ public:
 		return element_location.substr(pos + 1);
 	} // Get DC area from location string
 
+
 	// Solvers
 	virtual void solveEquilibrium() {};
+
 	virtual void computeABCD() {};
+	virtual void discretize(double Ts) { discretizeABCD(A_matrix, B_matrix, C_matrix, D_matrix, Ts, Ad_matrix, Bd_matrix, Cd_matrix, Dd_matrix); }
+
+
 	virtual Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u) {
 		return Eigen::MatrixXd::Zero(1, 1);
 	};
@@ -42,6 +67,7 @@ public:
 		eigenvalues = es.eigenvalues();
 		eigenvectors = es.eigenvectors();
 	}
+
 	// Compute participation factors from the state matrix A
 	// Returns: MatrixXd (n x n) where P(i,j) is participation of state i in mode j
 	Eigen::MatrixXd computeParticipationFactors(const Eigen::MatrixXd& A_matrix) {
@@ -75,6 +101,9 @@ public:
 		return P;
 	}
 
+	// Time-domain simulation
+	virtual vector<MatrixXcd> simulateTimeStep(const vector<MatrixXcd>& input, double Ts, int nKeep1, int nKeep2) { return vector<MatrixXcd>(1, MatrixXcd::Zero(1, 1)); }
+
 	// System analysis
 	void checkStability() const;
 	void printEigenvalues() const;
@@ -101,12 +130,16 @@ protected:
 	double t_delay;   // Time delay [s]
 
 	// System matrices
-	Eigen::MatrixXd A_matrix, B_matrix, C_matrix, D_matrix;
-	Eigen::MatrixXd Adelay, Bdelay, Cdelay, Ddelay; // Delay system matrices
+	MatrixXd A_matrix, B_matrix, C_matrix, D_matrix; // Continuous-time system matrices
+	MatrixXd Adelay, Bdelay, Cdelay, Ddelay; // Delay system matrices
+	MatrixXd Ad_matrix, Bd_matrix, Cd_matrix, Dd_matrix; // Discrete system matrices
+
 	int pade_order = 2; // Order of Padé approximation for delays
-	Eigen::VectorXd equilibrium_state;
+	VectorXd equilibrium_state;
 	VectorXcd eigenvalues;
 	VectorXcd eigenvectors;
+
+	VectorXcd initial_state; // Initial state for time-domain simulations
 
 
 	std::map<std::string, Controller*> controls; // Map of existing controllers
@@ -115,11 +148,15 @@ protected:
 	// List of controller and filter names, it can be changed only by developers
 	const std::vector<std::string> controller_list = {
 		"pll",  "dc_voltage", "active_power", "ac_voltage", "reactive_power", "energy", "zcc", "occ", "ccc",
-		"droop"
-	}; // List of controller names
+		"droop", "gfm"
+	}; // List of controller names (gfm appended — omit trailing 0 in legacy packs; init skips missing slots)
 	const std::vector<std::string> filter_list = {
 		"ac_voltage_dq", "ac_voltage", "active_power", "reactive_power", "dc_voltage"
 	}; // List of filter names
+
+
+
+	
 
 };
 

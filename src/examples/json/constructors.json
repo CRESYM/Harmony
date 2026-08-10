@@ -1,0 +1,29 @@
+{
+    "simulation": {
+        "title": "constructors",
+        "description": "JSON equivalent of example_constructors.cpp — transmission line Y-matrix sweep.",
+        "output_directory": "./files",
+        "frequency_range": { "start": 10, "end": 10000, "points": 20 }
+    },
+    "buses": [
+        { "id": "bus1", "location": "AC1", "pins": 1, "enabled": true },
+        { "id": "bus2", "location": "AC1", "pins": 1, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "tl",
+            "location": "AC1",
+            "type": "transmission_line",
+            "pins": 1,
+            "values": [0.01, 2.5e-7, 1e-9, 1e-11, 1000],
+            "connected_buses": [
+                { "bus_id": "bus1", "terminal": 1 },
+                { "bus_id": "bus2", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "y_matrix", "component_id": "tl" }
+    ]
+}

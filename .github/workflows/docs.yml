@@ -1,0 +1,33 @@
+name: Build API docs
+
+# Builds Doxygen + Graphviz class diagrams. HTML is uploaded as a CI artifact only.
+# Public site: maintain in your separate GitHub Pages repository (see docs/doxygen/README.md).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: harmony-docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Doxygen docs
+        uses: ./.github/actions/build-docs
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: harmony-api-docs
+          path: build/docs/html
+          retention-days: 30

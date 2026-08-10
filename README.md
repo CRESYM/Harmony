@@ -1,12 +1,18 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21534064.svg)](https://doi.org/10.5281/zenodo.21534064)
+
+![Windows build & test](https://github.com/CRESYM/Harmony/actions/workflows/windows_build_and_test.yml/badge.svg?branch=main) ![Linux build & test](https://github.com/CRESYM/Harmony/actions/workflows/linux_build_and_test.yml/badge.svg?branch=main) ![macOS build & test](https://github.com/CRESYM/Harmony/actions/workflows/macos_build_and_test.yml/badge.svg?branch=main)   
+![Windows run examples](https://github.com/CRESYM/Harmony/actions/workflows/windows_run_examples.yml/badge.svg?branch=main) ![Linux run examples](https://github.com/CRESYM/Harmony/actions/workflows/linux_run_examples.yml/badge.svg?branch=main) ![macOS run examples](https://github.com/CRESYM/Harmony/actions/workflows/macos_run_examples.yml/badge.svg?branch=main)  
+![Build API docs](https://github.com/CRESYM/Harmony/actions/workflows/docs.yml/badge.svg?branch=main)
+
 # Harmony $~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~$    ![alt text](cresym.png?raw=true)  
 
 HARMONic stabilitY assessment of PE-penetrated power systems
 
-Like other power systems, the European grid experiences a massive RES development, bringing up many new challenges for system operation. One of such challenges is the massive penetration of Power Electronic (PE) converters (e.g. PV & wind generation units, batteries & chargers, HVDC connections, statcoms, etc.) on a large scale as they may cause instable system operation (resonance) or harmonic waves that can interfere and/or damage the neighbouring equipment. 
+Like other power systems, the European grid experiences a massive RES development, bringing up many new challenges for system operation. One of such challenges is the massive penetration of Power Electronic (PE) converters (e.g., PV & wind generation units, batteries & chargers, HVDC connections, statcoms, etc.) on a large scale, as they may cause unstable system operation (resonance) or harmonic waves that can interfere and/or damage the neighbouring equipment. 
 
-Where a few, local (a plant) and rather simple situations had to be analysed in the past, the risk is growing exponentially, as more devices connect, as they are more diverse, and as they are closer to one another. Grid regulations are all the more demanding because complex situations cannot actually be addressed. And, as a consequence, strong mitigation measures are integrated in every piece of equipment, at a significant additional cost… without preventing all undesired interactions.    
+Where a few, local (a plant) and rather simple situations had to be analyzed in the past, the risk is growing exponentially as more devices connect, become more diverse, and are closer to one another. Grid regulations are all the more demanding because complex situations cannot be addressed directly. And, as a consequence, strong mitigation measures are integrated in every piece of equipment, at a significant additional cost… without preventing all undesired interactions.    
 
-There is a small number of publicly available, but limited, tools for such analyses, often requiring time-consuming modeling of the power system and the detailed control algorithms, possibly limited in terms of phasor-based simulation, or unable to model all power converters, or unable to satisfactorily model an AC-DC hybrid system. 
+There is a limited number of publicly available tools for such analyses, often requiring time-consuming modeling of the power system and detailed control algorithms, which may be limited in terms of phasor-based simulation, unable to model all power converters, or unable to satisfactorily model an AC-DC hybrid system. 
 Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) project deals with the development of a mathematical framework capable of simulating all components in AC-DC systems for converter-driven stability assessment studies becomes crucial, in order to complement present tools, and eventually:  
 
 (i) ease the performance of stability assessment studies; 
@@ -19,30 +25,47 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 
 ![alt text](/install/res/HARMONY_figure.png?raw=true) 
 
+If you use this repository, please cite the following publication.
+```
+@misc{lekic2026harmony,
+  title         = {Advanced Simulation Framework for AC/MTDC Power Systems},
+  author        = {Aleksandra Leki{\'c} and Azadeh Kermansaravi and Haixiao Li and Yasel Quintero Lares and Saif Alsarayreh and Robert Dimitrovski},
+  year          = {2026},
+  eprint        = {2606.09406},
+  archivePrefix = {arXiv},
+  primaryClass  = {eess.SY},
+  url           = {https://arxiv.org/abs/2606.09406}
+}
+```
+
 ## Installation and Usage
 
-See the [detailed installation instructions](docs/installation.md).
-
 ### Prerequisites 
-Harmony can be compiled on Windows. The requirements are:
-- [Visual Studio](https://visualstudio.microsoft.com) - version 2022 or newer, with a "Desktop Development for C++" workload installed (See [installation docs.](https://learn.microsoft.com/en-us/visualstudio/install/install-visual-studio?view=vs-2022))
-- [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python, and a few other packages. (You can also use Anaconda if it is already installed on your machine.)
-  
-> [!WARNING]
-> When installing miniconda, make sure you select the option **'Add to path'**. This will allow you to use miniconda from Visual Studio, Git Bash, etc. If you forgot this, have a look at Step 3 in [this blog post](https://eduand-alvarez.medium.com/setting-up-anaconda-on-your-windows-pc-6e39800c1afb), which shows how to add miniconda to your path. Alternatively, you may reinstall miniconda.
 
-- [Gurobi Optimizer](https://www.gurobi.com/downloads/gurobi-software/?_gl=1*nfc3bz*_up*MQ..*_ga*Mzk5NjUzMDE0LjE3NDk3NDM5OTU.*_ga_RTTPP25C8N*czE3NDk3NDM5OTQkbzEkZzEkdDE3NDk3NDQxMTIkajYwJGwwJGgxNzI0MDAwOTc3) - requires a license (free for academics).
-- [Matplot++](https://alandefreitas.github.io/matplotplusplus/) - installed through an MSI provided in the GitHub Releases. For example [v1.2.0](https://github.com/alandefreitas/matplotplusplus/releases/tag/v1.2.0).
-- [gnuplot](https://sourceforge.net/projects/gnuplot/) - required by Matplot++ at runtime. Install through one of the [provided installers](https://sourceforge.net/projects/gnuplot/files/gnuplot/).
+Harmony can be compiled on Windows, Linux and macOS. The requirements for each operating system are:
+- Compilers and build tools for C and C++
+    - Linux: GNU C and C++ compilers (tested version with 11.4.0) and GNU make
+    - MacOS: Apple Clang C and C++ compilers (tested with version 21.0.0) and GNU make
+    - Windows: [Visual Studio](https://visualstudio.microsoft.com) - version 2022 or newer, with a "Desktop Development for C++" workload installed (See [installation docs.](https://learn.microsoft.com/en-us/visualstudio/install/install-visual-studio?view=vs-2022))
+- [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python, and a few other packages. Select **Add to path** during installation to allow miniconda to be used from Visual Studio.
+- [Gurobi](https://www.gurobi.com/product/download-center/optimizer-software) - optimization software (license required, free for academics).
+- Additional system packages (Linux only):
+    - ```bash
+      # Install the OpenGL, X11, and GLFW development libraries
+      sudo apt update
+      sudo apt install libgl1-mesa-dev libx11-dev libglfw3-dev
+      ```
 
-> [!WARNING]
-> When installing gnuplot, make sure you select the option **'Add application directory to your PATH environment variable'**. The option can be a bit hidden in the installer so pay close attention. This option allows gnuplot to be discoverable by Harmony at execution time. 
+### Building
 
-### Build and Run
-To build and run Harmony, open Visual Studio and select "Continue without code" on the welcome dialogue. From the top menu, select View->Terminal. This will open the Visual Studio developer prompt. From there, type the following commands:
+See the [detailed installation instructions](docs/installation.md) for a comprehensive, step-by-step guide to building Harmomy.   
+
+To build and run Harmony:
+* Linux and MacOS: open the terminal and type the commands below.
+* Windows: open Visual Studio and select "Continue without code" on the welcome dialogue. From the top menu, select View->Terminal. This will open the Visual Studio Developer Command Prompt. From there, type the following commands.
 
 ```bash
-# Donwload the repository
+# Download the repository
 git clone https://github.com/CRESYM/Harmony.git
 cd Harmony
 
@@ -50,52 +73,143 @@ cd Harmony
 conda env create -f environment.yml
 conda activate harmony
 
-# Configure the project
+# Create a build directory for compilation
 mkdir build
 cd build
-cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" -DMATPLOT_PATH="matplot++_installation_dir"
-# e.g. cmake .. -DGUROBI_PATH="C:\gurobi1202\win64" -DMATPLOT_PATH="C:\Program Files\Matplot++ 1.2.0"
+
+# Configure the CMake project specifying the path to your Gurobi installation, for example:
+#   Windows:  cmake .. -DGUROBI_PATH="C:/gurobi1202/win64"
+#   Linux:    cmake .. -DGUROBI_PATH="/opt/gurobi1301/linux64"
+#   MacOS:    cmake .. -DGUROBI_PATH="/Library/gurobi1200/macos_universal2"
+cmake .. -DGUROBI_PATH="gurobi_installation_dir_config"
 
 # Compile Harmony
-cmake --build . --config Release
-
-# Run Harmony
-cd Release
-./Harmony
+# Replace 4 with the number of CPU cores you wish to use for parallel compilation
+cmake --build . --config Release -j 4
 ```
 
-### Run the tests
-To run the tests, you should follow a similar procedure as for the building and running the code.
+> [!TIP]
+> Adding the `-j` flag enables parallel compilation on Linux and macOS using the specified number of cores. For Windows, Harmony is already configured to automatically detect and use the maximum number of available cores for parallel compilation.
+
+### Running
+
+See the [detailed running instructions](docs/running-harmony.md) for a for a comprehensive guide to running Harmony.   
+
+Compiling Harmony produces two executables:
+* **HarmonyUI**: Run simulations via a graphical user interface (GUI). Simulations are configured via JSON input files.
+* **Harmony**: Run simulations from the command-line interface (CLI). Simulations are configured via JSON input files or C++ scripts.
+
+**Using the graphical user interface**   
+
+To use Harmony's graphical user interface, execute the following command from the `build` directory:
 ```bash
-# Open the tests directory
+# Run HarmonyUI (Windows)
+./Release/HarmonyUI.exe
+
+# Run HarmonyUI (Linux and MacOS)
+./HarmonyUI
+```
+
+**Using the command-line interface**
+
+To use Harmony's command-line interface, run one of the following commands from the `build` directory:"
+```bash
+# Windows
+./Release/Harmony.exe <option>
+
+# Linux and MacOS
+./Harmony <option>
+```
+
+Replace `<option>` with one or more of the options listed below.
+
+| Option | Description |
+|----------|-----------|
+| `--help -h` | Display the help message. |
+| `--cpp <example-name>` | Run one of the built-in examples. |
+| `--json <path-to-file>` | Run a simulation from a JSON input file. |
+| `--json-path <directory>` | Set the directory used to search for JSON input files. |
+| `--list-cpp` | List all available examples. |
+| `--list-json` | List all JSON input files in the current search path. |
+| `--no-plot` | Disable plotting (applies to examples only). |
+| `--search-path <directory>` | Add a directory to the search path for JSON input files. |
+| `--verbose` `-v` | Enable verbose output. |
+
+
+### Building and running the tests
+
+The test suite is built in much the same way as Harmony. Starting from the *root directory* of the repository, with the `harmony` Conda environment activated, run:
+
+```bash
+# Enter the tests directory
 cd tests
 
-# Activate the harmony conda environment
-conda activate harmony
-
-# Configure the project
+# Create and enter the build directory
 mkdir build
 cd build
-cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" -DMATPLOT_PATH="matplot++_installation_dir"
-# e.g. cmake .. -DGUROBI_PATH="C:\gurobi1202\win64" -DMATPLOT_PATH="C:\Program Files\Matplot++ 1.2.0"
 
-# Compile the tests
-cmake --build . --config Release
+# Configure the CMake project specifying the path to your Gurobi installation, for example:
+#   Windows:  cmake .. -DGUROBI_PATH="C:/gurobi1202/win64"
+#   Linux:    cmake .. -DGUROBI_PATH="/opt/gurobi1301/linux64"
+#   MacOS:    cmake .. -DGUROBI_PATH="/Library/gurobi1200/macos_universal2"
+cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" 
 
-# Run the tests
-ctest
+# Compile the test suite. 
+# Replace 4 with the number of CPU cores you wish to use for parallel compilation.
+cmake --build . --config Release -j 4
+
+# Run the tests.
+# Replace 4 with the desired level of parallelism.
+ctest -j 4
 ```
+
+## Documentation
+
+The project's documentation is available in the [docs](docs/) directory. It includes detailed guides for:
+
+* [Installation](docs/installation.md) - instructions for setting up an environment to build and run Harmony.
+* [Running](docs/running-harmony.md) - instructions for running Harmony.
+* [Input file format](docs/input-file-format.md) - description of the format for JSON input files.
+* [Developers](docs/developer-guide.md) - information for those extending Harmony's functionality, including adding new elements, solvers and tests.
+* [Maintainers](docs/maintainer-guide.md) - information for project maintainers, including CMake structure, adding dependencies and GitHub Actions workflows.
+
+Additional documentation:
+* [User Manual](docs/manual/README.md) - a comprehensive guide to using Harmony, including tutorials and examples.
+* [API documentation (Doxygen)](docs/doxygen/README.md) - reference documentation for the Harmony C++ API.
 
 
 ## Contributors
 - **Aleksandra Lekić**, development of the mathematical framework, development of individual components, and their spectral representation and formulation, design of the toolbox, different functionality interconnections, harmonic stability solver, supervision, and acquisition of the funding
-- **Robert Dimitrovski**, dynamic phasor formulation, development of a core of DQNsym, funding acquisition and supervision
+- **Robert Dimitrovski**, dynamic phasor formulation, development of a core of DQsym, funding acquisition and supervision
 - **Haixiao Li**, design of the power flow strategy, and formulation of the power flow solution
 - **Saif Alsarayreh**, dynamic phasor formulation, model design, and implementation
+- **Muhammad Noman Ashraf**, GFM control
 - **Azadeh Kermansaravi**, programming of the part of the toolbox
 - **Yasel Quintero**, documentation, installation setup, cross-platform compatibility, testing, issuing, release
 
 
 
 
- The development of the Harmony was supported by the [Digital Competence Centre](https://www.tudelft.nl/index.php?id=67120&L=1/), Delft University of Technology.
+ The development of the Harmony was supported by the [Digital Competence Centre](https://dcc.tudelft.nl/), Delft University of Technology.
+
+ ## Technical Foundations
+
+Built on component models and state-space methods from prior work:
+- Transmission line, MMC base models: PowerImpedanceACDC.jl (A. Lekić, 2024)
+- State-space solver: dc_dc_simulator (A. Lekić, GitHub)
+- AC-DC OPF solver: ACDC-OpFlow (H. Li, GitHub)
+- Dynamic phasor solver: DQsym (S. Alsarayreh, R. Dimitrovski, GitHub)
+
+All analysis solvers, optimization routines, and stability assessment methods are original developments for this framework.
+
+*License*: GPL v3
+
+### References
+
+[1] ELECTA, PowerImpedanceACDC-Impedance-based stability analyses, "PowerImpedanceACDC.jl," 2024, https://github.com/Electa-Git/PowerImpedanceACDC.jl
+
+[2] Lekić, A., "DC-DC Simulator," https://github.com/kul-optec/dc_dc_simulator
+
+[3] Li, H., Kermansaravi, A., Dimitrovski, R., & Lekić, A. (2025). ACDC-OpFlow, Unified, Cross-Language Framework for AC/DC Optimal Power Flow Solutions (Version v0.1) [Computer software]. https://doi.org/10.4121/66318317-4d5d-4dc4-ba5a-5fa65c585520
+
+[4] Alsarayreh, S., Dimitrovski, R., & Lekić, A. (2025). DQsym: A Dynamic Phasor-Based library for Analysis of Modern Power Systems This repository presents the Dynamic Phasor library for Analysis of Modern Power Systems (Version 1.0.0) [Computer software]. https://doi.org/https://doi.org/10.5281/zenodo.18544532

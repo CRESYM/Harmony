@@ -1,36 +1,31 @@
-﻿#ifndef _ADMITTANCE_H_
+#ifndef _ADMITTANCE_H_
 #define _ADMITTANCE_H_
+
+/**
+ * @file Admittance.h
+ * @brief Generic multi-phase admittance element with symbolic or numeric values.
+ */
 
 #include "Impedance_base.h"
 
-/*
-Creates admittance with specified number of input/output pins which represent phases. 
-The admittance expression has to be given in Omega and can have both numerical and 
-symbolic value (example: `z = s-2`). Depending on the provided vector of admittance values, 
-we differ three cases. If the number of element pins is greater than 1, admittance can be 
-represented with vector with one, `pins` or `pins × pins` number of elements. Namely:
--In the case of 1×1 vector, admittance has only one value. Then this value is given to all 
-diagonal admittance entries.
--In the case of `pins` elements, they are representing diagonal entiries of admittance.
--In case of `pins x pins` elements, they are representing all matrix of admittance.
-*/
-
+/**
+ * @class Admittance
+ * @brief Generic admittance matrix element for single- or multi-phase networks.
+ * @ingroup impedance
+ *
+ * Admittance values may be numerical or symbolic (e.g. s-2). For multi-pin elements,
+ * the values vector may contain one diagonal entry, `pins` diagonal entries, or a
+ * full `pins × pins` admittance matrix.
+ */
 class Admittance : public Impedance_base {
 public:
-    /*
-     * Constructor: Admittance
-     *
-     * Constructs the admittance model with the specified symbolic name, number of pins (phases),
-     * and a matrix of admittance values. The values can represent single-phase or multi-phase
-     * admittance depending on the input size.
-     *
-     * Parameters:
-     * - symbol: Symbolic identifier for the admittance element (e.g., Y1, Y2)
-     * - pins: Number of input/output pins (phases)
-     * - values: DenseMatrix representing the admittance values (numerical or symbolic)
+    /**
+     * @brief Construct an admittance element from a dense value matrix.
+     * @param symbol Element identifier (e.g. Y1, Y2).
+     * @param location Network area or location string.
+     * @param pins Number of input/output pins (phases).
+     * @param values DenseMatrix of admittance values (numerical or symbolic).
      */
-
-    // Unified constructor for single-phase and three-phase systems
     Admittance(const std::string& symbol, const std::string& location, int pins, DenseMatrix values);
 
     // Destructor to handle clean-up tasks

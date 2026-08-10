@@ -1,0 +1,32 @@
+{
+    "simulation": {
+        "title": "opf_csv",
+        "description": "JSON equivalent of example_OPF_csv.cpp — hybrid OPF via solve_opf(ac5, mtdc3) from src/data CSV cases.",
+        "output_directory": "./files"
+    },
+    "buses": [
+        { "id": "stub_ac", "location": "AC1", "pins": 3, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "stub_load",
+            "location": "AC1",
+            "type": "load",
+            "pins": 3,
+            "values": [1.0, 0.0, 0.0],
+            "connected_bus": { "bus_id": "stub_ac", "terminal": 1 },
+            "enabled": true
+        }
+    ],
+    "computations": [
+        {
+            "type": "opf",
+            "case_name": "ac5",
+            "dc_case_name": "mtdc3",
+            "vsc_control": true,
+            "write_txt": false,
+            "plot_result": true,
+            "print_info": false
+        }
+    ]
+}
