@@ -47,6 +47,10 @@ TEST_F(TestExamples, MMC_GFM) {
     EXPECT_NO_THROW(example_MMC_gfm(false));
 }
 
+TEST_F(TestExamples, Certificate_figures) {
+    EXPECT_NO_THROW(example_certificate_figures(false));
+}
+
 TEST_F(TestExamples, WT_type_3) {
     EXPECT_NO_THROW(example_WT_type_3(false));
     EXPECT_TRUE(std::filesystem::exists("files/DFIG.csv"));

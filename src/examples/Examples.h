@@ -61,6 +61,9 @@ extern void example_MMC(bool plotting_enabled = true);
 /** @brief GFM MMC control mode with StabilityEstimate reuse. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_MMC_gfm(bool plotting_enabled = true);
 
+/** @brief Paper-style device certificate figures (passivity/phase/gate/(P,Q)/local-vs-H). @param plotting_enabled Enable result plots. @ingroup examples */
+extern void example_certificate_figures(bool plotting_enabled = true);
+
 /** @brief Type-3 wind-turbine model demonstration. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_WT_type_3(bool plotting_enabled = true);
 

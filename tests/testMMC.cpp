@@ -109,25 +109,43 @@ TEST_F(TestMMC, TestYMatrix) {
 }
 
 TEST_F(TestMMC, TestGfmModeEquilibrium) {
+	// Match example_MMC_gfm MVP (energy + ZCC + GFM). The previous pack
+	// (energy off, fixed ZCC gains 19.93/4500) does not converge with KINSOL.
 	const double omega = 2.0 * M_PI * 50.0;
 	const double Vdc = 240e3;
 	const double Vm = 100e3;
 	const double Pac = 100e6;
+	const double Qac = 0.0;
+	const double Larm = 50e-3;
+	const double Rarm = 1.07;
+	const double Lf = 60e-3;
+	const double Rf = 0.535;
+	const double Reqac = Rf + Rarm / 2.0;
+	const double Leqac = Lf + Larm / 2.0;
+	const double Id = (2.0 / 3.0) * Pac / Vm;
+	const double Iq = 0.0;
+	const double vMd0 = Vm + Reqac * Id + omega * Leqac * Iq;
+	const double vMq0 = 0.0 + Reqac * Iq - omega * Leqac * Id;
+	const double Egfm_ref = std::hypot(vMd0, vMq0);
 	const double Kdroop_P = 2.0 * M_PI * 0.5 / 100e6;
-	const double Kdroop_Q = 0.02 * 100e3 / 50e6;
+	const double Kdroop_Q = 0.02 * Egfm_ref / 50e6;
+	const double zeta = 0.7;
+	const double w0_ccc = 300.0;
+	const double Ki_zcc = Larm * w0_ccc * w0_ccc;
+	const double Kp_zcc = 2.0 * zeta * std::sqrt(Ki_zcc * Larm) - Rarm;
 
 	std::vector<double> converter_params = {
-		omega, Pac, 0.0, 0.0, Vm, Pac, Vdc,
-		50e-3, 1.07, 0.01, 50, 0.06, 0.535, 0.0
+		omega, Pac, Qac, 0.0, Vm, Pac, Vdc,
+		Larm, Rarm, 0.01, 50, Lf, Rf, 0.0
 	};
 	std::vector<double> controller_params = {
 		0, 0, 0, 0, 0,
-		0, // energy off
-		1, 0, 19.93, 4500, 1, Pac / (3.0 * Vdc),
-		0, // occ off
-		0, // ccc off
-		0,
-		1, 0, Kdroop_P, Kdroop_Q, 4, 20e-3, 20e-3, 0.0, 0.0
+		1, 0, 120, 400, 1, 0, // energy
+		1, 0, Kp_zcc, Ki_zcc, 1, Pac / (3.0 * Vdc), // zcc
+		0, // occ
+		0, // ccc
+		0, // droop
+		1, 0, Kdroop_P, Kdroop_Q, 4, 20e-3, 20e-3, 0.0, 0.0 // gfm
 	};
 
 	MMC mmc("MMC_GFM", "AC1_DC1", converter_params, controller_params);

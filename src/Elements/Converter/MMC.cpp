@@ -420,6 +420,28 @@ void MMC::update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc
     }
 }
 
+std::pair<double, double> MMC::getGfmDroops() const
+{
+	if (!hasGfm())
+		return { 0.0, 0.0 };
+	const auto p = controls.at("gfm")->getParameters();
+	return { p.size() > 0 ? p[0] : 0.0, p.size() > 1 ? p[1] : 0.0 };
+}
+
+void MMC::setGfmDroops(double Kdroop_P, double Kdroop_Q)
+{
+	if (!hasGfm())
+		return;
+	auto* gfm = controls["gfm"];
+	auto p = gfm->getParameters();
+	// PI setParameters expects {Kp, Ki, zeta, bandwidth}
+	if (p.size() < 4)
+		p.resize(4, 0.0);
+	p[0] = Kdroop_P;
+	p[1] = Kdroop_Q;
+	gfm->setParameters(p);
+}
+
 /**
  * @brief Compute the state derivatives for the MMC system.
  * @param x State vector.

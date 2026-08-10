@@ -51,6 +51,7 @@ add_executable(
     testtransformerclassic.cpp
     testMMC.cpp
     testStabilityEstimate.cpp
+    testCertificate.cpp
     testOPF.cpp
     testJsonPipeline.cpp
     testexamples.cpp

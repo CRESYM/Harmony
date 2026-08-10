@@ -478,11 +478,20 @@ void visualization_process_pending_save(GLFWwindow* window)
     }
 }
 
-/// Block until the window is closed by the user.
+/// Block until the standalone visualization window is closed by the user.
 void visualization_wait()
 {
-    if (g_guiThread.joinable())
-        g_guiThread.join();
+	if (g_embedded.load())
+		return;
+
+	if (g_guiThread.joinable()) {
+		g_guiThread.join();
+		return;
+	}
+
+	// Fallback if the thread handle was already joined elsewhere.
+	while (g_running.load())
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 }
 
 /// Schedule a PNG capture of the named tab on the next rendered frame.

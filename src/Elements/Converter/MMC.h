@@ -79,6 +79,15 @@ public:
     void init_Filter(const std::vector<double>& converter_params);
     void update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc);
 
+    /** @brief True when GFM outer-loop states are enabled. */
+    bool hasGfm() const { return gfm_index_ >= 0 && controls.count("gfm") > 0; }
+
+    /** @brief Return current GFM droops (Kdroop_P, Kdroop_Q). */
+    std::pair<double, double> getGfmDroops() const;
+
+    /** @brief Set GFM droops (Kdroop_P, Kdroop_Q); no-op if GFM disabled. */
+    void setGfmDroops(double Kdroop_P, double Kdroop_Q);
+
     // Destructor — control blocks are freed by Converter base class
     ~MMC() override = default;
        

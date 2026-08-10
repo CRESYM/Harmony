@@ -119,7 +119,7 @@ void harmonyDrawBannerImGui(ImFont* bannerFont, const bool compact) {
 	}
 
 	if (!compact) {
-		ImGui::TextDisabled("Hybrid AC/DC power-system framework — CRESYM / BiGER");
+		ImGui::TextDisabled("Hybrid AC/DC power-system framework - CRESYM / BiGER");
 	}
 
 	ImGui::Spacing();

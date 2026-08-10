@@ -151,6 +151,7 @@ std::map<std::string, ExampleFn> exampleRegistry() {
 	add("generator", example_generator);
 	add("mmc", example_MMC);
 	add("mmc_gfm", example_MMC_gfm);
+	add("certificate_figures", example_certificate_figures);
 	add("wt_type_3", example_WT_type_3);
 	add("wt_type_4", example_WT_type_4);
 	add("pv_plant", example_PV_plant);
@@ -532,6 +533,13 @@ int runCppExample(const std::string& name, const bool plot, const bool verbose) 
 		return EXIT_FAILURE;
 	}
 
+	// Keep ImPlot window open until the user closes it (JSON path already does this).
+	// No-op in HarmonyUI embedded mode (no standalone GUI thread).
+	if (plot && visualization_is_running()) {
+		std::cout << "Close the Harmony Visualization window to exit.\n";
+		visualization_wait();
+	}
+
 	return EXIT_SUCCESS;
 }
 
@@ -600,9 +608,7 @@ int runJsonSimulation(
 	}
 
 	if (plot && waitForPlotClose && visualization_is_running()) {
-		if (verbose) {
-			std::cout << "Close the Harmony Visualization window to exit.\n";
-		}
+		std::cout << "Close the Harmony Visualization window to exit.\n";
 		visualization_wait();
 	}
 

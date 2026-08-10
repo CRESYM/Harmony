@@ -95,6 +95,16 @@ set(Solver_DQsym_Header_Files
 set(Solver_Stability_Estimate_Header_Files
     src/Solver/Stability_Estimate/Stability_estimate.h
 )
+set(Solver_Certificate_Header_Files
+    src/Solver/Certificate/Certificate_spec.h
+    src/Solver/Certificate/Geometric_certificates.h
+    src/Solver/Certificate/Stability_certificate.h
+    src/Solver/Certificate/Device_gate.h
+    src/Solver/Certificate/PnP_library.h
+    src/Solver/Certificate/Operating_region.h
+    src/Solver/Certificate/Tuning_assistant.h
+    src/Solver/Certificate/Local_vs_system.h
+)
 set(Solver_Helper_Functions_Header_Files
     src/Solver/Helper_Functions/Helper_Functions.h
     src/Solver/Helper_Functions/Standard_functions.h
@@ -195,6 +205,15 @@ set(Solver_State_Space_Model_Source_Files
 set(Solver_Stability_Estimate_Source_Files
     src/Solver/Stability_Estimate/Stability_estimate.cpp
 )
+set(Solver_Certificate_Source_Files
+    src/Solver/Certificate/Geometric_certificates.cpp
+    src/Solver/Certificate/Stability_certificate.cpp
+    src/Solver/Certificate/Device_gate.cpp
+    src/Solver/Certificate/PnP_library.cpp
+    src/Solver/Certificate/Operating_region.cpp
+    src/Solver/Certificate/Tuning_assistant.cpp
+    src/Solver/Certificate/Local_vs_system.cpp
+)
 set(Solver_OPF_Source_Files
     src/Solver/OPF/Powerflow_data.cpp
     src/Solver/OPF/Powerflow_network_params.cpp
@@ -260,6 +279,7 @@ set(Examples_Source_files
     src/examples/example_generator.cpp
     src/examples/example_MMC.cpp
     src/examples/example_MMC_gfm.cpp
+    src/examples/example_certificate_figures.cpp
     src/examples/example_WT_type_3.cpp
     src/examples/example_WT_type_4.cpp
     src/examples/example_PV_plant.cpp
@@ -302,6 +322,7 @@ set(HARMONY_HEADER_FILES
     ${Solver_OPF_Header_Files}
     ${Solver_DQsym_Header_Files}
     ${Solver_Stability_Estimate_Header_Files}
+    ${Solver_Certificate_Header_Files}
     ${Solver_Helper_Functions_Header_Files}
     ${Solver_State_Space_Model_Header_Files}
     ${Examples_Header_files}
@@ -330,6 +351,7 @@ set(HARMONY_SOURCE_FILES
     ${Solver_OPF_Source_Files}
     ${Solver_DQsym_Source_Files}
     ${Solver_Stability_Estimate_Source_Files}
+    ${Solver_Certificate_Source_Files}
     ${Solver_Helper_Functions_Source_Files}
     ${Solver_State_Space_Model_Source_Files}
     ${Examples_Source_files}
@@ -362,6 +384,7 @@ if(MSVC)
     source_group("Header Files\\Solver\\OPF" FILES ${Solver_OPF_Header_Files})
     source_group("Header Files\\Solver\\DQsym" FILES ${Solver_DQsym_Header_Files})
     source_group("Header Files\\Solver\\Stability Estimate" FILES ${Solver_Stability_Estimate_Header_Files})
+    source_group("Header Files\\Solver\\Certificate" FILES ${Solver_Certificate_Header_Files})
     source_group("Header Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Header_Files})
     source_group("Header Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Header_Files})
     source_group("Header Files\\Examples" FILES ${Examples_Header_files})
@@ -387,6 +410,7 @@ if(MSVC)
     source_group("Source Files\\Solver\\OPF" FILES ${Solver_OPF_Source_Files})
     source_group("Source Files\\Solver\\DQsym" FILES ${Solver_DQsym_Source_Files})
     source_group("Source Files\\Solver\\Stability Estimate" FILES ${Solver_Stability_Estimate_Source_Files})
+    source_group("Source Files\\Solver\\Certificate" FILES ${Solver_Certificate_Source_Files})
     source_group("Source Files\\Solver\\State Space Model" FILES ${Solver_State_Space_Model_Source_Files})
     source_group("Source Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Source_Files})
     source_group("Source Files\\Examples" FILES ${Examples_Source_files})
