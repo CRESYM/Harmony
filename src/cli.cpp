@@ -138,6 +138,7 @@ std::map<std::string, ExampleFn> exampleRegistry() {
 	add("opf_single_area", example_OPF_single_area);
 	add("opf_csv", example_OPF_csv);
 	add("opf_ac", example_OPF_ac);
+	add("opf_slo", example_OPF_SLO);
 	add("opf_double_area", example_OPF_double_area);
 	add("opf_csv_1", example_OPF_csv_1);
 	add("opf_pv", example_OPF_PV);

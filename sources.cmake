@@ -251,6 +251,7 @@ set(Examples_Source_files
     src/examples/example_OPF_single_area.cpp
     src/examples/example_OPF_csv.cpp
     src/examples/example_OPF_ac.cpp
+    src/examples/example_OPF_SLO.cpp
     src/examples/example_OPF_double_area.cpp
     src/examples/example_OPF_csv_1.cpp
     src/examples/example_OPF_PV.cpp

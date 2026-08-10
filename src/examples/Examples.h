@@ -19,6 +19,9 @@ extern void example_OPF_csv(bool plotting_enabled = true);
 /** @brief AC-only OPF from bundled CSV case data. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_OPF_ac(bool plotting_enabled = true);
 
+/** @brief SLO9 AC OPF assembled from Harmony components. @param plotting_enabled Enable result plots. @ingroup examples */
+extern void example_OPF_SLO(bool plotting_enabled = true);
+
 /** @brief Double-area hybrid OPF demonstration. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_OPF_double_area(bool plotting_enabled = true);
 

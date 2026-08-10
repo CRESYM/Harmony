@@ -940,7 +940,12 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
     // Initialize empty elements of the data map
     std::vector<std::string> keys = {
         "bus", "busdc", "shunt", "dcline", "storage", "switch",
-        "load", "branch", "branchDC", "gen", "convdc", "res"
+        "load", "branch", "gen", "convdc", "res",
+        // Canonical tables consumed below.  Initializing them explicitly is
+        // required for component-built AC-only networks, where no DC/RES
+        // element would otherwise create the corresponding map entry.
+        "busAC", "branchAC", "genAC", "genCostAC", "resAC",
+        "busDC", "branchDC", "conv"
     };
 
     for (const auto& key : keys) {
