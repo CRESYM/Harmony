@@ -125,27 +125,7 @@ or DC case use a common prefix:
 <case>_pol_dc.csv
 ```
 
-The AC and DC prefixes do not have to be the same. For example, an AC case
-`ac5` can be solved together with a DC case `mtdc3`.
-
-#### CSV formatting rules
-
-- Files contain numeric values only: **do not include a header row**, comments,
-  row labels, or units.
-- Use comma-separated columns and one component per row.
-- Every non-empty row in a file must have the same number of columns.
-- Bus references are one-based positive integers.
-- All `bus`, `branch`, `gen`, and `res` references within one AC grid must use
-  the same local bus-number mapping.
-- Use SI-derived power-system units expected by MATPOWER: MW, Mvar, kV,
-  degrees, and per-unit quantities on the case base. Do not place watts or volts
-  in MATPOWER-style columns.
-- Preserve the exact filename suffixes and letter case shown above. Harmony
-  constructs these filenames from the case prefix.
-- An AC case with no renewable units still needs `<case>_res_ac.csv`; it may be
-  an empty file.
-
-#### AC file schemas
+#### AC file 
 
 The AC matrices are the standard MATPOWER matrices with one final `grid` column.
 The `grid` value is `1` for a single AC grid and `1, 2, ...` for merged grids.
@@ -275,26 +255,6 @@ consistent with the ACDC_OPF case from which the data are taken. In particular,
 do not independently reverse `P_G`, `PDCSET`, or branch orientations during CSV
 conversion.
 
-#### Validation checklist
-
-Before running Harmony, check at least the following:
-
-1. Exactly one reference bus (`BUS_TYPE=3`) exists in each electrically
-   independent AC grid.
-2. `VMIN <= VM <= VMAX`, `PMIN <= PMAX`, and `QMIN <= QMAX`.
-3. Every branch endpoint, generator bus, RES bus, and converter AC/DC bus exists.
-4. Every in-service row uses status `1`; intentionally disabled rows use `0`.
-5. R/X/B and voltage values are on the declared `baseMVA`/`baseMW` and kV bases.
-6. All merged AC tables use the same grid IDs and the same row-to-grid grouping.
-7. Generator and gencost row counts/order agree.
-8. No `NaN`, `Inf`, text headers, or ragged CSV rows are present.
-9. Run the original MATPOWER/ACDC_OPF case and the exported Harmony case, then
-   compare objective value, bus voltages, generator dispatch, branch flows, and
-   converter setpoints within an explicit tolerance.
-
-Example case prefixes: `ac5`, `ac14ac57`, `ac9ac14`, `mtdc3`, and
-`mtdc3slack_a`.
-
 ### Run a prepared CSV case
 
 CSV mode calls `solve_opf` directly. A null data pointer tells Harmony to load
@@ -330,9 +290,7 @@ counterpart to the CSV-loaded SLO9 case.
 
 **JSON:** `"type": "opf"` with `"case_name"` in `computations`.
 
-**Requirements:** A valid Gurobi license. Component-built cases additionally
-require OPF metadata on buses/elements where the defaults are not appropriate;
-CSV cases obtain those values directly from their matrices.
+**Requirements:** A valid Gurobi license.
 
 ---
 
