@@ -92,6 +92,13 @@ public:
     void plot() const;
 
     /**
+     * @brief Store externally computed results so plot()/exportCSV() can be used.
+     *
+     * Used by low-level DSSS examples that build abc histories outside run().
+     */
+    void setResult(DQsymResult result);
+
+    /**
      * @brief Returns the result of the last completed simulation.
      * @return Const reference to stored DQsymResult.
      */

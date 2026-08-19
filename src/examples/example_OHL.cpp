@@ -31,9 +31,5 @@ void example_OHL(bool plotting_enabled /*=true*/) {
 	if (plotting_enabled) {
 		ohl->plotYParameters(10, 1e3, 1000);
 	}
-	
-	cout << "Press Enter to continue...\n";
-	cin.get();
-
 	delete ohl;
 }

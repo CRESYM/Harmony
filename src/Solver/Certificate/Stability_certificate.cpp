@@ -158,6 +158,12 @@ void accumulateMatrixMetrics(
 	const CertificateSpec& spec,
 	bool* sector_ok)
 {
+	if (!M.allFinite()) {
+		// Non-finite admittance (e.g. after KINSOL convergence failure).
+		// Leave all metrics at their worst-case defaults and mark sector failed.
+		if (sector_ok) *sector_ok = false;
+		return;
+	}
 	const double nu = passivityIndex(M);
 	const double nu_s = shiftedPassivityIndex(M, spec.shift_delta);
 	const double ph = maxEigenPhaseDeg(M);

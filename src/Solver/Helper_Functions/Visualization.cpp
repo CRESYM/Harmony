@@ -11,6 +11,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#include <algorithm>
+#include <cstddef>
+
 
 // ============================================================
 // INTERNAL STATE
@@ -271,7 +274,7 @@ static void init_gui()
 // Draw registered plot tabs (shared by standalone window and HarmonyUI embedded mode).
 static void draw_plot_tabs(const char* tabBarId)
 {
-    if (!ImGui::BeginTabBar(tabBarId))
+    if (!ImGui::BeginTabBar(tabBarId, ImGuiTabBarFlags_AutoSelectNewTabs))
         return;
 
     std::vector<PlotTab> snapshot;
@@ -902,27 +905,196 @@ void plot_participation_factors_implot(
 // ABC WAVEFORMS
 // ============================================================
 
+namespace {
+
+/** X: simulation time [t.front(), t.back()]; Y: min/max of xa/xb/xc + 5% margin. */
+void setup_abc_plot_axis_limits(
+    const std::vector<double>& t,
+    const std::vector<double>& xa,
+    const std::vector<double>& xb,
+    const std::vector<double>& xc)
+{
+    if (t.empty()) {
+        return;
+    }
+
+    double t0 = t.front();
+    double t1 = t.back();
+    if (t1 <= t0) {
+        t1 = t0 + 1e-9;
+    }
+
+    double yMin = 0.0;
+    double yMax = 0.0;
+    bool haveY = false;
+    auto widen = [&](const std::vector<double>& series) {
+        for (double v : series) {
+            if (!haveY) {
+                yMin = yMax = v;
+                haveY = true;
+            }
+            else {
+                yMin = std::min(yMin, v);
+                yMax = std::max(yMax, v);
+            }
+        }
+    };
+    widen(xa);
+    widen(xb);
+    widen(xc);
+
+    const double span = haveY ? (yMax - yMin) : 0.0;
+    const double pad = span > 0.0 ? 0.05 * span : 1.0;
+    const double yLo = haveY ? (yMin - pad) : -1.0;
+    const double yHi = haveY ? (yMax + pad) : 1.0;
+
+    ImPlot::SetupAxes("t (s)", "Amplitude");
+    // Once: correct initial range; user can still zoom/pan afterward.
+    ImPlot::SetupAxisLimits(ImAxis_X1, t0, t1, ImPlotCond_Once);
+    ImPlot::SetupAxisLimits(ImAxis_Y1, yLo, yHi, ImPlotCond_Once);
+}
+
+/** Shared legend + axis setup for abc waveform panels. */
+void setup_abc_plot_panel(
+    const std::vector<double>& t,
+    const std::vector<double>& xa,
+    const std::vector<double>& xb,
+    const std::vector<double>& xc)
+{
+    setup_abc_plot_axis_limits(t, xa, xb, xc);
+    ImPlot::SetupLegend(ImPlotLocation_NorthWest, ImPlotLegendFlags_None);
+}
+
+/**
+ * Reduce a series to at most two samples (min and max) per pixel column of the
+ * visible x-range. Drawing 25k-50k samples per phase across several panels
+ * exceeds ImGui's 16-bit draw-index budget, which truncates the traces partway
+ * and leaves stray filled geometry behind.
+ */
+void decimate_visible(
+    const std::vector<double>& t,
+    const std::vector<double>& y,
+    const double xMin,
+    const double xMax,
+    const int columns,
+    std::vector<double>& tOut,
+    std::vector<double>& yOut)
+{
+    tOut.clear();
+    yOut.clear();
+
+    const size_t n = std::min(t.size(), y.size());
+    if (n == 0) {
+        return;
+    }
+
+    // t is monotonically increasing; pad by one sample so the trace still
+    // reaches the plot edges.
+    const auto tBegin = t.begin();
+    const auto tEnd = t.begin() + static_cast<std::ptrdiff_t>(n);
+    size_t i0 = static_cast<size_t>(std::lower_bound(tBegin, tEnd, xMin) - tBegin);
+    size_t i1 = static_cast<size_t>(std::upper_bound(tBegin, tEnd, xMax) - tBegin);
+    if (i0 > 0) {
+        --i0;
+    }
+    if (i1 < n) {
+        ++i1;
+    }
+    if (i1 <= i0) {
+        return;
+    }
+
+    const size_t visible = i1 - i0;
+    const size_t cols = static_cast<size_t>(std::max(columns, 1));
+    if (visible <= cols * 2) {
+        tOut.assign(t.begin() + static_cast<std::ptrdiff_t>(i0),
+            t.begin() + static_cast<std::ptrdiff_t>(i1));
+        yOut.assign(y.begin() + static_cast<std::ptrdiff_t>(i0),
+            y.begin() + static_cast<std::ptrdiff_t>(i1));
+        return;
+    }
+
+    tOut.reserve(cols * 2);
+    yOut.reserve(cols * 2);
+    for (size_t c = 0; c < cols; ++c)
+    {
+        const size_t b0 = i0 + visible * c / cols;
+        const size_t b1 = i0 + visible * (c + 1) / cols;
+        if (b1 <= b0) {
+            continue;
+        }
+
+        size_t iMin = b0;
+        size_t iMax = b0;
+        for (size_t i = b0; i < b1; ++i) {
+            if (y[i] < y[iMin]) {
+                iMin = i;
+            }
+            if (y[i] > y[iMax]) {
+                iMax = i;
+            }
+        }
+
+        const size_t first = std::min(iMin, iMax);
+        const size_t second = std::max(iMin, iMax);
+        tOut.push_back(t[first]);
+        yOut.push_back(y[first]);
+        if (second != first) {
+            tOut.push_back(t[second]);
+            yOut.push_back(y[second]);
+        }
+    }
+}
+
+/** Draw the xa/xb/xc traces, decimated to the current plot width. */
+void plot_abc_lines(
+    const std::vector<double>& t,
+    const std::vector<double>& xa,
+    const std::vector<double>& xb,
+    const std::vector<double>& xc)
+{
+    const ImPlotRect limits = ImPlot::GetPlotLimits();
+    const int columns = std::max(64, static_cast<int>(ImPlot::GetPlotSize().x));
+
+    const char* names[3] = { "xa", "xb", "xc" };
+    const std::vector<double>* series[3] = { &xa, &xb, &xc };
+
+    std::vector<double> td;
+    std::vector<double> yd;
+    for (int s = 0; s < 3; ++s)
+    {
+        decimate_visible(t, *series[s], limits.X.Min, limits.X.Max, columns, td, yd);
+        if (td.size() < 2) {
+            continue;
+        }
+        ImPlot::PlotLine(names[s], td.data(), yd.data(), static_cast<int>(td.size()));
+    }
+}
+
+} // namespace
+
 void plot_abc_waveforms_implot(
     const std::vector<double>& t,
     const Eigen::MatrixXd& Xabc,
     const std::string& title)
 {
-    add_tab(title, [=]()
+    auto t_copy = t;
+    auto X_copy = Xabc;
+
+    add_tab(title, [t_copy = std::move(t_copy), X_copy = std::move(X_copy)]() mutable
         {
-            std::vector<double> xa(t.size()), xb(t.size()), xc(t.size());
-            for (size_t i = 0; i < t.size(); ++i)
+            std::vector<double> xa(t_copy.size()), xb(t_copy.size()), xc(t_copy.size());
+            for (size_t i = 0; i < t_copy.size(); ++i)
             {
-                xa[i] = Xabc(i, 0);
-                xb[i] = Xabc(i, 1);
-                xc[i] = Xabc(i, 2);
+                xa[i] = X_copy(i, 0);
+                xb[i] = X_copy(i, 1);
+                xc[i] = X_copy(i, 2);
             }
 
             if (ImPlot::BeginPlot(("ABC")))
             {
-                ImPlot::SetupAxes("t (s)", "Amplitude");
-                ImPlot::PlotLine("xa", t.data(), xa.data(), (int)t.size());
-                ImPlot::PlotLine("xb", t.data(), xb.data(), (int)t.size());
-                ImPlot::PlotLine("xc", t.data(), xc.data(), (int)t.size());
+                setup_abc_plot_panel(t_copy, xa, xb, xc);
+                plot_abc_lines(t_copy, xa, xb, xc);
                 ImPlot::EndPlot();
             }
         });
@@ -937,37 +1109,47 @@ void plot_abc_groups_implot(
     const std::vector<Eigen::MatrixXd>& Xabc_groups,
     const std::string& title)
 {
-    add_tab(title, [=]()
+    auto t_copy = t;
+    auto X_copy = Xabc_groups;
+
+    add_tab(title, [t_copy = std::move(t_copy), X_copy = std::move(X_copy), title]() mutable
         {
-            // Each group gets a fixed slice of height; wrap in a scrollable child
-            // so the tab remains usable regardless of group count.
+            const size_t nGroups = X_copy.size();
             constexpr float PLOT_H = kHarmonyPlotWaveformHeightPx;
+            const float groupGap = ImGui::GetStyle().ItemSpacing.y;
 
-            ImGui::BeginChild("##abc_groups_scroll", ImVec2(-1, -1), false,
-                ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::BeginChild("##abc_groups_scroll", ImVec2(-1, -1));
 
-            for (size_t g = 0; g < Xabc_groups.size(); ++g)
+            for (size_t g = 0; g < nGroups; ++g)
             {
-                const auto& X = Xabc_groups[g];
-                std::vector<double> xa(t.size()), xb(t.size()), xc(t.size());
-                for (size_t i = 0; i < t.size(); ++i)
+                const auto& X = X_copy[g];
+                std::vector<double> xa(t_copy.size()), xb(t_copy.size()), xc(t_copy.size());
+                for (size_t i = 0; i < t_copy.size(); ++i)
                 {
                     xa[i] = X(i, 0);
                     xb[i] = X(i, 1);
                     xc[i] = X(i, 2);
                 }
 
-                ImGui::PushID(static_cast<int>(g));
-                if (ImPlot::BeginPlot(("Group " + std::to_string(g + 1)).c_str(),
-                    ImVec2(-1, PLOT_H)))
+                const std::string childId = "##abc_group_slot_" + std::to_string(g);
+                ImGui::BeginChild(childId.c_str(), ImVec2(-1, PLOT_H), ImGuiChildFlags_None);
+
+                // Unique ImPlot ID per group (suffix after ##); label before ## is shown.
+                const std::string plotId = "Group " + std::to_string(g + 1)
+                    + "##" + title + "_g" + std::to_string(g);
+
+                if (ImPlot::BeginPlot(plotId.c_str(), ImVec2(-1, -1)))
                 {
-                    ImPlot::SetupAxes("t (s)", "Amplitude");
-                    ImPlot::PlotLine("xa", t.data(), xa.data(), static_cast<int>(t.size()));
-                    ImPlot::PlotLine("xb", t.data(), xb.data(), static_cast<int>(t.size()));
-                    ImPlot::PlotLine("xc", t.data(), xc.data(), static_cast<int>(t.size()));
+                    setup_abc_plot_panel(t_copy, xa, xb, xc);
+                    plot_abc_lines(t_copy, xa, xb, xc);
                     ImPlot::EndPlot();
                 }
-                ImGui::PopID();
+
+                ImGui::EndChild();
+
+                if (g + 1 < nGroups) {
+                    ImGui::Dummy(ImVec2(0, groupGap));
+                }
             }
 
             ImGui::EndChild();

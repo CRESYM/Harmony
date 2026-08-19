@@ -177,7 +177,4 @@ void example_point2point_case() {
         global_params["DCbaseKV"] * global_params["DCbaseKV"] / global_params["baseMVA"];
 
     pf.make_OPF(&net, global_params, false, false, false, true);
-
-    cout << "Press Enter to continue...\n";
-    cin.get();
 }

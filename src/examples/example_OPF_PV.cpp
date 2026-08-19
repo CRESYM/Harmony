@@ -173,7 +173,4 @@ void example_OPF_PV(bool plotting_enabled /*=true*/)
     global_params["Z_base"] = global_params["ACZbase"];
 
     pf.make_OPF(&net, global_params, false, false, plotting_enabled, true);
-
-    std::cout << "Press Enter to continue...\n";
-    std::cin.get();
 }

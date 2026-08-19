@@ -73,9 +73,11 @@ endforeach()
 list(REMOVE_DUPLICATES HARMONY_HEADER_DIRS)
 include_directories(${HARMONY_HEADER_DIRS})
 
-# Add the MP compiler flag for parallel compilation
+# Add the MP compiler flag for parallel compilation.
+# /EHa enables catching of Windows structured exceptions (SEH) via catch(...),
+# which prevents GFM/certificate tests from crashing on KINSOL failures.
 if (MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /EHa")
 endif()
 
 # Specify the output directory where the test executable will be placed

@@ -273,7 +273,7 @@ void startRun(LauncherState& state) {
 			if (kind == SourceKind::Cpp) {
 				appendLogLine(state, "Running C++ example: " + cppName
 					+ " (plot=" + std::string(plot ? "on" : "off") + ")");
-				exitCode = runCppExample(cppName, plot, verbose);
+				exitCode = runCppExample(cppName, plot, verbose, /*waitForPlotClose*/ false);
 			}
 			else {
 				std::filesystem::path resolved = jsonPath;
@@ -302,8 +302,10 @@ void startRun(LauncherState& state) {
 		}
 		else if (plot) {
 			appendLogLine(state,
-				"Plot was checked but no visualization tabs were created "
-				"(JSON needs \"plot\": true on the computation step).");
+				kind == SourceKind::Cpp
+					? "Plot was checked but no visualization tabs were created by the C++ example."
+					: "Plot was checked but no visualization tabs were created "
+					  "(JSON needs \"plot\": true on the computation step).");
 		}
 
 		appendLogLine(state, exitCode == EXIT_SUCCESS ? "Finished successfully." : "Finished with errors.");
@@ -343,20 +345,21 @@ void drawLauncherContent(LauncherState& state) {
 
 	ImGui::Checkbox("Plot", &state.plot);
 	ImGui::SameLine();
-	ImGui::TextDisabled("(requires Plot checked and JSON \"plot\": true)");
+	ImGui::TextDisabled("(C++ examples and JSON steps with \"plot\": true)");
 	ImGui::Checkbox("Verbose log", &state.verbose);
 
 	ImGui::InputText("PNG output directory", state.outputDir, IM_ARRAYSIZE(state.outputDir));
 
 	ImGui::Separator();
 
-	if (state.running.load()) {
+	const bool running = state.running.load();
+	if (running) {
 		ImGui::BeginDisabled();
 	}
 	if (ImGui::Button("Run")) {
 		startRun(state);
 	}
-	if (state.running.load()) {
+	if (running) {
 		ImGui::EndDisabled();
 		ImGui::SameLine();
 		ImGui::Text("Running...");

@@ -253,8 +253,4 @@ void example_OPF_single_area(bool plotting_enabled /*=true*/) {
         global_dict["DCbaseKV"] * global_dict["DCbaseKV"] / global_dict["baseMVA"];
     
 	pf.make_OPF(&net, global_dict, true, false, plotting_enabled, true);
-
-    cout << "Press Enter to continue...\n";
-    cin.get();
-
 }

@@ -180,7 +180,4 @@ void example_stability_check(bool plotting_enabled /*=true*/) {
     }
 
     delete stability;
-
-    cout << "Press Enter to continue...\n";
-    cin.get();
 }

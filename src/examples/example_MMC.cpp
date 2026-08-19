@@ -67,11 +67,6 @@ void example_MMC(bool plotting_enabled /*=true*/) {
 	std::cout << "Relative error B: " << err2 << "\n";  // should be < 1e-6
 	std::cout << "Relative error C: " << err3 << "\n";  // should be < 1e-6
 
-	if (plotting_enabled) {
-		cout << "Press enter to continue...\n";
-		cin.get();
-	}
-
 	//mmc1->printElementValues();  // Print MMC parameters, together with the reference values for the controllers
 
 	MatrixXcd Y = vectorToMatrix(mmc1->compute_y_parameters(50));
@@ -144,7 +139,4 @@ void example_MMC(bool plotting_enabled /*=true*/) {
 		mmc2->plotEigenvalues();
 		mmc2->plotYParameters(1, 1000, 500);
 	}
-
-	cout << "Press Enter to continue...\n";
-	cin.get();
 }

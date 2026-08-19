@@ -36,9 +36,5 @@ void example_cable(bool plotting_enabled /*=true*/) {
 	if (plotting_enabled) {
 		cable->plotYParameters(0.1, 1e6, 1e4);
 	}
-
-	cout << "Press Enter to continue...\n";
-	cin.get();
-
 	delete cable;
 }

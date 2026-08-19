@@ -5,9 +5,25 @@
  * @file Stability_estimate.h
  * @brief Small-signal stability and impedance analysis for AC/DC areas.
  *
- * Computes equivalent admittances, closing impedances, and frequency-domain
- * transfer functions for converter-interfaced subnetworks. Supports Bode and
- * Nyquist plotting and file export over a swept frequency range.
+ * Computes multi-port equivalent admittances and MIMO transfer functions for
+ * converter-interfaced subnetworks via a unified MNA that stamps both passive
+ * grid elements and converter Y-parameters into a single system matrix.
+ * Supports Bode and Nyquist plotting and file export over a swept frequency range.
+ *
+ * Algorithm (Lekic et al., CIGRE Paris 2026, eqs. 10-17):
+ *   Step 1  Partition the network into AC grids, DC grids, and converters.
+ *   Step 2  Build the multi-port Y-parameters of each passive AC/DC subnetwork
+ *           via adjusted MNA (eq. 2 of the paper).
+ *   Step 3  For every converter that is NOT the device-under-test, stamp its
+ *           full Y-matrix into a unified MNA together with the passive AC grid
+ *           it connects to, and solve for the equivalent DC-side admittance
+ *           Y_eq,conv (generalised eqs. 10-12).
+ *   Step 4  Close the DC grid around the converter under test (eq. 13-14).
+ *   Step 5  Form the MIMO transfer function H = Y_n * Z_eq (eqs. 15-17).
+ *
+ * The implementation is fully dimension-agnostic: all port sizes are read from
+ * Bus::getPinNumber(), so 1-pin (DC scalar), 2-pin (dq AC) and 3-pin (abc AC)
+ * buses are handled identically.
  */
 
 #include "../../Constants.h"
@@ -18,113 +34,122 @@ class Bus;
 class Element;
 class Network;
 class SubNetwork;
+class Converter;
 
 /**
  * @class StabilityEstimate
- * @brief Performs impedance-based stability assessment of network areas.
- *
- * Partitions a Network into AC grids, DC grids, and converter subnetworks,
- * then evaluates equivalent admittance parameters and transfer functions
- * at specified frequencies for stability margin analysis.
+ * @brief Performs impedance-based MIMO stability assessment of AC/MTDC networks.
  */
 class StabilityEstimate {
 public:
-    /** @brief Default constructor. */
-	StabilityEstimate() = default;
-
-    /** @brief Default destructor. */
-	~StabilityEstimate() = default;
+    StabilityEstimate() = default;
+    ~StabilityEstimate() = default;
 
     /**
-     * @brief Populates AC/DC area maps from the network hierarchy.
+     * @brief Populate AC/DC area maps from the network hierarchy.
      * @param net Network whose area decomposition is used.
      */
-	void add_areas(Network* net);
+    void add_areas(Network* net);
 
     /**
-     * @brief Computes numeric equivalent admittance parameters for a subnetwork.
-     * @param subnet Subnetwork whose Y-parameters are evaluated.
-     * @param frequency Evaluation frequency in Hz.
-     * @return Complex admittance matrix at @p frequency.
+     * @brief Multi-port admittance parameters of a passive subnetwork.
+     *
+     * Implements adjusted MNA eq. (2): excites each output port in turn with
+     * unit voltage (all others shorted) and reads back the resulting currents.
+     * Converters connected to the subnetwork are excluded automatically.
+     *
+     * @param subnet  Subnetwork to analyse.
+     * @param frequency  Evaluation frequency in Hz.
+     * @return  Y-parameter matrix of size (sum_pins × sum_pins) where sum_pins
+     *          is the total number of pins across all output buses.
      */
-	MatrixXcd compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double frequency);
+    MatrixXcd compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double frequency);
 
     /**
-     * @brief Computes the visible impedance when other subnetwork outputs are shorted.
-     * @param subnet Subnetwork under test.
-     * @param location Output port identifier (modified in place if needed).
-     * @param Y_param Admittance matrix of the subnetwork.
-     * @param Z_param Impedance matrix of the subnetwork.
-     * @return Closing impedance seen at @p location.
+     * @brief MIMO transfer function at a single frequency.
+     *
+     * Cuts the network at @p location of @p converter_name and returns
+     * H(jω) = Y_n(jω) · Z_eq(jω).
+     *
+     * The cut side determines which port is excited:
+     *   - DC location → H is (p_dc × p_dc) where p_dc = DC bus pin count.
+     *   - AC location → H is (p_ac × p_ac) where p_ac = AC bus pin count.
+     *
+     * All other converters are eliminated into the DC closing admittance via the
+     * unified AC+converter MNA (eqs. 10-12 generalised to arbitrary pin counts).
+     *
+     * @param converter_name  Name of the converter element.
+     * @param location  Bus name or area prefix identifying the cut side.
+     * @param frequency  Evaluation frequency in Hz.
+     * @return  Complex transfer function matrix H(jω).
      */
-	MatrixXcd compute_closing_impedance(SubNetwork*, string&, MatrixXcd&, MatrixXcd&);
+    MatrixXcd compute_transfer_function(string converter_name, string location, double frequency);
 
     /**
-     * @brief Evaluates a converter transfer function at a single frequency.
-     * @param converter_name Name of the converter element.
-     * @param location Output port or bus identifier.
-     * @param frequency Evaluation frequency in Hz.
-     * @return Complex transfer function value.
+     * @brief Write transfer function data to a CSV file over a frequency sweep.
      */
-	MatrixXcd compute_transfer_function(string converter_name, string location, double frequency);
+    void writeFileTF(string converter_name, string location,
+                     double start_frequency, double end_frequency, int number_of_points);
 
     /**
-     * @brief Writes transfer function data to a file over a frequency sweep.
-     * @param converter_name Name of the converter element.
-     * @param location Output port or bus identifier.
-     * @param start_frequency Sweep start frequency in Hz.
-     * @param end_frequency Sweep end frequency in Hz.
-     * @param number_of_points Number of logarithmically spaced frequency points.
+     * @brief Bode plot of the transfer function over a frequency sweep.
      */
-	void writeFileTF(string converter_name, string location, double start_frequency, double end_frequency, int number_of_points);
+    void bodeplotTF(string converter_name, string location,
+                    double start_frequency, double end_frequency, int number_of_points);
 
     /**
-     * @brief Plots the transfer function as a Bode diagram over a frequency sweep.
-     * @param converter_name Name of the converter element.
-     * @param location Output port or bus identifier.
-     * @param start_frequency Sweep start frequency in Hz.
-     * @param end_frequency Sweep end frequency in Hz.
-     * @param number_of_points Number of frequency points.
+     * @brief Nyquist plot of the transfer function over a frequency sweep.
      */
-	void bodeplotTF(string converter_name, string location, double start_frequency, double end_frequency, int number_of_points);
+    void nyquistplotTF(string converter_name, string location,
+                       double start_frequency, double end_frequency, int number_of_points);
 
-    /**
-     * @brief Plots the transfer function as a Nyquist diagram over a frequency sweep.
-     * @param converter_name Name of the converter element.
-     * @param location Output port or bus identifier.
-     * @param start_frequency Sweep start frequency in Hz.
-     * @param end_frequency Sweep end frequency in Hz.
-     * @param number_of_points Number of frequency points.
-     */
-	void nyquistplotTF(string converter_name, string location, double start_frequency, double end_frequency, int number_of_points);
+    /** @brief Print a summary of identified AC/DC areas and converters. */
+    void print_summary() const;
 
-    /** @brief Prints a summary of identified AC/DC areas and converters. */
-	void print_summary() const;
-
-    /**
-     * @brief Returns the map of AC grid subnetworks by name.
-     * @return Reference to the AC grids map.
-     */
-	std::unordered_map<std::string, SubNetwork*>& get_ac_grids() { return ac_grids; }
-
-    /**
-     * @brief Returns the map of DC grid subnetworks by name.
-     * @return Reference to the DC grids map.
-     */
-	std::unordered_map<std::string, SubNetwork*>& get_dc_grids() { return dc_grids; }
+    std::unordered_map<std::string, SubNetwork*>& get_ac_grids() { return ac_grids; }
+    std::unordered_map<std::string, SubNetwork*>& get_dc_grids() { return dc_grids; }
 
 private:
-	std::vector<std::string> ac_grid_names;
-	std::vector<std::string> dc_grid_names;
+    std::vector<std::string> ac_grid_names;
+    std::vector<std::string> dc_grid_names;
 
-	std::unordered_map<std::string, SubNetwork*> ac_grids;
-	std::unordered_map<std::string, SubNetwork*> dc_grids;
-	std::unordered_map<std::string, Element*> converters;
+    std::unordered_map<std::string, SubNetwork*> ac_grids;
+    std::unordered_map<std::string, SubNetwork*> dc_grids;
+    std::unordered_map<std::string, Element*>    converters;
 
-	void compute_equivalent_impedance(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements);
-	MatrixXcd compute_equivalent_impedance_num(Network* net, std::vector<Bus*> start_buses, std::vector<Bus*> end_buses, std::vector<Element*> skip_elements, double frequency);
+    /**
+     * @brief Compute the equivalent DC-side admittance of one converter by
+     *        stamping the converter Y-matrix into the passive AC-grid MNA.
+     *
+     * Generalises eqs. (10)-(12) of Lekic et al. to arbitrary port sizes:
+     *   Y_eq,conv = Y_dc + B · (Y_eq,AC − Y_dq)^{-1} · A
+     * where B, A, Y_dq, Y_dc are the appropriate sub-blocks of the converter
+     * 3-terminal Y-matrix, and Y_eq,AC is the multi-port passive AC admittance.
+     *
+     * @param conv       Converter element.
+     * @param ac_subnet  AC subnetwork the converter connects to.
+     * @param frequency  Evaluation frequency in Hz.
+     * @return  Equivalent DC-side admittance matrix (p_dc × p_dc).
+     */
+    MatrixXcd computeConverterDcAdmittance(Converter* conv,
+                                            SubNetwork* ac_subnet,
+                                            double frequency);
 
+    /**
+     * @brief Closing impedance seen at @p bus_name of the DC subnetwork when
+     *        all other ports are terminated with @p Y_closing.
+     *
+     * Implements eqs. (13)-(14): partitions the DC Y-parameter matrix around
+     * the input port and applies the Schur complement.
+     *
+     * @param sub         DC subnetwork.
+     * @param bus_name    Name of the input (main-converter) DC bus.
+     * @param Y_param     Multi-port DC admittance matrix.
+     * @param Y_closing   Block-diagonal closing admittance from other converters.
+     * @return  Equivalent closing impedance matrix (p × p).
+     */
+    MatrixXcd compute_closing_impedance(SubNetwork* sub, string& bus_name,
+                                        MatrixXcd& Y_param, MatrixXcd& Y_closing);
 };
-
 
 #endif

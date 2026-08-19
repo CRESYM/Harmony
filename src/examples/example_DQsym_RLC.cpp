@@ -128,10 +128,11 @@ void example_DQsym_RLC(bool plotting_enabled /*=true*/)
     std::cout << "Wrote DQsymRLC_abc_output.csv\n";
 
     if (plotting_enabled){
-        plot_abc_groups_implot(time, XabcHist, "DQsym RLC outputs converted to abc");
+        DQsymResult result;
+        result.time = time;
+        result.brkHistory = brkHistory;
+        result.DSSabcHist = XabcHist;
+        dq.setResult(std::move(result));
+        dq.plot();
     }
-
-    cout << "Press Enter to continue...\n";
-    cin.get();
-	
 }

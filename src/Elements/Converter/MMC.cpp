@@ -966,6 +966,8 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
  * @param u0 Operating point input vector.
  */
 void MMC::computeABCD() {
+    if (equilibrium_state.size() == 0)
+        throw std::runtime_error("[MMC::computeABCD] No equilibrium state available.");
     const Eigen::VectorXd& x0 = equilibrium_state;
     const Eigen::Vector3d u0 = makeOperatingInput(
         V_dc, P_dc, controls.count("dc_voltage") > 0, V_m, theta);
@@ -1641,6 +1643,11 @@ std::vector<std::vector<complex<double>>> MMC::compute_y_parameters(double frequ
 	double omega_num = 2.0 * M_PI * frequency;
 	std::complex<double> s_num = std::complex<double>(0, omega_num);
     const int n = A_matrix.rows();
+    if (n == 0) {
+        std::vector<std::vector<complex<double>>> Y_zero(Y_matrix.nrows(),
+            std::vector<complex<double>>(Y_matrix.ncols(), {0.0, 0.0}));
+        return Y_zero;
+    }
     Eigen::MatrixXcd I = Eigen::MatrixXcd::Identity(n, n);
     Eigen::MatrixXcd A_s = s_num * I - A_matrix.cast<std::complex<double>>();
     Eigen::MatrixXcd inv_A_s = A_s.inverse();
@@ -1938,20 +1945,6 @@ void MMC::stepControllers(double dt,
     Eigen::VectorXd F = computeStateDerivatives(x_fake, u_fake);
 
 
-    // Diagnostic: print what active power controller saw
-    if (controls.count("active_power")) {
-        double Pac_measured = 1.5 * (Vg_dq(0) * x_fake(ip + 0) + Vg_dq(1) * x_fake(ip + 1));
-        static int diag_p = 0;
-        if (diag_p % 5000 == 0) {
-            std::cout << "[P-ctrl diag] Pac_meas=" << Pac_measured
-                << " P_ref=" << controls["active_power"]->getReference()[0]
-                << " err=" << (controls["active_power"]->getReference()[0] - Pac_measured)
-                << " x_ctrl[0]=" << x_ctrl_dqsym_(0)
-                << "\n";
-        }
-        diag_p++;
-    }
-
     // ----- Forward-Euler integrate controller states -----
     if (n_ctrl > 0) {
         x_ctrl_dqsym_ += F.head(n_ctrl) * dt;
@@ -1978,44 +1971,6 @@ void MMC::stepControllers(double dt,
     else {
         mS_dqsym_(2, 0) = 1.0;  // open-loop fallback
     }
-
-    if (controls.count("zcc")) {
-        double iSz_meas = x_fake(ip + 2);
-        static int diag_z = 0;
-        if (diag_z % 5000 == 0) {
-            std::cout << "[ZCC diag] iSz_meas=" << iSz_meas
-                << " iSz_ref=" << controls["zcc"]->getReference()[0]
-                << " err=" << (controls["zcc"]->getReference()[0] - iSz_meas)
-                << " x_ctrl[zcc_idx]=" << x_ctrl_dqsym_(1)  // adjust index
-                << " vMSz_ref=" << last_vMSigma_z_ref_
-                << "\n";
-        }
-        diag_z++;
-    }
-
-    //temp. for diagnostics
-    /*static int diag_count = 0;
-    if (diag_count < 20) {
-        std::cout << "[step " << diag_count << "] "
-            << "iD(0,1)=" << iD(0, 1)
-            << " vMDd_ref=" << last_vMDelta_d_ref_
-            << " vMDq_ref=" << last_vMDelta_q_ref_
-            << " mD(0,1)=" << mD_dqsym_(0, 1)
-            << "\n";
-        diag_count++;
-    }*/
-
-    //temp. for diagnostics
-    static int diag_count = 0;
-    if (diag_count % 5000 == 0) {
-        std::cout << "[step " << diag_count << "] "
-            << "iD(0,1)=" << iD(0, 1)
-            << " x_ctrl=[" << x_ctrl_dqsym_.transpose() << "]"
-            << " vMDd=" << last_vMDelta_d_ref_
-            << " vMDq=" << last_vMDelta_q_ref_
-            << "\n";
-    }
-    diag_count++;
 }
 
 //add18/5]

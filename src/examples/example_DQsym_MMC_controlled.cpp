@@ -8,7 +8,7 @@
 #include "../Include_components.h"
 #include "../Solver/DQsym/DQsym.h"
 
-void example_DQsym_MMC_controlled()
+void example_DQsym_MMC_controlled(bool plotting_enabled /*=true*/)
 {
     std::cout << "=== example_DQsym_MMC (linear+nonlinear, DQsym mode) ===\n";
 
@@ -95,10 +95,8 @@ void example_DQsym_MMC_controlled()
         << result.DSSabcHist.size() << " groups.\n";
 
 
-    dq.plot();
+    if (plotting_enabled) {
+        dq.plot();
+    }
     dq.exportCSV("DQsym_MMC_SigmaDelta.csv");
-
-    cout << "Example complete. Press any key to exit.\n";
-    std::cin.get();
-
 }

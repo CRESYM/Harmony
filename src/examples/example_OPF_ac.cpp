@@ -15,7 +15,4 @@ void example_OPF_ac(bool plotting_enabled /*=true*/)
         /*writeTxt=*/false,
         /*plotResult=*/plotting_enabled,
         /*print_info=*/false);
-
-    std::cout << "Press Enter to exit...\n";
-    std::cin.get();
 }

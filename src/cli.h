@@ -62,8 +62,14 @@ std::vector<std::filesystem::path> discoverJsonFiles(
 /** @brief Parse and schema-validate a JSON simulation file. */
 bool validateJsonFile(const std::filesystem::path& jsonPath, std::string& errorOut);
 
-/** @brief Run a named C++ example. @return 0 on success, non-zero on failure. */
-int runCppExample(const std::string& name, bool plot, bool verbose);
+/** @brief Run a named C++ example. @return 0 on success, non-zero on failure.
+ *  @param waitForPlotClose When true (CLI default), block until the plot window closes.
+ */
+int runCppExample(
+	const std::string& name,
+	bool plot,
+	bool verbose,
+	bool waitForPlotClose = true);
 
 /**
  * @brief Run a JSON simulation file. @return 0 on success, non-zero on failure.
