@@ -29,7 +29,7 @@ void example_OHL(bool plotting_enabled /*=true*/) {
 	cout << "Y-parameters printed in file." << endl;
 
 	if (plotting_enabled) {
-		ohl->plotYParameters(10, 1e3, 1000);
+		ohl->plotYParameters(10, 1e3, 400);
 	}
 	delete ohl;
 }

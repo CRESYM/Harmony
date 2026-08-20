@@ -141,6 +141,11 @@ std::map<std::string, ExampleFn> exampleRegistry() {
 	add("opf_slo", example_OPF_SLO);
 	add("opf_double_area", example_OPF_double_area);
 	add("opf_csv_1", example_OPF_csv_1);
+	add("opf_ieee9", example_OPF_ieee9);
+	add("opf_ieee9_hvdc", example_OPF_ieee9_hvdc);
+	add("opf_ieee39", example_OPF_ieee39);
+	add("opf_ieee39_hvdc", example_OPF_ieee39_hvdc);
+	add("opf_rts24_hvdc", example_OPF_rts24_hvdc);
 	add("opf_pv", example_OPF_PV);
 	add("opf_wt", example_OPF_WT);
 	add("dqsym_math_operations", example_DQsym_math_operations);

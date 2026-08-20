@@ -155,12 +155,12 @@ Common examples:
 | `mmc` | MMC equilibrium and Y-matrix |
 | `mmc_gfm` | GFM MMC mode + StabilityEstimate (`H = Y Z_eq`) |
 | `certificate_figures` | Paper-style passivity/phase/gate/(P,Q)/local-vs-H certificate plots |
-
-See also [`docs/certificates.md`](certificates.md) for the five certificate workflows (device gate, PnP library, operating region, GFM tuning, local vs system).
 | `opf`, `opf_csv`, `opf_1`, `opf_csv_1`, `opf_pv`, `opf_wt` | Optimal power flow |
 | `cable`, `ohl` | Line/cable Y-parameter sweeps |
 | `wt_type_3`, `pv_plant` | RES models |
 | `dqsym_rlc`, `dqsym_simple_mmc` | Dynamic phasor (DQsym) |
+
+See also [`docs/certificates.md`](certificates.md) for the five certificate workflows (device gate, PnP library, operating region, GFM tuning, local vs system).
 
 Full catalog: [User Manual — Examples](manual/08-examples-catalog.md).
 

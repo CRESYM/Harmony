@@ -125,6 +125,42 @@ or DC case use a common prefix:
 <case>_pol_dc.csv
 ```
 
+#### Bundled cases
+
+| Prefix | Contents | Origin |
+|---|---|---|
+| `ac5` | 5 AC buses | PJM/Stagg 5-bus |
+| `SLO9` | 9 AC buses, 400 kV | Slovenian 9-bus |
+| `ieee9` | 9 AC buses, 345 kV | MATPOWER `case9` (WSCC 3-machine) |
+| `ieee39` | 39 AC buses | MATPOWER `case39` (New England) |
+| `ac9ac14`, `ac14ac57`, `ac57ac118` | merged multi-grid AC cases | MATPOWER cases merged pairwise |
+| `mtdc3`, `mtdc3slack_a` | 3 DC buses, 3 converters | MatACDC 3-terminal MTDC |
+| `hvdc2ptp` | 4 DC buses, 2 point-to-point links, 4 converters | Built for Harmony; pair with the `ieee9` AC case |
+| `ieee39hvdc` | 39 AC buses + 10 DC buses, 12 DC branches | pglib-opf-hvdc `case39_10_he` |
+| `rts24hvdc` | 3 AC grids (50 buses) joined only by DC + 7 DC buses | pglib-opf-hvdc `case24_7_jb` |
+
+#### Importing a MATPOWER or MatACDC case
+
+`tools/matpower_to_harmony.py` converts `.m` case files into this CSV layout,
+including MatACDC's `dcbus` / `dcconv` / `dcbranch` matrices:
+
+```bash
+python tools/matpower_to_harmony.py convert case39.m --prefix ieee39 --ac-only
+python tools/matpower_to_harmony.py convert case39_10_he.m --prefix ieee39hvdc
+python tools/matpower_to_harmony.py convert case24_7_jb.m --prefix rts24hvdc --grid-from-island
+python tools/matpower_to_harmony.py extract-grid ac9ac14 --grid 1 --prefix ieee9
+```
+
+Use `--grid-from-island` when a case holds several electrically separate AC
+systems that are tied together only by HVDC; each island becomes its own Harmony
+AC grid. The converter renumbers buses to `1..N` per grid, enforces one converter
+per DC bus, and requires a slack bus in every AC grid.
+
+Source cases are available from
+[MATPOWER](https://github.com/MATPOWER/matpower/tree/master/data),
+[MatACDC](https://www.esat.kuleuven.be/electa/teaching/matacdc), and
+[pglib-opf-hvdc](https://github.com/power-grid-lib/pglib-opf-hvdc).
+
 #### AC file 
 
 The AC matrices are the standard MATPOWER matrices with one final `grid` column.
@@ -255,6 +291,28 @@ consistent with the ACDC_OPF case from which the data are taken. In particular,
 do not independently reverse `P_G`, `PDCSET`, or branch orientations during CSV
 conversion.
 
+**Power sign conventions (MatACDC OPF vs MMC dynamics):**
+
+| Quantity | MatACDC / OPF CSV | MMC `Pac`/`Pdc` / Y-matrix |
+|---|---|---|
+| Inverter | `P_G > 0` ⇒ `ps,pn ≤ 0` (network injections) | `Pac,Pdc > 0` (AC export / DC import) |
+| Rectifier | `P_G < 0` ⇒ `ps,pn ≥ 0` | `Pac,Pdc < 0` |
+
+`MMC::computePowerFlow` writes `P_G = Pac` (MW) so that OPF’s `pn = −P_G`
+matches. After OPF, `make_OPF` maps results back with
+`Pac = −ps`, `Qac = −qs`, `Pdc = −pn` before `update_MMC`. Seed MMC examples
+in machine signs (`Pac`/`Pdc` same sign), not raw OPF injections.
+
+The OPF pairs converter row `i` with DC bus row `i`, so `conv_dc` must have
+exactly one row per DC bus, ordered by `BUSDC_I`.
+
+`TYPE_DC` selects the DC-side control: `1` constant power (`P_G`), `2` constant
+DC voltage (`VTAR`), anything else power-voltage droop (`DROOP`, `PDCSET`,
+`VDCSET`). `TYPE_AC` selects `1` constant reactive power (`Q_G`) or AC voltage
+control (`VTAR`). These setpoints are only enforced when `solve_opf` is called
+with `vscControl = true`; with `false` the optimiser chooses the setpoints, which
+is the right choice for a benchmark where no converter controls DC voltage.
+
 ### Run a prepared CSV case
 
 CSV mode calls `solve_opf` directly. A null data pointer tells Harmony to load
@@ -287,6 +345,12 @@ counterpart to the CSV-loaded SLO9 case.
 `Harmony --cpp opf_csv`, `Harmony --cpp opf_csv_1`,
 `Harmony --cpp point2point_case`, `Harmony --cpp opf_pv`, and
 `Harmony --cpp opf_wt`.
+
+IEEE benchmark cases: `Harmony --cpp opf_ieee9`, `opf_ieee9_hvdc`
+(9-bus AC grid plus two point-to-point HVDC links), `opf_ieee39`,
+`opf_ieee39_hvdc`, and `opf_rts24_hvdc`. The AC-only solves reproduce the
+published MATPOWER optima to within the second-order-cone relaxation gap
+($5296.67 against 5296.69 for `case9`, $41854.59 against 41864.18 for `case39`).
 
 **JSON:** `"type": "opf"` with `"case_name"` in `computations`.
 

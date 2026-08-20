@@ -28,8 +28,6 @@ MatrixXcd yFromAbcd(
 	const int n = static_cast<int>(A.rows());
 
 	Eigen::MatrixXcd Y = Cc * (s * Eigen::MatrixXcd::Identity(n, n) - Ac).inverse() * Bc + Dc;
-	Y(1, 1) = -Y(1, 1);
-	Y(2, 2) = -Y(2, 2);
 
 	if (applyDcCorrection) {
 		Y(0, 0) = 1.0 / Y(0, 0);
@@ -165,7 +163,52 @@ TEST_F(TestMMC, TestGfmModeEquilibrium) {
 	const int plant = static_cast<int>(x_eq.size()) - 12;
 	const double Id_h = x_eq(plant);
 	const double Iq_h = x_eq(plant + 1);
-	// True GFM SS (MATLAB t→∞): Pac=Pref ⇒ Id=2P/(3V) when Vgq=0; Iq ≠ 0 from Q-V droop / plant.
+	// True GFM SS: Pac=Pref ⇒ Id=2P/(3V) when Vgq=0; Iq ≠ 0 from Q–V droop / plant.
+	// Q = 1.5(Vd iq − Vq id); golden Iq is the closed-loop droop equilibrium (not Iq_ref=0).
 	EXPECT_NEAR(Id_h, (2.0 / 3.0) * Pac / Vm, 1e-3);
-	EXPECT_NEAR(Iq_h, 8.3256, 0.05);
+	EXPECT_NEAR(Iq_h, 14.0664, 0.05);
+}
+
+TEST_F(TestMMC, TestOpfPowerFlowSignConvention) {
+	// MMC machine convention: Pac>0 inverter. computePowerFlow writes P_G=Pac
+	// so MatACDC OPF can enforce pn=-P_G. make_OPF maps back with Pac=-ps.
+	const double omega = 2.0 * M_PI * 50.0;
+	const double Pac = 50.0e6;
+	const double Qac = 10.0e6;
+	const double Vdc = 400e3;
+	const double Vm = 345e3;
+	std::vector<double> converter_params = {
+		omega, Pac, Qac, 0.0, Vm, Pac, Vdc,
+		50e-3, 1.07, 0.01, 400, 0.06, 0.535, 0.0
+	};
+	std::vector<double> controller_params = {
+		0, 0,
+		1, 0, 6.6667e-07, 3.3333e-04, 1, Pac,
+		0, 0,
+		1, 0, 120, 400, 1, 0,
+		1, 0, 19.93, 4500, 1, 166.67,
+		1, 0, 117.93, 8.5e4, 2, 666.67, 0,
+		1, 0, 19.93, 4500, 2, 0, 0,
+		0
+	};
+	MMC mmc("MMC1", "AC1_DC1", converter_params, controller_params);
+
+	std::map<std::string, double> row;
+	std::map<std::string, double> globals{
+		{"omega", omega}, {"ACZbase", 1.0}, {"DCbaseKV", 400.0}, {"ACbaseKV", 345.0}
+	};
+	mmc.computePowerFlow(row, globals);
+	EXPECT_NEAR(row.at("P_g"), Pac / 1e6, 1e-9);
+	EXPECT_NEAR(row.at("Q_g"), Qac / 1e6, 1e-9);
+
+	// Simulated OPF inverter injections (MatACDC): ps,qs,pn ≤ 0 → MMC Pac=-ps.
+	const double ps_MW = -Pac / 1e6;
+	const double qs_MVar = -Qac / 1e6;
+	const double pn_MW = -Pac / 1e6;
+	mmc.update_MMC(Vm, 0.0, -ps_MW * 1e6, -qs_MVar * 1e6, Vdc, -pn_MW * 1e6);
+
+	row.clear();
+	mmc.computePowerFlow(row, globals);
+	EXPECT_NEAR(row.at("P_g"), Pac / 1e6, 1e-9);
+	EXPECT_NEAR(row.at("Q_g"), Qac / 1e6, 1e-9);
 }

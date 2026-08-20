@@ -34,7 +34,8 @@ void example_cable(bool plotting_enabled /*=true*/) {
 	cout << "Y-parameters printed in file." << endl;
 	
 	if (plotting_enabled) {
-		cable->plotYParameters(0.1, 1e6, 1e4);
+		// Interactive Bode is downsampled for drawing; keep this moderate so Y(f) stays fast.
+		cable->plotYParameters(0.1, 1e6, 500);
 	}
 	delete cable;
 }

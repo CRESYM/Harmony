@@ -77,6 +77,7 @@ public:
     // Initialization methods
     void init_Controller(const std::vector<double>& converter_params);// Method to initialize controllers and Filters in MMC
     void init_Filter(const std::vector<double>& converter_params);
+    /** @brief Set operating point. Pac/Pdc use MMC machine signs (see MMC.cpp). */
     void update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc);
 
     /** @brief True when GFM outer-loop states are enabled. */
@@ -120,10 +121,12 @@ public:
 		//data["bf"] = 0.0; // conductance of the filter
 		//data["rf"] = 0.0; // Resistance of the filter
 		//data["xf"] = 0.0; // Reactance of the filter
-		data["xc"] = globalParams["omega"] * L_reactor / globalParams["ACZbase"]; // Base voltage for AC
+        data["xc"] = globalParams["omega"] * L_reactor / globalParams["ACZbase"]; // Base voltage for AC
 		data["rc"] = R_reactor / globalParams["ACZbase"]; // Resistance of the phase reactor
-        data["P_g"] = P / 1e6; // Setting of DC p-control value
-        data["Q_g"] = Q / 1e6; // Setting of AC q-control value
+        // MatACDC P_G/Q_G: OPF enforces pn = -P_G and qs = -Q_G, so pass MMC
+        // machine-convention Pac/Qac directly (inverter Pac>0 → pn<0).
+        data["P_g"] = P / 1e6;
+        data["Q_g"] = Q / 1e6;
         data["Vtar"] = V_dc / 1e3 / globalParams["DCbaseKV"]; // Seting of DC v-control value
 
 		data["gridac"] = (int)element_location[2] - '0'; // AC grid number

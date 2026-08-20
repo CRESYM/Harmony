@@ -1,0 +1,63 @@
+{
+    "simulation": {
+        "title": "mmc_powerimpedance_match",
+        "description": "Standalone MMC matched to PowerImpedanceACDC default GFL controls (plant = example_MMC, gains = PI defaults converted SI).",
+        "output_directory": "./benchmarking/mmc_powerimpedance/results",
+        "frequency_range": { "start": 1, "end": 1000, "points": 200 },
+        "nominal_power": 100.0,
+        "nominal_voltage": 122.4744871391589,
+        "dc_nominal_voltage": 200.0
+    },
+    "buses": [
+        { "id": "ac_bus", "location": "AC1", "pins": 3, "enabled": true },
+        { "id": "dc_bus", "location": "DC1", "pins": 2, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "MMC1",
+            "location": "AC1_DC1",
+            "type": "mmc",
+            "converter_params": [
+                314.1592653589793,
+                100000000.0,
+                0.0,
+                0.0,
+                100000.0,
+                100000000.0,
+                200000.0,
+                0.05,
+                1.07,
+                0.01,
+                400.0,
+                0.06,
+                0.535,
+                0.0
+            ],
+            "controller_params": [
+                1, 0, 0.000879645943005142, 0.03947841760435743, 1, 0,
+                0,
+                1, 0, 6.666666666666667e-07, 0.00020943933333333334, 1, 100000000.0,
+                0,
+                1, 0, 6.666666666666667e-07, 0.00020943933333333334, 1, 0.0,
+                0,
+                0,
+                1, 0, 115.365, 78414.81, 2, 666.6666666666666, 0.0,
+                1, 0, 41.92, 19276.56, 2, 0.0, 0.0,
+                0
+            ],
+            "connected_buses": [
+                { "bus_id": "ac_bus", "terminal": 1 },
+                { "bus_id": "dc_bus", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        {
+            "type": "y_matrix",
+            "component_id": "MMC1",
+            "frequency_range": { "start": 1, "end": 1000, "points": 200 },
+            "plot": false
+        }
+    ]
+}

@@ -213,6 +213,9 @@ public:
     /** @brief True when the most recent @ref solve_opf completed with a usable solution. */
     bool opfSolved() const { return opf_solved_; }
 
+    /** @brief Objective value of the most recent @ref solve_opf, in $/h. Zero if it did not solve. */
+    double totalGenerationCost() const { return total_gen_cost_; }
+
 private:
     std::unordered_map<std::string, Eigen::MatrixXd> network_ac;
     double baseMVA_ac;
@@ -279,6 +282,7 @@ private:
 
     double opf_user_base_mva_ = 100.0;
     bool opf_solved_ = false;
+    double total_gen_cost_ = 0.0;
 
 };
 

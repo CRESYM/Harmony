@@ -10,19 +10,19 @@
 /**
  * @details
  * The state vector 'x' in MMC is ordered as follows (from end to start):
- * [iDelta_d, iDelta_q, iSigma_d, iSigma_q, iSigma_z, vCDelta_d, vCDelta_q, vCDelta_Zd, vCDelta_Zq, vCSigma_d, vCSigma_q, vCSigma_z]
- * where:
+ * [iDelta_d, iDelta_q, iSigma_z, iSigma_d, iSigma_q, vCDelta_d, vCDelta_q, vCDelta_Zd, vCDelta_Zq, vCSigma_d, vCSigma_q, vCSigma_z]
+ * where plant currents/voltages are expressed in the grid dq frame:
  *   - iDelta_d, iDelta_q   : AC differential currents (d/q axis)
- *   - iSigma_d, iSigma_q   : Circulating currents (d/q axis)
  *   - iSigma_z             : Zero-sequence circulating current
+ *   - iSigma_d, iSigma_q   : Circulating currents (d/q axis)
  *   - vCDelta_d, vCDelta_q : AC capacitor voltages (d/q axis)
  *   - vCDelta_Zd, vCDelta_Zq : Zero-sequence capacitor voltages (d/q axis)
  *   - vCSigma_d, vCSigma_q : Circulating capacitor voltages (d/q axis)
  *   - vCSigma_z            : Zero-sequence circulating capacitor voltage
  *
- * Additional states (if present) are prepended for controllers, filters, PLL, and delay blocks.
- * The index 'i' is set to (number_of_states - 12) to access the main MMC states above.
- * Controller/filter/PLL/delay states are accessed at lower indices (i.e., x[0] ... x[i-1]).
+ * With a PLL, controllers operate in the converter dq frame (rotated by θ_pll);
+ * plant derivatives remain in the grid frame. Additional states (if present) are
+ * prepended for controllers, filters, PLL, and delay blocks.
  */
 // -----------------------------------------------------------------------------
 
@@ -347,12 +347,18 @@ void MMC::init_Filter(const std::vector<double>& filter_params) {
 
 /**
  * @brief Update MMC operating point and controller references.
- * @param Vm AC voltage magnitude.
- * @param theta AC voltage phase angle.
- * @param Pac Active power.
- * @param Qac Reactive power.
- * @param Vdc DC voltage.
- * @param Pdc DC power.
+ * @param Vm AC voltage magnitude [V peak phase].
+ * @param theta AC voltage phase angle [rad].
+ * @param Pac Active power [W], MMC machine convention: positive = export to AC
+ *        (AC current leaving the converter).
+ * @param Qac Reactive power [VAr], same sign convention as Pac (standard dq Q).
+ * @param Vdc DC voltage [V].
+ * @param Pdc DC power [W], MMC machine convention: positive = import from DC
+ *        (DC current entering the converter). For a lossless inverter,
+ *        Pac and Pdc are both positive.
+ *
+ * When applying MatACDC/Harmony OPF results, negate network injections:
+ * Pac = -ps, Qac = -qs, Pdc = -pn (see PowerFlow::make_OPF).
  */
 void MMC::update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc) {
     V_m = Vm;
@@ -370,8 +376,9 @@ void MMC::update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc
         throw std::runtime_error("Voltage magnitude too small for dq transformation.");
     }
 
-    const double Id = (2.0 / 3.0) * (Vgd * P + Vgq * Q) / denom;
-    const double Iq = (2.0 / 3.0) * (Vgq * P - Vgd * Q) / denom;
+    // From Pac = 1.5(Vd Id + Vq Iq), Qac = 1.5(Vd Iq - Vq Id).
+    const double Id = (2.0 / 3.0) * (Vgd * P - Vgq * Q) / denom;
+    const double Iq = (2.0 / 3.0) * (Vgq * P + Vgd * Q) / denom;
 
     // Set OCC controller reference (dq current)
     if (controls.count("occ")) {
@@ -459,20 +466,26 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     const double Ce = 6.0 * C_arm / N;
     Eigen::VectorXd F = Eigen::VectorXd::Zero(number_of_states);
 
-    // Extract state variables from the end of the state vector
+    // Extract state variables from the end of the state vector (grid dq frame).
     int i = number_of_states - 12;
-    double iDelta_d = x(i), iDelta_q = x(i + 1), iSigma_z = x(i + 2), iSigma_d = x(i + 3), iSigma_q = x(i + 4);
+    const double iDelta_d_g = x(i), iDelta_q_g = x(i + 1), iSigma_z = x(i + 2);
+    const double iSigma_d_g = x(i + 3), iSigma_q_g = x(i + 4);
     double vCDelta_d = x(i + 5), vCDelta_q = x(i + 6), vCDelta_Zd = x(i + 7), vCDelta_Zq = x(i + 8);
     double vCSigma_d = x(i + 9), vCSigma_q = x(i + 10), vCSigma_z = x(i + 11);
 
-    // Constants for now
+    // Port voltages/currents stay in the grid frame for the plant; controllers may
+    // use PLL-rotated copies.
     double Vdc = (controls.count("dc_voltage")) ? x(vdc_index) : u(0);
-    double w = omega_0;
-    double Vgd = u(1);
-    double Vgq = u(2);
-    double Pac = 1.5 * (Vgd * iDelta_d + Vgq * iDelta_q);
-    double Qac = 1.5 * (-Vgd * iDelta_q + Vgq * iDelta_d);
-    double Vac_mag = 1.5 * sqrt(Vgd * Vgd + Vgq * Vgq);
+    const double Vgd_g = u(1);
+    const double Vgq_g = u(2);
+    double Vgd = Vgd_g;
+    double Vgq = Vgq_g;
+    double iDelta_d = iDelta_d_g, iDelta_q = iDelta_q_g;
+    double iSigma_d = iSigma_d_g, iSigma_q = iSigma_q_g;
+    double Pac = 1.5 * (Vgd_g * iDelta_d_g + Vgq_g * iDelta_q_g);
+    // Generator dq: Q = 1.5(Vd iq - Vq id); with Vq≈0, +iq ⇒ +Q.
+    double Qac = 1.5 * (Vgd_g * iDelta_q_g - Vgq_g * iDelta_d_g);
+    double Vac_mag = std::sqrt(Vgd_g * Vgd_g + Vgq_g * Vgq_g);
 
     // Extract control reference voltages (user must assign these before this call)
     double vMDelta_d_ref = 0, vMDelta_q_ref = 0, vMDelta_Zd_ref = 0, vMDelta_Zq_ref = 0;
@@ -574,24 +587,24 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         double vMSigma_z = (mDelta_d * vCDelta_d) / 4 + (mDelta_q * vCDelta_q) / 4 + (mDelta_Zd * vCDelta_Zd) / 4 + (mDelta_Zq * vCDelta_Zq) / 4
             + (mSigma_d * vCSigma_d) / 4 + (mSigma_q * vCSigma_q) / 4 + (mSigma_z * vCSigma_z) / 2;
 
-        double diDeltad_dt = -(Vgd - vMDelta_d + Reqac * iDelta_d + Leqac * iDelta_q * w) / Leqac;
-        double diDeltaq_dt = -(Vgq - vMDelta_q + Reqac * iDelta_q - Leqac * iDelta_d * w) / Leqac;
-        double diSigmad_dt = -(vMSigma_d + R_arm * iSigma_d - 2 * L_arm * iSigma_q * w) / L_arm;
-        double diSigmaq_dt = -(vMSigma_q + R_arm * iSigma_q + 2 * L_arm * iSigma_d * w) / L_arm;
+        double diDeltad_dt = -(Vgd - vMDelta_d + Reqac * iDelta_d + Leqac * iDelta_q * omega_0) / Leqac;
+        double diDeltaq_dt = -(Vgq - vMDelta_q + Reqac * iDelta_q - Leqac * iDelta_d * omega_0) / Leqac;
+        double diSigmad_dt = -(vMSigma_d + R_arm * iSigma_d - 2 * L_arm * iSigma_q * omega_0) / L_arm;
+        double diSigmaq_dt = -(vMSigma_q + R_arm * iSigma_q + 2 * L_arm * iSigma_d * omega_0) / L_arm;
         double diSigmaz_dt = -(vMSigma_z - Vdc / 2 + R_arm * iSigma_z) / L_arm;
 
         double dvCSigmad_dt = (N * (iSigma_d * mSigma_z + iSigma_z * mSigma_d + iDelta_d * (mDelta_d / 4 + mDelta_Zd / 4)
-            - iDelta_q * (mDelta_q / 4 - mDelta_Zq / 4) + (4 * C_arm * vCSigma_q * w) / N)) / (2 * C_arm);
+            - iDelta_q * (mDelta_q / 4 - mDelta_Zq / 4) + (4 * C_arm * vCSigma_q * omega_0) / N)) / (2 * C_arm);
         double dvCSigmaq_dt = -(N * (iDelta_q * (mDelta_d / 4 - mDelta_Zd / 4) - iSigma_z * mSigma_q - iSigma_q * mSigma_z
-            + iDelta_d * (mDelta_q / 4 + mDelta_Zq / 4) + (4 * C_arm * vCSigma_d * w) / N)) / (2 * C_arm);
+            + iDelta_d * (mDelta_q / 4 + mDelta_Zq / 4) + (4 * C_arm * vCSigma_d * omega_0) / N)) / (2 * C_arm);
         double dvCSigmaz_dt = (N * (iDelta_d * mDelta_d + iDelta_q * mDelta_q + 2 * iSigma_d * mSigma_d + 2 * iSigma_q * mSigma_q + 4 * iSigma_z * mSigma_z)) / (8 * C_arm);
 
         double dvCDeltad_dt = (N * (iSigma_z * mDelta_d - (iDelta_q * mSigma_q) / 4 + iSigma_d * (mDelta_d / 2 + mDelta_Zd / 2) - iSigma_q * (mDelta_q / 2 + mDelta_Zq / 2)
-            + iDelta_d * (mSigma_d / 4 + mSigma_z / 2) - (2 * C_arm * vCDelta_q * w) / N)) / (2 * C_arm);
+            + iDelta_d * (mSigma_d / 4 + mSigma_z / 2) - (2 * C_arm * vCDelta_q * omega_0) / N)) / (2 * C_arm);
         double dvCDeltaq_dt = -(N * ((iDelta_d * mSigma_q) / 4 - iSigma_z * mDelta_q + iSigma_q * (mDelta_d / 2 - mDelta_Zd / 2) + iSigma_d * (mDelta_q / 2 - mDelta_Zq / 2)
-            + iDelta_q * (mSigma_d / 4 - mSigma_z / 2) - (2 * C_arm * vCDelta_d * w) / N)) / (2 * C_arm);
-        double dvCDeltaZd_dt = (N * (iDelta_d * mSigma_d + 2 * iSigma_d * mDelta_d + iDelta_q * mSigma_q + 2 * iSigma_q * mDelta_q + 4 * iSigma_z * mDelta_Zd)) / (8 * C_arm) - 3 * vCDelta_Zq * w;
-        double dvCDeltaZq_dt = 3 * vCDelta_Zd * w + (N * (iDelta_q * mSigma_d - iDelta_d * mSigma_q + 2 * iSigma_d * mDelta_q - 2 * iSigma_q * mDelta_d + 4 * iSigma_z * mDelta_Zq)) / (8 * C_arm);
+            + iDelta_q * (mSigma_d / 4 - mSigma_z / 2) - (2 * C_arm * vCDelta_d * omega_0) / N)) / (2 * C_arm);
+        double dvCDeltaZd_dt = (N * (iDelta_d * mSigma_d + 2 * iSigma_d * mDelta_d + iDelta_q * mSigma_q + 2 * iSigma_q * mDelta_q + 4 * iSigma_z * mDelta_Zd)) / (8 * C_arm) - 3 * vCDelta_Zq * omega_0;
+        double dvCDeltaZq_dt = 3 * vCDelta_Zd * omega_0 + (N * (iDelta_q * mSigma_d - iDelta_d * mSigma_q + 2 * iSigma_d * mDelta_q - 2 * iSigma_q * mDelta_d + 4 * iSigma_z * mDelta_Zq)) / (8 * C_arm);
 
         F(i++) = diDeltad_dt; F(i++) = diDeltaq_dt; F(i++) = diSigmaz_dt; F(i++) = diSigmad_dt; F(i++) = diSigmaq_dt;
         F(i++) = dvCDeltad_dt; F(i++) = dvCDeltaq_dt; F(i++) = dvCDeltaZd_dt; F(i++) = dvCDeltaZq_dt;
@@ -623,9 +636,8 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
 
         state_variables = controls["pll"]->define_equations(x(i), Vgq, 0);
         F(i) = state_variables(0);
-        double delta_omega = state_variables(1);
-        w = omega_0 + delta_omega;
-        F(i + 1) = delta_omega; //control_blocks["pll"]->define_differential_equations(delta_omega);
+        const double delta_omega = state_variables(1);
+        F(i + 1) = delta_omega; // dθ/dt = Δω (rad/s)
         i += 2;
     }
 
@@ -641,8 +653,8 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         const double Pac_f = x(gfm_index_ + 1);
         const double Qac_f = x(gfm_index_ + 2);
 
-        Pac = 1.5 * (Vgd * iDelta_d + Vgq * iDelta_q);
-        Qac = 1.5 * (-Vgd * iDelta_q + Vgq * iDelta_d);
+        Pac = 1.5 * (Vgd_g * iDelta_d_g + Vgq_g * iDelta_q_g);
+        Qac = 1.5 * (Vgd_g * iDelta_q_g - Vgq_g * iDelta_d_g);
 
         const auto* gfm = controls.at("gfm");
         const double Kdroop_P = gfm->getParameters()[0];
@@ -672,14 +684,15 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         const double Vgfm = E_ref + Kdroop_Q * (Qac_f - Qac_ref);
         const double e_d = Vgfm * std::cos(theta_gfm);
         const double e_q = Vgfm * std::sin(theta_gfm);
-        gfm_vMDelta_d = e_d - Rvirt * iDelta_d - w * Lvirt * iDelta_q;
-        gfm_vMDelta_q = e_q - Rvirt * iDelta_q + w * Lvirt * iDelta_d;
+        gfm_vMDelta_d = e_d - Rvirt * iDelta_d_g - omega_0 * Lvirt * iDelta_q_g;
+        gfm_vMDelta_q = e_q - Rvirt * iDelta_q_g + omega_0 * Lvirt * iDelta_d_g;
     }
 
-    // Apply dq transformations (reuse matrices) — identity under GFM (grid-frame control).
+    // Rotate currents into the control frame for GFL controllers only. Plant states
+    // remain in the grid frame (see di*/dvC* below).
     if (!has_gfm) {
-        Eigen::Vector2d i_delta_vec = T_theta * Eigen::Vector2d(iDelta_d, iDelta_q);
-        Eigen::Vector2d i_sigma_vec = T_2theta * Eigen::Vector2d(iSigma_d, iSigma_q);
+        Eigen::Vector2d i_delta_vec = T_theta * Eigen::Vector2d(iDelta_d_g, iDelta_q_g);
+        Eigen::Vector2d i_sigma_vec = T_2theta * Eigen::Vector2d(iSigma_d_g, iSigma_q_g);
         iDelta_d = i_delta_vec(0);
         iDelta_q = i_delta_vec(1);
         iSigma_d = i_sigma_vec(0);
@@ -773,7 +786,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     if (has_reactive_power_ctrl) {
         state_variables = controls["reactive_power"]->define_equations(x(i), Qac, 0);
         F(i) = state_variables(0);
-        double iDelta_q_ref = -state_variables(1);
+        double iDelta_q_ref = state_variables(1);
         i += 1;
         if (has_occ) controls["occ"]->setReference(iDelta_q_ref, 1);
     } else if (has_ac_voltage_ctrl) {
@@ -804,7 +817,8 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
 
     if (has_occ && !has_gfm) {
         vector<double> refs = controls["occ"]->getReference();
-        if (!has_active_power_ctrl || !has_dc_voltage_ctrl) {
+        // Outer P/Q/Vdc already issue control-frame refs; only rotate fixed OCC refs.
+        if (!has_active_power_ctrl && !has_dc_voltage_ctrl) {
             Eigen::Vector2d i_delta_ref_vec = T_theta * Eigen::Vector2d(refs[0], refs[1]);
             double iDelta_d_ref = i_delta_ref_vec(0);
             double iDelta_q_ref = i_delta_ref_vec(1);
@@ -812,7 +826,8 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         }
         x1 << x(i), x(i + 1);
         u1 << iDelta_d, iDelta_q;
-        c1 << w * Leqac * iDelta_q + Vgd, -w * Leqac * iDelta_d + Vgq;
+        // Decoupling at nominal grid speed (grid-frame plant).
+        c1 << omega_0 * Leqac * iDelta_q + Vgd, -omega_0 * Leqac * iDelta_d + Vgq;
         state_variables = controls["occ"]->define_equations(x1, u1, c1);
         F(i) = state_variables(0);
         F(i + 1) = state_variables(1);
@@ -831,15 +846,16 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
 
     if (controls.count("ccc")) {
         vector<double> refs = controls["ccc"]->getReference();
-        if (!controls.count("reactive_power") || !controls.count("ac_voltage")) {
-            Eigen::Vector2d i_sigma_ref_vec = T_theta * Eigen::Vector2d(refs[0], refs[1]);
+        // Keep CCC refs in the control frame (defaults [0,0]); do not re-rotate.
+        if (!controls.count("reactive_power") && !controls.count("ac_voltage")) {
+            Eigen::Vector2d i_sigma_ref_vec = T_2theta * Eigen::Vector2d(refs[0], refs[1]);
             double iSigma_d_ref = i_sigma_ref_vec(0);
             double iSigma_q_ref = i_sigma_ref_vec(1);
             controls["ccc"]->setReference({ iSigma_d_ref, iSigma_q_ref });
         }
         x1 << x(i), x(i + 1);
         u1 << iSigma_d, iSigma_q;
-        c1 << -2 * w * L_arm * iSigma_q, 2 * w * L_arm * iSigma_d;
+        c1 << -2 * omega_0 * L_arm * iSigma_q, 2 * omega_0 * L_arm * iSigma_d;
         state_variables = controls["ccc"]->define_equations(x1, u1, c1);
         F(i) = state_variables(0);
         F(i + 1) = state_variables(1);
@@ -923,29 +939,28 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         + (mSigma_d * vCSigma_d) / 4 + (mSigma_q * vCSigma_q) / 4 + (mSigma_z * vCSigma_z) / 2;
 
 
-    // AC Current dynamics
-    double diDeltad_dt = -(Vgd - vMDelta_d + Reqac * iDelta_d + Leqac * iDelta_q * w) / Leqac;
-    double diDeltaq_dt = -(Vgq - vMDelta_q + Reqac * iDelta_q - Leqac * iDelta_d * w) / Leqac;
-    
-    
-    // Common - mode Current dynamics
-    double diSigmad_dt = -(vMSigma_d + R_arm * iSigma_d - 2 * L_arm * iSigma_q * w) / L_arm;
-    double diSigmaq_dt = -(vMSigma_q + R_arm * iSigma_q + 2 * L_arm * iSigma_d * w) / L_arm;
+    // Plant dynamics in the grid dq frame (states and port voltages). Modulation
+    // references were transformed back to the grid frame above.
+    const double w_g = omega_0;
+    double diDeltad_dt = -(Vgd_g - vMDelta_d + Reqac * iDelta_d_g + Leqac * iDelta_q_g * w_g) / Leqac;
+    double diDeltaq_dt = -(Vgq_g - vMDelta_q + Reqac * iDelta_q_g - Leqac * iDelta_d_g * w_g) / Leqac;
+
+    double diSigmad_dt = -(vMSigma_d + R_arm * iSigma_d_g - 2 * L_arm * iSigma_q_g * w_g) / L_arm;
+    double diSigmaq_dt = -(vMSigma_q + R_arm * iSigma_q_g + 2 * L_arm * iSigma_d_g * w_g) / L_arm;
     double diSigmaz_dt = -(vMSigma_z - Vdc / 2 + R_arm * iSigma_z) / L_arm;
 
-	// Capacitor voltage dynamics
-    double dvCSigmad_dt = (N * (iSigma_d * mSigma_z + iSigma_z * mSigma_d + iDelta_d * (mDelta_d / 4 + mDelta_Zd / 4) 
-        - iDelta_q * (mDelta_q / 4 - mDelta_Zq / 4) + (4 * C_arm * vCSigma_q * w) / N)) / (2 * C_arm);
-    double dvCSigmaq_dt = -(N * (iDelta_q * (mDelta_d / 4 - mDelta_Zd / 4) - iSigma_z * mSigma_q - iSigma_q * mSigma_z 
-        + iDelta_d * (mDelta_q / 4 + mDelta_Zq / 4) + (4 * C_arm * vCSigma_d * w) / N)) / (2 * C_arm);
-    double dvCSigmaz_dt = (N * (iDelta_d * mDelta_d + iDelta_q * mDelta_q + 2 * iSigma_d * mSigma_d + 2 * iSigma_q * mSigma_q + 4 * iSigma_z * mSigma_z)) / (8 * C_arm);
+    double dvCSigmad_dt = (N * (iSigma_d_g * mSigma_z + iSigma_z * mSigma_d + iDelta_d_g * (mDelta_d / 4 + mDelta_Zd / 4)
+        - iDelta_q_g * (mDelta_q / 4 - mDelta_Zq / 4) + (4 * C_arm * vCSigma_q * w_g) / N)) / (2 * C_arm);
+    double dvCSigmaq_dt = -(N * (iDelta_q_g * (mDelta_d / 4 - mDelta_Zd / 4) - iSigma_z * mSigma_q - iSigma_q_g * mSigma_z
+        + iDelta_d_g * (mDelta_q / 4 + mDelta_Zq / 4) + (4 * C_arm * vCSigma_d * w_g) / N)) / (2 * C_arm);
+    double dvCSigmaz_dt = (N * (iDelta_d_g * mDelta_d + iDelta_q_g * mDelta_q + 2 * iSigma_d_g * mSigma_d + 2 * iSigma_q_g * mSigma_q + 4 * iSigma_z * mSigma_z)) / (8 * C_arm);
 
-    double dvCDeltad_dt = (N * (iSigma_z * mDelta_d - (iDelta_q * mSigma_q) / 4 + iSigma_d * (mDelta_d / 2 + mDelta_Zd / 2) - iSigma_q * (mDelta_q / 2 + mDelta_Zq / 2) 
-        + iDelta_d * (mSigma_d / 4 + mSigma_z / 2) - (2 * C_arm * vCDelta_q * w) / N)) / (2 * C_arm);
-    double dvCDeltaq_dt = -(N * ((iDelta_d * mSigma_q) / 4 - iSigma_z * mDelta_q + iSigma_q * (mDelta_d / 2 - mDelta_Zd / 2) + iSigma_d * (mDelta_q / 2 - mDelta_Zq / 2) 
-        + iDelta_q * (mSigma_d / 4 - mSigma_z / 2) - (2 * C_arm * vCDelta_d * w) / N)) / (2 * C_arm);
-    double dvCDeltaZd_dt = (N * (iDelta_d * mSigma_d + 2 * iSigma_d * mDelta_d + iDelta_q * mSigma_q + 2 * iSigma_q * mDelta_q + 4 * iSigma_z * mDelta_Zd)) / (8 * C_arm) - 3 * vCDelta_Zq * w;
-    double dvCDeltaZq_dt = 3 * vCDelta_Zd * w + (N * (iDelta_q * mSigma_d - iDelta_d * mSigma_q + 2 * iSigma_d * mDelta_q - 2 * iSigma_q * mDelta_d + 4 * iSigma_z * mDelta_Zq)) / (8 * C_arm);
+    double dvCDeltad_dt = (N * (iSigma_z * mDelta_d - (iDelta_q_g * mSigma_q) / 4 + iSigma_d_g * (mDelta_d / 2 + mDelta_Zd / 2) - iSigma_q_g * (mDelta_q / 2 + mDelta_Zq / 2)
+        + iDelta_d_g * (mSigma_d / 4 + mSigma_z / 2) - (2 * C_arm * vCDelta_q * w_g) / N)) / (2 * C_arm);
+    double dvCDeltaq_dt = -(N * ((iDelta_d_g * mSigma_q) / 4 - iSigma_z * mDelta_q + iSigma_q_g * (mDelta_d / 2 - mDelta_Zd / 2) + iSigma_d_g * (mDelta_q / 2 - mDelta_Zq / 2)
+        + iDelta_q_g * (mSigma_d / 4 - mSigma_z / 2) - (2 * C_arm * vCDelta_d * w_g) / N)) / (2 * C_arm);
+    double dvCDeltaZd_dt = (N * (iDelta_d_g * mSigma_d + 2 * iSigma_d_g * mDelta_d + iDelta_q_g * mSigma_q + 2 * iSigma_q_g * mDelta_q + 4 * iSigma_z * mDelta_Zd)) / (8 * C_arm) - 3 * vCDelta_Zq * w_g;
+    double dvCDeltaZq_dt = 3 * vCDelta_Zd * w_g + (N * (iDelta_q_g * mSigma_d - iDelta_d_g * mSigma_q + 2 * iSigma_d_g * mDelta_q - 2 * iSigma_q_g * mDelta_d + 4 * iSigma_z * mDelta_Zq)) / (8 * C_arm);
 
     F(i++) = diDeltad_dt; F(i++) = diDeltaq_dt; F(i++) = diSigmaz_dt; F(i++) = diSigmad_dt; F(i++) = diSigmaq_dt;
     F(i++) = dvCDeltad_dt; F(i++) = dvCDeltaq_dt; F(i++) = dvCDeltaZd_dt; F(i++) = dvCDeltaZq_dt;
@@ -1448,8 +1463,8 @@ void MMC::solveEquilibrium() {
         throw std::runtime_error("Voltage magnitude too small for dq transformation.");
     }
 
-    const double Id = (2.0 / 3.0) * (Vgd * P + Vgq * Q) / denom;
-    const double Iq = (2.0 / 3.0) * (Vgq * P - Vgd * Q) / denom;
+    const double Id = (2.0 / 3.0) * (Vgd * P - Vgq * Q) / denom;
+    const double Iq = (2.0 / 3.0) * (Vgq * P + Vgd * Q) / denom;
     const double iSigma_z = (std::abs(V_dc) > 1e-3) ? P_dc / (3.0 * V_dc) : 0.0;
 
     if (controls.count("pll") && n >= 2) {
@@ -1657,12 +1672,13 @@ std::vector<std::vector<complex<double>>> MMC::compute_y_parameters(double frequ
     Eigen::MatrixXcd D_c = D_matrix.cast<std::complex<double>>();
 	Eigen::MatrixXcd Y = C_c * inv_A_s * B_c + D_c;
 
-	Y(1, 1) = -Y(1, 1); // Correct the sign for the second row, second column
-	Y(2, 2) = -Y(2, 2); // Correct the sign for the third row, third column
+    // Port currents: AC iΔ exits the converter (generator); DC 3·iΣz enters
+    // (load). Do not negate AC diagonals here.
 
+    // Legacy key "dc" (not "dc_voltage"): optional Z→Y correction for older models.
     if (controls.count("dc")) {
-		Y(0, 0) = 1.0 / Y(0, 0); // Invert to get admittance from impedance
-        Y(0, 0) = 2.0 * (Y(0, 0) - s_num *  C_arm * (6.0/N)); // Correct the sign for the first row, first column
+		Y(0, 0) = 1.0 / Y(0, 0);
+        Y(0, 0) = 2.0 * (Y(0, 0) - s_num *  C_arm * (6.0/N));
     }
 
     std::vector<std::vector<complex<double>>> Y_val_exact(Y_matrix.nrows());

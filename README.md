@@ -33,7 +33,6 @@ If you use this repository, please cite the following publication.
   year          = {2026},
   eprint        = {2606.09406},
   archivePrefix = {arXiv},
-  primaryClass  = {eess.SY},
   url           = {https://arxiv.org/abs/2606.09406}
 }
 ```
@@ -198,7 +197,12 @@ Built on component models and state-space methods from prior work:
 - Transmission line, MMC base models: PowerImpedanceACDC.jl (A. Lekić, 2024)
 - State-space solver: dc_dc_simulator (A. Lekić, GitHub)
 - AC-DC OPF solver: ACDC-OpFlow (H. Li, GitHub)
-- Dynamic phasor solver: DQsym (S. Alsarayreh, R. Dimitrovski, GitHub)
+- Dynamic phasor solver: DQsym (S. Alsarayreh, R. Dimitrovski, A. Lekić, GitHub)
+
+
+This repository utilizes AI-assisted for **documentation generation**, **automated test creation** (and conversion from other tools), and **UI scaffolding**. 
+All generated assets are manually reviewed, tested, and maintained to guarantee project reliability.
+
 
 All analysis solvers, optimization routines, and stability assessment methods are original developments for this framework.
 

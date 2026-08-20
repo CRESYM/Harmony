@@ -82,7 +82,7 @@ void example_OPF_PV(bool plotting_enabled /*=true*/)
     net.connectElementToBus(br1_dc, 1, bus1_dc);
     net.connectElementToBus(br1_dc, 2, bus2_dc);
 
-    /* ---------- 2.3 Create Converters ---------- */
+    /* ---------- 2.3 Create Converters (MMC machine signs: Pac,Pdc > 0 = inverter) ---------- */
     vector<double> converter_params1 = {
         2 * M_PI * 50,
         50.0 * 1e6,
@@ -117,6 +117,7 @@ void example_OPF_PV(bool plotting_enabled /*=true*/)
     net.connectElementToBus(mmc1, 1, bus3_ac);
     net.connectElementToBus(mmc1, 2, bus1_dc);
 
+    // Rectifier seed: Pac,Pdc < 0 (AC import / DC export)
     vector<double> converter_params2 = {
         2 * M_PI * 50,
         -50.0 * 1e6,
