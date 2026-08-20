@@ -45,4 +45,4 @@ Using **200** matched samples on both sides:
 | Max Frobenius | ≈ **0.0014** |
 | At 1 / 50 / 100 / 500 / 1000 Hz | ≈ **0.001** |
 
-\(3\times3\) \(Y(f)\) agrees to ~0.1%.
+$3\times 3$ admittance $Y(f)$ agrees to ~0.1%.
