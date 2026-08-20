@@ -40,7 +40,7 @@ Using **200** matched samples on both sides:
 | Metric | Value |
 |--------|-------|
 | Harmony / PI samples (1–1000 Hz) | 200 / 200 (log-spaced, inclusive end) |
-| Mean Frobenius $|Y_H - Y_{PI}|/|Y_{PI}|$  | ≈ **0.0008** |
+| Mean Frobenius $\|Y_H - Y_{PI}\|/\|Y_{PI}\|$  | ≈ **0.0008** |
 | Median Frobenius | ≈ **0.0009** |
 | Max Frobenius | ≈ **0.0014** |
 | At 1 / 50 / 100 / 500 / 1000 Hz | ≈ **0.001** |
