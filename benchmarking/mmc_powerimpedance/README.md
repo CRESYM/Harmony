@@ -10,7 +10,7 @@ Identical plant and operating point (Harmony `example_MMC` plant):
 
 | Quantity | Value |
 |----------|-------|
-| \(L_\mathrm{arm}, R_\mathrm{arm}, C_\mathrm{arm}, N\) | 50 mH, 1.07 Ω, 10 mF, 400 |
+| $L_\mathrm{arm}, R_\mathrm{arm}, C_\mathrm{arm}, N$ | 50 mH, 1.07 Ω, 10 mF, 400 |
 | \(L_r, R_r\) | 60 mH, 0.535 Ω |
 | \(V_m\) (peak phase), \(V_\mathrm{dc}\) | 100 kV, 200 kV |
 | \(P, Q\) | 100 MW, 0 |
@@ -35,11 +35,7 @@ python benchmarking/mmc_powerimpedance/compare_results.py
 
 ## Result (this tree)
 
-After aligning Harmony’s Q measurement / \(i_q^\mathrm{ref}\) with PowerImpedance
-(\(Q=1.5(V_d i_q-V_q i_d)\), positive PI → \(i_q^\mathrm{ref}\)), stopping
-erroneous re-rotation of outer-loop OCC refs by \(T_\theta\), fixing the
-log-frequency sweep to include \(f_\mathrm{end}\) (`/(N-1)`), and using
-**200** matched samples on both sides:
+Using **200** matched samples on both sides:
 
 | Metric | Value |
 |--------|-------|
@@ -49,6 +45,4 @@ log-frequency sweep to include \(f_\mathrm{end}\) (`/(N-1)`), and using
 | Max Frobenius | ≈ **0.0014** |
 | At 1 / 50 / 100 / 500 / 1000 Hz | ≈ **0.001** |
 
-The earlier mid-band “spikes” were mostly a **frequency-grid mismatch**
-(Harmony stopped at ~841 Hz and paired wrong points near the resonance).
-With aligned dense grids the full \(3\times3\) \(Y(f)\) agrees to ~0.1%.
+\(3\times3\) \(Y(f)\) agrees to ~0.1%.
