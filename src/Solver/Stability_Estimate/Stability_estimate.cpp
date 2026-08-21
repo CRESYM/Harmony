@@ -508,7 +508,7 @@ void StabilityEstimate::writeFileTF(string converter_name, string location,
     double gap = (end_frequency - start_frequency) / (number_of_points - 1);
     double frequency = start_frequency;
     for (int p = 0; p < number_of_points; p++) {
-        MatrixXcd TF = compute_transfer_function(converter_name, location, frequency);
+		MatrixXcd TF = compute_transfer_function(converter_name, location, frequency);
         myfile << frequency << ",";
         for (int i = 0; i < TF.rows(); i++)
             for (int j = 0; j < TF.cols(); ++j)
@@ -542,7 +542,7 @@ void StabilityEstimate::bodeplotTF(string converter_name, string location,
     double frequency = start_frequency;
     for (int p = 0; p < number_of_points; p++) {
         frequencies.push_back(frequency);
-        MatrixXcd TF = compute_transfer_function(converter_name, location, frequency);
+		MatrixXcd TF = compute_transfer_function(converter_name, location, frequency);
         for (int i = 0; i < TF.rows(); ++i)
             for (int j = 0; j < TF.cols(); ++j) {
                 int k = TF.cols() * i + j;
@@ -577,7 +577,7 @@ void StabilityEstimate::nyquistplotTF(string converter_name, string location,
         MatrixXcd TF_freq = compute_transfer_function(converter_name, location, frequency);
         for (int i = 0; i < TF_freq.rows(); ++i)
             for (int j = 0; j < TF_freq.cols(); ++j)
-                TF[p][TF_freq.cols() * i + j] = TF_freq(i, j);
+				TF[p][TF_freq.cols() * i + j] = TF_freq(i, j);
         frequency *= gap;
     }
     nyquist_plot_implot(TF, labels,
