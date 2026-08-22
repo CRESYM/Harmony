@@ -120,5 +120,12 @@ target_link_libraries(
 )
 # Enable CMake’s test runner to discover the tests included in the binary,
 # using the GoogleTest CMake module.
+#
+# PRE_TEST: run discovery at ctest time, not as a post-build step. On Windows,
+# MSBuild post-build often lacks conda/Gurobi DLL paths; launching the exe then
+# fails with 0xc0000135 (missing DLL) or 0xc0000409 / stack-buffer checks.
 include(GoogleTest)
-gtest_discover_tests(testharmony)
+gtest_discover_tests(testharmony
+  DISCOVERY_MODE PRE_TEST
+  DISCOVERY_TIMEOUT 60
+)
