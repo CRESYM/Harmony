@@ -27,13 +27,13 @@ Harmony (“HARMONic stabilitY assessment of PE-penetrated power systems”) pro
 
 If you use this repository, please cite the following publication.
 ```
-@misc{lekic2026harmony,
+@inproceedings{lekic2026harmony,
   title         = {Advanced Simulation Framework for AC/MTDC Power Systems},
   author        = {Aleksandra Leki{\'c} and Azadeh Kermansaravi and Haixiao Li and Yasel Quintero Lares and Saif Alsarayreh and Robert Dimitrovski},
   year          = {2026},
-  eprint        = {2606.09406},
-  archivePrefix = {arXiv},
-  url           = {https://arxiv.org/abs/2606.09406}
+  booktitle     = {CIGRE Symposium 2026},
+  organization  = {CIGRE}
+  url           = {https://www.e-cigre.org/publications/detail/b4-10277-2026-advanced-simulation-framework-for-acmtdc-power-systems.html}
 }
 ```
 
