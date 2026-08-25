@@ -23,7 +23,11 @@ runs:
           else
             GUROBI_BIN=$(echo "$GUROBI" | sed 's|\\|/|g;s|^\([A-Za-z]\):|/\L\1|')/bin
           fi
-          export PATH="${GUROBI_BIN}:$PATH"
+          if [ -n "${CONDA_PREFIX:-}" ] && [ -d "${CONDA_PREFIX}/Library/bin" ]; then
+            export PATH="${CONDA_PREFIX}/Library/bin:${GUROBI_BIN}:$PATH"
+          else
+            export PATH="${GUROBI_BIN}:$PATH"
+          fi
           cd tests/build
           ctest -C Release --output-on-failure -j1 ${{ inputs.ctest_args }}
         elif [ "${{ runner.os }}" = "Linux" ]; then

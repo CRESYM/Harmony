@@ -153,7 +153,7 @@ if(WIN32)
         "libmpfr*.dll" "mpfr*.dll"
         "flint*.dll"
         "libmpc*.dll" "mpc*.dll"
-        "libwinpthread*.dll" "libgcc*.dll" "libstdc++*.dll" "libssp*.dll"
+        "libwinpthread*.dll" "libgcc*.dll"
         "zlib*.dll" "libz*.dll" "zstd*.dll" "libpng*.dll" "png*.dll"
         "imgui*.dll" "implot*.dll"
         "gurobi*.dll"
@@ -204,12 +204,9 @@ endforeach()
         COMMENT "Copy imported runtime DLLs next to testharmony.exe"
     )
 
-    set(_harmony_test_launcher ${CMAKE_COMMAND} -E env)
-    foreach(_dir IN LISTS _harmony_dll_bin_dirs)
-        list(APPEND _harmony_test_launcher --modify "PATH=path_list_prepend:${_dir}")
-    endforeach()
-    list(APPEND _harmony_test_launcher --)
-    set_target_properties(testharmony PROPERTIES TEST_LAUNCHER "${_harmony_test_launcher}")
+    # Do not set TEST_LAUNCHER (cmake -E env). CMake 4.4 on CI wraps every test
+    # in that launcher and the process aborts with 0xc0000409 before gtest runs.
+    # Rely on copied DLLs plus ENVIRONMENT_MODIFICATION / run-ctest PATH instead.
 
     # Names match CI: ctest -E TestExamples / ctest -R TestExamples
     add_test(NAME testharmony COMMAND testharmony --gtest_filter=-TestExamples.*)
