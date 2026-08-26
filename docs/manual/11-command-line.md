@@ -1,12 +1,12 @@
-# Chapter 10 — Command-Line Interface
+# Chapter 11 — Command-Line Interface
 
-[← Troubleshooting](09-troubleshooting.md) | [Manual index](README.md) | [Next: HarmonyUI →](11-harmony-ui.md)
+[← Troubleshooting](10-troubleshooting.md) | [Manual index](README.md) | [Next: HarmonyUI →](12-harmony-ui.md)
 
 ---
 
 > **Canonical run guide:** [`../running-harmony.md`](../running-harmony.md) (conda, paths, Visual Studio, troubleshooting). This chapter is the detailed **CLI** reference for the `Harmony` executable.
 >
-> For interactive use with embedded plots, see [Chapter 11 — HarmonyUI](11-harmony-ui.md).
+> For interactive use with embedded plots, see [Chapter 12 — HarmonyUI](12-harmony-ui.md).
 > Docs map: [`../README.md`](../README.md).
 
 After you have built Harmony (see [Chapter 2 § Build](02-getting-started.md#24-build-the-main-executable)), use the **`Harmony`** executable to run **C++ examples** or **JSON simulation files**. No recompile is needed to switch studies. **`HarmonyUI`** is a separate target for the graphical launcher.
@@ -25,7 +25,7 @@ build\Release\Harmony.exe --help
 
 ---
 
-## 10.1 Overview
+## 11.1 Overview
 
 | Mode | Flag | Purpose |
 |------|------|---------|
@@ -45,7 +45,7 @@ Common options:
 
 ---
 
-## 10.2 Help and discovery
+## 11.2 Help and discovery
 
 ```bash
 ./build/Harmony --help
@@ -57,7 +57,7 @@ Example names in `--list-cpp` omit the `example_` prefix (e.g. `stability_check`
 
 ---
 
-## 10.3 Run a C++ example
+## 11.3 Run a C++ example
 
 ```bash
 ./build/Harmony --cpp stability_check
@@ -77,7 +77,7 @@ Set the **working directory** to the repository root.
 
 ---
 
-## 10.4 Run a JSON simulation
+## 11.4 Run a JSON simulation
 
 ```bash
 ./build/Harmony --json example.json
@@ -116,7 +116,7 @@ JSON format and component types: [Chapter 5](05-json-input.md) and [`../input-fi
 
 ---
 
-## 10.5 Example names (C++)
+## 11.5 Example names (C++)
 
 | CLI name | Topic |
 |----------|--------|
@@ -132,7 +132,7 @@ Run `./build/Harmony --list-cpp` (or `build\Release\Harmony.exe --list-cpp` on W
 
 ---
 
-## 10.6 JSON computations from the CLI
+## 11.6 JSON computations from the CLI
 
 When using `--json`, the `computations` array in the file runs after the network is built. Supported types include:
 
@@ -162,7 +162,7 @@ Example DQsym block:
 
 ---
 
-## 10.7 Runtime issues
+## 11.7 Runtime issues
 
 ### Executable exits immediately (Windows)
 
@@ -185,12 +185,12 @@ Use an explicit path, or add `--search-path`. Confirm the file exists:
 
 JSON runs with `"plot": true` or `"plot_result": true` keep the CLI open until the **Harmony Visualization** window closes. Use `--no-plot`, or use **HarmonyUI** with the **Plot** checkbox for interactive viewing without blocking a script.
 
-More build and environment issues: [Chapter 9](09-troubleshooting.md).
+More build and environment issues: [Chapter 10](10-troubleshooting.md).
 
 ---
 
-## 10.8 Adding new examples (developers)
+## 11.8 Adding new examples (developers)
 
 To expose a new C++ example on the command line, register it in `src/cli.cpp`. You do not need to edit `src/main.cpp` or rebuild to switch between already-registered examples. New examples appear automatically in **HarmonyUI** dropdowns after rebuild.
 
-[← Troubleshooting](09-troubleshooting.md) | [Manual index](README.md) | [Next: HarmonyUI →](11-harmony-ui.md)
+[← Troubleshooting](10-troubleshooting.md) | [Manual index](README.md) | [Next: HarmonyUI →](12-harmony-ui.md)

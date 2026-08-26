@@ -19,7 +19,7 @@ build\Release\Harmony.exe --list-json
 ./build/Harmony --json example.json --verbose
 ```
 
-Full run instructions: [**Running Harmony**](running-harmony.md). By default Harmony searches `src/examples`, `src/examples/json`, `src/json`, `examples`, and `.`. Override with the `HARMONY_JSON_PATH` environment variable or `--json-path`; append with `--search-path`. CLI details: [User Manual Chapter 10](manual/10-command-line.md).
+Full run instructions: [**Running Harmony**](running-harmony.md). By default Harmony searches `src/examples`, `src/examples/json`, `src/json`, `examples`, and `.`. Override with the `HARMONY_JSON_PATH` environment variable or `--json-path`; append with `--search-path`. CLI details: [User Manual Chapter 11](manual/11-command-line.md).
 
 ## Top-level structure
 
@@ -191,6 +191,6 @@ JSON plot flags are honored only when the CLI is run without `--no-plot`.
 Documentation map: [`docs/README.md`](README.md).
 
 - [User Manual — JSON workflow](manual/05-json-input.md)
-- [User Manual — Command-line interface](manual/10-command-line.md)
+- [User Manual — Command-line interface](manual/11-command-line.md)
 - [Running Harmony](running-harmony.md)
 - Build and install: [`installation.md`](installation.md)

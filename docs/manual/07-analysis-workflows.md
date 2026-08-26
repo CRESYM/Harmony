@@ -1,6 +1,6 @@
 # Chapter 7 — Analysis Workflows
 
-[← Component reference](06-component-reference.md) | [Manual index](README.md) | [Next: Examples catalog →](08-examples-catalog.md)
+[← Component reference](06-component-reference.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Certificates →](08-certificates.md)
 
 ---
 
@@ -8,7 +8,7 @@
 
 After building a `Network`, you invoke a **solver** appropriate to the study type. This chapter describes the main workflows and points to example code.
 
-**How to run:** [`../running-harmony.md`](../running-harmony.md). Use **HarmonyUI** for interactive runs with optional embedded plots ([Chapter 11](11-harmony-ui.md)), or the **`Harmony` CLI** for scripts and CI:
+**How to run:** [`../running-harmony.md`](../running-harmony.md). Use **HarmonyUI** for interactive runs with optional embedded plots ([Chapter 12](12-harmony-ui.md)), or the **`Harmony` CLI** for scripts and CI:
 
 ```bash
 HarmonyUI                             # graphical launcher (build target HarmonyUI)
@@ -464,10 +464,10 @@ Decentralized **passivity / phase / geometric** screens on top of `Y(jω)` and `
 
 **Run:** `Harmony --cpp certificate_figures`
 
-Full API, metrics, and test filters: [`../certificates.md`](../certificates.md).
+Full API, metrics, and test filters: [Chapter 8 — Certificates](08-certificates.md).
 
 ---
 
 See [`../running-harmony.md`](../running-harmony.md) for CLI usage. Docs map: [`../README.md`](../README.md).
 
-[← Component reference](06-component-reference.md) | [Manual index](README.md) | [Next: Examples catalog →](08-examples-catalog.md)
+[← Component reference](06-component-reference.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Certificates →](08-certificates.md)

@@ -1,5 +1,7 @@
 # Running Harmony
 
+![Harmony overview](../install/res/HARMONY_figure.png)
+
 After [building](installation.md), you can run studies in two ways:
 
 - **`HarmonyUI`** — graphical launcher (recommended for interactive use): pick examples, optional plots in the same window, log panel.
@@ -7,7 +9,7 @@ After [building](installation.md), you can run studies in two ways:
 
 Both use the same solvers and JSON pipeline. Activate the conda environment before either executable.
 
-**Docs map:** [docs/README.md](README.md) · **Tutorials:** [User Manual](manual/README.md) · **CLI detail:** [Chapter 10](manual/10-command-line.md) · **GUI detail:** [Chapter 11](manual/11-harmony-ui.md)
+**Docs map:** [docs/README.md](README.md) · **Tutorials:** [User Manual](manual/README.md) · **CLI detail:** [Chapter 11](manual/11-command-line.md) · **GUI detail:** [Chapter 12](manual/12-harmony-ui.md)
 
 ---
 
@@ -57,7 +59,7 @@ build\Release\HarmonyUI.exe
 2. Check **Plot** only if you want charts.
 3. Click **Run** — output goes to **Log**; charts appear under **Plots** when enabled.
 
-Full UI guide: [User Manual — Chapter 11](manual/11-harmony-ui.md).
+Full UI guide: [User Manual — Chapter 12](manual/12-harmony-ui.md).
 
 ---
 
@@ -162,9 +164,9 @@ Common examples:
 | `wt_type_3`, `pv_plant` | RES models |
 | `dqsym_rlc`, `dqsym_simple_mmc` | Dynamic phasor (DQsym) |
 
-See also [`docs/certificates.md`](certificates.md) for the five certificate workflows (device gate, PnP library, operating region, GFM tuning, local vs system).
+See also [Manual Chapter 8 — Certificates](manual/08-certificates.md) for the five certificate workflows (device gate, PnP library, operating region, GFM tuning, local vs system).
 
-Full catalog: [User Manual — Examples](manual/08-examples-catalog.md).
+Full catalog: [User Manual — Examples](manual/09-examples-catalog.md).
 
 ---
 
@@ -230,7 +232,7 @@ DQsym JSON runs may write debug text files to the current directory (`state_spac
 | HarmonyUI: no charts | Check **Plot** before Run; JSON needs `"plot": true` or `"plot_result": true`. |
 | ImGui focus / plot crash (old builds) | Use current HarmonyUI with embedded **Plots** tab (single window). |
 
-More detail: [User Manual — Troubleshooting](manual/09-troubleshooting.md), [Chapter 10 — CLI](manual/10-command-line.md), [Chapter 11 — HarmonyUI](manual/11-harmony-ui.md).
+More detail: [User Manual — Troubleshooting](manual/10-troubleshooting.md), [Chapter 11 — CLI](manual/11-command-line.md), [Chapter 12 — HarmonyUI](manual/12-harmony-ui.md).
 
 ---
 
@@ -239,10 +241,10 @@ More detail: [User Manual — Troubleshooting](manual/09-troubleshooting.md), [C
 Documentation map: [`docs/README.md`](README.md).
 
 - [Installation](installation.md) — build the executables
-- [HarmonyUI (Chapter 11)](manual/11-harmony-ui.md) — graphical launcher
-- [CLI reference (Chapter 10)](manual/10-command-line.md)
+- [HarmonyUI (Chapter 12)](manual/12-harmony-ui.md) — graphical launcher
+- [CLI reference (Chapter 11)](manual/11-command-line.md)
 - [User Manual](manual/README.md) — workflows and components
 - [JSON input format](input-file-format.md) — schema for `--json`
-- [Certificates](certificates.md) — passivity / geometric screens
-- [Troubleshooting (Chapter 9)](manual/09-troubleshooting.md)
+- [Certificates (Chapter 8)](manual/08-certificates.md) — passivity / geometric screens
+- [Troubleshooting (Chapter 10)](manual/10-troubleshooting.md)
 - [Developer guide](developer-guide.md) · [Maintainer guide](maintainer-guide.md) · [Doxygen](doxygen/README.md)

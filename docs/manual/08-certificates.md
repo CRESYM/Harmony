@@ -1,10 +1,14 @@
-# Certificates in Harmony
+# Chapter 8 — Certificates
+
+[← Analysis workflows](07-analysis-workflows.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Examples catalog →](09-examples-catalog.md)
 
 Decentralized **passivity / phase / geometric** device certificates on top of Harmony’s `Y(jω)` and `H = Y Z_eq` pipelines.
 
-Narrative context: [User Manual — Chapter 7 § Certificates](manual/07-analysis-workflows.md#710-device-certificates). Docs map: [`docs/README.md`](README.md).
+Narrative overview: [Chapter 7 § 7.10](07-analysis-workflows.md#710-device-certificates). Docs map: [`../README.md`](../README.md).
 
-## Workflows
+---
+
+## 8.1 Workflows
 
 | # | API | Purpose |
 |---|-----|---------|
@@ -16,7 +20,9 @@ Narrative context: [User Manual — Chapter 7 § Certificates](manual/07-analysi
 
 Paper-style ImPlot figures: `plot_certificate_*` in `Stability_certificate.h`.
 
-## Geometric metrics
+---
+
+## 8.2 Geometric metrics
 
 Implemented in `Geometric_certificates.h` and always filled into each `CertificateSweep`:
 
@@ -32,14 +38,20 @@ Implemented in `Geometric_certificates.h` and always filled into each `Certifica
 
 Plots: `plot_certificate_numerical_range`, `plot_certificate_dw_shell` (xz projection of sampled DW shell), `plot_certificate_geometric_sweep`.
 
-## Run the demo
+---
+
+## 8.3 Run the demo
 
 ```bash
 Harmony --cpp certificate_figures
 Harmony --cpp certificate_figures --no-plot
 ```
 
-## Unit tests (geometric certificates)
+Also available from **HarmonyUI** (Launcher → C++ examples).
+
+---
+
+## 8.4 Unit tests
 
 Build `testharmony` from `tests/`, then:
 
@@ -58,21 +70,29 @@ End-to-end demo case (GFM local FAIL vs `I+H` PASS): `certificate_figures`.
 
 Outputs under `files/`: device/system sweeps, operating region CSV, PnP library JSON, tuning before/after.
 
-## Spec
+---
+
+## 8.5 Spec
 
 `CertificateSpec` controls frequency grid, AC dq block, phase limit, passivity ε, shifted passivity δ, gain limit, sector `[α,β]`, and which gates are enforced.
 
-## Honesty / scope
+---
+
+## 8.6 Honesty / scope
 
 - Device checks are **sufficient local screens**, not a replacement for full eigenvalue / Nyquist studies.
 - GFM MMCs often **fail** strict passivity; NR phase / shortage maps make that visible vs `H`.
 - DW support here is a **sampled shell + NR projection** (DW-lite). It is **not** a full projected-shell interconnection theorem between converter and network DW shells.
 - Full SRG composition and dynamic multipliers are still future work.
 
+---
+
 ## Related documentation
 
-- [Docs index](README.md)
-- [User Manual Ch. 7 — Analysis workflows](manual/07-analysis-workflows.md)
-- [Running Harmony](running-harmony.md) — how to launch `certificate_figures`
-- [Examples catalog](manual/08-examples-catalog.md)
-- [Installation](installation.md) · [Developer guide](developer-guide.md) · [Doxygen](doxygen/README.md)
+- [Docs index](../README.md)
+- [Chapter 7 — Analysis workflows](07-analysis-workflows.md)
+- [`../running-harmony.md`](../running-harmony.md) — how to launch `certificate_figures`
+- [Chapter 9 — Examples catalog](09-examples-catalog.md)
+- [`../installation.md`](../installation.md) · [`../developer-guide.md`](../developer-guide.md) · [`../doxygen/README.md`](../doxygen/README.md)
+
+[← Analysis workflows](07-analysis-workflows.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Examples catalog →](09-examples-catalog.md)

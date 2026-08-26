@@ -20,7 +20,7 @@ Full run instructions: [`../running-harmony.md`](../running-harmony.md). It is s
 
 Full field-level specification: [`../input-file-format.md`](../input-file-format.md). Docs map: [`../README.md`](../README.md).
 
-JSON cases mirroring C++ examples live under `src/examples/json/` (see [Chapter 8 § JSON examples](08-examples-catalog.md#86-json-examples-from-c-examples)).
+JSON cases mirroring C++ examples live under `src/examples/json/` (see [Chapter 9 § JSON examples](09-examples-catalog.md#96-json-examples-from-c-examples)).
 
 ---
 
@@ -40,7 +40,7 @@ build\Release\Harmony.exe --search-path /path/to/cases --json my_case.json
 ./build/Harmony --json example.json --verbose
 ```
 
-Full run guide: [`../running-harmony.md`](../running-harmony.md). CLI reference: [Chapter 10](10-command-line.md).
+Full run guide: [`../running-harmony.md`](../running-harmony.md). CLI reference: [Chapter 11](11-command-line.md).
 
 ---
 

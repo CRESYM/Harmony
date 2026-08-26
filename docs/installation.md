@@ -1,5 +1,7 @@
 # Installation Instructions
 
+![Harmony overview](../install/res/HARMONY_figure.png)
+
 This document describes how to set up a development environment that allows you to compile and run Harmony.
 
 **Docs map:** [docs/README.md](README.md) · **Tutorial path:** [User Manual Ch. 2](manual/02-getting-started.md) · **After build:** [running-harmony.md](running-harmony.md)
@@ -243,7 +245,7 @@ build\Release\Harmony.exe --json src/examples/json/stability_check.json
 | Disable plots | Leave **Plot** unchecked | `--no-plot` |
 | List examples | Dropdown menus | `--list-cpp`, `--list-json` |
 
-Full details: [Running Harmony](running-harmony.md), [User Manual — HarmonyUI](manual/11-harmony-ui.md).
+Full details: [Running Harmony](running-harmony.md), [User Manual — HarmonyUI](manual/12-harmony-ui.md).
 
 **Visual Studio:** Set **HarmonyUI** as the startup project for the GUI, or **Harmony** for CLI debugging. Set **Working Directory** to the repository root. For **Harmony**, add **Command Arguments** such as `--cpp stability_check --no-plot` or `--json src/examples/json/stability_check.json`. See [Running Harmony — Visual Studio](running-harmony.md#visual-studio).
 

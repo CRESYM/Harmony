@@ -1,6 +1,6 @@
-# Chapter 11 — HarmonyUI (graphical launcher)
+# Chapter 12 — HarmonyUI (graphical launcher)
 
-[← Command-line interface](10-command-line.md) | [Manual index](README.md)
+[← Command-line interface](11-command-line.md) | [Manual index](README.md) | [Docs map](../README.md) 
 
 ---
 
@@ -15,7 +15,7 @@ Both link the same solvers and JSON pipeline. The CLI is unchanged for automatio
 
 ---
 
-## 11.1 Build and launch
+## 12.1 Build and launch
 
 From the repository root with `(harmony)` active:
 
@@ -47,7 +47,7 @@ Typical output paths:
 
 ---
 
-## 11.2 Main window layout
+## 12.2 Main window layout
 
 HarmonyUI uses a single window with three sections (top buttons):
 
@@ -61,7 +61,7 @@ After a successful run with **Plot** enabled, HarmonyUI switches to the **Plots*
 
 ---
 
-## 11.3 Running a study
+## 12.3 Running a study
 
 1. Open **Launcher**.
 2. Choose **C++ example** or **JSON file**.
@@ -83,7 +83,7 @@ JSON plot flags are still honoured only when **Plot** is checked in HarmonyUI.
 
 ---
 
-## 11.4 OPF examples
+## 12.4 OPF examples
 
 All bundled OPF cases are listed in the dropdowns (not hidden when Gurobi is missing):
 
@@ -100,7 +100,7 @@ If Gurobi is not installed or licensed, OPF runs fail with an error in **Log**; 
 
 ---
 
-## 11.5 Saving plots as PNG
+## 12.5 Saving plots as PNG
 
 - **Per tab:** In **Plots**, each chart tab has a **Save PNG** button (top-right of the tab).
 - **All tabs:** **Save all tabs as PNG** on the Plots toolbar saves every open chart.
@@ -110,13 +110,13 @@ PNG capture uses the HarmonyUI window; plots are embedded in the same process (n
 
 ---
 
-## 11.6 Validate JSON
+## 12.6 Validate JSON
 
 On the Launcher tab, with **JSON file** selected, click **Validate JSON** to parse and schema-check the file without running solvers. Errors are written to **Log**.
 
 ---
 
-## 11.7 CLI vs HarmonyUI (plotting)
+## 12.7 CLI vs HarmonyUI (plotting)
 
 | Aspect | HarmonyUI | `Harmony` CLI |
 |--------|-----------|---------------|
@@ -134,7 +134,7 @@ Harmony --cpp opf_csv --verbose
 
 ---
 
-## 11.8 Troubleshooting
+## 12.8 Troubleshooting
 
 | Problem | What to do |
 |---------|------------|
@@ -144,17 +144,17 @@ Harmony --cpp opf_csv --verbose
 | DLL error on start (Windows `0xC0000135`) | `conda activate harmony` before launching. |
 | ImGui / focus errors (older builds) | Update to a build with **embedded plots** (single window). Do not run HarmonyUI and the old separate visualization window together. |
 
-More: [Chapter 9 — Troubleshooting](09-troubleshooting.md), [`../running-harmony.md`](../running-harmony.md).
+More: [Chapter 10 — Troubleshooting](10-troubleshooting.md), [`../running-harmony.md`](../running-harmony.md).
 
 ---
 
-## 11.9 Related documentation
+## 12.9 Related documentation
 
 - [`../README.md`](../README.md) — documentation index
 - [`../running-harmony.md`](../running-harmony.md) — conda, paths, CLI flags
-- [Chapter 10 — Command-line interface](10-command-line.md) — `Harmony` executable reference
-- [Chapter 8 — Examples catalog](08-examples-catalog.md) — JSON files in `src/examples/json/`
+- [Chapter 11 — Command-line interface](11-command-line.md) — `Harmony` executable reference
+- [Chapter 9 — Examples catalog](09-examples-catalog.md) — JSON files in `src/examples/json/`
 - [Chapter 5 — JSON input](05-json-input.md) — `computations` and plot flags
-- [Chapter 9 — Troubleshooting](09-troubleshooting.md)
+- [Chapter 10 — Troubleshooting](10-troubleshooting.md)
 
-[← Command-line interface](10-command-line.md) | [Manual index](README.md)
+[← Command-line interface](11-command-line.md) | [Manual index](README.md) | [Docs map](../README.md)

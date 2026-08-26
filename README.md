@@ -172,7 +172,7 @@ Start at the **[documentation index](docs/README.md)** — it maps the user manu
 | Install / build / test | [installation.md](docs/installation.md) |
 | Run GUI / CLI | [running-harmony.md](docs/running-harmony.md) |
 | JSON schema | [input-file-format.md](docs/input-file-format.md) |
-| Certificates | [certificates.md](docs/certificates.md) |
+| Certificates | [Manual Ch. 8](docs/manual/08-certificates.md) |
 | Extend / contribute | [developer-guide.md](docs/developer-guide.md) |
 | CI / packaging | [maintainer-guide.md](docs/maintainer-guide.md) |
 | C++ API (Doxygen) | [doxygen/README.md](docs/doxygen/README.md) |

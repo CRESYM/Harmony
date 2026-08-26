@@ -110,5 +110,5 @@ Documentation map: [`../README.md`](../README.md).
 
 - [Installation](../installation.md) · [**Running Harmony**](../running-harmony.md)
 - [User Manual](../manual/README.md) — workflows and tutorials
-- [Input file format](../input-file-format.md) · [Certificates](../certificates.md)
+- [Input file format](../input-file-format.md) · [Certificates](../manual/08-certificates.md)
 - [Developer guide](../developer-guide.md) · [Maintainer guide](../maintainer-guide.md)

@@ -12,7 +12,7 @@ This chapter walks through installing Harmony, building it, running an example, 
 |-------|----------|
 | This chapter | Short path to a working build |
 | Platform detail / screenshots | [`../installation.md`](../installation.md) |
-| How to run studies after building | [`../running-harmony.md`](../running-harmony.md), [Chapter 10](10-command-line.md), [Chapter 11](11-harmony-ui.md) |
+| How to run studies after building | [`../running-harmony.md`](../running-harmony.md), [Chapter 11](11-command-line.md), [Chapter 12](12-harmony-ui.md) |
 | Full docs map | [`../README.md`](../README.md) |
 
 Supported platforms: **Windows**, **Linux** (Ubuntu 22.04+ tested), **macOS** (Sequoia tested).
@@ -88,7 +88,7 @@ build\Release\HarmonyUI.exe
 ./build/HarmonyUI
 ```
 
-On **Launcher**, pick a C++ example or JSON file, optionally check **Plot**, then **Run**. Output appears under **Log**; charts under **Plots** when enabled. See [Chapter 11 — HarmonyUI](11-harmony-ui.md).
+On **Launcher**, pick a C++ example or JSON file, optionally check **Plot**, then **Run**. Output appears under **Log**; charts under **Plots** when enabled. See [Chapter 12 — HarmonyUI](12-harmony-ui.md).
 
 ### Harmony (CLI)
 
@@ -150,7 +150,7 @@ See [Chapter 5](05-json-input.md) and [`../running-harmony.md`](../running-harmo
 | Replace JSON search dirs | `--json-path <dir>` or `HARMONY_JSON_PATH` |
 | Append JSON search dir | `--search-path <dir>` |
 
-Full reference: [Chapter 10 — Command-line interface](10-command-line.md).
+Full reference: [Chapter 11 — Command-line interface](11-command-line.md).
 
 ---
 
@@ -191,7 +191,7 @@ Tests cover network wiring, individual elements, MMC Y-matrices, state-space for
 | 3 | Run `Harmony --cpp mmc` to inspect a single converter |
 | 4 | Run `Harmony --cpp stability_check` for a full AC–DC study |
 | 5 | Run `Harmony --json src/examples/json/stability_check.json` ([Chapter 5](05-json-input.md)) |
-| 6 | Try **HarmonyUI** for interactive runs ([Chapter 11](11-harmony-ui.md)) |
+| 6 | Try **HarmonyUI** for interactive runs ([Chapter 12](12-harmony-ui.md)) |
 | 7 | Explore OPF: `Harmony --cpp opf` or `--cpp opf_csv` |
 
 ---

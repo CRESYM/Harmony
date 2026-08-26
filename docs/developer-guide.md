@@ -41,7 +41,7 @@ API comments: use Doxygen `/** … */` so they appear in the generated reference
 1. Add `src/examples/example_*.cpp` and declare it in [`sources.cmake`](../sources.cmake) + `Examples.h`.
 2. Register the CLI name in `src/cli.cpp` (see existing `--cpp` entries).
 3. Optionally add a mirror JSON under `src/examples/json/`.
-4. List it in [Manual Ch. 8](manual/08-examples-catalog.md).
+4. List it in [Manual Ch. 9](manual/09-examples-catalog.md).
 
 ## Related documentation
 

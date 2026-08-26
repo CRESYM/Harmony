@@ -1,12 +1,12 @@
-# Chapter 9 — Troubleshooting
+# Chapter 10 — Troubleshooting
 
-[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Command-line interface →](10-command-line.md) | [HarmonyUI →](11-harmony-ui.md)
+[← Examples catalog](09-examples-catalog.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Command-line interface →](11-command-line.md) | [HarmonyUI →](12-harmony-ui.md)
 
 ---
 
 > **Running Harmony:** [`../running-harmony.md`](../running-harmony.md) — conda activation, working directory, CLI flags, and common run failures.
 
-## 9.1 Build and environment
+## 10.1 Build and environment
 
 ### `(harmony)` not shown in terminal
 
@@ -52,7 +52,7 @@ Gurobi provides separate C++ wrapper libraries for Debug (`gurobi_c++mdd*.lib`) 
 
 ---
 
-## 9.2 Runtime errors
+## 10.2 Runtime errors
 
 ### `[WARNING] Pin mismatch`
 
@@ -122,7 +122,7 @@ Component references a bus id not defined in `"buses"`, or the bus has `"enabled
 
 ---
 
-## 9.3 Model assembly
+## 10.3 Model assembly
 
 ### Converter missing from area summary
 
@@ -147,7 +147,7 @@ Component references a bus id not defined in `"buses"`, or the bus has `"enabled
 
 ---
 
-## 9.4 Memory and crashes on exit
+## 10.4 Memory and crashes on exit
 
 Harmony expects the `Network` to own all heap-allocated buses and elements. Do not delete objects after handing them to `connectElementToBus`.
 
@@ -158,16 +158,16 @@ If extending the code:
 
 ---
 
-## 9.5 Getting help
+## 10.5 Getting help
 
 1. Check GitHub [Issues](https://github.com/CRESYM/Harmony/issues) for known problems
 2. Run `ctest` to isolate library vs example issues
-3. Compare against the closest bundled example from [Chapter 8](08-examples-catalog.md)
+3. Compare against the closest bundled example from [Chapter 9](09-examples-catalog.md)
 4. Include Harmony commit hash, OS, conda environment export, and minimal reproduction when reporting bugs
 
 ---
 
-## 9.6 Known limitations (current release)
+## 10.6 Known limitations (current release)
 
 | Limitation | Workaround |
 |------------|------------|
@@ -175,4 +175,4 @@ If extending the code:
 | `equivalent_impedance` not in JSON | C++ `StabilityEstimate` API |
 | User manual PDF not auto-generated from this draft | Export Markdown via Pandoc or publish to GitHub Pages |
 
-[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Command-line interface →](10-command-line.md) | [HarmonyUI →](11-harmony-ui.md)
+[← Examples catalog](09-examples-catalog.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Command-line interface →](11-command-line.md) | [HarmonyUI →](12-harmony-ui.md)

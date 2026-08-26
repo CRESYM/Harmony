@@ -1,6 +1,6 @@
-# Chapter 8 — Examples Catalog
+# Chapter 9 — Examples Catalog
 
-[← Analysis workflows](07-analysis-workflows.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Troubleshooting →](09-troubleshooting.md)
+[← Certificates](08-certificates.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Troubleshooting →](10-troubleshooting.md)
 
 ---
 
@@ -19,7 +19,7 @@ Harmony --list-json
 Harmony --json src/examples/json/<file>.json
 ```
 
-See [`../running-harmony.md`](../running-harmony.md), [Chapter 11 — HarmonyUI](11-harmony-ui.md), and [Chapter 10](10-command-line.md). Example names drop the `example_` prefix (`example_MMC` → `--cpp mmc`).
+See [`../running-harmony.md`](../running-harmony.md), [Chapter 12 — HarmonyUI](12-harmony-ui.md), and [Chapter 11](11-command-line.md). Example names drop the `example_` prefix (`example_MMC` → `--cpp mmc`).
 
 In **HarmonyUI**, OPF examples appear in a group at the top of each dropdown. Check **Plot** before **Run** to view charts in the **Plots** tab.
 
@@ -27,7 +27,7 @@ Most plotting examples accept `bool plotting_enabled = true`. Use `--no-plot` in
 
 ---
 
-## 8.1 Component demonstrations
+## 9.1 Component demonstrations
 
 | Example | `--cpp` name | File |
 |---------|--------------|------|
@@ -44,7 +44,7 @@ Most plotting examples accept `bool plotting_enabled = true`. Use `--no-plot` in
 
 ---
 
-## 8.2 Solver examples — OPF
+## 9.2 Solver examples — OPF
 
 | Example | `--cpp` name | File | Description |
 |---------|--------------|------|-------------|
@@ -60,7 +60,7 @@ Most plotting examples accept `bool plotting_enabled = true`. Use `--no-plot` in
 
 ---
 
-## 8.3 Solver examples — DQsym
+## 9.3 Solver examples — DQsym
 
 | Example | `--cpp` name | File | Description |
 |---------|--------------|------|-------------|
@@ -73,7 +73,7 @@ Most plotting examples accept `bool plotting_enabled = true`. Use `--no-plot` in
 
 ---
 
-## 8.4 Solver examples — state-space and stability
+## 9.4 Solver examples — state-space and stability
 
 | Example | `--cpp` name | File | Description |
 |---------|--------------|------|-------------|
@@ -83,7 +83,7 @@ Most plotting examples accept `bool plotting_enabled = true`. Use `--no-plot` in
 
 ---
 
-## 8.5 How to switch examples
+## 9.5 How to switch examples
 
 From the **repository root** with `(harmony)` active:
 
@@ -104,7 +104,7 @@ CLI names drop the `example_` prefix (`example_stability_check` → `stability_c
 
 ---
 
-## 8.6 JSON examples (from C++ examples)
+## 9.6 JSON examples (from C++ examples)
 
 JSON equivalents of bundled C++ demos are in `src/examples/json/`:
 
@@ -142,7 +142,7 @@ CSV OPF reads `src/data/` relative to the repo (auto-detected from the working d
 
 ---
 
-## 8.7 CI coverage
+## 9.7 CI coverage
 
 GitHub Actions workflows on Windows, Linux, and macOS:
 
@@ -153,11 +153,11 @@ HarmonyUI is compile-tested on all three platforms; example workflows use the CL
 
 ---
 
-## 8.8 Suggested example by user goal
+## 9.8 Suggested example by user goal
 
 | Goal | Start with |
 |------|------------|
-| Interactive exploration | **HarmonyUI** → pick example → **Run** ([Chapter 11](11-harmony-ui.md)) |
+| Interactive exploration | **HarmonyUI** → pick example → **Run** ([Chapter 12](12-harmony-ui.md)) |
 | Learn network assembly | `--cpp constructors`, `--cpp state_space` |
 | Understand MMC | `--cpp mmc` |
 | Full hybrid stability | `--cpp stability_check` |
@@ -166,4 +166,4 @@ HarmonyUI is compile-tested on all three platforms; example workflows use the CL
 | RES integration | `--cpp pv_plant`, `--cpp opf_pv` |
 | Lines and cables | `--cpp cable`, `--cpp ohl` |
 
-[← Analysis workflows](07-analysis-workflows.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Troubleshooting →](09-troubleshooting.md)
+[← Certificates](08-certificates.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Troubleshooting →](10-troubleshooting.md)

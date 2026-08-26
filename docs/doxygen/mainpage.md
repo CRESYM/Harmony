@@ -19,7 +19,7 @@ with high power-electronics penetration.
 - [**Running Harmony**](../running-harmony.md) — command-line usage (`--cpp`, `--json`)
 - [User Manual](../manual/README.md) — installation, workflows, and examples
 - [JSON input format](../input-file-format.md) — schema for `--json`
-- [Certificates](../certificates.md) — passivity / geometric screens
+- [Certificates](../manual/08-certificates.md) — passivity / geometric screens
 
 ## License
 
