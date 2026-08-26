@@ -6,8 +6,6 @@
 - **Running Harmony** — [`running-harmony.md`](running-harmony.md) (CLI: `--cpp`, `--json`)
 - **JSON input format** — [`input-file-format.md`](input-file-format.md)
 - **Doxygen-style comments** — partial (`@brief` in solvers, some elements); no `Doxyfile`
-- **User manual PDF** — referenced in README/installer but **not in this repository**
-- **Class diagram** — [`Harmony.cd`](Harmony.cd)
 
 ![alt text](/install/res/HARMONY_figure.png?raw=true) 
 
