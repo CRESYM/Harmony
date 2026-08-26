@@ -9,7 +9,7 @@
 - **User manual PDF** — referenced in README/installer but **not in this repository**
 - **Class diagram** — [`Harmony.cd`](Harmony.cd)
 
-## Documentation types I can add
+![alt text](/install/res/HARMONY_figure.png?raw=true) 
 
 ### Doxygen API reference
 
