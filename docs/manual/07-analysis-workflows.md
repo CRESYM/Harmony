@@ -448,6 +448,26 @@ These require programmatic bus/element selection; not yet exposed in JSON.
 2. Configure DQsym with appropriate `dt` and output buses
 3. Apply breaker function if modeling switching events
 
-See [`../running-harmony.md`](../running-harmony.md) for CLI usage.
+---
+
+## 7.10 Device certificates
+
+Decentralized **passivity / phase / geometric** screens on top of `Y(jω)` and `H = Y Z_eq`:
+
+| Workflow | Purpose |
+|----------|---------|
+| Device gate | Local allow/block before interconnect |
+| PnP library | Catalog of gate results (JSON/CSV) |
+| Operating region | (P,Q) / post-OPF setpoint check |
+| GFM droop tune | Search droops to restore certificates |
+| Local vs system | Local Y vs system `Her(I+H)` |
+
+**Run:** `Harmony --cpp certificate_figures`
+
+Full API, metrics, and test filters: [`../certificates.md`](../certificates.md).
+
+---
+
+See [`../running-harmony.md`](../running-harmony.md) for CLI usage. Docs map: [`../README.md`](../README.md).
 
 [← Component reference](06-component-reference.md) | [Manual index](README.md) | [Next: Examples catalog →](08-examples-catalog.md)

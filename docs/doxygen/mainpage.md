@@ -15,9 +15,11 @@ with high power-electronics penetration.
 
 ## User documentation
 
+- [**Documentation index**](../README.md) — map of all docs
 - [**Running Harmony**](../running-harmony.md) — command-line usage (`--cpp`, `--json`)
 - [User Manual](../manual/README.md) — installation, workflows, and examples
 - [JSON input format](../input-file-format.md) — schema for `--json`
+- [Certificates](../certificates.md) — passivity / geometric screens
 
 ## License
 

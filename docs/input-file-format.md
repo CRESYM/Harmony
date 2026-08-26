@@ -188,6 +188,9 @@ JSON plot flags are honored only when the CLI is run without `--no-plot`.
 
 ## See also
 
-- [User Manual — Command-line interface](manual/10-command-line.md)
+Documentation map: [`docs/README.md`](README.md).
+
 - [User Manual — JSON workflow](manual/05-json-input.md)
+- [User Manual — Command-line interface](manual/10-command-line.md)
+- [Running Harmony](running-harmony.md)
 - Build and install: [`installation.md`](installation.md)

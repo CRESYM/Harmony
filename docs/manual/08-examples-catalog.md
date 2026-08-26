@@ -1,6 +1,6 @@
 # Chapter 8 — Examples Catalog
 
-[← Analysis workflows](07-analysis-workflows.md) | [Manual index](README.md) | [Next: Troubleshooting →](09-troubleshooting.md)
+[← Analysis workflows](07-analysis-workflows.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Troubleshooting →](09-troubleshooting.md)
 
 ---
 
@@ -166,4 +166,4 @@ HarmonyUI is compile-tested on all three platforms; example workflows use the CL
 | RES integration | `--cpp pv_plant`, `--cpp opf_pv` |
 | Lines and cables | `--cpp cable`, `--cpp ohl` |
 
-[← Analysis workflows](07-analysis-workflows.md) | [Manual index](README.md) | [Next: Troubleshooting →](09-troubleshooting.md)
+[← Analysis workflows](07-analysis-workflows.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Troubleshooting →](09-troubleshooting.md)

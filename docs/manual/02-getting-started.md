@@ -6,7 +6,14 @@
 
 ## 2.1 Overview
 
-This chapter walks through installing Harmony, building it, running an example, and running the test suite. Detailed platform-specific instructions with screenshots are in [`../installation.md`](../installation.md). **How to run** studies after building: [`../running-harmony.md`](../running-harmony.md) and [Chapter 10](10-command-line.md).
+This chapter walks through installing Harmony, building it, running an example, and running the test suite.
+
+| Depth | Document |
+|-------|----------|
+| This chapter | Short path to a working build |
+| Platform detail / screenshots | [`../installation.md`](../installation.md) |
+| How to run studies after building | [`../running-harmony.md`](../running-harmony.md), [Chapter 10](10-command-line.md), [Chapter 11](11-harmony-ui.md) |
+| Full docs map | [`../README.md`](../README.md) |
 
 Supported platforms: **Windows**, **Linux** (Ubuntu 22.04+ tested), **macOS** (Sequoia tested).
 

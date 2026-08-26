@@ -18,7 +18,7 @@ Full run instructions: [`../running-harmony.md`](../running-harmony.md). It is s
 - Automated batch runs
 - Sharing case definitions with non-developers
 
-Full field-level specification: [`../input-file-format.md`](../input-file-format.md).
+Full field-level specification: [`../input-file-format.md`](../input-file-format.md). Docs map: [`../README.md`](../README.md).
 
 JSON cases mirroring C++ examples live under `src/examples/json/` (see [Chapter 8 § JSON examples](08-examples-catalog.md#86-json-examples-from-c-examples)).
 

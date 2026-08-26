@@ -2,6 +2,8 @@
 
 Decentralized **passivity / phase / geometric** device certificates on top of Harmony’s `Y(jω)` and `H = Y Z_eq` pipelines.
 
+Narrative context: [User Manual — Chapter 7 § Certificates](manual/07-analysis-workflows.md#710-device-certificates). Docs map: [`docs/README.md`](README.md).
+
 ## Workflows
 
 | # | API | Purpose |
@@ -66,3 +68,11 @@ Outputs under `files/`: device/system sweeps, operating region CSV, PnP library 
 - GFM MMCs often **fail** strict passivity; NR phase / shortage maps make that visible vs `H`.
 - DW support here is a **sampled shell + NR projection** (DW-lite). It is **not** a full projected-shell interconnection theorem between converter and network DW shells.
 - Full SRG composition and dynamic multipliers are still future work.
+
+## Related documentation
+
+- [Docs index](README.md)
+- [User Manual Ch. 7 — Analysis workflows](manual/07-analysis-workflows.md)
+- [Running Harmony](running-harmony.md) — how to launch `certificate_figures`
+- [Examples catalog](manual/08-examples-catalog.md)
+- [Installation](installation.md) · [Developer guide](developer-guide.md) · [Doxygen](doxygen/README.md)

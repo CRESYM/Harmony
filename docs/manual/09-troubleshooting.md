@@ -1,6 +1,6 @@
 # Chapter 9 — Troubleshooting
 
-[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md) | [Next: Command-line interface →](10-command-line.md) | [HarmonyUI →](11-harmony-ui.md)
+[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Command-line interface →](10-command-line.md) | [HarmonyUI →](11-harmony-ui.md)
 
 ---
 
@@ -175,4 +175,4 @@ If extending the code:
 | `equivalent_impedance` not in JSON | C++ `StabilityEstimate` API |
 | User manual PDF not auto-generated from this draft | Export Markdown via Pandoc or publish to GitHub Pages |
 
-[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md) | [Next: Command-line interface →](10-command-line.md) | [HarmonyUI →](11-harmony-ui.md)
+[← Examples catalog](08-examples-catalog.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Command-line interface →](10-command-line.md) | [HarmonyUI →](11-harmony-ui.md)

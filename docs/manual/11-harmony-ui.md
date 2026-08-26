@@ -150,9 +150,11 @@ More: [Chapter 9 — Troubleshooting](09-troubleshooting.md), [`../running-harmo
 
 ## 11.9 Related documentation
 
+- [`../README.md`](../README.md) — documentation index
 - [`../running-harmony.md`](../running-harmony.md) — conda, paths, CLI flags
 - [Chapter 10 — Command-line interface](10-command-line.md) — `Harmony` executable reference
 - [Chapter 8 — Examples catalog](08-examples-catalog.md) — JSON files in `src/examples/json/`
 - [Chapter 5 — JSON input](05-json-input.md) — `computations` and plot flags
+- [Chapter 9 — Troubleshooting](09-troubleshooting.md)
 
 [← Command-line interface](10-command-line.md) | [Manual index](README.md)

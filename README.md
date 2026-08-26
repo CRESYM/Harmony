@@ -164,17 +164,18 @@ ctest -j 4
 
 ## Documentation
 
-The project's documentation is available in the [docs](docs/) directory. It includes detailed guides for:
+Start at the **[documentation index](docs/README.md)** — it maps the user manual, install/run guides, JSON reference, certificates, and API docs.
 
-* [Installation](docs/installation.md) - instructions for setting up an environment to build and run Harmony.
-* [Running](docs/running-harmony.md) - instructions for running Harmony.
-* [Input file format](docs/input-file-format.md) - description of the format for JSON input files.
-* [Developers](docs/developer-guide.md) - information for those extending Harmony's functionality, including adding new elements, solvers and tests.
-* [Maintainers](docs/maintainer-guide.md) - information for project maintainers, including CMake structure, adding dependencies and GitHub Actions workflows.
-
-Additional documentation:
-* [User Manual](docs/manual/README.md) - a comprehensive guide to using Harmony, including tutorials and examples.
-* [API documentation (Doxygen)](docs/doxygen/README.md) - reference documentation for the Harmony C++ API.
+| Audience | Document |
+|----------|----------|
+| Tutorials & workflows | [User Manual](docs/manual/README.md) |
+| Install / build / test | [installation.md](docs/installation.md) |
+| Run GUI / CLI | [running-harmony.md](docs/running-harmony.md) |
+| JSON schema | [input-file-format.md](docs/input-file-format.md) |
+| Certificates | [certificates.md](docs/certificates.md) |
+| Extend / contribute | [developer-guide.md](docs/developer-guide.md) |
+| CI / packaging | [maintainer-guide.md](docs/maintainer-guide.md) |
+| C++ API (Doxygen) | [doxygen/README.md](docs/doxygen/README.md) |
 
 
 ## Contributors

@@ -2,6 +2,8 @@
 
 [← Manual index](README.md) | [Next: Getting started →](02-getting-started.md)
 
+**Docs map:** [`../README.md`](../README.md) (all documentation). This chapter is the scope overview for the user manual.
+
 ---
 
 ## 1.1 What is Harmony?

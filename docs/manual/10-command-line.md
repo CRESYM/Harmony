@@ -7,6 +7,7 @@
 > **Canonical run guide:** [`../running-harmony.md`](../running-harmony.md) (conda, paths, Visual Studio, troubleshooting). This chapter is the detailed **CLI** reference for the `Harmony` executable.
 >
 > For interactive use with embedded plots, see [Chapter 11 — HarmonyUI](11-harmony-ui.md).
+> Docs map: [`../README.md`](../README.md).
 
 After you have built Harmony (see [Chapter 2 § Build](02-getting-started.md#24-build-the-main-executable)), use the **`Harmony`** executable to run **C++ examples** or **JSON simulation files**. No recompile is needed to switch studies. **`HarmonyUI`** is a separate target for the graphical launcher.
 

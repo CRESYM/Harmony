@@ -1,6 +1,6 @@
 # Chapter 6 — Component Reference
 
-[← JSON input](05-json-input.md) | [Manual index](README.md) | [Next: Analysis workflows →](07-analysis-workflows.md)
+[← JSON input](05-json-input.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Analysis workflows →](07-analysis-workflows.md)
 
 ---
 
@@ -198,4 +198,4 @@ Many elements store a **symbolic Y-matrix** (SymEngine) internally. At runtime:
 - `writeFile` sweeps frequency logarithmically
 - State-space formation uses MNA stamping from symbolic matrices
 
-[← JSON input](05-json-input.md) | [Manual index](README.md) | [Next: Analysis workflows →](07-analysis-workflows.md)
+[← JSON input](05-json-input.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Analysis workflows →](07-analysis-workflows.md)

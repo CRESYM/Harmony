@@ -7,6 +7,8 @@ After [building](installation.md), you can run studies in two ways:
 
 Both use the same solvers and JSON pipeline. Activate the conda environment before either executable.
 
+**Docs map:** [docs/README.md](README.md) · **Tutorials:** [User Manual](manual/README.md) · **CLI detail:** [Chapter 10](manual/10-command-line.md) · **GUI detail:** [Chapter 11](manual/11-harmony-ui.md)
+
 ---
 
 ## Before you run
@@ -234,8 +236,13 @@ More detail: [User Manual — Troubleshooting](manual/09-troubleshooting.md), [C
 
 ## Related documentation
 
+Documentation map: [`docs/README.md`](README.md).
+
 - [Installation](installation.md) — build the executables
 - [HarmonyUI (Chapter 11)](manual/11-harmony-ui.md) — graphical launcher
+- [CLI reference (Chapter 10)](manual/10-command-line.md)
 - [User Manual](manual/README.md) — workflows and components
 - [JSON input format](input-file-format.md) — schema for `--json`
-- [Command-line reference (Chapter 10)](manual/10-command-line.md)
+- [Certificates](certificates.md) — passivity / geometric screens
+- [Troubleshooting (Chapter 9)](manual/09-troubleshooting.md)
+- [Developer guide](developer-guide.md) · [Maintainer guide](maintainer-guide.md) · [Doxygen](doxygen/README.md)
