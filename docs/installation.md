@@ -1,13 +1,17 @@
 # Installation Instructions
 
-This document describes how to set up a development environment that allows you to compile and run Harmony.   
+![Harmony overview](../install/res/HARMONY_figure.png)
+
+This document describes how to set up a development environment that allows you to compile and run Harmony.
+
+**Docs map:** [docs/README.md](README.md) · **Tutorial path:** [User Manual Ch. 2](manual/02-getting-started.md) · **After build:** [running-harmony.md](running-harmony.md)
 
 Sections:
-* [Prerequisites](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#prerequisites)
-* [Compiling](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#compiling-harmony)
-* [Running](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#running-harmony)
-* [Testing](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#testing)
-* [Related documentation](https://github.com/CRESYM/Harmony/blob/main/docs/installation.md#related-documentation)
+* [Prerequisites](#prerequisites)
+* [Compiling](#compiling-harmony)
+* [Running](#running-harmony)
+* [Testing](#testing)
+* [Related documentation](#related-documentation)
 
 ## Prerequisites 
 Harmony can be compiled on Windows, Linux (tested in Ubuntu 22.04.5), and macOS (tested in Tahoe 26.5). The requirements for each operating system are:
@@ -195,10 +199,16 @@ ctest -j 4
 
 ## Related Documentation
 
-After completing the steps above, you may find the following documentation helpful:
-* [Detailed Running Instructions](running-harmony.md)
-* [Guide for developers](developer-guide.md)
-* [Guide for maintainers](maintainer-guide.md)
+Documentation map: [`docs/README.md`](README.md).
+
+| Next step | Document |
+|-----------|----------|
+| Run studies | [Running Harmony](running-harmony.md) |
+| Tutorials & workflows | [User Manual](manual/README.md) |
+| JSON cases | [input-file-format.md](input-file-format.md) · [Manual Ch. 5](manual/05-json-input.md) |
+| Extend Harmony | [Developer guide](developer-guide.md) |
+| CI / packaging | [Maintainer guide](maintainer-guide.md) |
+| C++ API | [Doxygen](doxygen/README.md) |
 
 
 
@@ -235,7 +245,7 @@ build\Release\Harmony.exe --json src/examples/json/stability_check.json
 | Disable plots | Leave **Plot** unchecked | `--no-plot` |
 | List examples | Dropdown menus | `--list-cpp`, `--list-json` |
 
-Full details: [Running Harmony](running-harmony.md), [User Manual — HarmonyUI](manual/11-harmony-ui.md).
+Full details: [Running Harmony](running-harmony.md), [User Manual — HarmonyUI](manual/12-harmony-ui.md).
 
 **Visual Studio:** Set **HarmonyUI** as the startup project for the GUI, or **Harmony** for CLI debugging. Set **Working Directory** to the repository root. For **Harmony**, add **Command Arguments** such as `--cpp stability_check --no-plot` or `--json src/examples/json/stability_check.json`. See [Running Harmony — Visual Studio](running-harmony.md#visual-studio).
 

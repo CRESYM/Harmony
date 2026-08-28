@@ -1,56 +1,24 @@
-# Documentation Plan for Harmony
+# Documentation roadmap
 
-## Current state
+The live documentation map is **[`docs/README.md`](README.md)**. Use that page (and the [User Manual](manual/README.md)) as the entry point.
 
-- **Installation guide** — [`installation.md`](installation.md)
-- **Running Harmony** — [`running-harmony.md`](running-harmony.md) (CLI: `--cpp`, `--json`)
-- **JSON input format** — [`input-file-format.md`](input-file-format.md)
-- **Doxygen-style comments** — partial (`@brief` in solvers, some elements); no `Doxyfile`
-- **User manual PDF** — referenced in README/installer but **not in this repository**
-- **Class diagram** — [`Harmony.cd`](Harmony.cd)
+## Done
 
-## Documentation types I can add
+| Item | Location |
+|------|----------|
+| Docs hub / index | [`README.md`](README.md) |
+| User manual (Ch. 1–12) | [`manual/`](manual/README.md) |
+| Installation guide | [`installation.md`](installation.md) |
+| Running guide (GUI + CLI) | [`running-harmony.md`](running-harmony.md) |
+| JSON field reference | [`input-file-format.md`](input-file-format.md) |
+| Certificates reference | [`manual/08-certificates.md`](manual/08-certificates.md) |
+| Doxygen API docs | [`doxygen/README.md`](doxygen/README.md) · CI: `.github/workflows/docs.yml` |
 
-### Doxygen API reference
+## Remaining gaps
 
-Best for developers integrating or extending Harmony.
+1. Flesh out [developer-guide.md](developer-guide.md) (add element / solver / test checklists).
+2. Flesh out [maintainer-guide.md](maintainer-guide.md) (CMake, Gurobi Actions secrets, ImPlot notes).
+3. Optional: JSON Schema file for editor validation; PDF export of the manual.
+4. Expand manual figures / MMC parameter tables where examples still rely on source only.
 
-- Class/method reference from `src/` (including `src/json/`)
-- Module pages: Elements, Solvers, Control, Network
-- Inheritance diagrams for `Element` hierarchy
-- CMake `doxygen_add_docs` target + CI artifact (`harmony-api-docs`); public site in separate Pages repo
-
-### User manual (Markdown → PDF or web)
-
-Best for end users running studies.
-
-Suggested chapters:
-
-1. Introduction and scope
-2. Installation (link to `installation.md`)
-3. Running examples and tests
-4. JSON input workflow (`input-file-format.md`)
-5. OPF from CSV case files
-6. Stability assessment workflow
-7. DQsym time-domain simulation
-8. Component parameter reference (MMC, transformers, RES)
-9. Troubleshooting (Gurobi, conda, pin mismatches)
-
-### Other useful docs
-
-- **JSON Schema** — validate input files at parse time
-- **Example gallery** — one page per `example_*.cpp`
-- **CONTRIBUTING.md** — build, test, code style
-- **CHANGELOG.md** — release history
-
-## Recommended priority
-
-1. JSON input docs — [`input-file-format.md`](input-file-format.md) (done)
-2. **User manual draft** — [`manual/README.md`](manual/README.md) (done)
-3. **Doxygen API docs** — [`doxygen/README.md`](doxygen/README.md) (done — build with `-DBUILD_DOCS=ON`)
-4. Expand manual (figures, MMC parameter tables, PDF export)
-5. JSON Schema + MMC/RES JSON builders
-
-**API docs CI:** Doxygen + Graphviz class diagrams are built in [`.github/workflows/docs.yml`](../.github/workflows/docs.yml); download artifact `harmony-api-docs` or build locally, then copy HTML into the separate GitHub Pages repository (see [`doxygen/README.md`](doxygen/README.md)).
-
-Ask which items to implement next.
+Current installs use conda — see [`installation.md`](installation.md).

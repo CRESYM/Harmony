@@ -252,7 +252,8 @@ DQsymResult DQsym::run(Config& cfg)
 
 
     int ny = CdC.rows();
-    int nGroups = ny / 3;
+    const int nGroups = (ny + 2) / 3;   // ceil(ny/3); pad below if ny % 3 != 0
+    const int padRows = nGroups * 3 - ny;
     VectorXcd xo = VectorXcd::Zero(nx);
 
     // ---- Step 2: allocate ----
@@ -385,8 +386,15 @@ DQsymResult DQsym::run(Config& cfg)
             elementStates[name] = groups;
         }
 
-        // 3e. ABC reconstruction
-        auto abcGroups = dqn2abc_groups_at_time(y, theta);
+        // 3e. ABC reconstruction (pad state rows to a multiple of 3 when needed)
+        MatrixXcd yPlot = y;
+        if (padRows > 0) {
+            MatrixXcd pad = MatrixXcd::Zero(padRows, y.cols());
+            yPlot.resize(ny + padRows, y.cols());
+            yPlot.topRows(ny) = y;
+            yPlot.bottomRows(padRows).setZero();
+        }
+        auto abcGroups = dqn2abc_groups_at_time(yPlot, theta);
         for (int g = 0; g < nGroups && g < (int)abcGroups.size(); ++g)
             result.DSSabcHist[g].row(k) = abcGroups[g].transpose();
     }
@@ -450,6 +458,12 @@ void DQsym::plot() const
 
     plot_abc_groups_implot(result_.time, result_.DSSabcHist,
         "State-space outputs (abc)");
+}
+
+void DQsym::setResult(DQsymResult result)
+{
+    result_ = std::move(result);
+    hasRun_ = true;
 }
 
 const DQsymResult& DQsym::getResult() const

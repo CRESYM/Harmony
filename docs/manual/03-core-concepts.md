@@ -1,6 +1,6 @@
 # Chapter 3 — Core Concepts
 
-[← Getting started](02-getting-started.md) | [Manual index](README.md) | [Next: Building networks →](04-building-networks.md)
+[← Getting started](02-getting-started.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Building networks →](04-building-networks.md)
 
 ---
 
@@ -122,4 +122,4 @@ Harmony --json src/examples/example.json
 
 See [`../running-harmony.md`](../running-harmony.md).
 
-[← Getting started](02-getting-started.md) | [Manual index](README.md) | [Next: Building networks →](04-building-networks.md)
+[← Getting started](02-getting-started.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Building networks →](04-building-networks.md)

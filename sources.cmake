@@ -273,6 +273,7 @@ set(Examples_Source_files
     src/examples/example_OPF_SLO.cpp
     src/examples/example_OPF_double_area.cpp
     src/examples/example_OPF_csv_1.cpp
+    src/examples/example_OPF_ieee.cpp
     src/examples/example_OPF_PV.cpp
     src/examples/example_OPF_WT.cpp
     src/examples/example_DQsym_math_operations.cpp
@@ -294,7 +295,9 @@ set(Examples_Source_files
     src/examples/example_DQsym_DSSS2.cpp
     src/examples/example_DQsym_RLC.cpp
     src/examples/example_DQsym_Simple_MMC.cpp
+    src/examples/example_DQsym_MMC_controlled.cpp
     src/examples/example_state_space.cpp   
+    src/examples/example_PLL_test.cpp
 )
 set(Ui_Source_Files
     src/ui/harmony_launcher.cpp

@@ -21,11 +21,6 @@
 #include "../Solver/Certificate/Tuning_assistant.h"
 #include "../Solver/Stability_Estimate/Stability_estimate.h"
 
-#include <cmath>
-#include <filesystem>
-#include <iostream>
-#include <utility>
-#include <vector>
 
 namespace {
 

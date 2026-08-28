@@ -18,7 +18,4 @@ void example_visuals(bool plotting_enabled /*=true*/) {
 	transmission_line->writeFile(10, 10000000, 1000);
 
 	delete transmission_line;
-
-	cout << "Press Enter to continue...\n";
-	cin.get();
 }

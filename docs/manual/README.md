@@ -2,23 +2,33 @@
 
 **HARMONic stabilitY assessment of PE-penetrated power systems**
 
-Version: draft (June 2025)  
+Version: draft (August 2026)  
 License: GPL v3  
 Project: [CRESYM/Harmony](https://github.com/CRESYM/Harmony)
+
+![Harmony overview](../../install/res/HARMONY_figure.png)
 
 ---
 
 ## About this manual
 
-This manual explains how to **install**, **build**, and **use** Harmony for stability and analysis studies on AC–DC power systems with high power-electronics penetration. It is written for researchers and engineers who run studies rather than developers extending the C++ library.
+This manual is the **narrative guide** for researchers and engineers who install Harmony and run stability / OPF / time-domain studies. It explains concepts, workflows, and examples.
 
-For API-level documentation, see [Building API Documentation (Doxygen)](../doxygen/README.md).
+All documentation lives under [`docs/`](../README.md). Use that index if you are unsure which page to open.
 
-For detailed installation steps with screenshots, see [`../installation.md`](../installation.md).
+---
 
-For **how to run** Harmony after building, see [`../running-harmony.md`](../running-harmony.md), [Chapter 11 — HarmonyUI](11-harmony-ui.md) (graphical launcher), and [Chapter 10 — Command-line interface](10-command-line.md) (CLI).
+## Companion references (same `docs/` tree)
 
-For the JSON input file specification, see [`../input-file-format.md`](../input-file-format.md).
+| Need | Document | Relation to this manual |
+|------|----------|-------------------------|
+| Step-by-step install (screenshots) | [installation.md](../installation.md) | Expands [Chapter 2](02-getting-started.md) |
+| Day-to-day run (conda, paths, VS) | [running-harmony.md](../running-harmony.md) | Pairs with [Ch. 11](11-command-line.md) / [Ch. 12](12-harmony-ui.md) |
+| Every JSON key / type | [input-file-format.md](../input-file-format.md) | Spec behind [Chapter 5](05-json-input.md) |
+| C++ class reference | [Doxygen](../doxygen/README.md) | API, not tutorials |
+| Extending / CI | [Developer](../developer-guide.md) · [Maintainer](../maintainer-guide.md) | Outside this manual’s scope |
+
+Certificates live **in** this manual: [Chapter 8](08-certificates.md) (detail) and [Chapter 7 § 7.10](07-analysis-workflows.md#710-device-certificates) (overview).
 
 ---
 
@@ -32,11 +42,12 @@ For the JSON input file specification, see [`../input-file-format.md`](../input-
 | [4](04-building-networks.md) | Building networks in C++ | Programmatic model assembly |
 | [5](05-json-input.md) | JSON input workflow | File-driven simulations |
 | [6](06-component-reference.md) | Component reference | Parameters for major device types |
-| [7](07-analysis-workflows.md) | Analysis workflows | OPF, stability, state-space, DQsym |
-| [8](08-examples-catalog.md) | Examples catalog | Guide to all bundled examples |
-| [9](09-troubleshooting.md) | Troubleshooting | Common errors and fixes |
-| [10](10-command-line.md) | Command-line interface | Run examples and JSON cases with `--cpp` / `--json` |
-| [11](11-harmony-ui.md) | HarmonyUI | Graphical launcher, embedded plots, PNG export |
+| [7](07-analysis-workflows.md) | Analysis workflows | OPF, stability, DQsym, certificates overview |
+| [8](08-certificates.md) | Certificates | Passivity / geometric certificate APIs |
+| [9](09-examples-catalog.md) | Examples catalog | Guide to all bundled examples |
+| [10](10-troubleshooting.md) | Troubleshooting | Common errors and fixes |
+| [11](11-command-line.md) | Command-line interface | `--cpp` / `--json` reference |
+| [12](12-harmony-ui.md) | HarmonyUI | Graphical launcher, plots, PNG export |
 
 ---
 
@@ -44,14 +55,16 @@ For the JSON input file specification, see [`../input-file-format.md`](../input-
 
 | Task | Where to look |
 |------|----------------|
-| First-time install | [Chapter 2](02-getting-started.md), [`installation.md`](../installation.md) |
-| **Run Harmony (GUI)** | [**HarmonyUI**](11-harmony-ui.md), [`running-harmony.md`](../running-harmony.md) |
-| **Run Harmony (CLI)** | [**`running-harmony.md`**](../running-harmony.md), [Chapter 10](10-command-line.md) |
-| Run a hybrid AC–DC stability study | `Harmony --cpp stability_check`, [Chapter 7](07-analysis-workflows.md) |
-| Run optimal power flow | `Harmony --cpp opf`, [Chapter 7](07-analysis-workflows.md) |
-| Define a case without C++ | `Harmony --json …`, [Chapter 5](05-json-input.md) |
-| MMC converter parameters | [Chapter 6 § Converters](06-component-reference.md#62-modular-multilevel-converter-mmc) |
-| Run unit tests | [Chapter 2 § Tests](02-getting-started.md#27-running-the-test-suite) |
+| First-time install | [Chapter 2](02-getting-started.md) · [installation.md](../installation.md) |
+| Run Harmony (GUI) | [Chapter 12](12-harmony-ui.md) · [running-harmony.md](../running-harmony.md) |
+| Run Harmony (CLI) | [Chapter 11](11-command-line.md) · [running-harmony.md](../running-harmony.md) |
+| Hybrid AC–DC stability | `Harmony --cpp stability_check` · [Chapter 7](07-analysis-workflows.md) |
+| Optimal power flow | `Harmony --cpp opf` · [Chapter 7](07-analysis-workflows.md) |
+| Device certificates | `Harmony --cpp certificate_figures` · [Chapter 8](08-certificates.md) |
+| Define a case without C++ | `Harmony --json …` · [Chapter 5](05-json-input.md) |
+| MMC parameters | [Chapter 6 § MMC](06-component-reference.md#62-modular-multilevel-converter-mmc) |
+| Unit tests | [Chapter 2 § Tests](02-getting-started.md#27-running-the-test-suite) |
+| Full docs map | [docs/README.md](../README.md) |
 
 ---
 
@@ -59,19 +72,15 @@ For the JSON input file specification, see [`../input-file-format.md`](../input-
 
 ```
 Harmony/
-├── src/                  Main library and examples
-│   ├── Elements/         Device models (R, L, C, MMC, transformers, RES, …)
-│   ├── Solver/           OPF, DQsym, state-space, stability
-│   ├── Control/          PI controllers, filters (used by converters)
-│   ├── examples/         Runnable demonstration programs
-│   ├── data/             CSV case files for OPF
-│   ├── main.cpp          CLI entry point (--cpp / --json)
-│   └── ui/               HarmonyUI launcher (harmony_ui_main.cpp)
-├── src/json/             JSON builders, validation, computation runner
-├── tests/                GoogleTest unit tests
-└── docs/                 Installation, running guide, and this manual
+├── src/                  Main library, CLI, UI, examples, json/
+├── tests/                GoogleTest suite
+├── install/              Installer project + res/ assets (incl. HARMONY_figure.png)
+└── docs/                 Documentation hub → README.md
+    ├── manual/           This user manual (chapters 1–12)
+    ├── installation.md
     ├── running-harmony.md
-    └── installation.md
+    ├── input-file-format.md
+    └── doxygen/          API docs build instructions
 ```
 
 ---

@@ -107,8 +107,4 @@ void example_DQsym_Simple_MMC(bool plotting_enabled /*=true*/)
     }
 
     dq.exportCSV("DQsym_MMC_SigmaDelta.csv");
-
-	cout << "Example complete. Press any key to exit.\n";
-	std::cin.get();
-
 }

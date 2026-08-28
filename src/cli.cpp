@@ -141,12 +141,18 @@ std::map<std::string, ExampleFn> exampleRegistry() {
 	add("opf_slo", example_OPF_SLO);
 	add("opf_double_area", example_OPF_double_area);
 	add("opf_csv_1", example_OPF_csv_1);
+	add("opf_ieee9", example_OPF_ieee9);
+	add("opf_ieee9_hvdc", example_OPF_ieee9_hvdc);
+	add("opf_ieee39", example_OPF_ieee39);
+	add("opf_ieee39_hvdc", example_OPF_ieee39_hvdc);
+	add("opf_rts24_hvdc", example_OPF_rts24_hvdc);
 	add("opf_pv", example_OPF_PV);
 	add("opf_wt", example_OPF_WT);
 	add("dqsym_math_operations", example_DQsym_math_operations);
 	add("dqsym_dsss2", example_DQsym_DSSS2);
 	add("dqsym_rlc", example_DQsym_RLC);
 	add("dqsym_simple_mmc", example_DQsym_Simple_MMC);
+	add("dqsym_mmc_controlled", [](bool plotting_enabled) { example_DQsym_MMC_controlled(plotting_enabled); });
 	add("state_space", [](bool) { example_state_space(); });
 	add("generator", example_generator);
 	add("mmc", example_MMC);
@@ -163,6 +169,7 @@ std::map<std::string, ExampleFn> exampleRegistry() {
 	add("stability_check", example_stability_check);
 	add("admittance_parameters", [](bool) { example_admittance_parameters(); });
 	add("point2point_case", [](bool) { example_point2point_case(); });
+	add("pll_test", [](bool) { example_PLL_test(); });
 	return registry;
 }
 
@@ -512,7 +519,12 @@ void printJsonNotFoundHelp(
 }
 
 
-int runCppExample(const std::string& name, const bool plot, const bool verbose) {
+int runCppExample(
+	const std::string& name,
+	const bool plot,
+	const bool verbose,
+	const bool waitForPlotClose)
+{
 	const auto registry = exampleRegistry();
 	const std::string key = normalizeExampleName(name);
 	const auto it = registry.find(key);
@@ -533,9 +545,9 @@ int runCppExample(const std::string& name, const bool plot, const bool verbose) 
 		return EXIT_FAILURE;
 	}
 
-	// Keep ImPlot window open until the user closes it (JSON path already does this).
+	// Keep ImPlot window open until the user closes it (CLI default).
 	// No-op in HarmonyUI embedded mode (no standalone GUI thread).
-	if (plot && visualization_is_running()) {
+	if (plot && waitForPlotClose && visualization_is_running()) {
 		std::cout << "Close the Harmony Visualization window to exit.\n";
 		visualization_wait();
 	}

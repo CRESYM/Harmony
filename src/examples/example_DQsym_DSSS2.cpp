@@ -145,14 +145,12 @@ void example_DQsym_DSSS2(bool plotting_enabled /*=true*/)
 
     std::cout << "Wrote dsss2_abc_output.csv\n";
 
-    std::vector<Eigen::MatrixXd> values2;
-    for (int g = 0; g < nGroups; ++g)
-        values2.push_back(XabcHist[g]);
-
     if(plotting_enabled) {
-        plot_abc_groups_implot(time, values2, "DSSS2 outputs converted to abc");
+        DQsymResult result;
+        result.time = time;
+        result.brkHistory = brkHistory;
+        result.DSSabcHist = XabcHist;
+        dq.setResult(std::move(result));
+        dq.plot();
     }
-
-    cout << "Press Enter to continue...\n";
-    cin.get();
 }

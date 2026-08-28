@@ -1,6 +1,6 @@
 # Chapter 4 — Building Networks in C++
 
-[← Core concepts](03-core-concepts.md) | [Manual index](README.md) | [Next: JSON input →](05-json-input.md)
+[← Core concepts](03-core-concepts.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: JSON input →](05-json-input.md)
 
 ---
 
@@ -135,4 +135,4 @@ Harmony --json my_case.json      # JSON-defined case
 
 See [`../running-harmony.md`](../running-harmony.md).
 
-[← Core concepts](03-core-concepts.md) | [Manual index](README.md) | [Next: JSON input →](05-json-input.md)
+[← Core concepts](03-core-concepts.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: JSON input →](05-json-input.md)

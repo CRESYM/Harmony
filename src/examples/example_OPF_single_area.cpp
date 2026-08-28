@@ -159,16 +159,17 @@ void example_OPF_single_area(bool plotting_enabled /*=true*/) {
     const double q_inv = 100.0 * 1e6;
 
     // MMC1 — rectifier: DC P control + AC Q control
+    // MMC machine signs: Pac,Pdc < 0 (AC import / DC export to the DC grid).
     std::vector<double> converter_params1 = {
-        omega_nom, -p_rect, -q_rect, 0.0, v_ac, p_rect, v_dc,
+        omega_nom, -p_rect, -q_rect, 0.0, v_ac, -p_rect, v_dc,
         0.05, 1.07, 0.01, 400, 0.0005, 0.0001, 0.0
     };
     std::vector<double> controller_params1 = {
         1, 0, 0.001103374, 0.00073, 1, 0, // PLL
         0, // dc_voltage
-        1, 0, 6.6667e-07, 3.3333e-04, 1, p_rect, // active_power (DC P)
+        1, 0, 6.6667e-07, 3.3333e-04, 1, -p_rect, // active_power
         0, // ac_voltage
-        1, 0, 6.6667e-07, 3.3333e-04, 1, -q_rect, // reactive_power (AC Q)
+        1, 0, 6.6667e-07, 3.3333e-04, 1, -q_rect, // reactive_power
         1, 0, 120, 400, 1, 0, // energy
         1, 0, 19.93, 4500, 1, 4000.0, // zcc
         1, 0, 117.93, 8.5e4, 2, 16000.0, 0, // occ
@@ -211,19 +212,20 @@ void example_OPF_single_area(bool plotting_enabled /*=true*/) {
 	mmc2->setOPFInfo(mmc2_info);
 
     // MMC3 — inverter: DC P control + AC Q control
+    // MMC machine signs: Pac,Pdc > 0 (AC export / DC import).
     std::vector<double> converter_params3 = {
-        omega_nom, p_inv, q_inv, 0.0, v_ac, -p_inv, v_dc,
+        omega_nom, p_inv, q_inv, 0.0, v_ac, p_inv, v_dc,
         0.05, 1.07, 0.01, 400, 0.0005, 0.0001, 0.0
     };
     std::vector<double> controller_params3 = {
         1, 0, 0.001103374, 0.00073, 1, 0, // PLL
         0, // dc_voltage
-        1, 0, 6.6667e-07, 3.3333e-04, 1, p_inv, // active_power (DC P)
+        1, 0, 6.6667e-07, 3.3333e-04, 1, p_inv, // active_power
         0, // ac_voltage
-        1, 0, 6.6667e-07, 3.3333e-04, 1, q_inv, // reactive_power (AC Q)
+        1, 0, 6.6667e-07, 3.3333e-04, 1, q_inv, // reactive_power
         1, 0, 120, 400, 1, 0, // energy
-        1, 0, 19.93, 4500, 1, -10666.7, // zcc
-        1, 0, 117.93, 8.5e4, 2, -1435.36, 0, // occ
+        1, 0, 19.93, 4500, 1, 10666.7, // zcc
+        1, 0, 117.93, 8.5e4, 2, 1435.36, 0, // occ
         1, 0, 19.93, 4500, 2, 0, 0, // ccc
         0 // droop
     };
@@ -253,8 +255,4 @@ void example_OPF_single_area(bool plotting_enabled /*=true*/) {
         global_dict["DCbaseKV"] * global_dict["DCbaseKV"] / global_dict["baseMVA"];
     
 	pf.make_OPF(&net, global_dict, true, false, plotting_enabled, true);
-
-    cout << "Press Enter to continue...\n";
-    cin.get();
-
 }

@@ -15,7 +15,4 @@ void example_generator(bool plotting_enabled /*=true*/) {
 	if (plotting_enabled){
 		gen->plotYParameters(1.0, 100.0, 500);
 	}
-
-	cout << "Press Enter to continue...\n";
-	cin.get();
 }

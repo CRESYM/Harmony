@@ -1,0 +1,8 @@
+Bus ac_bus has the following elements attached:
+  - MMC1
+Bus dc_bus has the following elements attached:
+  - MMC1
+Element: MMC1, Symbol: MMC1
+[Robust] LineSearch...
+[KINSOL] Evals:39 Iters:13
+Computing Y-matrix for 'MMC1' (1-1000 Hz, 40 points)

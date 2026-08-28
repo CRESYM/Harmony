@@ -200,10 +200,12 @@ void Element::writeFile(double start_frequency, double end_frequency, int number
     myfile.open("./files/" + element_symbol + ".csv");
 
     // Print the Y-parameters in file
-    double gap = (log10(end_frequency) - log10(start_frequency)) * 1.0 / (number_of_points);
-	gap = pow(10, gap);
+    // Use (N-1) so the last sample is exactly end_frequency (log-spaced).
+    const int n = std::max(number_of_points, 2);
+    const double gap = std::pow(10.0,
+        (std::log10(end_frequency) - std::log10(start_frequency)) / (n - 1));
     double frequency = start_frequency;
-    for (int p = 0; p < number_of_points; p++) {
+    for (int p = 0; p < n; p++) {
         std::vector<std::vector<complex<double>>> Y = compute_y_parameters(frequency);
         
         // write in file
@@ -229,15 +231,15 @@ void Element::writeFile(double start_frequency, double end_frequency, int number
  * @param number_of_points The number of points to plot across the frequency range.
  */
 void Element::plotYParameters(double start_frequency, double end_frequency, int number_of_points) {
+    const int n = std::max(number_of_points, 2);
     std::vector<double> frequencies;
-    std::vector<std::vector<double>> magnitudes(number_of_points, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));
-    std::vector<std::vector<double>> phases(number_of_points, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));
+    std::vector<std::vector<double>> magnitudes(n, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));
+    std::vector<std::vector<double>> phases(n, std::vector<double>(pow(input_pins + output_pins, 2), 0.0));
     std::vector<std::string> labels;
-    double gap = (log10(end_frequency) - log10(start_frequency)) * 1.0 / (number_of_points);
-	gap = pow(10, gap);
-	// cout << gap << endl;
+    const double gap = std::pow(10.0,
+        (std::log10(end_frequency) - std::log10(start_frequency)) / (n - 1));
     double frequency = start_frequency;
-    for (int p = 0; p < number_of_points; p++) {
+    for (int p = 0; p < n; p++) {
         frequencies.push_back(frequency);
         std::vector<std::vector<complex<double>>> Y = compute_y_parameters(frequency);
 

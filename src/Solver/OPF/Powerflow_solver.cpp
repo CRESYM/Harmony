@@ -1149,6 +1149,7 @@ void PowerFlow::solve_opf(
             this->convState_dc = convState_dc;
             this->fbus_dc = fbus_dc;
             this->tbus_dc = tbus_dc;
+            this->total_gen_cost_ = model.get(GRB_DoubleAttr_ObjVal);
             this->opf_solved_ = true;
         }
 

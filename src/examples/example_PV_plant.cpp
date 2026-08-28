@@ -47,7 +47,4 @@ void example_PV_plant(bool plotting_enabled /*=true*/) {
 	if (plotting_enabled) {
 		pv->plotYParameters(1, 10000, 500);
 	}
-
-	cout << "Press Enter to continue...\n";
-	cin.get();
 }

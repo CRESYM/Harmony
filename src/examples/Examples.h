@@ -28,6 +28,21 @@ extern void example_OPF_double_area(bool plotting_enabled = true);
 /** @brief Variant OPF case from CSV data. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_OPF_csv_1(bool plotting_enabled = true);
 
+/** @brief IEEE 9-bus (MATPOWER case9) AC OPF. @param plotting_enabled Enable result plots. @ingroup examples */
+extern void example_OPF_ieee9(bool plotting_enabled = true);
+
+/** @brief IEEE 9-bus with two point-to-point HVDC links. @param plotting_enabled Enable result plots. @ingroup examples */
+extern void example_OPF_ieee9_hvdc(bool plotting_enabled = true);
+
+/** @brief IEEE 39-bus New England AC OPF. @param plotting_enabled Enable result plots. @ingroup examples */
+extern void example_OPF_ieee39(bool plotting_enabled = true);
+
+/** @brief IEEE 39-bus with a 10-terminal HVDC grid (pglib case39_10). @param plotting_enabled Enable result plots. @ingroup examples */
+extern void example_OPF_ieee39_hvdc(bool plotting_enabled = true);
+
+/** @brief IEEE RTS zones joined by an HVDC grid (pglib case24_7). @param plotting_enabled Enable result plots. @ingroup examples */
+extern void example_OPF_rts24_hvdc(bool plotting_enabled = true);
+
 /** @brief OPF study including a PV plant. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_OPF_PV(bool plotting_enabled = true);
 
@@ -46,8 +61,8 @@ extern void example_DQsym_RLC(bool plotting_enabled = true);
 /** @brief Simplified MMC model in the DQsym solver. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_DQsym_Simple_MMC(bool plotting_enabled = true);
 
-/** @brief DQsym validation routines (header declaration only). @ingroup examples */
-extern void example_DQsym_validation();
+/** @brief Controlled MMC model in the DQsym solver. @ingroup examples */
+extern void example_DQsym_MMC_controlled(bool plotting_enabled = true);
 
 /** @brief Build state-space (A, B, C, D) matrices for an RLC network. @ingroup examples */
 extern void example_state_space();
@@ -96,5 +111,8 @@ extern void example_admittance_parameters();
 
 /** @brief Point-to-point HVDC-style OPF case. @ingroup examples */
 extern void example_point2point_case();
+
+/** @brief PLL controller test using ProportionalIntegralController. @ingroup examples */
+extern void example_PLL_test();
 
 #endif

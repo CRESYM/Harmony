@@ -42,6 +42,9 @@ jobs:
         shell: bash -l {0}
         run: |
           export PATH="/c/gurobi1301/win64/bin:$PATH"
+          if [ -n "${CONDA_PREFIX:-}" ] && [ -d "${CONDA_PREFIX}/Library/bin" ]; then
+            export PATH="${CONDA_PREFIX}/Library/bin:$PATH"
+          fi
           mkdir tests/build
           cd tests/build
           cmake .. -DGUROBI_PATH="C:\gurobi1301\win64"

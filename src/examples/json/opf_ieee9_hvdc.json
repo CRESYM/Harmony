@@ -1,0 +1,32 @@
+{
+    "simulation": {
+        "title": "opf_ieee9_hvdc",
+        "description": "IEEE 9-bus (MATPOWER case9) with two point-to-point HVDC links — solve_opf(ieee9, hvdc2ptp) from src/data CSV cases.",
+        "output_directory": "./files"
+    },
+    "buses": [
+        { "id": "stub_ac", "location": "AC1", "pins": 3, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "stub_load",
+            "location": "AC1",
+            "type": "load",
+            "pins": 3,
+            "values": [1.0, 0.0, 0.0],
+            "connected_bus": { "bus_id": "stub_ac", "terminal": 1 },
+            "enabled": true
+        }
+    ],
+    "computations": [
+        {
+            "type": "opf",
+            "case_name": "ieee9",
+            "dc_case_name": "hvdc2ptp",
+            "vsc_control": true,
+            "write_txt": false,
+            "plot_result": true,
+            "print_info": false
+        }
+    ]
+}

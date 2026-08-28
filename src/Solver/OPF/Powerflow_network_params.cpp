@@ -1125,14 +1125,19 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
                 continue;
             }
 
-            // Converter-indexed OPF quantities
-            const double Vm_kV = std::sqrt(std::max(0.0, v2s_dc_k(k))) * global_params["ACbaseKV"];
-            const double theta_rad = theta_s_k(k);
-            const double Pac_MW = ps_dc_k(k) * baseMW_dc;
-            const double Qac_MVar = qs_dc_k(k) * baseMW_dc;
+            // MatACDC OPF injections (ps, qs, pn) use network-injection signs:
+            // inverter: ps,pn ≤ 0 (power into AC network / out of DC network).
+            // MMC dynamics use machine signs: Pac,Pdc > 0 means AC export / DC import
+            // (AC current out of converter, DC current into converter). Bridge with a sign flip.
+            const double Pac_MW = -ps_dc_k(k) * baseMW_dc;
+            const double Qac_MVar = -qs_dc_k(k) * baseMW_dc;
+            // AC filter-bus voltage / angle from OPF (v2s in pu^2, theta_s in deg)
+            const double Vm_kV = std::sqrt(std::max(0.0, v2s_dc_k(static_cast<Eigen::Index>(k))))
+                * global_params["ACbaseKV"];
+            const double theta_rad = theta_s_k(static_cast<Eigen::Index>(k)) * M_PI / 180.0;
             // DC bus-indexed OPF quantities
             const double Vdc_kV = std::sqrt(std::max(0.0, vn2_dc_k(dc_bus_idx))) * global_params["DCbaseKV"];
-            const double Pdc_MW = pn_dc_k(dc_bus_idx) * baseMW_dc;
+            const double Pdc_MW = -pn_dc_k(dc_bus_idx) * baseMW_dc;
 
             // Convert units
             const double Vm_V = Vm_kV * 1e3;
@@ -1142,7 +1147,7 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
             const double Pdc_W = Pdc_MW * 1e6;
 
 
-            // Update the MMC
+            // Update the MMC (Pac/Qac/Pdc in MMC machine convention)
             mmc->update_MMC(Vm_V, theta_rad, Pac_W, Qac_Var, Vdc_V, Pdc_W);
 
             // Solve equilibrium and compute state-space matrices

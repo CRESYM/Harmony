@@ -11,6 +11,11 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <memory>
+
 
 // ============================================================
 // INTERNAL STATE
@@ -271,7 +276,7 @@ static void init_gui()
 // Draw registered plot tabs (shared by standalone window and HarmonyUI embedded mode).
 static void draw_plot_tabs(const char* tabBarId)
 {
-    if (!ImGui::BeginTabBar(tabBarId))
+    if (!ImGui::BeginTabBar(tabBarId, ImGuiTabBarFlags_AutoSelectNewTabs))
         return;
 
     std::vector<PlotTab> snapshot;
@@ -532,6 +537,60 @@ void add_plot_tab(const std::string& title, std::function<void()> fn)
 // BODE
 // ============================================================
 
+namespace {
+
+/** X = scanned [f0, f1]; Y = data min/max + pad so traces are not clipped.
+ *  applyLimits: force range this frame (see ABC — Cond_Once is session-sticky). */
+void setup_bode_axis_limits(
+    const std::vector<double>& freq,
+    const std::vector<std::vector<double>>& yData,
+    const int nSignals,
+    const bool applyLimits)
+{
+    if (!applyLimits || freq.empty() || yData.empty() || nSignals <= 0) {
+        return;
+    }
+
+    double f0 = freq.front();
+    double f1 = freq.back();
+    if (!(f0 > 0.0) || !(f1 > f0)) {
+        // Log axis needs a positive span; fall back to a tiny decade.
+        f0 = std::max(f0, 1e-12);
+        f1 = (f1 > f0) ? f1 : f0 * 10.0;
+    }
+
+    double yMin = 0.0;
+    double yMax = 0.0;
+    bool haveY = false;
+    for (const auto& row : yData) {
+        const int n = std::min(nSignals, static_cast<int>(row.size()));
+        for (int j = 0; j < n; ++j) {
+            const double v = row[static_cast<size_t>(j)];
+            if (!std::isfinite(v)) {
+                continue;
+            }
+            if (!haveY) {
+                yMin = yMax = v;
+                haveY = true;
+            }
+            else {
+                yMin = std::min(yMin, v);
+                yMax = std::max(yMax, v);
+            }
+        }
+    }
+
+    const double span = haveY ? (yMax - yMin) : 0.0;
+    const double pad = span > 0.0 ? 0.08 * span : 1.0;
+    const double yLo = haveY ? (yMin - pad) : -1.0;
+    const double yHi = haveY ? (yMax + pad) : 1.0;
+
+    ImPlot::SetupAxisLimits(ImAxis_X1, f0, f1, ImPlotCond_Always);
+    ImPlot::SetupAxisLimits(ImAxis_Y1, yLo, yHi, ImPlotCond_Always);
+}
+
+} // namespace
+
 void bode_plot_implot(
     const std::vector<double>& freq,
     const std::vector<std::vector<double>>& mag_dB,
@@ -539,6 +598,8 @@ void bode_plot_implot(
     const std::vector<std::string>& labels,
     const std::string& title)
 {
+    // Shared so the flag survives draw_plot_tabs()'s std::function copy each frame.
+    const auto applyLimits = std::make_shared<bool>(true);
     add_tab(title, [=]()
         {
             if (freq.empty() || mag_dB.empty() || phase_deg.empty())
@@ -547,49 +608,64 @@ void bode_plot_implot(
             const int N = (int)freq.size();
             const int nSignals = (int)labels.size();
 
-            ImGui::BeginChild("BodeLayout");
+            // NoScrollWithMouse: otherwise the child steals the wheel and ImPlot cannot zoom.
+            ImGui::BeginChild("BodeLayout", ImVec2(0, 0), ImGuiChildFlags_None,
+                ImGuiWindowFlags_NoScrollWithMouse);
 
-            // ---- Magnitude ----
-            if (ImPlot::BeginPlot("Magnitude (dB)", ImVec2(-1, kHarmonyPlotPanelHeightPx)))
+            // Fit both panels in the visible area (avoids "only magnitude" when phase is below the fold).
+            const float gap = ImGui::GetStyle().ItemSpacing.y;
+            const float availH = std::max(240.0f, ImGui::GetContentRegionAvail().y);
+            const float panelH = std::max(160.0f, 0.5f * (availH - gap));
+
+            // Dense multi-channel sweeps exceed ImGui's 16-bit draw-index budget
+            // (~65k). Magnitude draws first and phase then truncates mid-trace
+            // (e.g. stops near ~100 Hz). Cap vertices per panel by channel count.
+            auto plot_bode_panel = [&](const char* plotTitle,
+                const char* yLabel,
+                const std::vector<std::vector<double>>& yData)
             {
-                ImPlot::SetupAxes("Frequency (Hz)", "20 log10 |H(jw)|");
+                if (!ImPlot::BeginPlot(plotTitle, ImVec2(-1, panelH))) {
+                    return;
+                }
+                ImPlot::SetupAxes("Frequency (Hz)", yLabel);
                 ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
+                setup_bode_axis_limits(freq, yData, nSignals, *applyLimits);
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest);
+
+                constexpr int kMaxVertsPerPanel = 6000;
+                const int maxPtsByBudget = std::max(64, kMaxVertsPerPanel / std::max(nSignals, 1));
+                const int maxPtsByWidth = std::max(128, static_cast<int>(ImPlot::GetPlotSize().x));
+                const int maxPts = std::min({ N, maxPtsByBudget, maxPtsByWidth });
+                const int stride = std::max(1, (N + maxPts - 1) / maxPts);
+                const int nDraw = (N + stride - 1) / stride;
+
+                std::vector<double> xs(static_cast<size_t>(nDraw));
+                std::vector<double> ys(static_cast<size_t>(nDraw));
+                for (int k = 0; k < nDraw; ++k) {
+                    xs[static_cast<size_t>(k)] = freq[static_cast<size_t>(std::min(k * stride, N - 1))];
+                }
 
                 for (int j = 0; j < nSignals; ++j)
                 {
-                    std::vector<double> y(N);
-                    for (int i = 0; i < N; ++i)
-                        y[i] = mag_dB[i][j];
-
-                    ImPlot::PlotLine(labels[j].c_str(), freq.data(), y.data(), N);
+                    for (int k = 0; k < nDraw; ++k) {
+                        const int i = std::min(k * stride, N - 1);
+                        ys[static_cast<size_t>(k)] =
+                            (j < static_cast<int>(yData[static_cast<size_t>(i)].size()))
+                            ? yData[static_cast<size_t>(i)][static_cast<size_t>(j)]
+                            : 0.0;
+                    }
+                    ImPlot::PlotLine(labels[j].c_str(), xs.data(), ys.data(), nDraw);
                 }
 
                 ImPlot::EndPlot();
-            }
+            };
 
-            ImGui::Dummy(ImVec2(0, 10));
-
-            // ---- Phase ----
-            if (ImPlot::BeginPlot("Phase (deg)", ImVec2(-1, kHarmonyPlotPanelHeightPx)))
-            {
-                ImPlot::SetupAxes("Frequency (Hz)", "Angle H(jw)");
-                ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
-                ImPlot::SetupLegend(ImPlotLocation_SouthWest);
-
-                for (int j = 0; j < nSignals; ++j)
-                {
-                    std::vector<double> y(N);
-                    for (int i = 0; i < N; ++i)
-                        y[i] = phase_deg[i][j];
-
-                    ImPlot::PlotLine(labels[j].c_str(), freq.data(), y.data(), N);
-                }
-
-                ImPlot::EndPlot();
-            }
+            plot_bode_panel("Magnitude (dB)", "20 log10 |H(jw)|", mag_dB);
+            ImGui::Dummy(ImVec2(0, gap));
+            plot_bode_panel("Phase (deg)", "Angle H(jw)", phase_deg);
 
             ImGui::EndChild();
+            *applyLimits = false;
         });
 }
 
@@ -602,6 +678,7 @@ void nyquist_plot_implot(
     const std::vector<std::string>& labels,
     const std::string& title)
 {
+    const auto applyLimits = std::make_shared<bool>(true);
     add_tab(title, [=]()
         {
             if (H_data.empty())
@@ -610,7 +687,8 @@ void nyquist_plot_implot(
             const int N = (int)H_data.size();
             const int channels = (int)H_data[0].size();
 
-            ImGui::BeginChild("NyquistLayout");
+            ImGui::BeginChild("NyquistLayout", ImVec2(0, 0), ImGuiChildFlags_None,
+                ImGuiWindowFlags_NoScrollWithMouse);
 
             if (ImPlot::BeginPlot("Nyquist"))
             {
@@ -629,8 +707,10 @@ void nyquist_plot_implot(
                         max_im = std::max(max_im, std::imag(v));
                     }
 
-                double pad_re = 0.05 * (max_re - min_re);
-                double pad_im = 0.05 * (max_im - min_im);
+                double pad_re = 0.08 * (max_re - min_re);
+                double pad_im = 0.08 * (max_im - min_im);
+                if (pad_re <= 0.0) pad_re = 0.1;
+                if (pad_im <= 0.0) pad_im = 0.1;
                 min_re -= pad_re; max_re += pad_re;
                 min_im -= pad_im; max_im += pad_im;
 
@@ -639,25 +719,34 @@ void nyquist_plot_implot(
                 double cy = 0.5 * (min_im + max_im);
                 double half = 0.5 * range;
 
-                ImPlot::SetupAxesLimits(cx - half, cx + half,
-                    cy - half, cy + half,
-                    ImPlotCond_Once);
+                if (*applyLimits) {
+                    ImPlot::SetupAxesLimits(cx - half, cx + half,
+                        cy - half, cy + half,
+                        ImPlotCond_Always);
+                }
+
+                constexpr int kMaxVerts = 6000;
+                const int maxPts = std::max(64, std::min(N, kMaxVerts / std::max(channels, 1)));
+                const int stride = std::max(1, (N + maxPts - 1) / maxPts);
+                const int nDraw = (N + stride - 1) / stride;
 
                 // Curves
                 for (int j = 0; j < channels; ++j)
                 {
-                    std::vector<double> re(N), im(N);
-                    for (int i = 0; i < N; ++i)
+                    std::vector<double> re(static_cast<size_t>(nDraw));
+                    std::vector<double> im(static_cast<size_t>(nDraw));
+                    for (int k = 0; k < nDraw; ++k)
                     {
-                        re[i] = std::real(H_data[i][j]);
-                        im[i] = std::imag(H_data[i][j]);
+                        const int i = std::min(k * stride, N - 1);
+                        re[static_cast<size_t>(k)] = std::real(H_data[static_cast<size_t>(i)][j]);
+                        im[static_cast<size_t>(k)] = std::imag(H_data[static_cast<size_t>(i)][j]);
                     }
 
                     const std::string lbl = (j < (int)labels.size())
                         ? labels[j]
                         : ("TF_" + std::to_string(j + 1));
 
-                    ImPlot::PlotLine(lbl.c_str(), re.data(), im.data(), N);
+                    ImPlot::PlotLine(lbl.c_str(), re.data(), im.data(), nDraw);
                 }
 
                 // Unit circle
@@ -678,6 +767,7 @@ void nyquist_plot_implot(
             }
 
             ImGui::EndChild();
+            *applyLimits = false;
         });
 }
 
@@ -704,7 +794,8 @@ void plot_eigenvalues_implot(
                 im.push_back(std::imag(l));
             }
 
-            ImGui::BeginChild("EigLayout");
+            ImGui::BeginChild("EigLayout", ImVec2(0, 0), ImGuiChildFlags_None,
+                ImGuiWindowFlags_NoScrollWithMouse);
 
             if (ImPlot::BeginPlot("Eigenvalues (s-plane)",
                 ImVec2(-1, kHarmonyPlotEigenHeightPx),
@@ -793,7 +884,8 @@ void plot_participation_factors_implot(
             // ----------------------------------------------------------
             // Plot
             // ----------------------------------------------------------
-            ImGui::BeginChild("##pf_child", ImVec2(-1, -1), false);
+            ImGui::BeginChild("##pf_child", ImVec2(-1, -1), ImGuiChildFlags_None,
+                ImGuiWindowFlags_NoScrollWithMouse);
 
             const double bar_width = 0.8 / n_modes;
 
@@ -806,8 +898,8 @@ void plot_participation_factors_implot(
                     ImPlotAxisFlags_None,
                     ImPlotAxisFlags_None);
 
-                // Y-axis: fixed 0–1.05, grid on
-                ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0, 1.05, ImPlotCond_Always);
+                // Y-axis: initial 0–1.05 (Once so the user can still zoom).
+                ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0, 1.05, ImPlotCond_Once);
 
                 // Custom tick labels on X
                 std::vector<double>      x_ticks(n_states);
@@ -902,29 +994,210 @@ void plot_participation_factors_implot(
 // ABC WAVEFORMS
 // ============================================================
 
+namespace {
+
+/** X: simulation time [t.front(), t.back()]; Y: min/max of xa/xb/xc + margin.
+ *  When applyLimits is true, force the range this frame (Always). Call that only
+ *  on the first draw of a newly registered tab — Cond_Once is sticky per plot ID
+ *  for the whole ImGui session, so HarmonyUI re-runs would otherwise keep stale
+ *  ranges and clip new waveforms. */
+void setup_abc_plot_axis_limits(
+    const std::vector<double>& t,
+    const std::vector<double>& xa,
+    const std::vector<double>& xb,
+    const std::vector<double>& xc,
+    const bool applyLimits)
+{
+    if (t.empty()) {
+        return;
+    }
+
+    double t0 = t.front();
+    double t1 = t.back();
+    if (t1 <= t0) {
+        t1 = t0 + 1e-9;
+    }
+
+    double yMin = 0.0;
+    double yMax = 0.0;
+    bool haveY = false;
+    auto widen = [&](const std::vector<double>& series) {
+        for (double v : series) {
+            if (!std::isfinite(v)) {
+                continue;
+            }
+            if (!haveY) {
+                yMin = yMax = v;
+                haveY = true;
+            }
+            else {
+                yMin = std::min(yMin, v);
+                yMax = std::max(yMax, v);
+            }
+        }
+    };
+    widen(xa);
+    widen(xb);
+    widen(xc);
+
+    const double span = haveY ? (yMax - yMin) : 0.0;
+    const double pad = span > 0.0 ? 0.08 * span : 1.0;
+    const double yLo = haveY ? (yMin - pad) : -1.0;
+    const double yHi = haveY ? (yMax + pad) : 1.0;
+
+    ImPlot::SetupAxes("t (s)", "Amplitude");
+    if (applyLimits) {
+        ImPlot::SetupAxisLimits(ImAxis_X1, t0, t1, ImPlotCond_Always);
+        ImPlot::SetupAxisLimits(ImAxis_Y1, yLo, yHi, ImPlotCond_Always);
+    }
+}
+
+/** Shared legend + axis setup for abc waveform panels. */
+void setup_abc_plot_panel(
+    const std::vector<double>& t,
+    const std::vector<double>& xa,
+    const std::vector<double>& xb,
+    const std::vector<double>& xc,
+    const bool applyLimits)
+{
+    setup_abc_plot_axis_limits(t, xa, xb, xc, applyLimits);
+    ImPlot::SetupLegend(ImPlotLocation_NorthWest, ImPlotLegendFlags_None);
+}
+
+/**
+ * Reduce a series to at most two samples (min and max) per pixel column of the
+ * visible x-range. Drawing 25k-50k samples per phase across several panels
+ * exceeds ImGui's 16-bit draw-index budget, which truncates the traces partway
+ * and leaves stray filled geometry behind.
+ */
+void decimate_visible(
+    const std::vector<double>& t,
+    const std::vector<double>& y,
+    const double xMin,
+    const double xMax,
+    const int columns,
+    std::vector<double>& tOut,
+    std::vector<double>& yOut)
+{
+    tOut.clear();
+    yOut.clear();
+
+    const size_t n = std::min(t.size(), y.size());
+    if (n == 0) {
+        return;
+    }
+
+    // t is monotonically increasing; pad by one sample so the trace still
+    // reaches the plot edges.
+    const auto tBegin = t.begin();
+    const auto tEnd = t.begin() + static_cast<std::ptrdiff_t>(n);
+    size_t i0 = static_cast<size_t>(std::lower_bound(tBegin, tEnd, xMin) - tBegin);
+    size_t i1 = static_cast<size_t>(std::upper_bound(tBegin, tEnd, xMax) - tBegin);
+    if (i0 > 0) {
+        --i0;
+    }
+    if (i1 < n) {
+        ++i1;
+    }
+    if (i1 <= i0) {
+        return;
+    }
+
+    const size_t visible = i1 - i0;
+    const size_t cols = static_cast<size_t>(std::max(columns, 1));
+    if (visible <= cols * 2) {
+        tOut.assign(t.begin() + static_cast<std::ptrdiff_t>(i0),
+            t.begin() + static_cast<std::ptrdiff_t>(i1));
+        yOut.assign(y.begin() + static_cast<std::ptrdiff_t>(i0),
+            y.begin() + static_cast<std::ptrdiff_t>(i1));
+        return;
+    }
+
+    tOut.reserve(cols * 2);
+    yOut.reserve(cols * 2);
+    for (size_t c = 0; c < cols; ++c)
+    {
+        const size_t b0 = i0 + visible * c / cols;
+        const size_t b1 = i0 + visible * (c + 1) / cols;
+        if (b1 <= b0) {
+            continue;
+        }
+
+        size_t iMin = b0;
+        size_t iMax = b0;
+        for (size_t i = b0; i < b1; ++i) {
+            if (y[i] < y[iMin]) {
+                iMin = i;
+            }
+            if (y[i] > y[iMax]) {
+                iMax = i;
+            }
+        }
+
+        const size_t first = std::min(iMin, iMax);
+        const size_t second = std::max(iMin, iMax);
+        tOut.push_back(t[first]);
+        yOut.push_back(y[first]);
+        if (second != first) {
+            tOut.push_back(t[second]);
+            yOut.push_back(y[second]);
+        }
+    }
+}
+
+/** Draw the xa/xb/xc traces, decimated to the current plot width. */
+void plot_abc_lines(
+    const std::vector<double>& t,
+    const std::vector<double>& xa,
+    const std::vector<double>& xb,
+    const std::vector<double>& xc)
+{
+    const ImPlotRect limits = ImPlot::GetPlotLimits();
+    const int columns = std::max(64, static_cast<int>(ImPlot::GetPlotSize().x));
+
+    const char* names[3] = { "xa", "xb", "xc" };
+    const std::vector<double>* series[3] = { &xa, &xb, &xc };
+
+    std::vector<double> td;
+    std::vector<double> yd;
+    for (int s = 0; s < 3; ++s)
+    {
+        decimate_visible(t, *series[s], limits.X.Min, limits.X.Max, columns, td, yd);
+        if (td.size() < 2) {
+            continue;
+        }
+        ImPlot::PlotLine(names[s], td.data(), yd.data(), static_cast<int>(td.size()));
+    }
+}
+
+} // namespace
+
 void plot_abc_waveforms_implot(
     const std::vector<double>& t,
     const Eigen::MatrixXd& Xabc,
     const std::string& title)
 {
-    add_tab(title, [=]()
+    auto t_copy = t;
+    auto X_copy = Xabc;
+    const auto applyLimits = std::make_shared<bool>(true);
+
+    add_tab(title, [t_copy = std::move(t_copy), X_copy = std::move(X_copy), applyLimits]()
         {
-            std::vector<double> xa(t.size()), xb(t.size()), xc(t.size());
-            for (size_t i = 0; i < t.size(); ++i)
+            std::vector<double> xa(t_copy.size()), xb(t_copy.size()), xc(t_copy.size());
+            for (size_t i = 0; i < t_copy.size(); ++i)
             {
-                xa[i] = Xabc(i, 0);
-                xb[i] = Xabc(i, 1);
-                xc[i] = Xabc(i, 2);
+                xa[i] = X_copy(i, 0);
+                xb[i] = X_copy(i, 1);
+                xc[i] = X_copy(i, 2);
             }
 
             if (ImPlot::BeginPlot(("ABC")))
             {
-                ImPlot::SetupAxes("t (s)", "Amplitude");
-                ImPlot::PlotLine("xa", t.data(), xa.data(), (int)t.size());
-                ImPlot::PlotLine("xb", t.data(), xb.data(), (int)t.size());
-                ImPlot::PlotLine("xc", t.data(), xc.data(), (int)t.size());
+                setup_abc_plot_panel(t_copy, xa, xb, xc, *applyLimits);
+                plot_abc_lines(t_copy, xa, xb, xc);
                 ImPlot::EndPlot();
             }
+            *applyLimits = false;
         });
 }
 
@@ -937,40 +1210,55 @@ void plot_abc_groups_implot(
     const std::vector<Eigen::MatrixXd>& Xabc_groups,
     const std::string& title)
 {
-    add_tab(title, [=]()
+    auto t_copy = t;
+    auto X_copy = Xabc_groups;
+    const auto applyLimits = std::make_shared<bool>(true);
+
+    add_tab(title, [t_copy = std::move(t_copy), X_copy = std::move(X_copy), title, applyLimits]()
         {
-            // Each group gets a fixed slice of height; wrap in a scrollable child
-            // so the tab remains usable regardless of group count.
+            const size_t nGroups = X_copy.size();
             constexpr float PLOT_H = kHarmonyPlotWaveformHeightPx;
+            const float groupGap = ImGui::GetStyle().ItemSpacing.y;
 
-            ImGui::BeginChild("##abc_groups_scroll", ImVec2(-1, -1), false,
-                ImGuiWindowFlags_HorizontalScrollbar);
+            // Scroll with the scrollbar; keep the wheel for ImPlot zoom on the panels below.
+            ImGui::BeginChild("##abc_groups_scroll", ImVec2(-1, -1), ImGuiChildFlags_None,
+                ImGuiWindowFlags_NoScrollWithMouse);
 
-            for (size_t g = 0; g < Xabc_groups.size(); ++g)
+            for (size_t g = 0; g < nGroups; ++g)
             {
-                const auto& X = Xabc_groups[g];
-                std::vector<double> xa(t.size()), xb(t.size()), xc(t.size());
-                for (size_t i = 0; i < t.size(); ++i)
+                const auto& X = X_copy[g];
+                std::vector<double> xa(t_copy.size()), xb(t_copy.size()), xc(t_copy.size());
+                for (size_t i = 0; i < t_copy.size(); ++i)
                 {
                     xa[i] = X(i, 0);
                     xb[i] = X(i, 1);
                     xc[i] = X(i, 2);
                 }
 
-                ImGui::PushID(static_cast<int>(g));
-                if (ImPlot::BeginPlot(("Group " + std::to_string(g + 1)).c_str(),
-                    ImVec2(-1, PLOT_H)))
+                const std::string childId = "##abc_group_slot_" + std::to_string(g);
+                ImGui::BeginChild(childId.c_str(), ImVec2(-1, PLOT_H), ImGuiChildFlags_None,
+                    ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+                // Unique ImPlot ID per group (suffix after ##); label before ## is shown.
+                const std::string plotId = "Group " + std::to_string(g + 1)
+                    + "##" + title + "_g" + std::to_string(g);
+
+                if (ImPlot::BeginPlot(plotId.c_str(), ImVec2(-1, -1)))
                 {
-                    ImPlot::SetupAxes("t (s)", "Amplitude");
-                    ImPlot::PlotLine("xa", t.data(), xa.data(), static_cast<int>(t.size()));
-                    ImPlot::PlotLine("xb", t.data(), xb.data(), static_cast<int>(t.size()));
-                    ImPlot::PlotLine("xc", t.data(), xc.data(), static_cast<int>(t.size()));
+                    setup_abc_plot_panel(t_copy, xa, xb, xc, *applyLimits);
+                    plot_abc_lines(t_copy, xa, xb, xc);
                     ImPlot::EndPlot();
                 }
-                ImGui::PopID();
+
+                ImGui::EndChild();
+
+                if (g + 1 < nGroups) {
+                    ImGui::Dummy(ImVec2(0, groupGap));
+                }
             }
 
             ImGui::EndChild();
+            *applyLimits = false;
         });
 }
 

@@ -118,7 +118,7 @@ void example_OPF_WT(bool plotting_enabled /*=true*/)
     net.connectElementToBus(br1_dc, 1, bus1_dc);
     net.connectElementToBus(br1_dc, 2, bus2_dc);
 
-    /* ---------- 2.3 Create Converters ---------- */
+    /* ---------- 2.3 Create Converters (MMC machine signs: Pac,Pdc > 0 = inverter) ---------- */
     std::vector<double> converter_params1 = {
         2 * M_PI * 50,
         50.0 * 1e6,
@@ -153,6 +153,7 @@ void example_OPF_WT(bool plotting_enabled /*=true*/)
     net.connectElementToBus(mmc1, 1, bus3_ac);
     net.connectElementToBus(mmc1, 2, bus1_dc);
 
+    // Rectifier seed: Pac,Pdc < 0 (AC import / DC export)
     std::vector<double> converter_params2 = {
         2 * M_PI * 50,
         -50.0 * 1e6,
@@ -209,7 +210,4 @@ void example_OPF_WT(bool plotting_enabled /*=true*/)
     global_params["Z_base"] = global_params["ACZbase"];
 
     pf.make_OPF(&net, global_params, false, false, plotting_enabled, true);
-
-    std::cout << "Press Enter to continue...\n";
-    std::cin.get();
 }

@@ -4,6 +4,7 @@
  */
 #include "computation_runner.h"
 
+#include "../Include_components.h"
 #include "../Solver/DQsym/DQsym.h"
 #include "../Solver/Stability_Estimate/Stability_estimate.h"
 #include "../Solver/OPF/Powerflow.h"
@@ -51,6 +52,19 @@ void runYMatrix(const JSON& calc, Network& network, const JSON& defaultRange, co
 	for (const auto& [id, elem] : network.getElements()) {
 		if (calc.contains("component_id") && calc.at("component_id") != id) {
 			continue;
+		}
+		// Converters need an equilibrium + ABCD before Y(s) = C(sI-A)^{-1}B+D
+		// is meaningful; without this the JSON path wrote an all-zero matrix.
+		if (auto* conv = dynamic_cast<Converter*>(elem)) {
+			try {
+				conv->solveEquilibrium();
+				conv->computeABCD();
+			}
+			catch (const std::exception& ex) {
+				std::cerr << "[y_matrix] '" << id << "' linearisation failed: "
+					<< ex.what() << "\n";
+				continue;
+			}
 		}
 		std::cout << "Computing Y-matrix for '" << id << "' ("
 			<< range.start << "-" << range.end << " Hz, "

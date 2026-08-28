@@ -144,13 +144,13 @@ void example_DQsym_math_operations(bool plotting_enabled /*=true*/)
 
 		if (plotting_enabled){
 			cout << "Plotting...\n";
-			plot_abc_waveforms_implot(res.t, res.Xabc, "dqn2abc Example");
+			DQsymResult result;
+			result.time = res.t;
+			result.DSSabcHist = { res.Xabc };
+			dqSym.setResult(std::move(result));
+			dqSym.plot();
 			cout << "Plot finished.\n";
 		}
-
-		// Prevent immediate exit (important!)
-		std::cout << "Press Enter to continue...\n";
-		std::cin.get();
 	}
 	catch (const std::exception& e) {
 		std::cerr << "ERROR in dqn2abc test: " << e.what() << "\n";

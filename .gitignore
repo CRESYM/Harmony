@@ -270,8 +270,9 @@ Harmony/.vs/Harmony/v15/.suo
 # Visual Studio Code files
 .vs/
 
-# Harmony output files
+# Harmony output files (runtime CSVs / dumps written by examples & WriteValues)
 src/files/
+files/
 
 # Legacy input_file build artifacts (module moved to src/json/)
 input_file/

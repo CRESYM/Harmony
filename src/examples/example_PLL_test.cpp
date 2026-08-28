@@ -147,7 +147,4 @@ void example_PLL_test() {
     std::cout << "  Final wt_dev      = " << theta_c - omega_0 * Tend
         << "   (should be ~ atan2(Vgq,Vgd) = "
         << std::atan2(Vgq_grid, Vgd_grid) << ")\n";
-
-    std::cout << "\nPress Enter to continue...\n";
-    std::cin.get();
 }

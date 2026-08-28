@@ -1,6 +1,6 @@
 # Chapter 6 — Component Reference
 
-[← JSON input](05-json-input.md) | [Manual index](README.md) | [Next: Analysis workflows →](07-analysis-workflows.md)
+[← JSON input](05-json-input.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Analysis workflows →](07-analysis-workflows.md)
 
 ---
 
@@ -130,11 +130,11 @@ The most detailed converter model. Constructor variants accept:
 | Index | Quantity | Unit | Description |
 |-------|----------|------|-------------|
 | 0 | ω | rad/s | Nominal angular frequency (e.g. 2π·50) |
-| 1 | P | W | Active power setpoint |
-| 2 | Q | var | Reactive power setpoint |
+| 1 | P | W | Active power setpoint (**machine sign**: `>0` = export to AC) |
+| 2 | Q | var | Reactive power setpoint (same dq convention as dynamics) |
 | 3 | θ | rad | AC voltage angle |
 | 4 | V_m | V | AC voltage magnitude |
-| 5 | P_dc | W | DC power |
+| 5 | P_dc | W | DC power (**machine sign**: `>0` = import from DC; same sign as `P` when lossless) |
 | 6 | V_dc | V | DC voltage |
 | 7 | L_arm | H | Arm inductance |
 | 8 | R_arm | Ω | Arm resistance |
@@ -198,4 +198,4 @@ Many elements store a **symbolic Y-matrix** (SymEngine) internally. At runtime:
 - `writeFile` sweeps frequency logarithmically
 - State-space formation uses MNA stamping from symbolic matrices
 
-[← JSON input](05-json-input.md) | [Manual index](README.md) | [Next: Analysis workflows →](07-analysis-workflows.md)
+[← JSON input](05-json-input.md) | [Manual index](README.md) | [Docs map](../README.md) | [Next: Analysis workflows →](07-analysis-workflows.md)
