@@ -3,41 +3,13 @@
  * @brief Implementation of Interactive ImGui/ImPlot visualization for solver results.
  */
 #include "Constants.h"
-#include "HarmonyTypes.h"
-#include "VizIncludes.h"
-#include "HarmonyTypes.h"
-#include "VizIncludes.h"
 #include "Visualization.h"
-#include "ui/harmony_banner_gui.h"
-#include "../DQsym/dqsym_snapshot.h"
-
-#include <imgui.h>
-#include <implot.h>
-
-#include <optional>
-#include "ui/harmony_banner_gui.h"
-#include "../DQsym/dqsym_snapshot.h"
-
-#include <imgui.h>
-#include <implot.h>
-
-#include <optional>
-#include "ui/harmony_banner_gui.h"
+#include "harmony_banner_gui.h"
 
 // stb_image_write — single-header PNG/BMP writer (no external lib required).
 // Drop stb_image_write.h into your source tree from https://github.com/nothings/stb
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
-
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
-#include <memory>
-
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
-#include <memory>
 
 #include <algorithm>
 #include <cmath>
@@ -278,8 +250,10 @@ static void init_gui()
     }
 
     g_window = glfwCreateWindow(vizWidth, vizHeight, "Harmony Visualization", NULL, NULL);
-    if (!g_window)
+    if (!g_window) {
+        glfwTerminate();
         throw std::runtime_error("Failed to create window");
+    }
 
     glfwMakeContextCurrent(g_window);
     glfwSwapInterval(1);
@@ -469,7 +443,16 @@ void visualization_stop()
         g_tabs.clear();
         g_pending_save.clear();
         g_running = false;
+        return;
     }
+
+    if (g_guiThread.joinable()) {
+        g_guiThread.join();
+    }
+
+    std::lock_guard<std::mutex> lock(g_mutex);
+    g_tabs.clear();
+    g_pending_save.clear();
 }
 
 bool visualization_is_running()
@@ -628,21 +611,13 @@ void bode_plot_implot(
 {
     // Shared so the flag survives draw_plot_tabs()'s std::function copy each frame.
     const auto applyLimits = std::make_shared<bool>(true);
-    add_tab(title, [=]() mutable
+    add_tab(title, [=]()
         {
             if (freq.empty() || mag_dB.empty() || phase_deg.empty())
                 return;
 
             const int N = (int)freq.size();
             const int nSignals = (int)labels.size();
-            // Force correct limits on first draw of this tab (HarmonyUI keeps ImPlot IDs).
-            static thread_local int unused_tls = 0; (void)unused_tls;
-            bool applyLimits = true;
-            // NOTE: applyLimits must be captured by the lambda — use mutable local:
-            // Actually [=]() mutable with a local bool that starts true each call would
-            // reset every frame. Need a variable that persists across draws of THIS tab.
-            // Capture by value into the closure:
-            (void)0;
 
             // NoScrollWithMouse: otherwise the child steals the wheel and ImPlot cannot zoom.
             ImGui::BeginChild("BodeLayout", ImVec2(0, 0), ImGuiChildFlags_None,
@@ -1207,6 +1182,35 @@ void plot_abc_lines(
 }
 
 } // namespace
+
+void plot_abc_waveforms_implot(
+    const std::vector<double>& t,
+    const Eigen::MatrixXd& Xabc,
+    const std::string& title)
+{
+    auto t_copy = t;
+    auto X_copy = Xabc;
+    const auto applyLimits = std::make_shared<bool>(true);
+
+    add_tab(title, [t_copy = std::move(t_copy), X_copy = std::move(X_copy), applyLimits]()
+        {
+            std::vector<double> xa(t_copy.size()), xb(t_copy.size()), xc(t_copy.size());
+            for (size_t i = 0; i < t_copy.size(); ++i)
+            {
+                xa[i] = X_copy(i, 0);
+                xb[i] = X_copy(i, 1);
+                xc[i] = X_copy(i, 2);
+            }
+
+            if (ImPlot::BeginPlot(("ABC")))
+            {
+                setup_abc_plot_panel(t_copy, xa, xb, xc, *applyLimits);
+                plot_abc_lines(t_copy, xa, xb, xc);
+                ImPlot::EndPlot();
+            }
+            *applyLimits = false;
+        });
+}
 
 // ============================================================
 // ABC GROUPS

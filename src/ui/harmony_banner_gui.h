@@ -3,14 +3,8 @@
 struct ImFont;
 struct ImGuiIO;
 
-/** @brief Default UI font size (pixels) for HarmonyUI. */
-constexpr float kHarmonyUiFontSizePx = 20.0f;
-
 /** @brief ASCII banner font size (pixels) in the launcher. */
 constexpr float kHarmonyLauncherBannerFontSizePx = 10.0f;
-
-/** @brief ImGui widget scale factor for HarmonyUI. */
-constexpr float kHarmonyUiStyleScale = 1.35f;
 
 /** @brief UI font size (pixels) in the plot / visualization window. */
 constexpr float kHarmonyPlotUiFontSizePx = 24.0f;
@@ -28,16 +22,13 @@ constexpr float kHarmonyPlotEigenHeightPx = 640.0f;
 constexpr float kHarmonyPlotWaveformHeightPx = 300.0f;
 
 /** @brief Load the primary UI font and replace ImGui's default. */
-ImFont* harmonyInitUiFont(ImGuiIO& io, float sizePixels = kHarmonyUiFontSizePx);
+ImFont* harmonyInitUiFont(ImGuiIO& io, float sizePixels = kHarmonyPlotUiFontSizePx);
 
 /** @brief Enlarge paddings, buttons, and scroll bars for readability. */
-void harmonyApplyUiStyleScale(float scale = kHarmonyUiStyleScale);
+void harmonyApplyUiStyleScale(float scale = kHarmonyPlotUiStyleScale);
 
 /** @brief Enlarge ImPlot tick labels, legends, markers, and line weight. */
 void harmonyApplyPlotStyle();
-
-/** @brief Configure fonts and style for the HarmonyUI launcher window. */
-ImFont* harmonyConfigureLauncherUi(ImGuiIO& io, ImFont** bannerFontOut);
 
 /** @brief Configure fonts and style for the Harmony Visualization window. */
 ImFont* harmonyConfigurePlotUi(ImGuiIO& io);

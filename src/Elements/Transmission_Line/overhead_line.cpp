@@ -227,20 +227,12 @@ Overhead_Line::Groundwires::Groundwires(int ng, std::vector<double>& values, dou
 }
 
 
-Overhead_Line::~Overhead_Line() {
-	delete conductors;
-	conductors = nullptr;
-	delete groundwires;
-	groundwires = nullptr;
-}
-
-
 Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& location, double len, std::tuple<double, double, double> earth,
 	std::tuple<std::string, std::vector<int>, std::vector<double>, double, double, double, double> conductor,
 	std::tuple<int, std::vector<double>, double> groundwire) : length(len), earthParameters(earth), Element(symbol, location, 1, 1) {
 
-	conductors = new Conductors(std::get<0>(conductor), std::get<1>(conductor), std::get<2>(conductor), std::get<3>(conductor), std::get<4>(conductor), std::get<5>(conductor), std::get<6>(conductor));
-	groundwires = new Groundwires(std::get<0>(groundwire), std::get<1>(groundwire), conductors->ybc, std::get<2>(groundwire));
+	conductors = std::make_unique<Conductors>(std::get<0>(conductor), std::get<1>(conductor), std::get<2>(conductor), std::get<3>(conductor), std::get<4>(conductor), std::get<5>(conductor), std::get<6>(conductor));
+	groundwires = std::make_unique<Groundwires>(std::get<0>(groundwire), std::get<1>(groundwire), conductors->ybc, std::get<2>(groundwire));
 
 	// Calculate earth parameters
 	RCP<const Basic> mu_earth = real_double(std::get<0>(earthParameters) * mu_0);

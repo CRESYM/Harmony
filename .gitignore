@@ -280,14 +280,6 @@ input_file/
 # Harmony build directory
 build/
 
-# Legacy input_file build artifacts (module moved to src/json/)
-input_file/
-
-
-# Legacy input_file build artifacts (module moved to src/json/)
-input_file/
-
-
 
 # Harmony installers
 install/Harmony/

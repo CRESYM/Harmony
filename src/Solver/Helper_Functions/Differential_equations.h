@@ -10,7 +10,7 @@
  * Tustin (bilinear) discretization of state-space models.
  */
 
-#include "../../HarmonyTypes.h"
+#include "../../Constants.h"
 
 /// Right-hand side of dx/dt = f(t, x, u).
 using RHSFunc = std::function<Eigen::VectorXd(double t,

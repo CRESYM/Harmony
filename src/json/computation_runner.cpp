@@ -6,13 +6,11 @@
 
 #include "../Include_components.h"
 #include "../Solver/DQsym/DQsym.h"
-#include "../Solver/DQsym/dqsym_snapshot.h"
 #include "../Solver/Stability_Estimate/Stability_estimate.h"
 #include "../Solver/OPF/Powerflow.h"
 
 #include <cctype>
 #include <filesystem>
-#include <optional>
 
 
 namespace {
@@ -48,31 +46,9 @@ FrequencyRange parseFrequencyRangeLocal(const JSON& rangeJson) {
 	return range;
 }
 
-std::optional<DqsymStabilityPickConfig> parseStabilityPickConfig(
-	const JSON& calc,
-	const JSON& simCfg)
-{
-	if (!calc.contains("converter_id")) {
-		throw std::invalid_argument("Snapshot stability requires 'converter_id'.\n");
-	}
-
-	DqsymStabilityPickConfig cfg;
-	cfg.converter_id = calc.at("converter_id").get<std::string>();
-	cfg.location = calc.value("location", std::string("AC"));
-	const JSON rangeJson = calc.value("frequency_range", simCfg.value("frequency_range", JSON::object()));
+void runYMatrix(const JSON& calc, Network& network, const JSON& defaultRange, const bool plottingEnabled) {
+	const JSON rangeJson = calc.value("frequency_range", defaultRange);
 	const FrequencyRange range = parseFrequencyRangeLocal(rangeJson);
-	cfg.freq_start = range.start;
-	cfg.freq_end = range.end;
-	cfg.freq_points = range.points;
-	cfg.plot_type = lowerCopy(calc.value("plot_type", std::string("bode")));
-	cfg.plot = calc.value("plot", true);
-	return cfg;
-}
-
-void runYMatrix(const JSON& calc, Network& network, const JSON& simCfg, const bool plottingEnabled) {
-	const JSON rangeJson = calc.value("frequency_range", simCfg.value("frequency_range", JSON::object()));
-	const FrequencyRange range = parseFrequencyRangeLocal(rangeJson);
-	const std::string outputDir = simCfg.value("output_directory", "./files");
 	for (const auto& [id, elem] : network.getElements()) {
 		if (calc.contains("component_id") && calc.at("component_id") != id) {
 			continue;
@@ -93,7 +69,7 @@ void runYMatrix(const JSON& calc, Network& network, const JSON& simCfg, const bo
 		std::cout << "Computing Y-matrix for '" << id << "' ("
 			<< range.start << "-" << range.end << " Hz, "
 			<< range.points << " points)\n";
-		elem->writeFile(range.start, range.end, range.points, outputDir);
+		elem->writeFile(range.start, range.end, range.points);
 		if (jsonPlotRequested(calc, plottingEnabled)) {
 			elem->plotYParameters(range.start, range.end, range.points);
 		}
@@ -163,11 +139,7 @@ void runOpf(const JSON& calc, Network& network, const JSON& simulationConfig, co
 		calc.value("print_info", true));
 }
 
-void runDqsym(const JSON& calc, Network& network, const JSON& simCfg, const bool plottingEnabled) {
-	auto& session = DqsymSnapshotSession::instance();
-	session.clear();
-	session.setNetworkPointer(&network);
-
+void runDqsym(const JSON& calc, Network& network, const bool plottingEnabled) {
 	DQsym dq;
 	dq.initialize(&network);
 
@@ -178,30 +150,6 @@ void runDqsym(const JSON& calc, Network& network, const JSON& simCfg, const bool
 	cfg.f = calc.value("frequency", 50.0);
 	cfg.omega = 2.0 * M_PI * cfg.f;
 	cfg.nKeep = calc.value("n_keep", 5);
-	cfg.plotting_enabled = plottingEnabled;
-	cfg.record_snapshot_history = calc.value("record_snapshot_history", false);
-	cfg.snapshot_history_stride = std::max(1, calc.value("snapshot_history_stride", 1));
-
-	if (calc.contains("snapshot_times") && calc.at("snapshot_times").is_array()) {
-		for (const auto& ts : calc.at("snapshot_times")) {
-			cfg.snapshot_times.push_back(ts.get<double>());
-		}
-	}
-
-	if (calc.contains("stability_at_snapshots")) {
-		cfg.stability_at_snapshots = parseStabilityPickConfig(
-			calc.at("stability_at_snapshots"), simCfg);
-		session.setStabilityConfig(*cfg.stability_at_snapshots);
-		session.setRetainNetwork(true);
-	}
-
-	if (calc.contains("stability_on_pick")) {
-		cfg.stability_on_pick = parseStabilityPickConfig(
-			calc.at("stability_on_pick"), simCfg);
-		session.setStabilityConfig(*cfg.stability_on_pick);
-		session.setRetainNetwork(true);
-		cfg.record_snapshot_history = true;
-	}
 
 	const int swCount = calc.value("switch_count", 1);
 	cfg.swOnRes = Eigen::VectorXd::Constant(swCount, 0.01);
@@ -276,7 +224,7 @@ std::string ComputationRunner::normalizeType(const JSON& calc) {
 
 void ComputationRunner::registerBuiltins() {
 	handlers_["y_matrix"] = [this](const JSON& calc, Network& net, const JSON& simCfg) {
-		runYMatrix(calc, net, simCfg, plottingEnabled_);
+		runYMatrix(calc, net, simCfg.value("frequency_range", JSON::object()), plottingEnabled_);
 	};
 	handlers_["y_matrx"] = handlers_["y_matrix"];
 
@@ -290,18 +238,6 @@ void ComputationRunner::registerBuiltins() {
 
 	handlers_["stability_assessment"] = [this](const JSON& calc, Network& net, const JSON& simCfg) {
 		net.add_areas();
-		for (auto& [id, elem] : net.getElements()) {
-			if (auto* conv = dynamic_cast<Converter*>(elem)) {
-				try {
-					conv->solveEquilibrium();
-					conv->computeABCD();
-				}
-				catch (const std::exception& ex) {
-					std::cerr << "[stability_assessment] '" << id
-						<< "' linearisation failed: " << ex.what() << "\n";
-				}
-			}
-		}
 		StabilityEstimate stability;
 		stability.add_areas(&net);
 		stability.print_summary();
@@ -322,8 +258,8 @@ void ComputationRunner::registerBuiltins() {
 	};
 	handlers_["opf"] = handlers_["power_flow"];
 
-	handlers_["dqsym"] = [this](const JSON& calc, Network& net, const JSON& simCfg) {
-		runDqsym(calc, net, simCfg, plottingEnabled_);
+	handlers_["dqsym"] = [this](const JSON& calc, Network& net, const JSON&) {
+		runDqsym(calc, net, plottingEnabled_);
 	};
 	handlers_["time_domain"] = handlers_["dqsym"];
 }

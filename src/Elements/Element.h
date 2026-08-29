@@ -156,17 +156,14 @@ public:
      * @param start_frequency Lower bound of frequency range (Hz).
      * @param end_frequency Upper bound of frequency range (Hz).
      * @param number_of_points Number of frequency samples.
-     * @param output_directory Directory for `{symbol}.csv` (default `./files`).
      */
-    void writeFile(double start_frequency, double end_frequency, int number_of_points,
-        const std::string& output_directory = "./files");
+    void writeFile(double start_frequency, double end_frequency, int number_of_points);
 
     /**
      * @brief Plot Y-parameter matrix entries versus frequency.
      * @param start_frequency Lower bound of frequency range (Hz).
      * @param end_frequency Upper bound of frequency range (Hz).
      * @param number_of_points Number of frequency samples.
-     * @param output_directory Directory for `{symbol}.csv` (default `./files`).
      */
     void plotYParameters(double start_frequency, double end_frequency, int number_of_points);
 

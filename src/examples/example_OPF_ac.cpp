@@ -10,12 +10,9 @@ void example_OPF_ac(bool plotting_enabled /*=true*/)
     PowerFlow pf;
     std::unordered_map<std::string, Eigen::MatrixXd>* noData = nullptr;
 
-    pf.solve_opf("", "ac5", noData,
+    pf.solve_opf("", "SLO9", noData,
         /*vscControl=*/false,
         /*writeTxt=*/false,
         /*plotResult=*/plotting_enabled,
         /*print_info=*/false);
-
-    std::cout << "Press Enter to exit...\n";
-    std::cin.get();
 }

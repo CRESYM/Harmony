@@ -54,16 +54,6 @@ extern vector<vector<complex<double>>> matrixToVector(const MatrixXcd& mat);
 extern vector<vector<double>> matrixToVector(const MatrixXd& mat);
 
 /**
- * @brief Stacks four input matrices into a single block column.
- * @param u1 First input block.
- * @param u2 Second input block.
- * @param u3 Third input block.
- * @param u4 Fourth input block.
- * @return Vertically stacked complex matrix.
- */
-extern MatrixXcd stack_u_4x_3xN(const MatrixXcd& u1, const MatrixXcd& u2, const MatrixXcd& u3, const MatrixXcd& u4);
-
-/**
  * @brief Complex matrix multiplication using nested vectors.
  * @param A Left operand.
  * @param B Right operand.

@@ -3,7 +3,6 @@
  * @brief Implementation of the PowerFlow OPF solver algorithms.
  */
 #include "Powerflow.h"
-#include "../../GurobiIncludes.h"
 #include "../Helper_Functions/Helper_Functions.h"
 #include "../../Bus.h"   
 

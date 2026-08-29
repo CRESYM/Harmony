@@ -3,8 +3,6 @@
  * @brief Implementation of Numerical integration, equilibrium finding, and discretization utilities.
  */
 #include "Differential_equations.h"
-#include "SundialsIncludes.h"
-#include "SundialsIncludes.h"
 #include <stdexcept>
 #include <iostream>
 #include <cmath>
@@ -89,62 +87,6 @@ static int kinsol_jac_cb(N_Vector u, N_Vector, SUNMatrix J, void* ud,
     auto* d = static_cast<KINSOLUserData*>(ud);
     eigen2sun(J, (*d->jac)(0.0, nv2eigen(u, d->n), d->u));
     return 0;
-}
-
-static int kinsol_fd_jac_cb(N_Vector u, N_Vector, SUNMatrix J, void* ud,
-    N_Vector, N_Vector) {
-    auto* d = static_cast<KINSOLUserData*>(ud);
-    auto [A, B] = computeJacobians(*d->rhs, nv2eigen(u, d->n), d->u, 0.0);
-    (void)B;
-    eigen2sun(J, A);
-    return 0;
-}
-
-static KINSOLConfig withAutoScaling(
-    const KINSOLConfig& cfg,
-    const RHSFunc& rhs,
-    const Eigen::VectorXd& x0,
-    const Eigen::VectorXd& u)
-{
-    KINSOLConfig scaled = cfg;
-    if (scaled.x_scale.size() != x0.size()) {
-        scaled.x_scale = x0.unaryExpr([](double v) {
-            return std::max(1.0, std::abs(v));
-        });
-    }
-    if (scaled.f_scale.size() != x0.size()) {
-        const Eigen::VectorXd f0 = rhs(0.0, x0, u);
-        scaled.f_scale = f0.cwiseAbs().cwiseMax(1.0);
-    }
-    return scaled;
-}
-
-static int kinsol_fd_jac_cb(N_Vector u, N_Vector, SUNMatrix J, void* ud,
-    N_Vector, N_Vector) {
-    auto* d = static_cast<KINSOLUserData*>(ud);
-    auto [A, B] = computeJacobians(*d->rhs, nv2eigen(u, d->n), d->u, 0.0);
-    (void)B;
-    eigen2sun(J, A);
-    return 0;
-}
-
-static KINSOLConfig withAutoScaling(
-    const KINSOLConfig& cfg,
-    const RHSFunc& rhs,
-    const Eigen::VectorXd& x0,
-    const Eigen::VectorXd& u)
-{
-    KINSOLConfig scaled = cfg;
-    if (scaled.x_scale.size() != x0.size()) {
-        scaled.x_scale = x0.unaryExpr([](double v) {
-            return std::max(1.0, std::abs(v));
-        });
-    }
-    if (scaled.f_scale.size() != x0.size()) {
-        const Eigen::VectorXd f0 = rhs(0.0, x0, u);
-        scaled.f_scale = f0.cwiseAbs().cwiseMax(1.0);
-    }
-    return scaled;
 }
 
 static int kinsol_fd_jac_cb(N_Vector u, N_Vector, SUNMatrix J, void* ud,
@@ -374,27 +316,44 @@ CVODEResult integrate(
 {
     int n = static_cast<int>(x0.size());
 
-    SUNContext ctx;
-    SUNContext_Create(SUN_COMM_NULL, &ctx);
+    SUNContext ctx{};
+    if (SUNContext_Create(SUN_COMM_NULL, &ctx) != 0)
+        throw std::runtime_error("SUNContext_Create failed");
 
-    N_Vector y = N_VNew_Serial(static_cast<sunindextype>(n), ctx);
-    eigen2nv(y, x0);
+    struct CvodeResources {
+        SUNContext* ctx = nullptr;
+        N_Vector y = nullptr;
+        void* cvode = nullptr;
+        SUNMatrix A = nullptr;
+        SUNLinearSolver LS = nullptr;
+        ~CvodeResources() {
+            if (y) N_VDestroy(y);
+            if (cvode) CVodeFree(&cvode);
+            if (LS) SUNLinSolFree(LS);
+            if (A) SUNMatDestroy(A);
+            if (ctx) SUNContext_Free(ctx);
+        }
+    } res;
+    res.ctx = &ctx;
 
-    void* cvode = CVodeCreate(CV_BDF, ctx);
+    res.y = N_VNew_Serial(static_cast<sunindextype>(n), ctx);
+    eigen2nv(res.y, x0);
+
+    res.cvode = CVodeCreate(CV_BDF, ctx);
     CVODEUserData ud = { &rhs, &jac, &inputFn, n };
-    CVodeSetUserData(cvode, &ud);
-    CVodeInit(cvode, cvode_rhs_cb, static_cast<sunrealtype>(t0), y);
-    CVodeSStolerances(cvode, static_cast<sunrealtype>(cfg.rtol),
+    CVodeSetUserData(res.cvode, &ud);
+    CVodeInit(res.cvode, cvode_rhs_cb, static_cast<sunrealtype>(t0), res.y);
+    CVodeSStolerances(res.cvode, static_cast<sunrealtype>(cfg.rtol),
         static_cast<sunrealtype>(cfg.atol));
-    CVodeSetMaxStep(cvode, static_cast<sunrealtype>(cfg.dt_max));
+    CVodeSetMaxStep(res.cvode, static_cast<sunrealtype>(cfg.dt_max));
 
-    SUNMatrix A = SUNDenseMatrix(static_cast<sunindextype>(n),
+    res.A = SUNDenseMatrix(static_cast<sunindextype>(n),
         static_cast<sunindextype>(n), ctx);
-    SUNLinearSolver LS = SUNLinSol_Dense(y, A, ctx);
-    CVodeSetLinearSolver(cvode, LS, A);
+    res.LS = SUNLinSol_Dense(res.y, res.A, ctx);
+    CVodeSetLinearSolver(res.cvode, res.LS, res.A);
 
     if (cfg.use_analytical_jac && jac)
-        CVodeSetJacFn(cvode, cvode_jac_cb);
+        CVodeSetJacFn(res.cvode, cvode_jac_cb);
 
     CVODEResult result;
     result.time.push_back(t0);
@@ -404,22 +363,20 @@ CVODEResult integrate(
     sunrealtype tn = static_cast<sunrealtype>(t0 + dt_output);
 
     while (static_cast<double>(tn) <= tEnd + 1e-12) {
-        int flag = CVode(cvode, tn, y, &tc, CV_NORMAL);
+        int flag = CVode(res.cvode, tn, res.y, &tc, CV_NORMAL);
         if (flag < 0)
             throw std::runtime_error("CVode flag " + std::to_string(flag));
         result.time.push_back(static_cast<double>(tc));
-        result.states.push_back(nv2eigen(y, n));
+        result.states.push_back(nv2eigen(res.y, n));
         tn += static_cast<sunrealtype>(dt_output);
     }
 
     long ns = 0, nf = 0, nj = 0;
-    CVodeGetNumSteps(cvode, &ns);
-    CVodeGetNumRhsEvals(cvode, &nf);
-    CVodeGetNumJacEvals(cvode, &nj);
+    CVodeGetNumSteps(res.cvode, &ns);
+    CVodeGetNumRhsEvals(res.cvode, &nf);
+    CVodeGetNumJacEvals(res.cvode, &nj);
     std::cout << "[CVODE] Steps:" << ns << " RHS:" << nf << " Jac:" << nj << "\n";
 
-    N_VDestroy(y); CVodeFree(&cvode);
-    SUNLinSolFree(LS); SUNMatDestroy(A); SUNContext_Free(&ctx);
     return result;
 }
 

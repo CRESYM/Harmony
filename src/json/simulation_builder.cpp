@@ -9,9 +9,6 @@
 #include "json_parameters.h"
 
 #include "../Bus.h"
-#include "json_parameters.h"
-
-#include "../Bus.h"
 
 #include <set>
 

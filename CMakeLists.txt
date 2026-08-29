@@ -29,86 +29,137 @@
 #   - External libraries are configured in dependencies.cmake
 # -----------------------------------------------------------------------------
 
+# -----------------------------------------------------------------------------
+# 1. Project Setup
+# -----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 4.0)
 project(Harmony)
 
+# Set the C++ Standard (GoogleTest requires >= 14)
+# std::variant included in Constants.h requires >= 17)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# -----------------------------------------------------------------------------
+# 2. Define Harmony Executable
+# -----------------------------------------------------------------------------
+
+# Load the list of source and header files.
 include(sources.cmake)
 
-# -----------------------------------------------------------------------------
-# 2. Compiler cache + HarmonyCore static library
-# -----------------------------------------------------------------------------
-
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ccache.cmake)
-
-add_library(HarmonyCore STATIC
-    ${HARMONY_HEADER_FILES}
-    ${HARMONY_CORE_SOURCE_FILES}
+# Create the Harmony executable from the project source files.
+add_executable(
+    Harmony
+    ${HARMONY_HEADER_FILES}     # defined in sources.cmake
+    ${HARMONY_SOURCE_FILES}     # defined in sources.cmake
 )
 
-add_library(HarmonyExamples STATIC
-    ${Examples_Source_files}
-)
+# -----------------------------------------------------------------------------
+# 3. Pre-compiled Headers and Windows Options
+# -----------------------------------------------------------------------------
 
-target_precompile_headers(HarmonyCore PRIVATE
+# 3.1 Precompiled headers 
+# Improve compilation speed by caching commonly included files that rarely change.
+target_precompile_headers(Harmony PRIVATE
     <Eigen/Dense>
-    "./src/HarmonyTypes.h"
-    "./src/SymEngineTypes.h"
+    <symengine/basic.h>
+    "./src/Constants.h"
     "./src/Include_components.h"
     "./src/Solver/Helper_Functions/Helper_Functions.h"
 )
 
+# 3.2 Windows options
 if (MSVC)
+    # Set Harmony as a starup project on Visual Studio Solution
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Harmony)
+    
+    # Add the MP compiler flag for parallel compilation
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 endif()
 
+# -----------------------------------------------------------------------------
+# 4. Link Dependencies
+# -----------------------------------------------------------------------------
+
+# Load helper functions that configure and link third-party libraries
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependencies.cmake)
 
-link_harmony_dependencies(HarmonyCore)
+# Link required external libraries
+link_eigen(Harmony)
+link_symengine(Harmony)
+link_sundials(Harmony)
+link_implot(Harmony)
+link_gurobi(Harmony)
+link_nlohmann_json(Harmony)
 
-target_include_directories(HarmonyCore PUBLIC
+target_include_directories(Harmony PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(HarmonyExamples PUBLIC HarmonyCore)
-link_harmony_dependencies(HarmonyExamples)
+# -----------------------------------------------------------------------------
+# 5. HarmonyUI launcher executable
+# -----------------------------------------------------------------------------
+add_executable(
+    HarmonyUI
+    ${HARMONY_HEADER_FILES}
+    ${HARMONY_UI_SOURCE_FILES}
+)
+
+target_precompile_headers(HarmonyUI PRIVATE
+    <Eigen/Dense>
+    <symengine/basic.h>
+    "./src/Constants.h"
+    "./src/Include_components.h"
+    "./src/Solver/Helper_Functions/Helper_Functions.h"
+)
+
+link_eigen(HarmonyUI)
+link_symengine(HarmonyUI)
+link_sundials(HarmonyUI)
+link_implot(HarmonyUI)
+link_gurobi(HarmonyUI)
+link_nlohmann_json(HarmonyUI)
+
+target_include_directories(HarmonyUI PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
 # -----------------------------------------------------------------------------
-# 3. Harmony and HarmonyUI executables
+# 6. Optional API documentation (Doxygen)
 # -----------------------------------------------------------------------------
-
-add_executable(Harmony src/main.cpp)
-target_link_libraries(Harmony PRIVATE HarmonyCore HarmonyExamples)
-
-add_executable(HarmonyUI ${HARMONY_UI_EXECUTABLE_SOURCES})
-target_link_libraries(HarmonyUI PRIVATE HarmonyCore HarmonyExamples)
-link_harmony_dependencies(HarmonyUI)
-
-# -----------------------------------------------------------------------------
-# 4. Optional API documentation (Doxygen)
-# -----------------------------------------------------------------------------
-
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/doxygen.cmake)
 
 # ==============================================================================
-# 5. Create MSI Installer on Windows (currently disabled)
+# 7. Create MSI Installer on Windows (currently disabled)
 # ==============================================================================
 if(MSVC AND FALSE)
+    # Find path to symengine dll and add it as a link directory
     get_target_property(SYMENGINE_DLL_PATH symengine LOCATION)
     get_filename_component(SYMENGINE_DLL_DIR "${SYMENGINE_DLL_PATH}" DIRECTORY)
+    target_link_directories(Harmony PRIVATE ${SYMENGINE_DLL_DIR})
 
+
+    # Find path to dlls required by symengine, which are in the same dir as the symengine dll
     file(GLOB FLINT_DLL_PATH "${SYMENGINE_DLL_DIR}/flint*.dll")
     file(GLOB LIBGMP_DLL_PATH "${SYMENGINE_DLL_DIR}/libgmp*.dll")
     file(GLOB LIBMPFR_DLL_PATH "${SYMENGINE_DLL_DIR}/libmpfr*.dll")
     file(GLOB LIBWINPTHREAD_DLL_PATH "${SYMENGINE_DLL_DIR}/libwinpthread*.dll")
     file(GLOB LIBMPC_DLL_PATH "${SYMENGINE_DLL_DIR}/libmpc*.dll")
+    file(GLOB LIBMPC_DLL_PATH "${SYMENGINE_DLL_DIR}/libmpc*.dll")
     file(GLOB LIBGCC_DLL_PATH "${SYMENGINE_DLL_DIR}/libgcc*.dll")
 
+    # Find path to Harmony User Manual
     file(GLOB HARMONY_USER_GUIDE ${CMAKE_SOURCE_DIR}/*.pdf)
 
+    # Print msgs to screen
+    message(STATUS "Copying Harmony binary, LICENSE, and dependencies to install/Harmony")
+    message(STATUS "Copying Harmony.exe to install/Harmony/bin")
+    message(STATUS "Copying LICENSE to install/Harmony")
+    message(STATUS "Copying Harmony user guide to install/Harmony/doc")
+    message(STATUS "Copying ${SYMENGINE_DLL_PATH} to install/Harmony/bin")
+    message(STATUS "Copying symengine dependencies to install/Harmony/bin")
+
+    # Copy the files to the installation directory
     set(INSTALL_DIR ${CMAKE_SOURCE_DIR}/install/Harmony)
     add_custom_command(TARGET Harmony POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${INSTALL_DIR}

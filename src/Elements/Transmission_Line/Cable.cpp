@@ -24,10 +24,14 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
 	std::map<string, Conductor*> conductors_constructor, std::map<string, Insulator*> insulators_constructor,
 	std::vector<std::pair<double, double>> positions_constructor)
 	: Element(symbol, location, pins, pins), earth_parameters(earth),
-	type(type_constructor), conductors(conductors_constructor), insulators(insulators_constructor), 
-	positions(positions_constructor), length(length_constructor)
-    // --- Begin replacement constructor body ---
+	type(type_constructor), positions(positions_constructor), length(length_constructor)
 {
+	for (auto& [key, conductor] : conductors_constructor) {
+		conductors[key].reset(conductor);
+	}
+	for (auto& [key, insulator] : insulators_constructor) {
+		insulators[key].reset(insulator);
+	}
     updateLayers();
 
     // Ground parameters
@@ -119,7 +123,7 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
     // -----------------------------
     int insIndex = 0;
     for (const auto& insPair : insulators) {
-        Insulator* ins = insPair.second;
+        Insulator* ins = insPair.second.get();
         double r_i = ins->ri;
         double r_o = ins->ro;
         double mu_layer = ins->permeability * mu_0;
@@ -273,17 +277,6 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
     Y_matrix = createZeroMatrix(2 * final_size, 2 * final_size);
 }
 
-// Destructor definition
-Cable::~Cable() {
-	for (auto& [key, conductor] : conductors)
-		delete conductor;
-	conductors.clear();
-
-	for (auto& [key, insulator] : insulators)
-		delete insulator;
-	insulators.clear();
-}
-
 std::vector<std::vector<complex<double>>> Cable::compute_y_parameters(double frequency)
 {
     // Step 1: Compute Z and Y matrices based on frequency
@@ -345,9 +338,6 @@ void Cable::updateLayers() {
 				double area = conductor->area;
 				if (area != 0) {
 					conductor->resistivity = (conductor->resistivity * M_PI * pow(conductor->ro, 2) / area);
-
-					// Update the conductor in the Cable object
-					updateConductor("C1", conductor);
 				}
 			}
 		}

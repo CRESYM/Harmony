@@ -22,7 +22,7 @@ public:
 	 */
 	RES_base(const string& symbol, const std::string& location) : Element(symbol, location, 3, 3) {}
 
-	~RES_base() = default;
+	~RES_base() override = default;
 	void computePowerFlow(std::map<std::string, double>& branchData,
 		std::map<std::string, double>& globalParams) const override;
 };

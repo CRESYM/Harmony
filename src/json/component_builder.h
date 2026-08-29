@@ -9,8 +9,6 @@ using JSON = nlohmann::json;
 #include "../Include_components.h"
 #include "json_parameters.h"
 #include "json_expression.h"
-#include "json_parameters.h"
-#include "json_expression.h"
 
 /**
  * @file component_builder.h

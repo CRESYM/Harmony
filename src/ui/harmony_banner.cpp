@@ -1,8 +1,5 @@
 #include "harmony_banner.h"
 
-#include <imgui.h>
-
-#include <filesystem>
 #include <ostream>
 
 namespace {
@@ -33,56 +30,4 @@ std::string_view harmonyAsciiBanner() {
 
 void printHarmonyBanner(std::ostream& out) {
 	out << kBanner << '\n';
-}
-
-ImFont* harmonyInitBannerFont(ImGuiIO& io, const float sizePixels) {
-	thread_local ImFont* cached = nullptr;
-	if (cached != nullptr) {
-		return cached;
-	}
-
-#ifdef HARMONY_IMGUI_FONT_PATH
-	if (std::filesystem::exists(HARMONY_IMGUI_FONT_PATH)) {
-		cached = io.Fonts->AddFontFromFileTTF(HARMONY_IMGUI_FONT_PATH, sizePixels);
-		if (cached != nullptr) {
-			return cached;
-		}
-	}
-#endif
-
-	ImFontConfig cfg;
-	cfg.SizePixels = sizePixels;
-	cached = io.Fonts->AddFontDefault(&cfg);
-	return cached;
-}
-
-void harmonyDrawBannerImGui(ImFont* bannerFont, const bool compact) {
-	if (bannerFont != nullptr) {
-		ImGui::PushFont(bannerFont);
-	}
-
-	const float lineHeight = ImGui::GetTextLineHeight();
-	const float visibleLines = compact ? 9.0f : 16.5f;
-	const ImVec2 bannerSize(0.f, lineHeight * visibleLines);
-
-	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.06f, 0.06f, 0.08f, 1.f));
-	ImGui::BeginChild(
-		"##HarmonyAsciiBanner",
-		bannerSize,
-		compact ? ImGuiChildFlags_Borders : ImGuiChildFlags_None,
-		ImGuiWindowFlags_HorizontalScrollbar);
-	const std::string_view banner = harmonyAsciiBanner();
-	ImGui::TextUnformatted(banner.data(), banner.data() + banner.size());
-	ImGui::EndChild();
-	ImGui::PopStyleColor();
-
-	if (bannerFont != nullptr) {
-		ImGui::PopFont();
-	}
-
-	if (!compact) {
-		ImGui::TextDisabled("Hybrid AC/DC power-system framework — CRESYM / BiGER");
-	}
-
-	ImGui::Spacing();
 }

@@ -12,13 +12,7 @@
 
 #include "../../Constants.h"
 #include "../../Bus.h"
-#include "dqsym_snapshot.h"
-
-#include <optional>
-#include <functional>
-#include <vector>
-
-class Network; class SubNetwork; class Element;
+#include "../Helper_Functions/Helper_Functions.h"
 
 class Network; class SubNetwork; class Element;
 
@@ -48,27 +42,6 @@ struct Config {
     Eigen::VectorXi swType;
     std::function<Eigen::VectorXi(int step, double t)> breakerFunction;
     std::vector<Bus*> outputBuses;
-
-    /** @brief Simulation times (s) at which snapshots are taken and optional stability is run. */
-    std::vector<double> snapshot_times;
-
-    /**
-     * @brief When true, store converter operating points during the run for plot-pick stability.
-     * Automatically enabled when @p stability_on_pick is set.
-     */
-    bool record_snapshot_history = false;
-
-    /** @brief Store every N-th step in snapshot history (default 1 = all steps). */
-    int snapshot_history_stride = 1;
-
-    /** @brief Run stability assessment at each scheduled snapshot time. */
-    std::optional<DqsymStabilityPickConfig> stability_at_snapshots;
-
-    /** @brief Retain network + history so stability can be run from waveform plot clicks. */
-    std::optional<DqsymStabilityPickConfig> stability_on_pick;
-
-    /** @brief When Plot is enabled in the host application. */
-    bool plotting_enabled = true;
 };
 
 /**
@@ -117,20 +90,6 @@ public:
 
     /** @brief Opens an interactive plot of the most recent simulation results. */
     void plot() const;
-
-    /**
-     * @brief Store externally computed results so plot()/exportCSV() can be used.
-     *
-     * Used by low-level DSSS examples that build abc histories outside run().
-     */
-    void setResult(DQsymResult result);
-
-    /**
-     * @brief Store externally computed results so plot()/exportCSV() can be used.
-     *
-     * Used by low-level DSSS examples that build abc histories outside run().
-     */
-    void setResult(DQsymResult result);
 
     /**
      * @brief Store externally computed results so plot()/exportCSV() can be used.

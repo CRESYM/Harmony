@@ -2,7 +2,7 @@
  * @file main.cpp
  * @brief Unified Harmony entry point: C++ examples and JSON simulations.
  */
-#include "cli.h"
+#include "ui/cli.h"
 
 #include <filesystem>
 #include <iostream>

@@ -21,12 +21,6 @@
 #include "../Solver/Certificate/Tuning_assistant.h"
 #include "../Solver/Stability_Estimate/Stability_estimate.h"
 
-#include <cmath>
-#include <filesystem>
-#include <iostream>
-#include <memory>
-#include <utility>
-#include <vector>
 
 namespace {
 
@@ -69,7 +63,7 @@ std::vector<double> controllerParams(const GfmPack& p)
 	};
 }
 
-std::unique_ptr<MMC> makeGfmMmc(const std::string& name, GfmPack p)
+MMC* makeGfmMmc(const std::string& name, GfmPack p)
 {
 	const double Reqac = p.Rf + p.Rarm / 2.0;
 	const double Leqac = p.Lf + p.Larm / 2.0;
@@ -77,7 +71,7 @@ std::unique_ptr<MMC> makeGfmMmc(const std::string& name, GfmPack p)
 	const double vMd0 = p.Vm + Reqac * Id;
 	const double vMq0 = -p.omega * Leqac * Id;
 	p.Kdroop_Q = 0.02 * std::hypot(vMd0, vMq0) / 50e6;
-	auto mmc = std::make_unique<MMC>(name, "AC1_DC1", converterParams(p), controllerParams(p));
+	MMC* mmc = new MMC(name, "AC1_DC1", converterParams(p), controllerParams(p));
 	mmc->solveEquilibrium();
 	mmc->computeABCD();
 	return mmc;
@@ -105,17 +99,16 @@ void example_certificate_figures(bool plotting_enabled /*=true*/)
 
 	const CertificateSpec spec = defaultSpec();
 	GfmPack base;
-	auto mmc = makeGfmMmc("MMC_CERT", base);
-	MMC* mmc_ptr = mmc.get();
+	MMC* mmc = makeGfmMmc("MMC_CERT", base);
 
 	// ----- 1. Device gate -----
-	const DeviceGateResult gate = evaluateDeviceGate(*mmc_ptr, "MMC_CERT", spec);
+	const DeviceGateResult gate = evaluateDeviceGate(*mmc, "MMC_CERT", spec);
 	reportDeviceGate(gate, plotting_enabled);
 	writeCertificateSweepCsv(gate.sweep, "files/certificate_device_sweep.csv");
 
 	// Passiveive branch as a second library entry that should ALLOW.
 	std::complex<double> Zac(1.0, 0.1);
-	auto line = std::make_unique<Impedance>("LINE_PASSIVE", "AC1", 3, Zac);
+	Impedance* line = new Impedance("LINE_PASSIVE", "AC1", 3, Zac);
 	CertificateSpec line_spec = spec;
 	line_spec.ac_dq_block = false;
 	line_spec.n_points = 40;
@@ -145,14 +138,14 @@ void example_certificate_figures(bool plotting_enabled /*=true*/)
 	region_spec.n_points = 30;
 	std::cout << "Sampling (P,Q) operating region...\n";
 	const OperatingRegionResult region =
-		certifyOperatingRegion(*mmc_ptr, grid, region_spec, &opf_pq);
+		certifyOperatingRegion(*mmc, grid, region_spec, &opf_pq);
 	reportOperatingRegion(region, plotting_enabled);
 	writeOperatingRegionCsv(region.samples, "files/certificate_operating_region.csv");
 
 	// Restore nominal OP after region sweep.
-	mmc_ptr->update_MMC(base.Vm, 0.0, base.Pac, base.Qac, base.Vdc, base.Pac);
-	mmc_ptr->solveEquilibrium();
-	mmc_ptr->computeABCD();
+	mmc->update_MMC(base.Vm, 0.0, base.Pac, base.Qac, base.Vdc, base.Pac);
+	mmc->solveEquilibrium();
+	mmc->computeABCD();
 
 	// ----- 4. GFM tuning assistant -----
 	GfmTuningBounds bounds;
@@ -164,7 +157,7 @@ void example_certificate_figures(bool plotting_enabled /*=true*/)
 	bounds.scale_Q_hi = 2.0;
 	CertificateSpec tune_spec = spec;
 	tune_spec.n_points = 40;
-	const GfmTuningResult tune = tuneGfmDroops(*mmc_ptr, tune_spec, bounds);
+	const GfmTuningResult tune = tuneGfmDroops(*mmc, tune_spec, bounds);
 	reportGfmTuning(tune, plotting_enabled);
 	writeCertificateSweepCsv(tune.before, "files/certificate_tune_before.csv");
 	writeCertificateSweepCsv(tune.after, "files/certificate_tune_after.csv");
@@ -175,10 +168,9 @@ void example_certificate_figures(bool plotting_enabled /*=true*/)
 	Bus* bus_dc = new Bus("DC1", "DC1", 2);
 	net.addBus(bus_ac);
 	net.addBus(bus_dc);
-	MMC* mmc_owned = mmc.release();
-	net.addElement(mmc_owned);
-	net.connectElementToBus(mmc_owned, 1, bus_ac);
-	net.connectElementToBus(mmc_owned, 2, bus_dc);
+	net.addElement(mmc);
+	net.connectElementToBus(mmc, 1, bus_ac);
+	net.connectElementToBus(mmc, 2, bus_dc);
 	std::vector<double> Zsrc = { 0.1, 0.1, 0.1 };
 	AC_source* src = new AC_source("G1", "AC1", 3, base.Vm, Zsrc);
 	net.addElement(src);
@@ -191,7 +183,7 @@ void example_certificate_figures(bool plotting_enabled /*=true*/)
 	// ----- 5. Local vs system H -----
 	try {
 		const LocalVsSystemResult cmp =
-			compareLocalVsSystem(*mmc_owned, stability, "MMC_CERT", "AC", spec);
+			compareLocalVsSystem(*mmc, stability, "MMC_CERT", "AC", spec);
 		reportLocalVsSystem(cmp, plotting_enabled);
 		writeCertificateSweepCsv(cmp.system_H, "files/certificate_system_H_sweep.csv");
 	}
@@ -200,13 +192,14 @@ void example_certificate_figures(bool plotting_enabled /*=true*/)
 	}
 
 	if (plotting_enabled) {
-		const Eigen::MatrixXcd Y50 = elementAdmittance(*mmc_owned, 50.0, true);
+		const Eigen::MatrixXcd Y50 = elementAdmittance(*mmc, 50.0, true);
 		plot_certificate_dw_slice(Y50, 50.0, "Numerical range W(Y) @ 50 Hz");
 		plot_certificate_numerical_range(Y50, 50.0, spec.phase_limit_deg, "Small-phase NR @ 50 Hz");
 		plot_certificate_dw_shell(Y50, 50.0, spec, "DW shell xz @ 50 Hz");
 		plot_certificate_geometric_sweep(gate.sweep, "Geometric sweep: MMC_CERT");
 	}
 
+	delete line;
 	std::cout << "Certificate workflows done"
 		<< (plotting_enabled ? " (close visualization window to exit)." : ".") << "\n";
 }

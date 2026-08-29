@@ -65,7 +65,7 @@ cmake --build build --config Release --target HarmonyUI
 build\Release\HarmonyUI.exe    # Windows
 ```
 
-See [Chapter 11 — HarmonyUI](11-harmony-ui.md).
+See [Chapter 12 — HarmonyUI](12-harmony-ui.md).
 
 ### B. C++ examples (CLI)
 
@@ -78,7 +78,7 @@ Harmony --cpp stability_check
 Harmony --cpp mmc --no-plot
 ```
 
-See [`../running-harmony.md`](../running-harmony.md) and [Chapter 10](10-command-line.md).
+See [`../running-harmony.md`](../running-harmony.md) and [Chapter 11](11-command-line.md).
 
 ### C. JSON input file
 

@@ -28,7 +28,7 @@ Prefer documenting the conda path in [installation.md](installation.md); do not 
 
 ## ImPlot / ImGui
 
-Plotting links through `link_implot` in `cmake/dependencies.cmake` (imgui, implot, glfw, OpenGL). Visualization entry points are under `src/Solver/Helper_Functions/Visualization.*` and HarmonyUI (`src/ui/`). User-facing plot behaviour: [Manual Ch. 11](manual/11-harmony-ui.md).
+Plotting links through `link_implot` in `cmake/dependencies.cmake` (imgui, implot, glfw, OpenGL). Visualization entry points are under `src/Solver/Helper_Functions/Visualization.*` and HarmonyUI (`src/ui/`). User-facing plot behaviour: [Manual Ch. 12](manual/12-harmony-ui.md).
 
 ## GitHub Actions pipelines
 

@@ -110,9 +110,7 @@ set(Solver_Helper_Functions_Header_Files
     src/Solver/Helper_Functions/Standard_functions.h
     src/Solver/Helper_Functions/Differential_equations.h
     src/Solver/Helper_Functions/Symbolic_functions.h
-    src/Solver/Helper_Functions/Visualization.h
     src/Solver/Helper_Functions/Writer.h
-    src/Solver/Helper_Functions/stb_image_write.h
     src/Solver/Helper_Functions/DQsym_Conversion_Functions.h
 )
 set(Control_Header_Files
@@ -128,15 +126,17 @@ set(Controller_Header_Files
 set(Header_Files
     src/Bus.h
     src/Constants.h
-    src/harmony_banner.h
-    src/ui/harmony_banner_gui.h
     src/Include_components.h
     src/Include_control_blocks.h
     src/network.h
     src/SubNetwork.h
 )
-set(Cli_Header_Files
-    src/cli.h
+set(Ui_Shared_Header_Files
+    src/ui/cli.h
+    src/ui/harmony_banner.h
+    src/ui/harmony_banner_gui.h
+    src/ui/Visualization.h
+    src/ui/stb_image_write.h
 )
 set(Ui_Header_Files
     src/ui/harmony_launcher.h
@@ -226,7 +226,6 @@ set(Solver_Helper_Functions_Source_Files
     src/Solver/Helper_Functions/Standard_functions.cpp
     src/Solver/Helper_Functions/Differential_equations.cpp
     src/Solver/Helper_Functions/Symbolic_functions.cpp
-    src/Solver/Helper_Functions/Visualization.cpp
     src/Solver/Helper_Functions/Writer.cpp
     src/Solver/Helper_Functions/DQsym_Conversion_Functions.cpp
 )
@@ -243,12 +242,9 @@ set(Controller_Source_Files
 set(Source_Files
     src/Bus.cpp
     src/Constants.cpp
-    src/cli.cpp
     src/main.cpp
     src/network.cpp
     src/SubNetwork.cpp
-    src/harmony_banner.cpp
-    src/ui/harmony_banner_gui.cpp
 )
 set(Json_Source_Files
     src/json/component_builder.cpp
@@ -292,16 +288,18 @@ set(Examples_Source_files
     src/examples/example_stability_check.cpp
     src/examples/example_admittance_parameters.cpp
     src/examples/example_point2point_case.cpp
-    src/examples/example_pi_branch_shunt.cpp
-    src/examples/example_pi_p2p_hvdc.cpp
-    src/examples/example_pi_ieee39_soil.cpp
     src/examples/example_DQsym_DSSS2.cpp
     src/examples/example_DQsym_RLC.cpp
     src/examples/example_DQsym_Simple_MMC.cpp
-    src/examples/example_DQsym_stability_snapshot.cpp
     src/examples/example_DQsym_MMC_controlled.cpp
     src/examples/example_state_space.cpp   
     src/examples/example_PLL_test.cpp
+)
+set(Ui_Shared_Source_Files
+    src/ui/cli.cpp
+    src/ui/harmony_banner.cpp
+    src/ui/harmony_banner_gui.cpp
+    src/ui/Visualization.cpp
 )
 set(Ui_Source_Files
     src/ui/harmony_launcher.cpp
@@ -316,7 +314,6 @@ set(HARMONY_HEADER_FILES
     ${Header_Files}
     ${Element_Header_Files}
     ${Element_Converter_Header_Files}
-    ${Element_Generator_Header_Files}
     ${Element_Impedance_Header_Files}
     ${Element_Load_Header_Files}
     ${Element_Source_Header_Files}
@@ -334,7 +331,7 @@ set(HARMONY_HEADER_FILES
     ${Solver_State_Space_Model_Header_Files}
     ${Examples_Header_files}
     ${Json_Header_Files}
-    ${Cli_Header_Files}
+    ${Ui_Shared_Header_Files}
     ${Ui_Header_Files}
 )
 
@@ -345,7 +342,6 @@ set(HARMONY_SOURCE_FILES
     ${Source_Files}
     ${Element_Source_Files}
     ${Element_Converter_Source_Files}
-    ${Element_Generator_Source_Files}
     ${Element_Impedance_Source_Files}
     ${Element_Load_Source_Files}
     ${Element_Source_Source_Files}
@@ -363,6 +359,7 @@ set(HARMONY_SOURCE_FILES
     ${Solver_State_Space_Model_Source_Files}
     ${Examples_Source_files}
     ${Json_Source_Files}
+    ${Ui_Shared_Source_Files}
 )
 
 # HarmonyUI: same core library as Harmony, different entry point (no src/main.cpp).
@@ -377,7 +374,6 @@ if(MSVC)
     source_group("Header Files" FILES ${Header_Files})
     source_group("Header Files\\Elements" FILES ${Element_Header_Files})
     source_group("Header Files\\Elements\\Converter" FILES ${Element_Converter_Header_Files})
-    source_group("Header Files\\Elements\\Generator" FILES ${Element_Generator_Header_Files})
     source_group("Header Files\\Elements\\Impedance" FILES ${Element_Impedance_Header_Files})
     source_group("Header Files\\Elements\\Load" FILES ${Element_Load_Header_Files})
     source_group("Header Files\\Elements\\Source" FILES ${Element_Source_Header_Files})
@@ -396,14 +392,12 @@ if(MSVC)
     source_group("Header Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Header_Files})
     source_group("Header Files\\Examples" FILES ${Examples_Header_files})
     source_group("Header Files\\JSON" FILES ${Json_Header_Files})
-    source_group("Header Files\\CLI" FILES ${Cli_Header_Files})
-    source_group("Header Files\\UI" FILES ${Ui_Header_Files})
+    source_group("Header Files\\UI" FILES ${Ui_Shared_Header_Files} ${Ui_Header_Files})
 
 
     source_group("Source Files" FILES ${Source_Files})
     source_group("Source Files\\Elements" FILES ${Element_Source_Files})
     source_group("Source Files\\Elements\\Converter" FILES ${Element_Converter_Source_Files})
-    source_group("Source Files\\Elements\\Generator" FILES ${Element_Generator_Source_Files})
     source_group("Source Files\\Elements\\Impedance" FILES ${Element_Impedance_Source_Files})
     source_group("Source Files\\Elements\\Load" FILES ${Element_Load_Source_Files})
     source_group("Source Files\\Elements\\Source" FILES ${Element_Source_Source_Files})
@@ -422,5 +416,5 @@ if(MSVC)
     source_group("Source Files\\Solver\\Helper Functions" FILES ${Solver_Helper_Functions_Source_Files})
     source_group("Source Files\\Examples" FILES ${Examples_Source_files})
     source_group("Source Files\\JSON" FILES ${Json_Source_Files})
-    source_group("Source Files\\UI" FILES ${Ui_Source_Files})
+    source_group("Source Files\\UI" FILES ${Ui_Shared_Source_Files} ${Ui_Source_Files})
 endif()

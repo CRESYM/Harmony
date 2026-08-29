@@ -6,7 +6,7 @@
  * @brief Declarations for runnable demonstration programs.
  * @ingroup examples
  *
- * Enable one function via the CLI (`Harmony --cpp <name>`) or register it in `src/cli.cpp`.
+ * Enable one function via the CLI (`Harmony --cpp <name>`) or register it in `src/ui/cli.cpp`.
  * Most functions accept @p plotting_enabled to suppress GUI output in CI.
  */
 

@@ -72,6 +72,30 @@ void Network::addElement(const std::string& designator, Element* elem) {
 
 // Function to connect an element to a bus
 void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
+    if (ownsResources_) {
+        bool elemOwned = false;
+        for (const auto& [key, owned] : ownedElements_) {
+            if (owned.get() == elem) {
+                elemOwned = true;
+                break;
+            }
+        }
+        if (!elemOwned && elem != nullptr) {
+            ownedElements_[elem->getElementSymbol()].reset(elem);
+        }
+
+        bool busOwned = false;
+        for (const auto& [key, owned] : ownedBuses_) {
+            if (owned.get() == bus) {
+                busOwned = true;
+                break;
+            }
+        }
+        if (!busOwned && bus != nullptr) {
+            ownedBuses_[bus->getBusName()].reset(bus);
+        }
+    }
+
     if (elements.find(elem->getElementSymbol()) == elements.end()) {
         elements[elem->getElementSymbol()] = elem;
     }
@@ -250,16 +274,6 @@ void Network::print_summary() const {
  *
  * @param net Pointer to the main Network object.
  */
-void Network::empty_areas() {
-    ownedGrids_.clear();
-    ac_grids.clear();
-    ac_grid_names.clear();
-    dc_grids.clear();
-    dc_grid_names.clear();
-    converters.clear();
-}
-
-
 void Network::empty_areas() {
     ownedGrids_.clear();
     ac_grids.clear();

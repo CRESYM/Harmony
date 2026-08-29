@@ -14,9 +14,8 @@
 #include "Standard_functions.h"
 #include "Symbolic_functions.h"
 #include "Differential_equations.h"
-#include "Visualization.h"
+#include "../../ui/Visualization.h"
 #include "Writer.h"
 #include "DQsym_Conversion_Functions.h"
-//#include "viz_opf.h"
 
 #endif

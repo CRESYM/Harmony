@@ -87,9 +87,6 @@ std::vector<std::filesystem::path> builtinJsonSearchPaths();
 /** @brief Paths from `HARMONY_JSON_PATH`, or empty if the variable is unset. */
 std::vector<std::filesystem::path> jsonSearchPathsFromEnvironment();
 
-/** @brief Default paths: `HARMONY_JSON_PATH` if set, otherwise @ref builtinJsonSearchPaths. */
-std::vector<std::filesystem::path> defaultJsonSearchPaths();
-
 /**
  * @brief Build the effective JSON search path list for one invocation.
  * @param jsonPathOverrides If non-empty, replaces defaults (`--json-path`).

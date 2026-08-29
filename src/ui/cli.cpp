@@ -8,7 +8,7 @@
 #include "examples/Examples.h"
 #include "json/json_validator.h"
 #include "json/simulation_builder.h"
-#include "Solver/Helper_Functions/Visualization.h"
+#include "Visualization.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -204,15 +204,6 @@ std::vector<std::filesystem::path> jsonSearchPathsFromEnvironment() {
 		}
 	}
 	return {};
-}
-
-
-std::vector<std::filesystem::path> defaultJsonSearchPaths() {
-	const auto fromEnv = jsonSearchPathsFromEnvironment();
-	if (!fromEnv.empty()) {
-		return fromEnv;
-	}
-	return builtinJsonSearchPaths();
 }
 
 

@@ -96,8 +96,12 @@ public:
 		std::vector<std::pair<double, double>> positions_constructor);
 
 	void setLength(double newLength) { length = newLength; }
-	void addConductor(const std::string& key, Conductor* conductor) { conductors[key] = conductor; }
-	void addInsulator(const std::string& key, Insulator* insulator) { insulators[key] = insulator; }
+	void addConductor(const std::string& key, Conductor* conductor) {
+		conductors[key].reset(conductor);
+	}
+	void addInsulator(const std::string& key, Insulator* insulator) {
+		insulators[key].reset(insulator);
+	}
 	void addPosition(double x, double y) { positions.emplace_back(x, y); }
 	void setEarthParameters(double mu, double epsilon, double rho) { earth_parameters = std::make_tuple(mu, epsilon, rho); }
 	void setConfiguration(const std::string& newConfig) { configuration = newConfig; }
@@ -115,49 +119,38 @@ public:
 	Conductor* getConductor(const std::string& key) {
 		auto it = conductors.find(key);
 		if (it != conductors.end()) {
-			return (it->second); // Return a pointer to the conductor if found
+			return it->second.get();
 		}
-		else {
-			return nullptr; // Return nullptr if conductor not found
-		}
+		return nullptr;
 	}
 
-	// Function to access an insulator from the insulators map
 	Insulator* getInsulator(const std::string& key) {
 		auto it = insulators.find(key);
 		if (it != insulators.end()) {
-			return (it->second);
+			return it->second.get();
 		}
-		return nullptr; // Insulator not found
+		return nullptr;
 	}
 
 	void updateInsulator(const std::string& key, Insulator* insulator) {
-		insulators[key] = insulator;
+		insulators[key].reset(insulator);
 	}
 
-	void updateLayers(); // Function to update layers
+	void updateLayers();
 
-	// Function to modify a conductor in the conductors map
 	void updateConductor(const std::string& key, Conductor* conductor) {
-		conductors[key] = conductor;
+		conductors[key].reset(conductor);
 	}
 
-	// Function to remove a conductor from the conductors map
 	void removeConductor(const std::string& key) {
-		auto it = conductors.find(key);
-		if (it != conductors.end()) {
-			delete it->second;
-			conductors.erase(it);
-		}
+		conductors.erase(key);
 	}
 
-	// Define a member function in the Cable class to access the conductors map
-	const std::map<std::string, Conductor*>& getCableConductors() const {
+	const std::map<std::string, std::unique_ptr<Conductor>>& getCableConductors() const {
 		return conductors;
 	}
 
-	// Define a member function in the Cable class to access the insulators map
-	const std::map<std::string, Insulator*>& getCableInsulators() const {
+	const std::map<std::string, std::unique_ptr<Insulator>>& getCableInsulators() const {
 		return insulators;
 	}
 
@@ -173,17 +166,12 @@ public:
 	virtual void printElementValues() override;
 
 	// Destructor
-	~Cable();
+	~Cable() override = default;
 
 private:
-	// Private member variables
-	double length;   //line length [m]
-	//dictionary with a particular order. Key: Symbol-> C1, C2, C3 and C4. Value: Conductor-> Mutable Struct Conductor, defined above
-	// entries are "Symbol" of the conductor and pointer to the conductor	
-	std::map<std::string, Conductor*> conductors;
-	//dictionary with a particular order. Key: Symbol-> I1, I2, I3 and I4. Value: Insulator-> Mutable Struct Insulator, defined above
-	// entries are "Symbol" of the insulator and pointer to the insulator
-	std::map<std::string, Insulator*> insulators;
+	double length;
+	std::map<std::string, std::unique_ptr<Conductor>> conductors;
+	std::map<std::string, std::unique_ptr<Insulator>> insulators;
 	//indicates all variables are real number, vector composed by tuple of real numbers. e.g. positions=[(0,0),(1,1)]. Cables positions 1st:x=0, y=0. 2nd: x=1, y=1.
 	std::vector<std::pair<double, double>> positions;
 	//(μᵣ, ϵᵣ, ρ) in units ([], [], [Ωm]) compact way of representing the type for a tuple of length N where all elements are of type Int or Float64.

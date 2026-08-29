@@ -5,15 +5,7 @@
 #include "Converter.h"
 
 
-Converter::~Converter() {
-    for (auto& [name, controller] : controls)
-        delete controller;
-    controls.clear();
-
-    for (auto& [name, filter] : filters)
-        delete filter;
-    filters.clear();
-}
+Converter::~Converter() = default;
 
 
 /**
@@ -81,17 +73,15 @@ void Converter::plotParticipationFactors() {
 
     // Make labels for states and modes
 	std::vector<std::string> state_labels;
-    for (auto control : controls) {
+    for (const auto& control : controls) {
 		int n = control.second->getNumberOfSignals();
 		if (control.first == "pll") n = 2; // PLL has always 2 states
-		if (control.first == "gfm") n = 3; // theta, Pac_f, Qac_f
-		if (control.first == "gfm") n = 3; // theta, Pac_f, Qac_f
 		if (control.first == "gfm") n = 3; // theta, Pac_f, Qac_f
         for (int i = 0; i < n; ++i) {
             state_labels.push_back(control.first + "_" + to_string(i + 1));
         } 
 	}
-    for (auto filter : filters) {
+    for (const auto& filter : filters) {
         for (int i = 0; i < filter.second->getFilterSize(); ++i) {
             state_labels.push_back(filter.first + "_" + to_string(i + 1));
         }

@@ -45,7 +45,7 @@ TEST(OPFBenchmark, Ieee9MatchesMatpowerOptimum) {
 	if (!pf.opfSolved()) {
 		GTEST_SKIP() << "IEEE 9-bus OPF did not succeed (Gurobi license may be required)";
 	}
-	EXPECT_NEAR(pf.getTotalGenerationCost(), 5296.69, 1.0);
+	EXPECT_NEAR(pf.totalGenerationCost(), 5296.69, 1.0);
 }
 
 // MATPOWER reports 41864.18 $/h for case39.
@@ -55,7 +55,7 @@ TEST(OPFBenchmark, Ieee39MatchesMatpowerOptimum) {
 	if (!pf.opfSolved()) {
 		GTEST_SKIP() << "IEEE 39-bus OPF did not succeed (Gurobi license may be required)";
 	}
-	EXPECT_NEAR(pf.getTotalGenerationCost(), 41864.18, 20.0);
+	EXPECT_NEAR(pf.totalGenerationCost(), 41864.18, 20.0);
 }
 
 TEST(OPFBenchmark, Ieee9WithTwoHvdcLinksSolves) {
@@ -65,5 +65,5 @@ TEST(OPFBenchmark, Ieee9WithTwoHvdcLinksSolves) {
 		GTEST_SKIP() << "IEEE 9-bus HVDC OPF did not succeed (Gurobi license may be required)";
 	}
 	// Routing power through converters costs more than the AC-only dispatch.
-	EXPECT_GT(pf.getTotalGenerationCost(), 5296.69);
+	EXPECT_GT(pf.totalGenerationCost(), 5296.69);
 }

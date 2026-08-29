@@ -93,8 +93,8 @@ private:
 	};
 
 	double length = 0;  // line length [km]
-	Conductors* conductors = nullptr;
-	Groundwires* groundwires = nullptr;
+	std::unique_ptr<Conductors> conductors;
+	std::unique_ptr<Groundwires> groundwires;
 
 	// Earth parameters are defined as (mu_r, epsilon_r, resistivity)
 	std::tuple<double, double, double> earthParameters = std::make_tuple(1, 1, 1); // (μᵣ_earth, ϵᵣ_earth, ρ_earth) in units ([], [], [Ωm])
@@ -121,7 +121,7 @@ public:
 		std::tuple<std::string, std::vector<int>, std::vector<double>, double, double, double, double> conductor,
 		std::tuple<int, std::vector<double>, double> groundwire);
 
-	~Overhead_Line() override;
+	~Overhead_Line() override = default;
 
 	// Function to compute Y parameters
 	virtual vector<vector<complex<double>>> compute_y_parameters(double omega_num) override;

@@ -33,7 +33,15 @@ public:
 	Eigen::MatrixXd getC() const { return C_matrix; }
 	Eigen::MatrixXd getD() const { return D_matrix; }
 
+	// Discrete-time matrix getters
+	Eigen::MatrixXd getAd() const { return Ad_matrix; }
+	Eigen::MatrixXd getBd() const { return Bd_matrix; }
+	Eigen::MatrixXd getCd() const { return Cd_matrix; }
+	Eigen::MatrixXd getDd() const { return Dd_matrix; }
+
 	Eigen::VectorXd getEquilibriumState() const { return equilibrium_state; }
+	VectorXcd getEigenvalues() { return eigenvalues; }
+	VectorXcd getEigenvectors() { return eigenvectors; }
 	string getACarea() const {
 		auto pos = element_location.find('_');
 		return element_location.substr(0, pos);
@@ -134,8 +142,8 @@ protected:
 	VectorXcd initial_state; // Initial state for time-domain simulations
 
 
-	std::map<std::string, Controller*> controls; // Map of existing controllers
-	std::map<std::string, Filter*> filters;      // Map of existing filters   
+	std::map<std::string, std::unique_ptr<Controller>> controls;
+	std::map<std::string, std::unique_ptr<Filter>> filters; 
 
 	// List of controller and filter names, it can be changed only by developers
 	const std::vector<std::string> controller_list = {

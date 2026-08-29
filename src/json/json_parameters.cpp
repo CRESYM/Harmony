@@ -24,16 +24,6 @@ void JsonParameterTable::mergeFromObject(const JSON& obj, const char* context) {
 	}
 }
 
-SymEngine::map_basic_basic JsonParameterTable::toSubstitutionMap() const {
-	SymEngine::map_basic_basic subs;
-	for (const auto& [name, value] : values_) {
-		subs[SymEngine::symbol(name)] = SymEngine::real_double(value);
-	}
-	return subs;
-}
-
-std::vector<std::string> JsonParameterTable::toSubstitutionMap() const;
-
 
 bool JsonParameterTable::contains(const std::string& name) const {
 	return values_.find(name) != values_.end();
