@@ -7,7 +7,7 @@
 #include "../Bus.h"
 #include "../Include_components.h"
 
-void example_PLL_test() {
+void example_PLL_test(bool plotting_enabled /*=true*/) {
     std::cout << "=== example_PLL_test ===\n";
 
     // -------- PI parameters (Simulink PID without D term) --------

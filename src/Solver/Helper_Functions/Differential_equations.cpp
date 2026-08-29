@@ -3,6 +3,8 @@
  * @brief Implementation of Numerical integration, equilibrium finding, and discretization utilities.
  */
 #include "Differential_equations.h"
+#include "SundialsIncludes.h"
+#include "SundialsIncludes.h"
 #include <stdexcept>
 #include <iostream>
 #include <cmath>
@@ -87,6 +89,62 @@ static int kinsol_jac_cb(N_Vector u, N_Vector, SUNMatrix J, void* ud,
     auto* d = static_cast<KINSOLUserData*>(ud);
     eigen2sun(J, (*d->jac)(0.0, nv2eigen(u, d->n), d->u));
     return 0;
+}
+
+static int kinsol_fd_jac_cb(N_Vector u, N_Vector, SUNMatrix J, void* ud,
+    N_Vector, N_Vector) {
+    auto* d = static_cast<KINSOLUserData*>(ud);
+    auto [A, B] = computeJacobians(*d->rhs, nv2eigen(u, d->n), d->u, 0.0);
+    (void)B;
+    eigen2sun(J, A);
+    return 0;
+}
+
+static KINSOLConfig withAutoScaling(
+    const KINSOLConfig& cfg,
+    const RHSFunc& rhs,
+    const Eigen::VectorXd& x0,
+    const Eigen::VectorXd& u)
+{
+    KINSOLConfig scaled = cfg;
+    if (scaled.x_scale.size() != x0.size()) {
+        scaled.x_scale = x0.unaryExpr([](double v) {
+            return std::max(1.0, std::abs(v));
+        });
+    }
+    if (scaled.f_scale.size() != x0.size()) {
+        const Eigen::VectorXd f0 = rhs(0.0, x0, u);
+        scaled.f_scale = f0.cwiseAbs().cwiseMax(1.0);
+    }
+    return scaled;
+}
+
+static int kinsol_fd_jac_cb(N_Vector u, N_Vector, SUNMatrix J, void* ud,
+    N_Vector, N_Vector) {
+    auto* d = static_cast<KINSOLUserData*>(ud);
+    auto [A, B] = computeJacobians(*d->rhs, nv2eigen(u, d->n), d->u, 0.0);
+    (void)B;
+    eigen2sun(J, A);
+    return 0;
+}
+
+static KINSOLConfig withAutoScaling(
+    const KINSOLConfig& cfg,
+    const RHSFunc& rhs,
+    const Eigen::VectorXd& x0,
+    const Eigen::VectorXd& u)
+{
+    KINSOLConfig scaled = cfg;
+    if (scaled.x_scale.size() != x0.size()) {
+        scaled.x_scale = x0.unaryExpr([](double v) {
+            return std::max(1.0, std::abs(v));
+        });
+    }
+    if (scaled.f_scale.size() != x0.size()) {
+        const Eigen::VectorXd f0 = rhs(0.0, x0, u);
+        scaled.f_scale = f0.cwiseAbs().cwiseMax(1.0);
+    }
+    return scaled;
 }
 
 static int kinsol_fd_jac_cb(N_Vector u, N_Vector, SUNMatrix J, void* ud,

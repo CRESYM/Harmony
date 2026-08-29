@@ -6,14 +6,7 @@
 
 ## 2.1 Overview
 
-This chapter walks through installing Harmony, building it, running an example, and running the test suite.
-
-| Depth | Document |
-|-------|----------|
-| This chapter | Short path to a working build |
-| Platform detail / screenshots | [`../installation.md`](../installation.md) |
-| How to run studies after building | [`../running-harmony.md`](../running-harmony.md), [Chapter 11](11-command-line.md), [Chapter 12](12-harmony-ui.md) |
-| Full docs map | [`../README.md`](../README.md) |
+This chapter walks through installing Harmony, building it, running an example, and running the test suite. Detailed platform-specific instructions with screenshots are in [`../installation.md`](../installation.md). **How to run** studies after building: [`../running-harmony.md`](../running-harmony.md) and [Chapter 10](10-command-line.md).
 
 Supported platforms: **Windows**, **Linux** (Ubuntu 22.04+ tested), **macOS** (Sequoia tested).
 
@@ -38,6 +31,7 @@ Supported platforms: **Windows**, **Linux** (Ubuntu 22.04+ tested), **macOS** (S
 ```bash
 git clone https://github.com/CRESYM/Harmony.git
 cd Harmony
+
 conda env create -f environment.yml
 conda activate harmony
 ```
@@ -65,40 +59,33 @@ cmake --build . --config Release -j 4
 
 On Windows you may also open `build/Harmony.sln` in Visual Studio, set **HarmonyUI** (GUI) or **Harmony** (CLI) as startup project, and build Release.
 
+
+
 Build both executables explicitly:
 
+
+
 ```bash
+
 cmake --build . --config Release --target Harmony --target HarmonyUI
+
 ```
 
 ---
 
 ## 2.5 Running Harmony
 
-Harmony ships two executables. Use **HarmonyUI** for interactive work, or **`Harmony`** for the command line (scripts, CI, developers). Use the **repository root** as the working directory and keep `(harmony)` active.
-
-### HarmonyUI (recommended for interactive use)
-
-```bash
-conda activate harmony
-cmake --build build --config Release --target HarmonyUI
-# Windows
-build\Release\HarmonyUI.exe
-# Linux / macOS
-./build/HarmonyUI
-```
-
-On **Launcher**, pick a C++ example or JSON file, optionally check **Plot**, then **Run**. Output appears under **Log**; charts under **Plots** when enabled. See [Chapter 12 — HarmonyUI](12-harmony-ui.md).
-
-### Harmony (CLI)
+Harmony is started from the command line. Use the **repository root** as the working directory and keep `(harmony)` active.
 
 ```bash
 conda activate harmony
 cd ..    # repository root if you are still in build/
+
 # Windows
 build\Release\Harmony.exe --help
 build\Release\Harmony.exe --list-cpp
 build\Release\Harmony.exe --list-json
+
 # Linux / macOS
 ./build/Harmony --help
 ./build/Harmony --list-cpp
@@ -110,6 +97,7 @@ build\Release\Harmony.exe --list-json
 # Windows
 build\Release\Harmony.exe --cpp stability_check
 build\Release\Harmony.exe --cpp mmc --no-plot
+
 # Linux / macOS
 ./build/Harmony --cpp stability_check
 ```
@@ -119,11 +107,8 @@ Example names omit the `example_` prefix. Use `--list-cpp` for the full list.
 **Expected behavior for `stability_check`:**
 
 - Builds an AC–DC network with loads, branches, and two MMC converters
-
 - Runs OPF to obtain an operating point
-
 - Computes transfer functions and optionally shows Bode/Nyquist plots
-
 - Writes Y-parameter data under `./files/` when applicable
 
 Use `--no-plot` on machines without a display or in CI.
@@ -131,8 +116,8 @@ Use `--no-plot` on machines without a display or in CI.
 ### Run a JSON simulation
 
 ```bash
-build\Release\Harmony.exe --json src/examples/json/stability_check.json --verbose   # Windows
-./build/Harmony --json src/examples/json/stability_check.json --verbose             # Linux / macOS
+build\Release\Harmony.exe --json src/examples/example.json --verbose   # Windows
+./build/Harmony --json src/examples/example.json --verbose             # Linux / macOS
 ```
 
 See [Chapter 5](05-json-input.md) and [`../running-harmony.md`](../running-harmony.md).
@@ -147,10 +132,9 @@ See [Chapter 5](05-json-input.md) and [`../running-harmony.md`](../running-harmo
 | JSON study | `Harmony --json <file>` |
 | No GUI | `--no-plot` |
 | Verbose log | `--verbose` |
-| Replace JSON search dirs | `--json-path <dir>` or `HARMONY_JSON_PATH` |
-| Append JSON search dir | `--search-path <dir>` |
+| Extra JSON search dir | `--search-path <dir>` |
 
-Full reference: [Chapter 11 — Command-line interface](11-command-line.md).
+Full reference: [Chapter 10 — Command-line interface](10-command-line.md).
 
 ---
 
@@ -190,9 +174,8 @@ Tests cover network wiring, individual elements, MMC Y-matrices, state-space for
 | 2 | Read [Chapter 3 — Core concepts](03-core-concepts.md) |
 | 3 | Run `Harmony --cpp mmc` to inspect a single converter |
 | 4 | Run `Harmony --cpp stability_check` for a full AC–DC study |
-| 5 | Run `Harmony --json src/examples/json/stability_check.json` ([Chapter 5](05-json-input.md)) |
-| 6 | Try **HarmonyUI** for interactive runs ([Chapter 12](12-harmony-ui.md)) |
-| 7 | Explore OPF: `Harmony --cpp opf` or `--cpp opf_csv` |
+| 5 | Run `Harmony --json src/examples/example.json` ([Chapter 5](05-json-input.md)) |
+| 6 | Explore OPF: `Harmony --cpp opf` or `--cpp opf_csv` |
 
 ---
 
@@ -201,7 +184,6 @@ Tests cover network wiring, individual elements, MMC Y-matrices, state-space for
 Regenerate the build directory when you:
 
 - Add or remove `.cpp` / `.h` files (update `sources.cmake`)
-
 - Change `CMakeLists.txt` or dependencies
 
 ```bash
@@ -225,3 +207,4 @@ cmake --build . --target harmony-docs
 Open `build/docs/html/index.html`. Requires Doxygen and Graphviz (class diagrams) — both are in [`environment.yml`](../../environment.yml). See [`../doxygen/README.md`](../doxygen/README.md) for CI builds and how to copy HTML into your separate GitHub Pages project.
 
 [← Introduction](01-introduction.md) | [Manual index](README.md) | [Next: Core concepts →](03-core-concepts.md)
+

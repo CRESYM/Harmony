@@ -7,6 +7,8 @@
 #include "../Include_components.h"
 #include "../Constants.h"
 
+#include <memory>
+
 void example_PV_plant(bool plotting_enabled /*=true*/) {
 	// Example usage of the PVplant class
 	vector<double> pv_parameters = {
@@ -38,7 +40,7 @@ void example_PV_plant(bool plotting_enabled /*=true*/) {
 		1.0			// K_i_pll: Integral gain of the PLL
 	};
 
-	PVplant* pv = new PVplant("PV1", "AC1", pv_parameters);
+	auto pv = std::make_unique<PVplant>("PV1", "AC1", pv_parameters);
 	cout << "PV plant model initialized successfully." << endl;
 	// Further operations with the pv_plant object can be performed here	
 

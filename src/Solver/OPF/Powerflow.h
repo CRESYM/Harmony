@@ -10,7 +10,7 @@
  * per-bus results for downstream use or visualization.
  */
 
-#include "../../Constants.h"
+#include "../../HarmonyTypes.h"
 #include "../../Bus.h"
 
 #include <string>
@@ -216,6 +216,9 @@ public:
     /** @brief Objective value of the most recent @ref solve_opf, in $/h. Zero if it did not solve. */
     double totalGenerationCost() const { return total_gen_cost_; }
 
+    /** @brief Objective value of the most recent @ref solve_opf, in $/h. Zero if it did not solve. */
+    double totalGenerationCost() const { return total_gen_cost_; }
+
 private:
     std::unordered_map<std::string, Eigen::MatrixXd> network_ac;
     double baseMVA_ac;
@@ -282,6 +285,7 @@ private:
 
     double opf_user_base_mva_ = 100.0;
     bool opf_solved_ = false;
+    double total_gen_cost_ = 0.0;
     double total_gen_cost_ = 0.0;
 
 };

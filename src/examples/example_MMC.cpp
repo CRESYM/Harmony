@@ -8,6 +8,8 @@
 #include "../Bus.h"
 #include "../Include_components.h"
 
+#include <memory>
+
 void example_MMC(bool plotting_enabled /*=true*/) {
 	//// Numerically computes the Jacobian matrices A = ∂f/∂x and B = ∂f/∂u at a specified operating point
 	double f = 50;
@@ -35,7 +37,7 @@ void example_MMC(bool plotting_enabled /*=true*/) {
 		1, 0, 0.7, 6280 // DC voltage filter parameters
 	};
 
-	MMC* mmc1 = new MMC("MMC1", "AC1_DC1", converter_params, controller_params); // , filter_params);
+	auto mmc1 = std::make_unique<MMC>("MMC1", "AC1_DC1", converter_params, controller_params); // , filter_params);
 
 	// Equilibrium Solution
 	std::cout << "\nEquilibrium Solution: \n";
@@ -103,7 +105,7 @@ void example_MMC(bool plotting_enabled /*=true*/) {
 		1, 0, 19.93, 4500, 2, 0, 0, // ccc controller parameters
 		0  // droop control
 	};
-	MMC* mmc2 = new MMC("MMC2", "AC2_DC1", converter_params2, controller_params2);
+	auto mmc2 = std::make_unique<MMC>("MMC2", "AC2_DC1", converter_params2, controller_params2);
 
 	mmc2->solveEquilibrium();
 	cout << std::setprecision(6);
@@ -111,22 +113,6 @@ void example_MMC(bool plotting_enabled /*=true*/) {
 	std::cout << std::setprecision(6) << "Equilibrium state:\n" << x_eq2.transpose() << "\n";
 
 	mmc2->computeABCD();
-	auto A3 = mmc2->getA();
-	auto B3 = mmc2->getB();
-	auto C3 = mmc2->getC();
-	
-	mmc2->computeABCD_analytical();
-	auto A4 = mmc2->getA();
-	auto B4 = mmc2->getB();
-	auto C4 = mmc2->getC();
-
-	double err4 = (A3 - A4).norm() / A3.norm();
-	double err5 = (B3 - B4).norm() / B3.norm();
-	double err6 = (C3 - C4).norm() / C3.norm();
-
-	std::cout << "Relative error A: " << err4 << "\n";  // should be < 1e-6
-	std::cout << "Relative error B: " << err5 << "\n";  // should be < 1e-6
-	std::cout << "Relative error C: " << err6 << "\n";  // should be < 1e-6
 
 	MatrixXcd Y2 = vectorToMatrix(mmc2->compute_y_parameters(50));
 	cout << "\nY-parameters at 50 Hz:\n" << std::setprecision(10) << Y2 << "\n";

@@ -1,0 +1,14 @@
+name = "HarmonyPowerImpedanceBench"
+uuid = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+version = "0.1.0"
+
+[deps]
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PowerImpedance = "2b9e73d6-9f99-4895-a28a-fad5d1cd90f9"
+
+[sources]
+PowerImpedance = {url = "https://github.com/Electa-Git/PowerImpedance.jl"}
+
+[compat]
+julia = "1.10"

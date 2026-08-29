@@ -53,6 +53,13 @@ Most plotting examples accept `bool plotting_enabled = true`. Use `--no-plot` in
 | `example_OPF_csv()` | `opf_csv` | `example_OPF_csv.cpp` | OPF from CSV data |
 | `example_OPF_csv_1()` | `opf_csv_1` | `example_OPF_csv_1.cpp` | Variant CSV OPF |
 | `example_point2point_case()` | `point2point_case` | `example_point2point_case.cpp` | Point-to-point HVDC-style case |
+| `example_pi_branch_shunt()` | `pi_branch_shunt` | `example_pi_branch_shunt.cpp` | PowerImpedance branch\|\|shunt Z(f) |
+| `example_pi_p2p_hvdc()` | `pi_p2p_hvdc` | `example_pi_p2p_hvdc.cpp` | PowerImpedance P2P HVDC analogue |
+| `example_pi_branch_shunt()` | `pi_branch_shunt` | `example_pi_branch_shunt.cpp` | PowerImpedance branch\|\|shunt Z(f) |
+| `example_pi_p2p_hvdc()` | `pi_p2p_hvdc` | `example_pi_p2p_hvdc.cpp` | PowerImpedance P2P HVDC analogue |
+| `example_pi_branch_shunt()` | `pi_branch_shunt` | `example_pi_branch_shunt.cpp` | PowerImpedance branch\|\|shunt Z(f) |
+| `example_pi_p2p_hvdc()` | `pi_p2p_hvdc` | `example_pi_p2p_hvdc.cpp` | PowerImpedance P2P HVDC analogue |
+| `example_pi_ieee39_soil()` | `pi_ieee39_soil` | `example_pi_ieee39_soil.cpp` | IEEE39 soil-ρ OHL sanity check |
 | `example_OPF_PV()` | `opf_pv` | `example_OPF_PV.cpp` | OPF with PV plant |
 | `example_OPF_WT()` | `opf_wt` | `example_OPF_WT.cpp` | OPF with wind plant |
 
@@ -128,13 +135,25 @@ JSON equivalents of bundled C++ demos are in `src/examples/json/`:
 | `dqsym_mmc.json` | `example_DQsym_Simple_MMC` | DQsym time-domain MMC with sources |
 | `stability_check.json` | `example_stability_check` | Full hybrid OPF + stability + Y-matrix plots |
 
+PowerImpedance.jl analogue cases (see `benchmarking/powerimpedance_examples/`):
+
+| `--cpp` / JSON | PowerImpedance example | Notes |
+|----------------|------------------------|-------|
+| `pi_branch_shunt` | `Gridspace_uncertainty.jl`, `SmallSignal_Gridspace.jl` | Deterministic Z sweeps |
+| `pi_p2p_hvdc` | `P2P_HVDC_*.jl` / README P2P | fd OHL/cable + StabilityEstimate |
+| `pi_ieee39_soil` | `IEEE39bus_Gridspace.jl` | Isolated T8_9 OHL soil-ρ sweep |
+| `benchmarking/.../json/connection_dsl_dc.json` | `Connection_DSL.jl` (DC) | Topology only |
+| `benchmarking/.../json/p2p_cable_readme.json` | P2P README cable | Matched layer geometry Y(f) |
+| `opf_ieee39` / `opf_ieee39_hvdc.json` | `IEEE39bus*.jl` | OPF only — not impedance-parity |
+
 Run with:
 
 ```bash
 Harmony --json src/examples/json/mmc.json --no-plot
-Harmony --json src/examples/json/stability_check.json --no-plot
-Harmony --json src/examples/json/dqsym_mmc.json --no-plot
-Harmony --json src/examples/json/opf_csv.json --no-plot
+Harmony --cpp pi_branch_shunt --no-plot
+Harmony --cpp pi_p2p_hvdc --no-plot
+Harmony --cpp pi_ieee39_soil --no-plot
+Harmony --json benchmarking/powerimpedance_examples/json/p2p_cable_readme.json --no-plot
 Harmony --list-json
 ```
 

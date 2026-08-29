@@ -5,10 +5,12 @@
 #include "harmony_launcher.h"
 
 #include "Constants.h"
+#include "VizIncludes.h"
 #include "cli.h"
 #include "ui/harmony_banner_gui.h"
 #include "log_capture.h"
 #include "Solver/Helper_Functions/Visualization.h"
+#include "Solver/DQsym/dqsym_snapshot.h"
 
 #include <algorithm>
 #include <atomic>
@@ -420,6 +422,12 @@ void drawPlotsContent(LauncherState& state) {
 			visualization_save_tab(title, outDir);
 		}
 		appendLogLine(state, "Scheduled PNG save for all plot tabs.");
+	}
+
+	if (DqsymSnapshotSession::instance().hasRecords()) {
+		ImGui::TextWrapped(
+			"DQsym snapshot history is available. Open the state-space waveform tab, "
+			"click a time on the plot, then run stability at the picked time.");
 	}
 
 	ImGui::Separator();

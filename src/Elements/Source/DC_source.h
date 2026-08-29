@@ -11,7 +11,7 @@
 
 /**
  * @class DC_source
- * @brief DC-side voltage source for hybrid AC-DC networks.
+ * @brief DC-side voltage source for hybrid AC–DC networks.
  *
  * Supports scalar or per-phase voltage with scalar or vector series impedance,
  * analogous to @ref AC_source on the AC side.
@@ -34,9 +34,6 @@ public:
 
     /** @brief Stamp the source into the symbolic MNA matrix. */
     void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
-
-    std::vector<MatrixXcd> simulateInputStep(
-        const std::vector<MatrixXcd>& states, int nKeep) const override;
 
 private:
 };

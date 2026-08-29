@@ -131,6 +131,28 @@ function(link_nlohmann_json TARGET_NAME)
 endfunction()
 
 
+# nlohmann_json
+function(link_nlohmann_json TARGET_NAME)
+    find_package(nlohmann_json CONFIG REQUIRED)
+    target_link_libraries(
+        ${TARGET_NAME}
+        PRIVATE
+        nlohmann_json::nlohmann_json
+    )
+endfunction()
+
+
+# nlohmann_json
+function(link_nlohmann_json TARGET_NAME)
+    find_package(nlohmann_json CONFIG REQUIRED)
+    target_link_libraries(
+        ${TARGET_NAME}
+        PRIVATE
+        nlohmann_json::nlohmann_json
+    )
+endfunction()
+
+
 # Gurobi
 set(GUROBI_PATH "" CACHE PATH "Path to Gurobi installation")
 function(link_gurobi TARGET_NAME)
@@ -226,4 +248,24 @@ function(link_gurobi TARGET_NAME)
             "${GUROBI_CPP_LIB}"
             "${GUROBI_CORE_LIB}")
     endif()
+endfunction()
+
+# Targets that compile Harmony headers (.cpp in core, examples, or UI) need these deps.
+function(link_harmony_dependencies TARGET_NAME)
+    link_eigen(${TARGET_NAME})
+    link_symengine(${TARGET_NAME})
+    link_sundials(${TARGET_NAME})
+    link_implot(${TARGET_NAME})
+    link_gurobi(${TARGET_NAME})
+    link_nlohmann_json(${TARGET_NAME})
+endfunction()
+
+# Targets that compile Harmony headers (.cpp in core, examples, or UI) need these deps.
+function(link_harmony_dependencies TARGET_NAME)
+    link_eigen(${TARGET_NAME})
+    link_symengine(${TARGET_NAME})
+    link_sundials(${TARGET_NAME})
+    link_implot(${TARGET_NAME})
+    link_gurobi(${TARGET_NAME})
+    link_nlohmann_json(${TARGET_NAME})
 endfunction()

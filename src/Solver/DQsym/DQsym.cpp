@@ -3,10 +3,15 @@
  * @brief Implementation of Dynamic phasor (DQsym) time-domain solver with switch handling.
  */
 #include "DQsym.h"
+#include "dqsym_snapshot.h"
 #include "../../Constants.h"
 
 #include "../../network.h"      // For access to the Network class and its members
 #include "../../Include_components.h"
+
+#include <optional>
+
+#include <optional>
 
 
 void DQsym::initialize(Network* net)
@@ -185,6 +190,122 @@ void DQsym::buildMatricesForState(
 }
 
 
+static bool matchesSnapshotTime(double t, double target, double dt) {
+    return std::abs(t - target) <= 0.5 * dt;
+}
+
+
+static bool shouldRecordHistoryStep(int stepIndex, int stride) {
+    return stride <= 1 || (stepIndex % stride) == 0;
+}
+
+
+static void maybeRunSnapshot(
+    Network* net,
+    const Config& cfg,
+    const std::map<std::string, std::vector<MatrixXcd>>& elementStates,
+    const StateSpaceModel& ssm,
+    const MatrixXcd& u,
+    double t,
+    int stepIndex,
+    bool scheduledSnapshot)
+{
+    auto& session = DqsymSnapshotSession::instance();
+    const bool recordHistory = cfg.record_snapshot_history || cfg.stability_on_pick.has_value();
+    const bool capture = scheduledSnapshot
+        || (recordHistory && shouldRecordHistoryStep(stepIndex, cfg.snapshot_history_stride));
+
+    if (!capture) {
+        return;
+    }
+
+    DqsymSnapshotRecord record = collectConverterSnapshots(
+        net, elementStates, ssm, u, t, stepIndex);
+
+    if (record.converters.empty()) {
+        return;
+    }
+
+    session.addRecord(std::move(record));
+    const int recordIndex = static_cast<int>(session.records().size()) - 1;
+
+    if (!scheduledSnapshot || !cfg.stability_at_snapshots.has_value()) {
+        return;
+    }
+    if (!session.network()) {
+        return;
+    }
+
+    session.applyRecordToNetwork(recordIndex);
+    try {
+        session.runStabilityAssessment(
+            cfg.plotting_enabled,
+            "@ t=" + std::to_string(t) + " s");
+    }
+    catch (const std::exception& ex) {
+        std::cerr << "[DQsym] Snapshot stability at t=" << t << " failed: " << ex.what() << "\n";
+    }
+}
+
+
+static bool matchesSnapshotTime(double t, double target, double dt) {
+    return std::abs(t - target) <= 0.5 * dt;
+}
+
+
+static bool shouldRecordHistoryStep(int stepIndex, int stride) {
+    return stride <= 1 || (stepIndex % stride) == 0;
+}
+
+
+static void maybeRunSnapshot(
+    Network* net,
+    const Config& cfg,
+    const std::map<std::string, std::vector<MatrixXcd>>& elementStates,
+    const StateSpaceModel& ssm,
+    const MatrixXcd& u,
+    double t,
+    int stepIndex,
+    bool scheduledSnapshot)
+{
+    auto& session = DqsymSnapshotSession::instance();
+    const bool recordHistory = cfg.record_snapshot_history || cfg.stability_on_pick.has_value();
+    const bool capture = scheduledSnapshot
+        || (recordHistory && shouldRecordHistoryStep(stepIndex, cfg.snapshot_history_stride));
+
+    if (!capture) {
+        return;
+    }
+
+    DqsymSnapshotRecord record = collectConverterSnapshots(
+        net, elementStates, ssm, u, t, stepIndex);
+
+    if (record.converters.empty()) {
+        return;
+    }
+
+    session.addRecord(std::move(record));
+    const int recordIndex = static_cast<int>(session.records().size()) - 1;
+
+    if (!scheduledSnapshot || !cfg.stability_at_snapshots.has_value()) {
+        return;
+    }
+    if (!session.network()) {
+        return;
+    }
+
+    session.applyRecordToNetwork(recordIndex);
+    try {
+        session.runStabilityAssessment(
+            cfg.plotting_enabled,
+            "@ t=" + std::to_string(t) + " s");
+    }
+    catch (const std::exception& ex) {
+        std::cerr << "[DQsym] Snapshot stability at t=" << t << " failed: " << ex.what() << "\n";
+    }
+}
+
+
 // ===================================================================
 //  run — assembles global state-space, discretizes, DSSS loop
 // ===================================================================
@@ -214,34 +335,8 @@ DQsymResult DQsym::run(Config& cfg)
     MatrixXd Dd_z = Eigen::MatrixXd::Zero(nx, nu);
     MatrixXd Ad_r, Bd_r;
 
-    std::ofstream file("state_space_outputcont.txt");
-    file << "State-space model formed:\n\n"
-        << "Ad_r (" << ssm.getA().rows() << "x" << ssm.getA().cols() << "):\n\n"
-        << ssm.getA() << "\n\n"
-        << "Bd_r (" << ssm.getB().rows() << "x" << ssm.getB().cols() << "):\n\n"
-        << ssm.getB() << "\n\n"
-        << "Cd_id (" << Cd_id.rows() << "x" << Cd_id.cols() << "):\n\n"
-        << Cd_id << "\n\n"
-        << "Dd_z (" << Dd_z.rows() << "x" << Dd_z.cols() << "):\n\n"
-        << Dd_z << "\n\n";
-
-    file.close();
-
     discretizeABCD(ssm.getA(), ssm.getB(), Cd_id, Dd_z,
         cfg.dt, Ad_r, Bd_r, Cd_id, Dd_z);
-
-   std::ofstream file1("state_space_output1.txt");
-    file1 << "State-space model formed:\n\n"
-        << "Ad_r (" << Ad_r.rows() << "x" << Ad_r.cols() << "):\n\n"
-        << Ad_r << "\n\n"
-        << "Bd_r (" << Bd_r.rows() << "x" << Bd_r.cols() << "):\n\n"
-        << Bd_r << "\n\n"
-        << "Cd_id (" << Cd_id.rows() << "x" << Cd_id.cols() << "):\n\n"
-        << Cd_id << "\n\n"
-        << "Dd_z (" << Dd_z.rows() << "x" << Dd_z.cols() << "):\n\n"
-        << Dd_z << "\n\n";
-
-    file1.close();
 
     MatrixXcd AdC = Ad_r.cast<std::complex<double>>();
     MatrixXcd BdC = Bd_r.cast<std::complex<double>>();
@@ -289,85 +384,24 @@ DQsymResult DQsym::run(Config& cfg)
             : Eigen::VectorXi::Zero(cfg.swType.size());
         result.brkHistory.row(k) = brkVec.transpose();
 
-        //add18/5[
-
-        
-
-        // 3b. Build u (nu × nKeep) — sources + MMC feedback from previous step
+        // Build u (nu × nKeep) — sources + MMC feedback from previous step
         MatrixXcd u = ssm.buildInputVector(cfg.nKeep, elementStates);
-		//cout << "Input vector u at step " << k << ":\n" << u << "\n";
-
 
         for (const auto& [name, elem] : converters) {
             MMC* mmc = dynamic_cast<MMC*>(elem);
             if (!mmc) continue;
 
-            // Find the AC bus this MMC connects to (terminal 1)
-            Bus* ac_bus = nullptr;
-            for (auto& [bus, terminal] : mmc->getConnections()) {
-                if (terminal == 1) { ac_bus = bus; break; }
-            }
-
-            // Find the AC source connected to the same AC bus and read its voltage from u
-            Eigen::Vector2d Vg_dq(0.0, 0.0);
-            if (ac_bus) {
-                for (const auto& g : ssm.getInputGroups()) {
-                    if (g.isVirtual) continue;
-                    // Check if this source connects to our AC bus
-                    bool found = false;
-                    for (auto& [bus, terminal] : g.element->getConnections()) {
-                        if (bus == ac_bus) { found = true; break; }
-                    }
-                    if (!found) continue;
-
-                    // Read positive-sequence fundamental: row dqsymStartCol+0, col 1
-                    if (g.dqsymStartCol < u.rows() && u.cols() >= 2) {
-                        std::complex<double> v_fund = u(g.dqsymStartCol, 1);
-                        Vg_dq(0) = v_fund.real();
-                        Vg_dq(1) = v_fund.imag();
-                    }
-                    break;
-                }
-            }
-
+            const Eigen::Vector2d Vg_dq = readMmcGridVoltageDq(*mmc, ssm, u);
             if (elementStates.count(name)) {
                 mmc->stepControllers(cfg.dt, elementStates.at(name), Vg_dq);
             }
         }
-        // === END DQsym closed-loop control: step controllers ===
-
-        //add18/5]
-        
 
         // 3c. DSSS
         MatrixXcd y = DSSS(dssState_, AdC, BdC, CdC, DdC,
             cfg.swOnRes, cfg.swOffRes, cfg.swType, brkVec,
             u, xo, cfg.dt, cfg.f);
 
-
-        if (k == 6000) {
-
-            std::ofstream file("state_space_output2.txt");
-
-            file << "State-space model formed with Standard mode:\n\n"
-
-                << "A (" << AdC.rows() << "x" << AdC.cols() << "):\n"
-                << AdC << "\n\n"
-
-                << "B (" << BdC.rows() << "x" << BdC.cols() << "):\n"
-                << BdC << "\n\n"
-
-                << "C (" << CdC.rows() << "x" << CdC.cols() << "):\n"
-                << CdC << "\n\n"
-
-                << "D (" << DdC.rows() << "x" << DdC.cols() << "):\n"
-                << DdC << "\n\n"
-
-                << "u (" << u.rows() << "x" << u.cols() << "):\n"
-                << u << "\n";
-
-            file.close();
-        }
 		//cout << y << "\n";
 
         // 3d. Extract state groups, update elementStates for next step
@@ -385,6 +419,16 @@ DQsymResult DQsym::run(Config& cfg)
 
             elementStates[name] = groups;
         }
+
+        bool scheduledSnapshot = false;
+        for (double snapshotTime : cfg.snapshot_times) {
+            if (matchesSnapshotTime(t, snapshotTime, cfg.dt)) {
+                scheduledSnapshot = true;
+                break;
+            }
+        }
+        maybeRunSnapshot(
+            net_, cfg, elementStates, ssm, u, t, k, scheduledSnapshot);
 
         // 3e. ABC reconstruction (pad state rows to a multiple of 3 when needed)
         MatrixXcd yPlot = y;
@@ -413,27 +457,6 @@ DQsymResult DQsym::run(Config& cfg)
 //  Results
 // ===================================================================
 
-//void DQsym::exportCSV(const std::string& filename) const
-//{
-//    if (!hasRun_)
-//        throw std::runtime_error("exportCSV() before run().");
-//
-//    std::vector<Eigen::MatrixXd> values = {};
-//    values.push_back(result_.brkHistory.cast<double>());
-//    for (const auto& m : result_.DSSabcHist) {
-//        values.push_back(m);
-//		cout << "DSSabcHist group with shape (" << m.rows() << "x" << m.cols() << ")\n";
-//    }
-//
-//    std::vector<std::string> headers;
-//    headers.push_back("brk");
-//    for (int g = 0; g < static_cast<int>(result_.DSSabcHist.size()); ++g)
-//        headers.push_back("state_abc" + std::to_string(g + 1));
-//
-//	cout << "Exporting CSV with " << values.size() << " matrices and headers: ";
-//
-//    write_file(result_.time, values, headers, filename);
-//}
 void DQsym::exportCSV(const std::string& filename) const
 {
     if (!hasRun_)
@@ -456,8 +479,11 @@ void DQsym::plot() const
     if (!hasRun_)
         throw std::runtime_error("plot() before run().");
 
-    plot_abc_groups_implot(result_.time, result_.DSSabcHist,
-        "State-space outputs (abc)");
+    plot_abc_groups_implot(
+        result_.time,
+        result_.DSSabcHist,
+        "State-space outputs (abc)",
+        DqsymSnapshotSession::instance().hasRecords());
 }
 
 void DQsym::setResult(DQsymResult result)

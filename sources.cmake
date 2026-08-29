@@ -292,9 +292,13 @@ set(Examples_Source_files
     src/examples/example_stability_check.cpp
     src/examples/example_admittance_parameters.cpp
     src/examples/example_point2point_case.cpp
+    src/examples/example_pi_branch_shunt.cpp
+    src/examples/example_pi_p2p_hvdc.cpp
+    src/examples/example_pi_ieee39_soil.cpp
     src/examples/example_DQsym_DSSS2.cpp
     src/examples/example_DQsym_RLC.cpp
     src/examples/example_DQsym_Simple_MMC.cpp
+    src/examples/example_DQsym_stability_snapshot.cpp
     src/examples/example_DQsym_MMC_controlled.cpp
     src/examples/example_state_space.cpp   
     src/examples/example_PLL_test.cpp

@@ -34,6 +34,18 @@ void Bus::detachElement(Element* elem) {
         connectedElements.end());
 }
 
+void Bus::detachElement(Element* elem) {
+    connectedElements.erase(
+        std::remove(connectedElements.begin(), connectedElements.end(), elem),
+        connectedElements.end());
+}
+
+void Bus::detachElement(Element* elem) {
+    connectedElements.erase(
+        std::remove(connectedElements.begin(), connectedElements.end(), elem),
+        connectedElements.end());
+}
+
 // Function to print the elements connected to the bus
 void Bus::printConnectedElements() {
     std::cout << "[Debug] printConnectedElements() called for bus " << busName << std::endl;

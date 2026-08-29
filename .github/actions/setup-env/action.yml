@@ -126,3 +126,13 @@ runs:
       if: runner.os == 'macOS'
       shell: bash -l {0}
       run: brew install glfw
+
+    - name: Install Implot/ImGui system dependencies
+      if: runner.os == 'macOS'
+      shell: bash -l {0}
+      run: brew install glfw
+
+    - name: Install Implot/ImGui system dependencies
+      if: runner.os == 'macOS'
+      shell: bash -l {0}
+      run: brew install glfw

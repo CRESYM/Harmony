@@ -1,4 +1,91 @@
-#include <gtest/gtest.h>
+TEST(JsonComplexCases, DcSourceSplitVoltageBuilds) {
+	const JSON config = JSON::parse(R"({
+		"simulation": { "title": "dc" },
+		"buses": [
+			{ "id": "dc_bus", "location": "DC1", "pins": 2 },
+			{ "id": "gnd", "location": "GND", "pins": 1 }
+		],
+		"components": [{
+			"id": "Vs_dc", "type": "dc_source", "location": "DC1", "pins": 2,
+			"voltage": [320000.0, -320000.0],
+			"resistance": 0.0,
+			"connected_buses": [
+				{ "bus_id": "dc_bus", "terminal": 1 },
+				{ "bus_id": "gnd", "terminal": 2 }
+			]
+		}]
+	})");
+
+	SimulationBuilder builder;
+	EXPECT_NO_THROW(builder.validateJSON(config));
+	Network network;
+	EXPECT_NO_THROW(builder.buildFromJSON(config, network));
+}
+
+
+TEST(JsonComplexCases, StabilityCheckIncludesOpfInfo) {
+	const fs::path path = harmonyRoot() / "src" / "examples" / "json" / "stability_check.json";
+	ASSERT_TRUE(fs::exists(path));
+
+	const JSON config = loadJsonFile(path);
+	bool foundOpfInfo = false;
+	for (const auto& comp : config.at("components")) {
+		if (comp.value("id", std::string()) == "SRC01" && comp.contains("opf_info")) {
+			foundOpfInfo = comp.at("opf_info").value("Ref", 0.0) == 1.0;
+			break;
+		}
+	}
+	EXPECT_TRUE(foundOpfInfo);
+
+	SimulationBuilder builder;
+	EXPECT_NO_THROW(builder.validateJSON(config));
+}
+
+
+TEST(JsonComplexCases, StabilityCheckIncludesOpfInfo) {
+	const fs::path path = harmonyRoot() / "src" / "examples" / "json" / "stability_check.json";
+	ASSERT_TRUE(fs::exists(path));
+
+	const JSON config = loadJsonFile(path);
+	bool foundOpfInfo = false;
+	for (const auto& comp : config.at("components")) {
+		if (comp.value("id", std::string()) == "SRC01" && comp.contains("opf_info")) {
+			foundOpfInfo = comp.at("opf_info").value("Ref", 0.0) == 1.0;
+			break;
+		}
+	}
+	EXPECT_TRUE(foundOpfInfo);
+
+	SimulationBuilder builder;
+	EXPECT_NO_THROW(builder.validateJSON(config));
+}
+
+
+TEST(JsonComplexCases, BuiltNetworkOpfWithoutCaseName) {
+	const fs::path path = harmonyRoot() / "src" / "examples" / "json" / "stability_check.json";
+	ASSERT_TRUE(fs::exists(path));
+
+	const JSON config = loadJsonFile(path);
+	Network network;
+	SimulationBuilder builder;
+	ASSERT_NO_THROW(builder.buildFromJSON(config, network));
+
+	// Run only the built-network OPF step (not stability plots / y-matrix sweeps).
+	JSON opfOnly = config;
+	opfOnly["computations"] = JSON::array({
+		JSON{{"type", "opf"}, {"vsc_control", false}, {"write_txt", false},
+			{"plot_result", false}, {"print_info", false}}
+	});
+
+	const int rc = builder.runComputationsWithStatus(opfOnly, network, false);
+	if (rc != 0) {
+		GTEST_SKIP() << "built-network OPF failed (Gurobi license or solver setup may be required)";
+	}
+	EXPECT_EQ(rc, 0);
+}
+
+
+TEST(JsonValidatorPins, PassiveTypesStillRequirePins) {#include <gtest/gtest.h>
 
 #include <algorithm>
 #include <fstream>
@@ -15,43 +102,6 @@ namespace fs = std::filesystem;
 
 static fs::path harmonyRoot() {
 	return fs::path(__FILE__).parent_path().parent_path();
-}
-
-
-/** CSV OPF reads ../../src/data relative to build/Release (same as C++ examples). */
-class HarmonyReleaseCwd {
-public:
-	HarmonyReleaseCwd() {
-		previous_ = fs::current_path();
-		const fs::path release = harmonyRoot() / "build" / "Release";
-		if (fs::exists(release)) {
-			fs::current_path(release);
-		}
-	}
-
-	~HarmonyReleaseCwd() {
-		fs::current_path(previous_);
-	}
-
-private:
-	fs::path previous_;
-};
-
-
-static bool needsOpfCsvCwd(const fs::path& path) {
-	return path.stem() == "opf_csv";
-}
-
-
-static bool isHeavyJsonRun(const fs::path& path) {
-	const std::string stem = path.stem().string();
-	return stem == "opf_csv" || stem == "stability_check" || stem == "dqsym_mmc";
-}
-
-
-static bool opfCsvDataAvailable() {
-	const fs::path data = harmonyRoot() / "src" / "data";
-	return fs::exists(data / "ac5_bus_ac.csv") && fs::exists(data / "mtdc3_bus_dc.csv");
 }
 
 
@@ -120,160 +170,9 @@ TEST(JsonPipelineSmoke, DiscoverAtLeastOneExample) {
 
 
 TEST(JsonPipelineSmoke, RunAllExamplesViaCli) {
-	HarmonyReleaseCwd cwd;
 	for (const auto& path : jsonExampleFiles()) {
-		if (needsOpfCsvCwd(path) || isHeavyJsonRun(path)) {
-			continue;
-		}
 		EXPECT_EQ(runJsonSimulation(path, false, false), 0) << path;
 	}
-}
-
-
-TEST(JsonComplexCases, StabilityCheckValidatesBuildsAndRuns) {
-	const fs::path path = harmonyRoot() / "src" / "examples" / "json" / "stability_check.json";
-	ASSERT_TRUE(fs::exists(path));
-
-	const JSON config = loadJsonFile(path);
-	SimulationBuilder builder;
-	EXPECT_NO_THROW(builder.validateJSON(config));
-
-	Network network;
-	ASSERT_NO_THROW(builder.buildFromJSON(config, network));
-	EXPECT_GE(network.getElements().size(), 7u);
-
-	const int rc = runJsonSimulation(path, false, false);
-	if (rc != 0) {
-		GTEST_SKIP() << "stability_check pipeline failed (Gurobi/KINSOL or solver setup may be required)";
-	}
-	EXPECT_EQ(rc, 0);
-}
-
-
-TEST(JsonComplexCases, DqsymMmcValidatesBuildsAndRuns) {
-	const fs::path path = harmonyRoot() / "src" / "examples" / "json" / "dqsym_mmc.json";
-	ASSERT_TRUE(fs::exists(path));
-
-	const JSON config = loadJsonFile(path);
-	SimulationBuilder builder;
-	EXPECT_NO_THROW(builder.validateJSON(config));
-
-	Network network;
-	ASSERT_NO_THROW(builder.buildFromJSON(config, network));
-	EXPECT_EQ(runJsonSimulation(path, false, false), 0);
-}
-
-
-TEST(JsonComplexCases, OpfCsvRunsWithCsvData) {
-	if (!opfCsvDataAvailable()) {
-		GTEST_SKIP() << "src/data CSV cases not found";
-	}
-
-	HarmonyReleaseCwd cwd;
-	const fs::path path = harmonyRoot() / "src" / "examples" / "json" / "opf_csv.json";
-	ASSERT_TRUE(fs::exists(path));
-
-	const JSON config = loadJsonFile(path);
-	SimulationBuilder builder;
-	EXPECT_NO_THROW(builder.validateJSON(config));
-
-	const int rc = runJsonSimulation(path, false, false);
-	if (rc != 0) {
-		GTEST_SKIP() << "OPF solve failed (Gurobi license or solver setup may be required)";
-	}
-	EXPECT_EQ(rc, 0);
-}
-
-
-TEST(JsonComplexCases, ImpedanceComplexFieldBuilds) {
-	const JSON config = JSON::parse(R"({
-		"simulation": { "title": "z" },
-		"buses": [
-			{ "id": "b1", "location": "AC1", "pins": 3 },
-			{ "id": "b2", "location": "AC1", "pins": 3 }
-		],
-		"components": [{
-			"id": "br1", "type": "impedance", "location": "AC1", "pins": 3,
-			"complex": [1.0, 40.0],
-			"connected_buses": [
-				{ "bus_id": "b1", "terminal": 1 },
-				{ "bus_id": "b2", "terminal": 2 }
-			]
-		}]
-	})");
-
-	SimulationBuilder builder;
-	EXPECT_NO_THROW(builder.validateJSON(config));
-	Network network;
-	EXPECT_NO_THROW(builder.buildFromJSON(config, network));
-}
-
-
-TEST(JsonComplexCases, DcSourceSplitVoltageBuilds) {
-	const JSON config = JSON::parse(R"({
-		"simulation": { "title": "dc" },
-		"buses": [
-			{ "id": "dc_bus", "location": "DC1", "pins": 2 },
-			{ "id": "gnd", "location": "GND", "pins": 1 }
-		],
-		"components": [{
-			"id": "Vs_dc", "type": "dc_source", "location": "DC1", "pins": 2,
-			"voltage": [320000.0, -320000.0],
-			"resistance": 0.0,
-			"connected_buses": [
-				{ "bus_id": "dc_bus", "terminal": 1 },
-				{ "bus_id": "gnd", "terminal": 2 }
-			]
-		}]
-	})");
-
-	SimulationBuilder builder;
-	EXPECT_NO_THROW(builder.validateJSON(config));
-	Network network;
-	EXPECT_NO_THROW(builder.buildFromJSON(config, network));
-}
-
-
-TEST(JsonComplexCases, StabilityCheckIncludesOpfInfo) {
-	const fs::path path = harmonyRoot() / "src" / "examples" / "json" / "stability_check.json";
-	ASSERT_TRUE(fs::exists(path));
-
-	const JSON config = loadJsonFile(path);
-	bool foundOpfInfo = false;
-	for (const auto& comp : config.at("components")) {
-		if (comp.value("id", std::string()) == "SRC01" && comp.contains("opf_info")) {
-			foundOpfInfo = comp.at("opf_info").value("Ref", 0.0) == 1.0;
-			break;
-		}
-	}
-	EXPECT_TRUE(foundOpfInfo);
-
-	SimulationBuilder builder;
-	EXPECT_NO_THROW(builder.validateJSON(config));
-}
-
-
-TEST(JsonComplexCases, BuiltNetworkOpfWithoutCaseName) {
-	const fs::path path = harmonyRoot() / "src" / "examples" / "json" / "stability_check.json";
-	ASSERT_TRUE(fs::exists(path));
-
-	const JSON config = loadJsonFile(path);
-	Network network;
-	SimulationBuilder builder;
-	ASSERT_NO_THROW(builder.buildFromJSON(config, network));
-
-	// Run only the built-network OPF step (not stability plots / y-matrix sweeps).
-	JSON opfOnly = config;
-	opfOnly["computations"] = JSON::array({
-		JSON{{"type", "opf"}, {"vsc_control", false}, {"write_txt", false},
-			{"plot_result", false}, {"print_info", false}}
-	});
-
-	const int rc = builder.runComputationsWithStatus(opfOnly, network, false);
-	if (rc != 0) {
-		GTEST_SKIP() << "built-network OPF failed (Gurobi license or solver setup may be required)";
-	}
-	EXPECT_EQ(rc, 0);
 }
 
 
@@ -322,6 +221,152 @@ TEST(JsonComputationPlots, RejectsInvalidPlotType) {
 		"computations": [
 			{ "type": "stability_assessment", "plot": true, "plot_type": "smith" }
 		]
+	})");
+
+	SimulationBuilder builder;
+	EXPECT_THROW(builder.validateJSON(bad), std::invalid_argument);
+}
+
+
+TEST(JsonParameters, ResolvesNamedValuesInPassives) {
+	const JSON config = JSON::parse(R"({
+		"simulation": { "title": "params" },
+		"parameters": { "R_val": 12.5, "L_val": 0.002 },
+		"buses": [
+			{ "id": "b1", "location": "AC1", "pins": 1 },
+			{ "id": "gnd", "location": "AC1", "pins": 1 }
+		],
+		"components": [{
+			"id": "R1", "type": "resistor", "location": "AC1", "pins": 1,
+			"values": ["R_val"],
+			"connected_buses": [
+				{ "bus_id": "b1", "terminal": 1 },
+				{ "bus_id": "gnd", "terminal": 2 }
+			]
+		}, {
+			"id": "L1", "type": "inductor", "location": "AC1", "pins": 1,
+			"values": ["L_val"],
+			"connected_buses": [
+				{ "bus_id": "b1", "terminal": 1 },
+				{ "bus_id": "gnd", "terminal": 2 }
+			]
+		}]
+	})");
+
+	SimulationBuilder builder;
+	EXPECT_NO_THROW(builder.validateJSON(config));
+	Network network;
+	EXPECT_NO_THROW(builder.buildFromJSON(config, network));
+}
+
+
+TEST(JsonParameters, MmcNamedParamsExampleValidates) {
+	const fs::path path = harmonyRoot() / "src" / "examples" / "json" / "mmc_named_params.json";
+	ASSERT_TRUE(fs::exists(path));
+
+	const JSON config = loadJsonFile(path);
+	SimulationBuilder builder;
+	EXPECT_NO_THROW(builder.validateJSON(config));
+}
+
+
+TEST(JsonParameters, RejectsUnknownParameterReference) {
+	const JSON bad = JSON::parse(R"({
+		"simulation": { "title": "params" },
+		"parameters": { "R_val": 10.0 },
+		"buses": [{ "id": "b1", "location": "AC1", "pins": 1 }],
+		"components": [{
+			"id": "R1", "type": "resistor", "location": "AC1", "pins": 1,
+			"values": ["missing_param"],
+			"connected_bus": { "bus_id": "b1", "terminal": 1 }
+		}]
+	})");
+
+	SimulationBuilder builder;
+	EXPECT_THROW(builder.validateJSON(bad), std::invalid_argument);
+}
+
+
+TEST(JsonParameters, LocalParametersOverrideRoot) {
+	const JSON config = JSON::parse(R"({
+		"simulation": { "title": "params" },
+		"parameters": { "R_val": 10.0 },
+		"buses": [{ "id": "b1", "location": "AC1", "pins": 1 }],
+		"components": [{
+			"id": "R1", "type": "resistor", "location": "AC1", "pins": 1,
+			"local_parameters": { "R_val": 99.0 },
+			"values": ["R_val"],
+			"connected_bus": { "bus_id": "b1", "terminal": 1 }
+		}]
+	})");
+
+	SimulationBuilder builder;
+	Network network;
+	ASSERT_NO_THROW(builder.buildFromJSON(config, network));
+}
+
+
+TEST(JsonExpressions, PassivesRlcExprExampleValidatesAndBuilds) {
+	const fs::path path = harmonyRoot() / "src" / "examples" / "json" / "passives_rlc_expr.json";
+	ASSERT_TRUE(fs::exists(path));
+
+	const JSON config = loadJsonFile(path);
+	SimulationBuilder builder;
+	EXPECT_NO_THROW(builder.validateJSON(config));
+	Network network;
+	EXPECT_NO_THROW(builder.buildFromJSON(config, network));
+}
+
+
+TEST(JsonExpressions, ParsesZexprForImpedance) {
+	const JSON config = JSON::parse(R"({
+		"simulation": { "title": "z" },
+		"parameters": { "R": 5.0, "L": 0.002 },
+		"buses": [
+			{ "id": "b1", "location": "AC1", "pins": 1 },
+			{ "id": "gnd", "location": "AC1", "pins": 1 }
+		],
+		"components": [{
+			"id": "Z1", "type": "impedance", "location": "AC1", "pins": 1,
+			"z_expr": "R + s*L",
+			"connected_buses": [
+				{ "bus_id": "b1", "terminal": 1 },
+				{ "bus_id": "gnd", "terminal": 2 }
+			]
+		}]
+	})");
+
+	SimulationBuilder builder;
+	EXPECT_NO_THROW(builder.validateJSON(config));
+}
+
+
+TEST(JsonExpressions, RejectsUnresolvedSymbol) {
+	const JSON bad = JSON::parse(R"({
+		"simulation": { "title": "bad" },
+		"buses": [{ "id": "b1", "location": "AC1", "pins": 1 }],
+		"components": [{
+			"id": "R1", "type": "resistor", "location": "AC1", "pins": 1,
+			"y_expr": "1/unknown_R",
+			"connected_bus": { "bus_id": "b1", "terminal": 1 }
+		}]
+	})");
+
+	SimulationBuilder builder;
+	EXPECT_THROW(builder.validateJSON(bad), std::invalid_argument);
+}
+
+
+TEST(JsonExpressions, RejectsValuesAndYexprTogether) {
+	const JSON bad = JSON::parse(R"({
+		"simulation": { "title": "bad" },
+		"buses": [{ "id": "b1", "location": "AC1", "pins": 1 }],
+		"components": [{
+			"id": "R1", "type": "resistor", "location": "AC1", "pins": 1,
+			"values": [10.0],
+			"y_expr": "1/10",
+			"connected_bus": { "bus_id": "b1", "terminal": 1 }
+		}]
 	})");
 
 	SimulationBuilder builder;
@@ -510,72 +555,4 @@ TEST(JsonParameters, LocalParametersOverrideRoot) {
 	SimulationBuilder builder;
 	Network network;
 	ASSERT_NO_THROW(builder.buildFromJSON(config, network));
-}
-
-
-TEST(JsonExpressions, PassivesRlcExprExampleValidatesAndBuilds) {
-	const fs::path path = harmonyRoot() / "src" / "examples" / "json" / "passives_rlc_expr.json";
-	ASSERT_TRUE(fs::exists(path));
-
-	const JSON config = loadJsonFile(path);
-	SimulationBuilder builder;
-	EXPECT_NO_THROW(builder.validateJSON(config));
-	Network network;
-	EXPECT_NO_THROW(builder.buildFromJSON(config, network));
-}
-
-
-TEST(JsonExpressions, ParsesZexprForImpedance) {
-	const JSON config = JSON::parse(R"({
-		"simulation": { "title": "z" },
-		"parameters": { "R": 5.0, "L": 0.002 },
-		"buses": [
-			{ "id": "b1", "location": "AC1", "pins": 1 },
-			{ "id": "gnd", "location": "AC1", "pins": 1 }
-		],
-		"components": [{
-			"id": "Z1", "type": "impedance", "location": "AC1", "pins": 1,
-			"z_expr": "R + s*L",
-			"connected_buses": [
-				{ "bus_id": "b1", "terminal": 1 },
-				{ "bus_id": "gnd", "terminal": 2 }
-			]
-		}]
-	})");
-
-	SimulationBuilder builder;
-	EXPECT_NO_THROW(builder.validateJSON(config));
-}
-
-
-TEST(JsonExpressions, RejectsUnresolvedSymbol) {
-	const JSON bad = JSON::parse(R"({
-		"simulation": { "title": "bad" },
-		"buses": [{ "id": "b1", "location": "AC1", "pins": 1 }],
-		"components": [{
-			"id": "R1", "type": "resistor", "location": "AC1", "pins": 1,
-			"y_expr": "1/unknown_R",
-			"connected_bus": { "bus_id": "b1", "terminal": 1 }
-		}]
-	})");
-
-	SimulationBuilder builder;
-	EXPECT_THROW(builder.validateJSON(bad), std::invalid_argument);
-}
-
-
-TEST(JsonExpressions, RejectsValuesAndYexprTogether) {
-	const JSON bad = JSON::parse(R"({
-		"simulation": { "title": "bad" },
-		"buses": [{ "id": "b1", "location": "AC1", "pins": 1 }],
-		"components": [{
-			"id": "R1", "type": "resistor", "location": "AC1", "pins": 1,
-			"values": [10.0],
-			"y_expr": "1/10",
-			"connected_bus": { "bus_id": "b1", "terminal": 1 }
-		}]
-	})");
-
-	SimulationBuilder builder;
-	EXPECT_THROW(builder.validateJSON(bad), std::invalid_argument);
 }

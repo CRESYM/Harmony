@@ -11,7 +11,7 @@ The live documentation map is **[`docs/README.md`](README.md)**. Use that page (
 | Installation guide | [`installation.md`](installation.md) |
 | Running guide (GUI + CLI) | [`running-harmony.md`](running-harmony.md) |
 | JSON field reference | [`input-file-format.md`](input-file-format.md) |
-| Certificates reference | [`manual/08-certificates.md`](manual/08-certificates.md) |
+| Certificates reference | [`manual/12-certificates.md`](manual/12-certificates.md) |
 | Doxygen API docs | [`doxygen/README.md`](doxygen/README.md) · CI: `.github/workflows/docs.yml` |
 
 ## Remaining gaps

@@ -7,6 +7,8 @@
 #include "component_builder.h"
 #include "json_expression.h"
 #include "json_parameters.h"
+#include "json_expression.h"
+#include "json_parameters.h"
 
 #include <cctype>
 
@@ -42,6 +44,49 @@ bool componentUsesJsonPins(const std::string& type) {
 /** `location` on the component is optional (builder supplies a default). */
 bool componentRequiresJsonLocation(const std::string& type) {
 	return type != "overhead_line";
+}
+
+/** Keys allowed on any component in addition to type-specific fields. */
+std::set<std::string> commonComponentKeys() {
+	return {
+		"id", "type", "location", "pins", "enabled",
+		"connected_bus", "connected_buses", "local_parameters"
+	};
+}
+
+JsonParameterTable mergedComponentParameters(
+	const JsonParameterTable& rootParams,
+	const JSON& comp,
+	const char* componentId)
+{
+	JsonParameterTable params = rootParams;
+	if (comp.contains("local_parameters")) {
+		params.mergeFromObject(
+			comp.at("local_parameters"),
+			(std::string("local_parameters of component '") + componentId + "'").c_str());
+	}
+	return params;
+}
+
+void requireExclusiveValueSpec(
+	const JSON& comp,
+	const std::initializer_list<const char*> fields,
+	const char* context)
+{
+	int count = 0;
+	for (const char* field : fields) {
+		if (comp.contains(field)) {
+			++count;
+		}
+	}
+	if (count == 0) {
+		throw std::invalid_argument(
+			std::string("ERROR: ") + context + " requires one of the value/expression fields.\n");
+	}
+	if (count > 1) {
+		throw std::invalid_argument(
+			std::string("ERROR: ") + context + " has multiple conflicting value/expression fields.\n");
+	}
 }
 
 /** Keys allowed on any component in addition to type-specific fields. */
@@ -350,7 +395,9 @@ void JsonValidator::validateComputation(const JSON& calc, const unsigned index) 
 		"frequency_range", "vsc_control", "write_txt", "plot_result", "print_info",
 		"dt", "t_start", "t_end", "frequency", "n_keep", "output_bus_ids",
 		"switch_count", "switch_on_resistance", "switch_off_resistance", "switch_types",
-		"plot", "plot_type"
+		"plot", "plot_type",
+		"snapshot_times", "snapshot_history_stride", "record_snapshot_history",
+		"stability_at_snapshots", "stability_on_pick"
 	}, ctx.c_str());
 	if (!calc.contains("type") || !calc.at("type").is_string()) {
 		throw std::invalid_argument("ERROR: computation requires string 'type'.\n");

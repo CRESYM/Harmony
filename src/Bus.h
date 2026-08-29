@@ -6,7 +6,7 @@
 #ifndef BUS_H
 #define BUS_H
 
-#include "Constants.h"
+#include "HarmonyTypes.h"
 
 class Element;  // Forward declaration of the Element class
 

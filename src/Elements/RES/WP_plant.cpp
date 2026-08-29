@@ -31,3 +31,13 @@ WPplant::~WPplant() {
 	delete wind_turbine;
 	wind_turbine = nullptr;
 }
+
+WPplant::~WPplant() {
+	delete wind_turbine;
+	wind_turbine = nullptr;
+}
+
+WPplant::~WPplant() {
+	delete wind_turbine;
+	wind_turbine = nullptr;
+}

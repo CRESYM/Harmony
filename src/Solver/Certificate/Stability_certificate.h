@@ -3,13 +3,12 @@
 
 /**
  * @file Stability_certificate.h
- * @brief Device-level passivity / phase / geometric metrics and plots.
+ * @brief Device-level passivity / phase / DW-style metrics and paper-style plots.
  */
 
 #include "../../Constants.h"
 #include "../Helper_Functions/Visualization.h"
 #include "Certificate_spec.h"
-#include "Geometric_certificates.h"
 
 #include <complex>
 #include <string>
@@ -23,32 +22,19 @@ struct CertificateSweep {
 	std::vector<double> freq_Hz;
 	std::vector<double> passivity_index;    ///< λ_min(Her Y) or Her(I+H)
 	std::vector<double> shifted_passivity;  ///< λ_min(Her(Y+δI))
-	std::vector<double> max_phase_deg;      ///< max |arg λ| (deg) — eigenphase heuristic
-	std::vector<double> nr_phase_deg;       ///< numerical-range (small-phase) |arg W|
-	std::vector<double> nr_zero_margin;     ///< >0 ⇒ 0 ∉ W(Y)
-	std::vector<double> small_gain;         ///< σ_max(Y) or σ_max(H)
-	std::vector<double> shortage_passivity; ///< max(0, -ν)
+	std::vector<double> max_phase_deg;      ///< max |arg λ| (deg)
 	std::vector<double> min_real_eig;       ///< min Re λ
-	std::vector<double> dw_margin;          ///< NR zero-margin (DW-lite local screen)
+	std::vector<double> dw_margin;          ///< Hermitian DW slice margin (= passivity_index)
 	bool pass_passivity = false;
 	bool pass_phase = false;
 	bool pass_shifted = false;
-	bool pass_nr_phase = false;
-	bool pass_nr_zero = false;
-	bool pass_small_gain = false;
 	bool pass_dw = false;
-	bool pass_sector = false;
 	double worst_passivity = 0.0;
 	double worst_shifted = 0.0;
 	double worst_phase_deg = 0.0;
-	double worst_nr_phase_deg = 0.0;
-	double worst_nr_zero_margin = 0.0;
-	double worst_small_gain = 0.0;
-	double worst_shortage = 0.0;
 	double worst_dw = 0.0;
 	double phase_limit_deg = 90.0;
 	double shift_delta = 0.0;
-	double gain_limit = 1.0;
 };
 
 /** @brief One sample of a (P,Q) operating-region certificate. */
@@ -68,16 +54,13 @@ double passivityIndex(const Eigen::MatrixXcd& Y);
 double shiftedPassivityIndex(const Eigen::MatrixXcd& Y, double delta);
 
 /**
- * @brief Hermitian DW-slice margin (legacy): λ_min(Her Y).
- * Prefer @ref certifyNumericalRange / @ref certifyDwShell for geometric certificates.
+ * @brief Hermitian DW-slice margin: for H=Her(Y), W(H)=[λmin,λmax] ⊂ ℝ.
+ * Returns λmin (positive ⇒ 0 left of W and outside if λmin>0).
  */
 double dwHermitianMargin(const Eigen::MatrixXcd& Y);
 
-/** @brief Maximum |arg(λ)| over eigenvalues of Y, in degrees (heuristic). */
+/** @brief Maximum |arg(λ)| over eigenvalues of Y, in degrees. */
 double maxEigenPhaseDeg(const Eigen::MatrixXcd& Y);
-
-/** @brief True if all enabled @p spec gates pass on a completed sweep. */
-bool sweepPassesSpec(const CertificateSweep& sweep, const CertificateSpec& spec);
 
 /** @brief Extract AC dq 2×2 block from 2×2 or 3×3 Y. */
 Eigen::MatrixXcd extractAcDqBlock(const Eigen::MatrixXcd& Y);
@@ -159,21 +142,5 @@ void plot_certificate_dw_slice(
 	const Eigen::MatrixXcd& Y,
 	double freq_Hz,
 	const std::string& title = "DW-style Hermitian slice");
-
-void plot_certificate_numerical_range(
-	const Eigen::MatrixXcd& Y,
-	double freq_Hz,
-	double phase_limit_deg = 90.0,
-	const std::string& title = "Numerical range W(Y)");
-
-void plot_certificate_dw_shell(
-	const Eigen::MatrixXcd& Y,
-	double freq_Hz,
-	const CertificateSpec& spec = {},
-	const std::string& title = "DW shell (xz projection)");
-
-void plot_certificate_geometric_sweep(
-	const CertificateSweep& sweep,
-	const std::string& title = "Geometric certificates");
 
 #endif // STABILITY_CERTIFICATE_H

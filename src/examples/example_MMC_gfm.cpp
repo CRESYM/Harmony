@@ -14,6 +14,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 
 void example_MMC_gfm(bool plotting_enabled /*=true*/) {
 	const double f = 50.0;
@@ -65,7 +66,7 @@ void example_MMC_gfm(bool plotting_enabled /*=true*/) {
 		1, 0, Kdroop_P, Kdroop_Q, 4, Tf_P, Tf_Q, 0.0, 0.0 // gfm
 	};
 
-	MMC* mmc = new MMC("MMC_GFM", "AC1_DC1", converter_params, controller_params);
+	auto mmc = std::make_unique<MMC>("MMC_GFM", "AC1_DC1", converter_params, controller_params);
 
 	std::cout << "\n=== GFM MMC equilibrium ===\n";
 	std::cout << std::setprecision(10)
@@ -139,9 +140,10 @@ void example_MMC_gfm(bool plotting_enabled /*=true*/) {
 	Bus* bus_dc = new Bus("DC1", "DC1", 2);
 	net.addBus(bus_ac);
 	net.addBus(bus_dc);
-	net.addElement(mmc);
-	net.connectElementToBus(mmc, 1, bus_ac);
-	net.connectElementToBus(mmc, 2, bus_dc);
+	MMC* mmc_owned = mmc.release();
+	net.addElement(mmc_owned);
+	net.connectElementToBus(mmc_owned, 1, bus_ac);
+	net.connectElementToBus(mmc_owned, 2, bus_dc);
 
 	std::vector<double> Zsrc = { 0.1, 0.1, 0.1 };
 	AC_source* src = new AC_source("G1", "AC1", 3, Vm, Zsrc);
@@ -166,8 +168,8 @@ void example_MMC_gfm(bool plotting_enabled /*=true*/) {
 	}
 
 	if (plotting_enabled) {
-		mmc->plotEigenvalues();
-		mmc->plotYParameters(1.0, 1000.0, 200);
+		mmc_owned->plotEigenvalues();
+		mmc_owned->plotYParameters(1.0, 1000.0, 200);
 	}
 
 	std::cout << "GFM MMC example done.\n";

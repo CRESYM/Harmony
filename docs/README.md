@@ -7,9 +7,9 @@ This folder holds all project documentation. Start from the role that matches wh
 | Role | Start here |
 |------|------------|
 | **New user** — install, build, first run | [User Manual](manual/README.md) → [Chapter 2](manual/02-getting-started.md) |
-| **Run studies** (GUI / CLI) | [Running Harmony](running-harmony.md) · [HarmonyUI](manual/12-harmony-ui.md) · [CLI](manual/11-command-line.md) |
+| **Run studies** (GUI / CLI) | [Running Harmony](running-harmony.md) · [HarmonyUI](manual/11-harmony-ui.md) · [CLI](manual/10-command-line.md) |
 | **JSON cases** | [Manual Ch. 5](manual/05-json-input.md) · [JSON field reference](input-file-format.md) |
-| **Workflows** (OPF, stability, certificates, …) | [Manual Ch. 7](manual/07-analysis-workflows.md) · [Ch. 8 Certificates](manual/08-certificates.md) |
+| **Workflows** (OPF, stability, certificates, …) | [Manual Ch. 7](manual/07-analysis-workflows.md) · [Ch. 12 Certificates](manual/12-certificates.md) |
 | **C++ API** | [Doxygen](doxygen/README.md) |
 | **Extend Harmony** | [Developer guide](developer-guide.md) |
 | **CI / packaging / deps** | [Maintainer guide](maintainer-guide.md) |
@@ -60,11 +60,11 @@ docs/README.md            ← you are here (index)
 | [5](manual/05-json-input.md) | JSON input workflow |
 | [6](manual/06-component-reference.md) | Component reference |
 | [7](manual/07-analysis-workflows.md) | Analysis workflows |
-| [8](manual/08-certificates.md) | Certificates |
-| [9](manual/09-examples-catalog.md) | Examples catalog |
-| [10](manual/10-troubleshooting.md) | Troubleshooting |
-| [11](manual/11-command-line.md) | Command-line interface |
-| [12](manual/12-harmony-ui.md) | HarmonyUI |
+| [8](manual/08-examples-catalog.md) | Examples catalog |
+| [9](manual/09-troubleshooting.md) | Troubleshooting |
+| [10](manual/10-command-line.md) | Command-line interface |
+| [11](manual/11-harmony-ui.md) | HarmonyUI |
+| [12](manual/12-certificates.md) | Certificates |
 
 Full TOC and quick-reference table: [manual/README.md](manual/README.md).
 

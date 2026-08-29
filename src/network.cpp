@@ -260,6 +260,16 @@ void Network::empty_areas() {
 }
 
 
+void Network::empty_areas() {
+    ownedGrids_.clear();
+    ac_grids.clear();
+    ac_grid_names.clear();
+    dc_grids.clear();
+    dc_grid_names.clear();
+    converters.clear();
+}
+
+
 void Network::add_areas() {
     // This function can be implemented to categorize and add AC and DC grids to the system
 

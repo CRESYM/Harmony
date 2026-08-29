@@ -6,7 +6,7 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
-#include "Constants.h"
+#include "HarmonyTypes.h"
 
 #include <memory>
 

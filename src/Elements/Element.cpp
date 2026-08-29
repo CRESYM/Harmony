@@ -195,9 +195,18 @@ void Element::printElementValues() {
  * @param end_frequency The ending frequency for the sweep.
  * @param number_of_points The number of frequency points to compute and write.
  */
-void Element::writeFile(double start_frequency, double end_frequency, int number_of_points) {
+void Element::writeFile(double start_frequency, double end_frequency, int number_of_points,
+    const std::string& output_directory) {
+    std::string dir = output_directory;
+    if (dir.empty()) {
+        dir = "./files";
+    }
+    if (dir.back() != '/' && dir.back() != '\\') {
+        dir += '/';
+    }
+
     std::ofstream myfile;
-    myfile.open("./files/" + element_symbol + ".csv");
+    myfile.open(dir + element_symbol + ".csv");
 
     // Print the Y-parameters in file
     // Use (N-1) so the last sample is exactly end_frequency (log-spaced).

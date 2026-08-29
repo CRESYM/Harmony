@@ -1,0 +1,54 @@
+{
+    "simulation": {
+        "title": "pi_connection_dsl_dc",
+        "description": "PowerImpedance Connection_DSL.jl scalar DC network: Vdc source — branch — load to gnd.",
+        "output_directory": "./benchmarking/powerimpedance_examples/results"
+    },
+    "buses": [
+        { "id": "source_bus", "location": "DC1", "pins": 1, "enabled": true },
+        { "id": "load_bus", "location": "DC1", "pins": 1, "enabled": true },
+        { "id": "gnd", "location": "DC1", "pins": 1, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "source",
+            "location": "DC1",
+            "type": "dc_source",
+            "pins": 1,
+            "voltage": 240.0,
+            "resistance": 0.0,
+            "connected_buses": [
+                { "bus_id": "source_bus", "terminal": 1 },
+                { "bus_id": "gnd", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "branch",
+            "location": "DC1",
+            "type": "impedance",
+            "pins": 1,
+            "values": [2.0],
+            "connected_buses": [
+                { "bus_id": "source_bus", "terminal": 1 },
+                { "bus_id": "load_bus", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "load",
+            "location": "DC1",
+            "type": "impedance",
+            "pins": 1,
+            "values": [10.0],
+            "connected_buses": [
+                { "bus_id": "load_bus", "terminal": 1 },
+                { "bus_id": "gnd", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "print_connections" }
+    ]
+}

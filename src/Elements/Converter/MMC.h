@@ -97,14 +97,6 @@ public:
     virtual void solveEquilibrium() override;
     virtual Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u) override;
     virtual void computeABCD() override;
-    /// Exact 12×12 plant Jacobian (modulation treated as fixed parameters)
-    Eigen::MatrixXd computePlantJacobian(
-        double w,
-        double mDd, double mDq, double mDZd, double mDZq,
-        double mSd, double mSq, double mSz) const;
-
-    /// computeABCD variant: exact plant block + numerical controller block
-    void computeABCD_analytical();
 
 	// Y-parameter computation
     std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency) override;
@@ -162,7 +154,6 @@ public:
     }
 
     // One MMC arm-voltage time step
-    //vector<MatrixXcd> simulateTimeStep(const vector<MatrixXcd>& input, double Ts, int nKeep1, int nKeep2) override;
 
     // State-space model manipulation - generic MNA stamping 
     void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int,
@@ -175,23 +166,12 @@ public:
 
     int getNumberOfInternalStates() const override { return number_of_states; }
 
-    //add18/5
-    // 
-    // // === BEGIN DQsym: expose plant-only state count ===
-    int getNumberOfPlantStates() const override {
-        /*std::cout << "[MMC::getNumberOfPlantStates] returning " << n_plant_states_ << "\n"; */
-        return n_plant_states_; }
-    // === END DQsym: expose plant-only state count ===
+    int getNumberOfPlantStates() const override { return n_plant_states_; }
 
-    //add18/5[
-
-    // added18/5=== BEGIN DQsym closed-loop control (public interface) ===
     void stepControllers(double dt,
         const std::vector<Eigen::MatrixXcd>& states,
         const Eigen::Vector2d& Vg_dq);
-    // added18/5]=== END DQsym closed-loop control ===
 
-    // added18/5=== BEGIN DQsym closed-loop control (members) ===
     Eigen::VectorXd x_ctrl_dqsym_;          // persistent controller integrator states
     Eigen::MatrixXcd mD_dqsym_;             // current Δ-modulation (set by stepControllers)
     Eigen::MatrixXcd mS_dqsym_;             // current Σ-modulation
@@ -204,9 +184,6 @@ public:
     mutable double last_vMSigma_d_ref_ = 0.0;
     mutable double last_vMSigma_q_ref_ = 0.0;
     mutable double last_vMSigma_z_ref_ = 0.0;
-    // added18/5=== END DQsym closed-loop control ===
-
-
 
     map_basic_basic getParameterSubstitutions() const override;
 
@@ -226,16 +203,20 @@ private:
 	double gfm_E_ref_ = 0.0; // GFM internal voltage magnitude reference
 	/// When true, GFM residuals use power-normalized form for KINSOL conditioning.
 	bool gfm_scale_eq_residual_ = false;
+	/// When true, GFM residuals use power-normalized form for KINSOL conditioning.
+	bool gfm_scale_eq_residual_ = false;
+	/// When true, GFM residuals use power-normalized form for KINSOL conditioning.
+	bool gfm_scale_eq_residual_ = false;
 
-    // add18/5=== BEGIN plant state count (captured at construction, before non-plant states added) ===
-    int n_plant_states_ = 12;   // will be overwritten in constructor with actual value
-    // add18/5=== END plant state count ===
+    int n_plant_states_ = 12;
 
     // Open-loop feedforward used when outer controllers (occ/zcc) are absent.
     bool open_loop_modulation_ = false;
     double ol_vMDelta_d_ref_ = 0.0;
     double ol_vMDelta_q_ref_ = 0.0;
     double ol_vMSigma_z_ref_ = 0.0;
+    Eigen::VectorXd equilibrium_guess_;
+    Eigen::VectorXd equilibrium_guess_;
     Eigen::VectorXd equilibrium_guess_;
 
     void computeOpenLoopArmRefs(
