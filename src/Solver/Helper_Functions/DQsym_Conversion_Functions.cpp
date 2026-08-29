@@ -308,7 +308,7 @@ MatrixXcd truncateHarmonics(const MatrixXcd& X, int nColsToKeep)
  * @param theta electrical angle [rad]
  * @return Vector3d instantaneous abc values at theta
  */
-Vector3d dqn2abc_at_time(const MatrixXcd& Xdcpnz_c, double theta)
+static Vector3d dqn2abc_at_time(const MatrixXcd& Xdcpnz_c, double theta)
 {
     if (Xdcpnz_c.rows() != 3) {
         throw std::runtime_error("Xdcpnz_c must have 3 rows.");

@@ -4,7 +4,7 @@
  */
 #include "WT_type_4.h"
 
-#include "../../Constants.h"
+#include "core/Constants.h"
 
 WTtype4::WTtype4(const string& symbol, const std::string& location, const vector<double>& parameters)
 	: RES_base(symbol, location) {

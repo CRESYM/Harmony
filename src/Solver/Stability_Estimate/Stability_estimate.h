@@ -26,9 +26,9 @@
  * buses are handled identically.
  */
 
-#include "../../Constants.h"
-#include "../Helper_Functions/Symbolic_functions.h"
-#include "../../SubNetwork.h"
+#include "core/Constants.h"
+#include "Solver/Helper_Functions/Symbolic_functions.h"
+#include "network/SubNetwork.h"
 
 class Bus;
 class Element;

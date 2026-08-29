@@ -8,9 +8,10 @@
  */
 #include "Stability_estimate.h"
 
-#include "../../network.h"
-#include "../../Include_components.h"
-#include "../../Bus.h"
+#include "network/network.h"
+#include "core/Include_components.h"
+#include "network/Bus.h"
+#include "ui/Visualization.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers

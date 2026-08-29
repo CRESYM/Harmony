@@ -6,8 +6,8 @@
 #ifndef ELEMENT_H
 #define ELEMENT_H
 
-#include "../Constants.h"
-#include "../Solver/Helper_Functions/Helper_Functions.h"
+#include "core/Constants.h"
+#include "Solver/Helper_Functions/Helper_Functions.h"
 
 class Bus; // Forward declaration of Bus class
 
@@ -60,18 +60,6 @@ public:
      * @return Output pin count.
      */
     int getOutputPins() const { return output_pins; }
-
-    /**
-     * @brief Set the number of input pins/phases.
-     * @param pins New input pin count.
-     */
-    void setInputPins(int pins) { input_pins = pins; }
-
-    /**
-     * @brief Set the number of output pins/phases.
-     * @param pins New output pin count.
-     */
-    void setOutputPins(int pins) { output_pins = pins; }
 
     /**
      * @brief Enable or disable coordinate transformation for this element.

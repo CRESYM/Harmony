@@ -4,11 +4,11 @@
  */
 #include "Examples.h"
 
-#include "../network.h"
-#include "../Bus.h"
-#include "../Include_components.h"
-#include "../Solver/OPF/Powerflow.h"
-#include "../Solver/Stability_Estimate/Stability_estimate.h"
+#include "network/network.h"
+#include "network/Bus.h"
+#include "core/Include_components.h"
+#include "Solver/OPF/Powerflow.h"
+#include "Solver/Stability_Estimate/Stability_estimate.h"
 
 void example_OPF_PV(bool plotting_enabled /*=true*/)
 {

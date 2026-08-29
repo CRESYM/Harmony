@@ -12,9 +12,9 @@
  * matrix rows/columns.
  */
 
-#include "../../Elements/Element.h"
-#include "../../Bus.h"
-#include "../../network.h"
+#include "Elements/Element.h"
+#include "network/Bus.h"
+#include "network/network.h"
 
 class Network; class Element; class Bus;
 

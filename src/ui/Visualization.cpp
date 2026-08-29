@@ -2,9 +2,18 @@
  * @file Visualization.cpp
  * @brief Implementation of Interactive ImGui/ImPlot visualization for solver results.
  */
-#include "Constants.h"
+#include "core/Constants.h"
 #include "Visualization.h"
 #include "harmony_banner_gui.h"
+
+#ifdef __APPLE__
+    #define GLFW_INCLUDE_GLCOREARB
+#endif
+#include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <implot.h>
 
 // stb_image_write — single-header PNG/BMP writer (no external lib required).
 // Drop stb_image_write.h into your source tree from https://github.com/nothings/stb
@@ -423,7 +432,13 @@ static void add_tab(const std::string& title, std::function<void()> fn)
 {
     ensure_running();
     std::lock_guard<std::mutex> lock(g_mutex);
-    g_tabs.push_back({ title, fn });
+    for (auto& tab : g_tabs) {
+        if (tab.title == title) {
+            tab.draw = std::move(fn);
+            return;
+        }
+    }
+    g_tabs.push_back({ title, std::move(fn) });
 }
 
 // ============================================================
@@ -620,7 +635,7 @@ void bode_plot_implot(
             const int nSignals = (int)labels.size();
 
             // NoScrollWithMouse: otherwise the child steals the wheel and ImPlot cannot zoom.
-            ImGui::BeginChild("BodeLayout", ImVec2(0, 0), ImGuiChildFlags_None,
+            ImGui::BeginChild(("BodeLayout##" + title).c_str(), ImVec2(0, 0), ImGuiChildFlags_None,
                 ImGuiWindowFlags_NoScrollWithMouse);
 
             // Fit both panels in the visible area (avoids "only magnitude" when phase is below the fold).
@@ -698,7 +713,7 @@ void nyquist_plot_implot(
             const int N = (int)H_data.size();
             const int channels = (int)H_data[0].size();
 
-            ImGui::BeginChild("NyquistLayout", ImVec2(0, 0), ImGuiChildFlags_None,
+            ImGui::BeginChild(("NyquistLayout##" + title).c_str(), ImVec2(0, 0), ImGuiChildFlags_None,
                 ImGuiWindowFlags_NoScrollWithMouse);
 
             if (ImPlot::BeginPlot("Nyquist"))
@@ -805,7 +820,7 @@ void plot_eigenvalues_implot(
                 im.push_back(std::imag(l));
             }
 
-            ImGui::BeginChild("EigLayout", ImVec2(0, 0), ImGuiChildFlags_None,
+            ImGui::BeginChild(("EigLayout##" + title).c_str(), ImVec2(0, 0), ImGuiChildFlags_None,
                 ImGuiWindowFlags_NoScrollWithMouse);
 
             if (ImPlot::BeginPlot("Eigenvalues (s-plane)",
@@ -895,7 +910,7 @@ void plot_participation_factors_implot(
             // ----------------------------------------------------------
             // Plot
             // ----------------------------------------------------------
-            ImGui::BeginChild("##pf_child", ImVec2(-1, -1), ImGuiChildFlags_None,
+            ImGui::BeginChild(("pf_child##" + title).c_str(), ImVec2(-1, -1), ImGuiChildFlags_None,
                 ImGuiWindowFlags_NoScrollWithMouse);
 
             const double bar_width = 0.8 / n_modes;
@@ -1183,56 +1198,73 @@ void plot_abc_lines(
 
 } // namespace
 
-void plot_abc_waveforms_implot(
-    const std::vector<double>& t,
-    const Eigen::MatrixXd& Xabc,
-    const std::string& title)
-{
-    auto t_copy = t;
-    auto X_copy = Xabc;
-    const auto applyLimits = std::make_shared<bool>(true);
-
-    add_tab(title, [t_copy = std::move(t_copy), X_copy = std::move(X_copy), applyLimits]()
-        {
-            std::vector<double> xa(t_copy.size()), xb(t_copy.size()), xc(t_copy.size());
-            for (size_t i = 0; i < t_copy.size(); ++i)
-            {
-                xa[i] = X_copy(i, 0);
-                xb[i] = X_copy(i, 1);
-                xc[i] = X_copy(i, 2);
-            }
-
-            if (ImPlot::BeginPlot(("ABC")))
-            {
-                setup_abc_plot_panel(t_copy, xa, xb, xc, *applyLimits);
-                plot_abc_lines(t_copy, xa, xb, xc);
-                ImPlot::EndPlot();
-            }
-            *applyLimits = false;
-        });
-}
-
-// ============================================================
-// ABC GROUPS
-// ============================================================
-
 void plot_abc_groups_implot(
     const std::vector<double>& t,
     const std::vector<Eigen::MatrixXd>& Xabc_groups,
-    const std::string& title)
+    const std::string& title,
+    std::function<void(double t_sel)> on_analyze,
+    std::function<void(double t_sel, double extra_t)> on_continue)
 {
     auto t_copy = t;
     auto X_copy = Xabc_groups;
     const auto applyLimits = std::make_shared<bool>(true);
+    const auto t_sel = std::make_shared<double>(t.empty() ? 0.0 : t.back());
+    const double defaultExtra = (!t.empty() && t.back() > t.front())
+        ? (t.back() - t.front()) : 0.1;
+    const auto extra_t = std::make_shared<double>(defaultExtra);
+    const auto status = std::make_shared<std::string>();
 
-    add_tab(title, [t_copy = std::move(t_copy), X_copy = std::move(X_copy), title, applyLimits]()
+    add_tab(title, [t_copy = std::move(t_copy), X_copy = std::move(X_copy), title,
+        applyLimits, t_sel, extra_t, status,
+        on_analyze = std::move(on_analyze), on_continue = std::move(on_continue)]()
         {
             const size_t nGroups = X_copy.size();
             constexpr float PLOT_H = kHarmonyPlotWaveformHeightPx;
             const float groupGap = ImGui::GetStyle().ItemSpacing.y;
 
+            if (!t_copy.empty()) {
+                ImGui::SetNextItemWidth(160.0f);
+                ImGui::InputDouble("t* (s)", t_sel.get(), 0.0, 0.0, "%.6f");
+                *t_sel = std::clamp(*t_sel, t_copy.front(), t_copy.back());
+                ImGui::SameLine();
+                ImGui::TextDisabled("Ctrl+click a trace to set t*");
+                if (on_analyze) {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Analyze at t*")) {
+                        try {
+                            on_analyze(*t_sel);
+                            *status = "Linearized at t* = " + std::to_string(*t_sel) + " s";
+                        }
+                        catch (const std::exception& ex) {
+                            *status = std::string("Analyze failed: ") + ex.what();
+                        }
+                    }
+                }
+                if (on_continue) {
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(110.0f);
+                    ImGui::InputDouble("extra (s)", extra_t.get(), 0.0, 0.0, "%.4f");
+                    if (*extra_t < 0.0)
+                        *extra_t = 0.0;
+                    ImGui::SameLine();
+                    if (ImGui::Button("Continue from t*")) {
+                        try {
+                            on_continue(*t_sel, *extra_t);
+                            *status = "Continued from t* = " + std::to_string(*t_sel)
+                                + " s by " + std::to_string(*extra_t) + " s";
+                        }
+                        catch (const std::exception& ex) {
+                            *status = std::string("Continue failed: ") + ex.what();
+                        }
+                    }
+                }
+                if (!status->empty()) {
+                    ImGui::TextUnformatted(status->c_str());
+                }
+            }
+
             // Scroll with the scrollbar; keep the wheel for ImPlot zoom on the panels below.
-            ImGui::BeginChild("##abc_groups_scroll", ImVec2(-1, -1), ImGuiChildFlags_None,
+            ImGui::BeginChild(("##abc_groups_scroll##" + title).c_str(), ImVec2(-1, -1), ImGuiChildFlags_None,
                 ImGuiWindowFlags_NoScrollWithMouse);
 
             for (size_t g = 0; g < nGroups; ++g)
@@ -1258,6 +1290,15 @@ void plot_abc_groups_implot(
                 {
                     setup_abc_plot_panel(t_copy, xa, xb, xc, *applyLimits);
                     plot_abc_lines(t_copy, xa, xb, xc);
+                    const double tMark = *t_sel;
+                    ImPlot::PlotInfLines("t*", &tMark, 1);
+                    if (ImPlot::IsPlotHovered()
+                        && ImGui::IsMouseClicked(ImGuiMouseButton_Left)
+                        && (ImGui::GetIO().KeyCtrl))
+                    {
+                        *t_sel = std::clamp(ImPlot::GetPlotMousePos().x,
+                            t_copy.front(), t_copy.back());
+                    }
                     ImPlot::EndPlot();
                 }
 

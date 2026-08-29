@@ -3,15 +3,15 @@
  * @brief Implementation of PowerFlow network parameter assembly.
  */
 #include "Powerflow.h"
-#include "../Helper_Functions/Helper_Functions.h"
+#include "Solver/Helper_Functions/Helper_Functions.h"
 
-#include "../../network.h"
-#include "../../Bus.h"
-#include "../../Include_components.h"
-#include "../../Elements/Converter/MMC.h"
-#include "../../Elements/RES/PV_plant.h"
-#include "../../Elements/RES/WT_type_3.h"
-#include "../../Elements/RES/WT_type_4.h"
+#include "network/network.h"
+#include "network/Bus.h"
+#include "core/Include_components.h"
+#include "Elements/Converter/MMC.h"
+#include "Elements/RES/PV_plant.h"
+#include "Elements/RES/WT_type_3.h"
+#include "Elements/RES/WT_type_4.h"
 
 #include <map>
 #include <unordered_map>

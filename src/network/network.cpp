@@ -4,13 +4,15 @@
  */
 #include "Bus.h"
 #include "SubNetwork.h"
-#include "Include_components.h"
+#include "core/Include_components.h"
 
 
 Network::Network() = default;
 
 
 Network::~Network() {
+    if (live_)
+        *live_ = false;
     empty_areas();
     ownedElements_.clear();
     elements.clear();

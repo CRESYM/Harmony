@@ -10,8 +10,8 @@
  * per-bus results for downstream use or visualization.
  */
 
-#include "../../Constants.h"
-#include "../../Bus.h"
+#include "core/Constants.h"
+#include "network/Bus.h"
 
 #include <string>
 #include <unordered_map>

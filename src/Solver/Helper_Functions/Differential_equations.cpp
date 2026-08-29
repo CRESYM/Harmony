@@ -1,11 +1,19 @@
 /**
  * @file Differential_equations.cpp
- * @brief Implementation of Numerical integration, equilibrium finding, and discretization utilities.
+ * @brief Implementation of Equilibrium finding, Padé delays, and discretization utilities.
  */
 #include "Differential_equations.h"
-#include <stdexcept>
-#include <iostream>
+
+#include <kinsol/kinsol.h>
+#include <nvector/nvector_serial.h>
+#include <sunlinsol/sunlinsol_dense.h>
+#include <sunmatrix/sunmatrix_dense.h>
+#include <sundials/sundials_context.h>
+#include <sundials/sundials_types.h>
+
 #include <cmath>
+#include <iostream>
+#include <stdexcept>
 
 
 // ===================================================================
@@ -37,39 +45,12 @@ static void eigen2sun(SUNMatrix J, const Eigen::MatrixXd& M) {
 //  Callback user data
 // ===================================================================
 
-struct CVODEUserData {
-    const RHSFunc* rhs;
-    const JacFunc* jac;
-    const std::function<Eigen::VectorXd(double t)>* inputFn;
-    int n;
-};
-
 struct KINSOLUserData {
     const RHSFunc* rhs;
     const JacFunc* jac;
     Eigen::VectorXd u;
     int n;
 };
-
-
-// ===================================================================
-//  CVODE callbacks
-// ===================================================================
-
-static int cvode_rhs_cb(sunrealtype t, N_Vector y, N_Vector ydot, void* ud) {
-    auto* d = static_cast<CVODEUserData*>(ud);
-    eigen2nv(ydot, (*d->rhs)(static_cast<double>(t),
-        nv2eigen(y, d->n), (*d->inputFn)(static_cast<double>(t))));
-    return 0;
-}
-
-static int cvode_jac_cb(sunrealtype t, N_Vector y, N_Vector, SUNMatrix J,
-    void* ud, N_Vector, N_Vector, N_Vector) {
-    auto* d = static_cast<CVODEUserData*>(ud);
-    eigen2sun(J, (*d->jac)(static_cast<double>(t),
-        nv2eigen(y, d->n), (*d->inputFn)(static_cast<double>(t))));
-    return 0;
-}
 
 
 // ===================================================================
@@ -205,21 +186,6 @@ static Eigen::VectorXd kinsolSolve(
 
 
 // ===================================================================
-//  PUBLIC: findEquilibrium — single strategy
-// ===================================================================
-
-Eigen::VectorXd findEquilibrium(
-    const RHSFunc& rhs, const Eigen::VectorXd& x0,
-    const Eigen::VectorXd& u, const KINSOLConfig& cfg,
-    const JacFunc& jac)
-{
-    if (x0.size() == 0 || u.size() == 0)
-        throw std::invalid_argument("x0 and u must be non-empty.");
-    return kinsolSolve(rhs, x0, u, cfg, jac);
-}
-
-
-// ===================================================================
 //  PUBLIC: findEquilibriumRobust — cascade
 // ===================================================================
 
@@ -305,83 +271,6 @@ Eigen::VectorXd findEquilibriumRobust(
 
 
 // ===================================================================
-//  PUBLIC: integrate — CVODE BDF
-// ===================================================================
-
-CVODEResult integrate(
-    const RHSFunc& rhs, const Eigen::VectorXd& x0,
-    const std::function<Eigen::VectorXd(double t)>& inputFn,
-    double t0, double tEnd, double dt_output,
-    const CVODEConfig& cfg, const JacFunc& jac)
-{
-    int n = static_cast<int>(x0.size());
-
-    SUNContext ctx{};
-    if (SUNContext_Create(SUN_COMM_NULL, &ctx) != 0)
-        throw std::runtime_error("SUNContext_Create failed");
-
-    struct CvodeResources {
-        SUNContext* ctx = nullptr;
-        N_Vector y = nullptr;
-        void* cvode = nullptr;
-        SUNMatrix A = nullptr;
-        SUNLinearSolver LS = nullptr;
-        ~CvodeResources() {
-            if (y) N_VDestroy(y);
-            if (cvode) CVodeFree(&cvode);
-            if (LS) SUNLinSolFree(LS);
-            if (A) SUNMatDestroy(A);
-            if (ctx) SUNContext_Free(ctx);
-        }
-    } res;
-    res.ctx = &ctx;
-
-    res.y = N_VNew_Serial(static_cast<sunindextype>(n), ctx);
-    eigen2nv(res.y, x0);
-
-    res.cvode = CVodeCreate(CV_BDF, ctx);
-    CVODEUserData ud = { &rhs, &jac, &inputFn, n };
-    CVodeSetUserData(res.cvode, &ud);
-    CVodeInit(res.cvode, cvode_rhs_cb, static_cast<sunrealtype>(t0), res.y);
-    CVodeSStolerances(res.cvode, static_cast<sunrealtype>(cfg.rtol),
-        static_cast<sunrealtype>(cfg.atol));
-    CVodeSetMaxStep(res.cvode, static_cast<sunrealtype>(cfg.dt_max));
-
-    res.A = SUNDenseMatrix(static_cast<sunindextype>(n),
-        static_cast<sunindextype>(n), ctx);
-    res.LS = SUNLinSol_Dense(res.y, res.A, ctx);
-    CVodeSetLinearSolver(res.cvode, res.LS, res.A);
-
-    if (cfg.use_analytical_jac && jac)
-        CVodeSetJacFn(res.cvode, cvode_jac_cb);
-
-    CVODEResult result;
-    result.time.push_back(t0);
-    result.states.push_back(x0);
-
-    sunrealtype tc = static_cast<sunrealtype>(t0);
-    sunrealtype tn = static_cast<sunrealtype>(t0 + dt_output);
-
-    while (static_cast<double>(tn) <= tEnd + 1e-12) {
-        int flag = CVode(res.cvode, tn, res.y, &tc, CV_NORMAL);
-        if (flag < 0)
-            throw std::runtime_error("CVode flag " + std::to_string(flag));
-        result.time.push_back(static_cast<double>(tc));
-        result.states.push_back(nv2eigen(res.y, n));
-        tn += static_cast<sunrealtype>(dt_output);
-    }
-
-    long ns = 0, nf = 0, nj = 0;
-    CVodeGetNumSteps(res.cvode, &ns);
-    CVodeGetNumRhsEvals(res.cvode, &nf);
-    CVodeGetNumJacEvals(res.cvode, &nj);
-    std::cout << "[CVODE] Steps:" << ns << " RHS:" << nf << " Jac:" << nj << "\n";
-
-    return result;
-}
-
-
-// ===================================================================
 //  PUBLIC: computeJacobians — central differences, adaptive step
 // ===================================================================
 
@@ -412,17 +301,8 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> computeJacobians(
 
 
 // ===================================================================
-//  Padé delay — 3rd order
+//  Padé delay
 // ===================================================================
-
-void padeDelaySystem3(double T, MatrixXd& Ad, MatrixXd& Bd, MatrixXd& Cd, MatrixXd& Dd) {
-    double a3 = T * T * T, a2 = 12 * T * T, a1 = 60 * T, a0 = 120;
-    double b3 = -T * T * T, b2 = 12 * T * T, b1 = -60 * T, b0 = 120;
-    Ad << -a2 / a3, -a1 / a3, -a0 / a3, 1, 0, 0, 0, 1, 0;
-    Bd << 1, 0, 0;
-    Cd << (b2 - b3 * a2 / a3) / a3, (b1 - b3 * a1 / a3) / a3, (b0 - b3 * a0 / a3) / a3;
-    Dd << b3 / a3;
-}
 
 void padeDelaySystemMulti3(double T, MatrixXd& Ad, MatrixXd& Bd, MatrixXd& Cd, MatrixXd& Dd, int ns) {
     double a3 = T * T * T, a2 = 12 * T * T, a1 = 60 * T, a0 = 120;
@@ -432,14 +312,6 @@ void padeDelaySystemMulti3(double T, MatrixXd& Ad, MatrixXd& Bd, MatrixXd& Cd, M
     Eigen::MatrixXd C(1, 3); C << (b2 - b3 * a2 / a3) / a3, (b1 - b3 * a1 / a3) / a3, (b0 - b3 * a0 / a3) / a3;
     Eigen::MatrixXd D(1, 1); D << b3 / a3;
     for (int i = 0; i < ns; ++i) { Ad.block(i * 3, i * 3, 3, 3) = A; Bd.block(i * 3, i, 3, 1) = B; Cd.block(i, i * 3, 1, 3) = C; Dd(i, i) = D(0, 0); }
-}
-
-void padeDelaySystem2(double T, MatrixXd& Ad, MatrixXd& Bd, MatrixXd& Cd, MatrixXd& Dd) {
-    double a2 = T * T, a1 = 6 * T, a0 = 12, b2 = -T * T, b1 = 6 * T, b0 = -12;
-    Ad << -a1 / a2, -a0 / a2, 1, 0;
-    Bd << 1, 0;
-    Cd << (b1 - b2 * a1 / a2) / a2, (b0 - b2 * a0 / a2) / a2;
-    Dd << b2 / a2;
 }
 
 void padeDelaySystemMulti2(double T, MatrixXd& Ad, MatrixXd& Bd, MatrixXd& Cd, MatrixXd& Dd, int ns) {

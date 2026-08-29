@@ -5,9 +5,9 @@
 #include <filesystem>
 #include <vector>
 
-#include "../src/ui/cli.h"
-#include "../src/json/simulation_builder.h"
-#include "../src/network.h"
+#include "ui/cli.h"
+#include "json/simulation_builder.h"
+#include "network/network.h"
 
 
 namespace fs = std::filesystem;
@@ -301,7 +301,7 @@ TEST(JsonComputationPlots, PlotKeysValidate) {
 				"plot": true,
 				"plot_type": "nyquist"
 			},
-			{ "type": "dqsym", "plot": true, "t_end": 0.001, "output_bus_ids": ["ac"] },
+			{ "type": "dqsym", "plot": true, "t_end": 0.001, "snapshot_time": 0.001, "output_bus_ids": ["ac"] },
 			{ "type": "opf", "case_name": "case", "plot_result": true }
 		]
 	})");

@@ -181,7 +181,7 @@ Each entry has a `type` field (case-insensitive).
 | `y_matrix` (`y_matrx`) | Frequency sweep to CSV. Optional `component_id`, `frequency_range`, `"plot": true` for Bode GUI |
 | `stability_assessment` | `StabilityEstimate` after `add_areas`. Optional: `converter_id`, `location`, `frequency_range`, `"plot": true`, `"plot_type": "bode"` or `"nyquist"` |
 | `power_flow` / `opf` | **CSV mode:** `"case_name"` (AC prefix) + optional `"dc_case_name"` → calls `solve_opf` like `example_OPF_csv` (network components ignored). **Built-network mode:** omit `case_name` → `make_OPF` on JSON components (like `stability_check`). Optional `"plot_result": true` |
-| `time_domain` / `dqsym` | DQsym time-domain run (`dt`, `t_end`, `frequency`, `output_bus_ids`, …). Optional `"plot": true` for ABC waveforms |
+| `time_domain` / `dqsym` | DQsym time-domain run (`dt`, `t_end`, `frequency`, `output_bus_ids`, …). Optional `"plot": true` for ABC waveforms. Optional `"snapshot_time"` (seconds) linearizes MMCs at that instant (`analyzeAtTime`); optional `"frequency_range"` for the TF sweep |
 | `equivalent_impedance` | Not wired — use C++ API |
 
 JSON plot flags are honored only when the CLI is run without `--no-plot`.

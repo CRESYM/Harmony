@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include <complex>
 
-#include "../network.h"
-#include "../Bus.h"
-#include "../Include_components.h"
-#include "../Solver/Stability_Estimate/Stability_estimate.h"
+#include "network/network.h"
+#include "network/Bus.h"
+#include "core/Include_components.h"
+#include "Solver/Stability_Estimate/Stability_estimate.h"
 
 
 namespace {

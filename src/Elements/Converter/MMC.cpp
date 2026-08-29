@@ -984,8 +984,10 @@ void MMC::computeABCD() {
     if (equilibrium_state.size() == 0)
         throw std::runtime_error("[MMC::computeABCD] No equilibrium state available.");
     const Eigen::VectorXd& x0 = equilibrium_state;
-    const Eigen::Vector3d u0 = makeOperatingInput(
-        V_dc, P_dc, controls.count("dc_voltage") > 0, V_m, theta);
+    const Eigen::Vector3d u0 = (operating_input_.size() >= 3)
+        ? Eigen::Vector3d(operating_input_.head(3))
+        : makeOperatingInput(
+            V_dc, P_dc, controls.count("dc_voltage") > 0, V_m, theta);
 
     //// Bind the member function computeStateDerivatives as a lambda
     //auto f = [&](const Eigen::VectorXd& x, const Eigen::VectorXd& u) {
@@ -1301,8 +1303,10 @@ Eigen::MatrixXd MMC::computePlantJacobian(
 void MMC::computeABCD_analytical()
 {
     const Eigen::VectorXd& x0 = equilibrium_state;
-    const Eigen::Vector3d u0 = makeOperatingInput(
-        V_dc, P_dc, controls.count("dc_voltage") > 0, V_m, theta);
+    const Eigen::Vector3d u0 = (operating_input_.size() >= 3)
+        ? Eigen::Vector3d(operating_input_.head(3))
+        : makeOperatingInput(
+            V_dc, P_dc, controls.count("dc_voltage") > 0, V_m, theta);
 
     // --- Evaluate modulation signals at operating point ---
     Eigen::VectorXd F0 = computeStateDerivatives(x0, u0);
@@ -1450,6 +1454,7 @@ void MMC::seedPlantStateGuess(
  * @brief Solve for the steady-state operating point x using Newton-Raphson.
  */
 void MMC::solveEquilibrium() {
+    operating_input_.resize(0);
     const int n = number_of_states;
     const bool has_occ = controls.count("occ") > 0;
     const bool has_gfm = controls.count("gfm") > 0;
@@ -1816,35 +1821,6 @@ void MMC::writeMNAmatrix(
     }
 }
 
-//disabled on the 18/5
-
-//std::vector<MatrixXcd> MMC::simulateInputStep(
-//    const std::vector<MatrixXcd>& states, int nKeep) const
-//{
-//    if (states.size() < 4)
-//        return { MatrixXcd::Zero(3,nKeep), MatrixXcd::Zero(3,nKeep),
-//                 MatrixXcd::Zero(3,nKeep), MatrixXcd::Zero(3,nKeep) };
-//
-//    const MatrixXcd& iD = states[0], & iS = states[1], & vCD = states[2], & vCS = states[3];
-//
-//    // m^Δ phasor per phase
-//    MatrixXcd mD = MatrixXcd::Zero(3, nKeep);
-//	// The same calculation as for the AC source: m^Δ = -sin(w0*t - 2pi*k/3) 
-//	mD(0, 1) = -m_1; 
-//
-//    // m^Σ = 1 at DC
-//    MatrixXcd mS = MatrixXcd::Zero(3, nKeep);
-//	mS(2, 0) = 1.0; 
-//
-//    auto trunc = [nKeep](const MatrixXcd& M) { return truncateHarmonics(M, nKeep); };
-//
-//    MatrixXcd u_vMD = trunc(-(dq_multiply(mD, vCS) + dq_multiply(mS, vCD)) / 2.0);
-//    MatrixXcd u_vMS = trunc((dq_multiply(mS, vCS) + dq_multiply(mD, vCD)) / 2.0);
-//    MatrixXcd u_PD = trunc(dq_multiply(mS, iD) / 2.0 + dq_multiply(mD, iS));
-//    MatrixXcd u_PS = trunc(dq_multiply(mD, iD) / 2.0 + dq_multiply(mS, iS));
-//
-//    return { u_vMD, u_vMS, u_PD, u_PS };
-//}
 
 //add18/5
 std::vector<MatrixXcd> MMC::simulateInputStep(
@@ -1883,8 +1859,6 @@ std::vector<MatrixXcd> MMC::simulateInputStep(
 }
 
 
-//add18/5
-
 map_basic_basic MMC::getParameterSubstitutions() const {
     map_basic_basic subs;
     subs[symbol("m_delta_" + element_symbol)] = real_double(m_1);
@@ -1892,16 +1866,47 @@ map_basic_basic MMC::getParameterSubstitutions() const {
     return subs;
 }
 
-//add18/5[
-// =====================================================================
-// stepControllers — advances controller integrators each DQsym timestep
-//                   and updates mD_dqsym_, mS_dqsym_ for simulateInputStep.
-//
-// Reuses computeStateDerivatives by building a "fake" full state vector
-// where the plant slots are populated from harmonic-state measurements.
-// computeStateDerivatives writes the modulation refs to the last_*_
-// mutable members as a side channel, which we then convert to mD/mS.
-// =====================================================================
+
+
+
+void MMC::fillPlantFromHarmonics(Eigen::VectorXd& x,
+    const std::vector<Eigen::MatrixXcd>& states) const
+{
+    if (states.size() < 4)
+        return;
+
+    auto at = [](const Eigen::MatrixXcd& M, int r, int c) -> std::complex<double> {
+        if (r < 0 || c < 0 || r >= M.rows() || c >= M.cols())
+            return { 0.0, 0.0 };
+        return M(r, c);
+    };
+
+    const Eigen::MatrixXcd& iD = states[0];
+    const Eigen::MatrixXcd& iS = states[1];
+    const Eigen::MatrixXcd& vCD = states[2];
+    const Eigen::MatrixXcd& vCS = states[3];
+
+    int n_ctrl = static_cast<int>(x.size()) - 12;
+    if (n_ctrl < 0)
+        n_ctrl = 0;
+    const int ip = n_ctrl;
+
+    if (static_cast<int>(x.size()) < ip + 12)
+        return;
+
+    x(ip + 0) = at(iD, 0, 1).real();   // iDelta_d
+    x(ip + 1) = at(iD, 0, 1).imag();   // iDelta_q
+    x(ip + 2) = at(iS, 2, 0).real();   // iSigma_z
+    x(ip + 3) = at(iS, 0, 1).real();   // iSigma_d
+    x(ip + 4) = at(iS, 0, 1).imag();   // iSigma_q
+    x(ip + 5) = at(vCD, 0, 1).real();  // vCDelta_d
+    x(ip + 6) = at(vCD, 0, 1).imag();  // vCDelta_q
+    x(ip + 7) = at(vCD, 2, 1).real();  // vCDelta_Zd
+    x(ip + 8) = at(vCD, 2, 1).imag();  // vCDelta_Zq
+    x(ip + 9) = at(vCS, 0, 1).real();  // vCSigma_d
+    x(ip + 10) = at(vCS, 0, 1).imag(); // vCSigma_q
+    x(ip + 11) = at(vCS, 2, 0).real(); // vCSigma_z
+}
 
 
 void MMC::stepControllers(double dt,
@@ -1928,27 +1933,9 @@ void MMC::stepControllers(double dt,
     Eigen::VectorXd x_fake = Eigen::VectorXd::Zero(number_of_states);
     int n_ctrl = number_of_states - 12;
     if (n_ctrl > 0) x_fake.head(n_ctrl) = x_ctrl_dqsym_;
+    fillPlantFromHarmonics(x_fake, states);
 
-    const Eigen::MatrixXcd& iD = states[0];
-    const Eigen::MatrixXcd& iS = states[1];
-    const Eigen::MatrixXcd& vCD = states[2];
     const Eigen::MatrixXcd& vCS = states[3];
-
-    int ip = n_ctrl;  // plant block start
-
-    // Plant state extraction — verify these slots match your DQsym convention!
-    x_fake(ip + 0) = iD(0, 1).real();   // iDelta_d
-    x_fake(ip + 1) = iD(0, 1).imag();   // iDelta_q
-    x_fake(ip + 2) = iS(2, 0).real();   // iSigma_z
-    x_fake(ip + 3) = iS(0, 1).real();   // iSigma_d
-    x_fake(ip + 4) = iS(0, 1).imag();   // iSigma_q
-    x_fake(ip + 5) = vCD(0, 1).real();  // vCDelta_d
-    x_fake(ip + 6) = vCD(0, 1).imag();  // vCDelta_q
-    x_fake(ip + 7) = 0.0;               // vCDelta_Zd (zero-seq, often 0 balanced)
-    x_fake(ip + 8) = 0.0;               // vCDelta_Zq
-    x_fake(ip + 9) = vCS(0, 1).real();  // vCSigma_d
-    x_fake(ip + 10) = vCS(0, 1).imag();  // vCSigma_q
-    x_fake(ip + 11) = vCS(2, 0).real();  // vCSigma_z
 
     // ----- Build u_fake -----
     Eigen::VectorXd u_fake(3);
@@ -1988,5 +1975,3 @@ void MMC::stepControllers(double dt,
         mS_dqsym_(2, 0) = 1.0;  // open-loop fallback
     }
 }
-
-//add18/5]

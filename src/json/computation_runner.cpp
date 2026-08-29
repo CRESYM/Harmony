@@ -4,10 +4,10 @@
  */
 #include "computation_runner.h"
 
-#include "../Include_components.h"
-#include "../Solver/DQsym/DQsym.h"
-#include "../Solver/Stability_Estimate/Stability_estimate.h"
-#include "../Solver/OPF/Powerflow.h"
+#include "core/Include_components.h"
+#include "Solver/DQsym/DQsym.h"
+#include "Solver/Stability_Estimate/Stability_estimate.h"
+#include "Solver/OPF/Powerflow.h"
 
 #include <cctype>
 #include <filesystem>
@@ -139,7 +139,7 @@ void runOpf(const JSON& calc, Network& network, const JSON& simulationConfig, co
 		calc.value("print_info", true));
 }
 
-void runDqsym(const JSON& calc, Network& network, const bool plottingEnabled) {
+void runDqsym(const JSON& calc, Network& network, const JSON& simCfg, const bool plottingEnabled) {
 	DQsym dq;
 	dq.initialize(&network);
 
@@ -203,6 +203,25 @@ void runDqsym(const JSON& calc, Network& network, const bool plottingEnabled) {
 	if (jsonPlotRequested(calc, plottingEnabled)) {
 		dq.plot();
 	}
+	if (calc.contains("snapshot_time")) {
+		const double tSnap = calc.at("snapshot_time").get<double>();
+		double fStart = 0.1;
+		double fEnd = 10000.0;
+		int fPoints = 500;
+		JSON rangeJson = JSON::object();
+		if (calc.contains("frequency_range"))
+			rangeJson = calc.at("frequency_range");
+		else if (simCfg.contains("frequency_range"))
+			rangeJson = simCfg.at("frequency_range");
+		if (!rangeJson.empty()) {
+			const FrequencyRange range = parseFrequencyRangeLocal(rangeJson);
+			fStart = range.start;
+			fEnd = range.end;
+			fPoints = range.points;
+		}
+		dq.analyzeAtTime(tSnap, jsonPlotRequested(calc, plottingEnabled),
+			fStart, fEnd, fPoints);
+	}
 }
 
 } // namespace
@@ -258,8 +277,8 @@ void ComputationRunner::registerBuiltins() {
 	};
 	handlers_["opf"] = handlers_["power_flow"];
 
-	handlers_["dqsym"] = [this](const JSON& calc, Network& net, const JSON&) {
-		runDqsym(calc, net, plottingEnabled_);
+	handlers_["dqsym"] = [this](const JSON& calc, Network& net, const JSON& simCfg) {
+		runDqsym(calc, net, simCfg, plottingEnabled_);
 	};
 	handlers_["time_domain"] = handlers_["dqsym"];
 }

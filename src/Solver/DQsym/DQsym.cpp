@@ -3,10 +3,218 @@
  * @brief Implementation of Dynamic phasor (DQsym) time-domain solver with switch handling.
  */
 #include "DQsym.h"
-#include "../../Constants.h"
+#include "core/Constants.h"
 
-#include "../../network.h"      // For access to the Network class and its members
-#include "../../Include_components.h"
+#include "network/network.h"      // For access to the Network class and its members
+#include "core/Include_components.h"
+#include "ui/Visualization.h"
+#include "Solver/Stability_Estimate/Stability_estimate.h"
+
+#include <algorithm>
+
+namespace {
+
+int nearestTimeIndex(const std::vector<double>& time, double t_sel)
+{
+    if (time.empty())
+        return 0;
+    auto it = std::lower_bound(time.begin(), time.end(), t_sel);
+    if (it == time.end())
+        return static_cast<int>(time.size()) - 1;
+    if (it == time.begin())
+        return 0;
+    const int i1 = static_cast<int>(std::distance(time.begin(), it));
+    const int i0 = i1 - 1;
+    return (std::abs(time[i1] - t_sel) < std::abs(time[i0] - t_sel)) ? i1 : i0;
+}
+
+void restoreMmcControllers(Network* net, const DQsymResult& result, int k)
+{
+    if (!net)
+        return;
+    for (auto& [name, elem] : net->get_converters()) {
+        MMC* mmc = dynamic_cast<MMC*>(elem);
+        if (!mmc || !result.stateHist.count(name))
+            continue;
+        const Eigen::MatrixXd& X = result.stateHist.at(name);
+        if (k < 0 || k >= X.cols())
+            continue;
+        const int n_ctrl = mmc->getNumberOfInternalStates() - 12;
+        if (n_ctrl > 0 && X.rows() >= n_ctrl) {
+            mmc->x_ctrl_dqsym_ = X.col(k).head(n_ctrl);
+            mmc->dqsym_initialized_ = true;
+        }
+    }
+}
+
+void analyzeSnapshot(Network* net, const DQsymResult& result, double t, bool plotResults,
+    double fStart = 0.1, double fEnd = 10000.0, int fPoints = 500)
+{
+    if (!net)
+        throw std::runtime_error("analyzeSnapshot: null network.");
+    if (result.time.empty())
+        throw std::runtime_error("analyzeSnapshot: empty time history.");
+    if (result.stateHist.empty())
+        throw std::runtime_error("analyzeSnapshot: no converter snapshots (need an MMC in the DQsym run).");
+
+    const int k = nearestTimeIndex(result.time, t);
+    std::cout << "[DQsym] Snapshot linearization at t = "
+        << result.time[k] << " s (step " << k << ")\n";
+
+    int nConv = 0;
+    for (auto& [name, elem] : net->get_converters()) {
+        MMC* mmc = dynamic_cast<MMC*>(elem);
+        if (!mmc || !result.stateHist.count(name))
+            continue;
+        const Eigen::MatrixXd& X = result.stateHist.at(name);
+        const Eigen::MatrixXd& U = result.inputHist.at(name);
+        if (k >= X.cols() || k >= U.cols())
+            continue;
+        try {
+            mmc->setEquilibriumState(X.col(k), U.col(k));
+            mmc->computeABCD();
+            mmc->checkStability();
+            mmc->printEigenvalues();
+            try {
+                mmc->writeFile(fStart, fEnd, fPoints);
+            }
+            catch (const std::exception& ex) {
+                std::cout << "[DQsym] Y-parameter CSV for '" << name
+                    << "' failed: " << ex.what() << "\n";
+            }
+            ++nConv;
+            if (plotResults) {
+                mmc->plotEigenvalues();
+                mmc->plotParticipationFactors();
+            }
+        }
+        catch (const std::exception& ex) {
+            std::cout << "[DQsym] Linearization of '" << name << "' failed: " << ex.what() << "\n";
+        }
+    }
+    if (nConv == 0)
+        throw std::runtime_error("analyzeSnapshot: no MMC snapshot columns at this time.");
+
+    try {
+        net->is_area_empty() ? net->add_areas() : void();
+        StabilityEstimate stability;
+        stability.add_areas(net);
+        for (auto& [name, elem] : net->get_converters()) {
+            if (!result.stateHist.count(name))
+                continue;
+            auto trySide = [&](const char* loc) {
+                bool wrote = false;
+                try {
+                    stability.writeFileTF(name, loc, fStart, fEnd, fPoints);
+                    wrote = true;
+                }
+                catch (const std::exception& ex) {
+                    std::cout << "[DQsym] Transfer-function CSV at " << loc << " for '"
+                        << name << "' failed: " << ex.what() << "\n";
+                }
+                if (plotResults) {
+                    try {
+                        stability.bodeplotTF(name, loc, fStart, fEnd, fPoints);
+                        stability.nyquistplotTF(name, loc, fStart, std::min(fEnd, 2000.0),
+                            std::min(fPoints, 400));
+                        wrote = true;
+                    }
+                    catch (const std::exception& ex) {
+                        std::cout << "[DQsym] Impedance plots at " << loc << " for '"
+                            << name << "' failed: " << ex.what() << "\n";
+                    }
+                }
+                return wrote;
+            };
+            if (!trySide("AC"))
+                trySide("DC");
+        }
+    }
+    catch (const std::exception& ex) {
+        std::cout << "[DQsym] StabilityEstimate failed: " << ex.what() << "\n";
+    }
+}
+
+DQsymResult mergeDQsymResults(const DQsymResult& prefix, int kKeep, const DQsymResult& extra)
+{
+    DQsymResult out = prefix;
+    const int n0 = std::max(0, kKeep + 1);
+    const int n1 = static_cast<int>(extra.time.size());
+    const int n = n0 + n1;
+
+    out.time.resize(n);
+    for (int i = 0; i < n0 && i < static_cast<int>(prefix.time.size()); ++i)
+        out.time[i] = prefix.time[i];
+    for (int i = 0; i < n1; ++i)
+        out.time[n0 + i] = extra.time[i];
+
+    const int nbrk = std::max(prefix.brkHistory.cols(), extra.brkHistory.cols());
+    out.brkHistory = Eigen::MatrixXi::Zero(n, nbrk);
+    if (prefix.brkHistory.size() > 0)
+        out.brkHistory.block(0, 0, std::min(n0, static_cast<int>(prefix.brkHistory.rows())),
+            std::min(nbrk, static_cast<int>(prefix.brkHistory.cols()))) =
+            prefix.brkHistory.topLeftCorner(
+                std::min(n0, static_cast<int>(prefix.brkHistory.rows())),
+                std::min(nbrk, static_cast<int>(prefix.brkHistory.cols())));
+    if (extra.brkHistory.size() > 0)
+        out.brkHistory.block(n0, 0, std::min(n1, static_cast<int>(extra.brkHistory.rows())),
+            std::min(nbrk, static_cast<int>(extra.brkHistory.cols()))) =
+            extra.brkHistory.topLeftCorner(
+                std::min(n1, static_cast<int>(extra.brkHistory.rows())),
+                std::min(nbrk, static_cast<int>(extra.brkHistory.cols())));
+
+    out.DSSabcHist.resize(prefix.DSSabcHist.size());
+    for (size_t g = 0; g < prefix.DSSabcHist.size(); ++g) {
+        out.DSSabcHist[g] = Eigen::MatrixXd::Zero(n, 3);
+        const int r0 = std::min(n0, static_cast<int>(prefix.DSSabcHist[g].rows()));
+        if (r0 > 0)
+            out.DSSabcHist[g].topRows(r0) = prefix.DSSabcHist[g].topRows(r0);
+        if (g < extra.DSSabcHist.size()) {
+            const int r1 = std::min(n1, static_cast<int>(extra.DSSabcHist[g].rows()));
+            if (r1 > 0)
+                out.DSSabcHist[g].block(n0, 0, r1, 3) = extra.DSSabcHist[g].topRows(r1);
+        }
+    }
+
+    for (auto& [name, X] : prefix.stateHist) {
+        Eigen::MatrixXd M = Eigen::MatrixXd::Zero(X.rows(), n);
+        const int c0 = std::min(n0, static_cast<int>(X.cols()));
+        if (c0 > 0)
+            M.leftCols(c0) = X.leftCols(c0);
+        if (extra.stateHist.count(name)) {
+            const auto& Xe = extra.stateHist.at(name);
+            const int c1 = std::min(n1, static_cast<int>(Xe.cols()));
+            if (c1 > 0 && Xe.rows() == M.rows())
+                M.block(0, n0, Xe.rows(), c1) = Xe.leftCols(c1);
+        }
+        out.stateHist[name] = std::move(M);
+    }
+    for (auto& [name, U] : prefix.inputHist) {
+        Eigen::MatrixXd M = Eigen::MatrixXd::Zero(U.rows(), n);
+        const int c0 = std::min(n0, static_cast<int>(U.cols()));
+        if (c0 > 0)
+            M.leftCols(c0) = U.leftCols(c0);
+        if (extra.inputHist.count(name)) {
+            const auto& Ue = extra.inputHist.at(name);
+            const int c1 = std::min(n1, static_cast<int>(Ue.cols()));
+            if (c1 > 0 && Ue.rows() == M.rows())
+                M.block(0, n0, Ue.rows(), c1) = Ue.leftCols(c1);
+        }
+        out.inputHist[name] = std::move(M);
+    }
+
+    out.xHist.resize(n);
+    for (int i = 0; i < n0 && i < static_cast<int>(prefix.xHist.size()); ++i)
+        out.xHist[i] = prefix.xHist[i];
+    for (int i = 0; i < n1 && i < static_cast<int>(extra.xHist.size()); ++i)
+        out.xHist[n0 + i] = extra.xHist[i];
+
+    out.cfg = extra.cfg;
+    out.cfg.resumeX = MatrixXcd();
+    return out;
+}
+
+} // namespace
 
 
 void DQsym::initialize(Network* net)
@@ -263,6 +471,9 @@ DQsymResult DQsym::run(Config& cfg)
     result.time.resize(N);
     result.DSSabcHist.assign(nGroups, Eigen::MatrixXd::Zero(N, 3));
     result.brkHistory = Eigen::MatrixXi::Zero(N, cfg.swType.size());
+    result.xHist.assign(N, MatrixXcd());
+    result.cfg = cfg;
+    result.cfg.resumeX = MatrixXcd();
 
     dssState_ = DSSState{};
 
@@ -274,6 +485,46 @@ DQsymResult DQsym::run(Config& cfg)
         int nStateGroups = nStates / 3;
         elementStates[name] = std::vector<MatrixXcd>(
             nStateGroups, MatrixXcd::Zero(3, cfg.nKeep));
+        if (dynamic_cast<MMC*>(elem)) {
+            const int nFull = elem->getNumberOfInternalStates();
+            result.stateHist[name] = Eigen::MatrixXd::Zero(nFull, N);
+            result.inputHist[name] = Eigen::MatrixXd::Zero(3, N);
+        }
+    }
+
+    const bool resume = cfg.resumeX.rows() == nx && cfg.resumeX.cols() == cfg.nKeep;
+    if (resume) {
+        MatrixXcd A0, B0, C0, D0;
+        convertToPhasor(AdC, BdC, CdC, DdC, A0, B0, C0, D0);
+        dssState_.nStates = nx;
+        dssState_.nInputs = BdC.cols();
+        dssState_.nOutputs = ny;
+        dssState_.nSwitches = static_cast<int>((cfg.swType.array() == 1).count());
+        dssState_.x_old = cfg.resumeX;
+        Eigen::VectorXi brk0 = cfg.breakerFunction
+            ? cfg.breakerFunction(0, cfg.t_start)
+            : Eigen::VectorXi::Zero(cfg.swType.size());
+        dssState_.swVec = brk0;
+        dssState_.swVecOld = brk0;
+        dssState_.yswitch = VectorXcd::Zero(dssState_.nSwitches);
+        buildMatricesForState(A0, B0, C0, D0, dssState_.swVec, cfg.swType,
+            cfg.swOnRes, cfg.swOffRes,
+            dssState_.Ads, dssState_.Bds, dssState_.Cds, dssState_.Dds);
+        dssState_.initialized = true;
+
+        for (const auto& [name, elem] : converters) {
+            int nStates = elem->getNumberOfPlantStates();
+            if (nStates <= 0) continue;
+            int startRow = ssm.getStateIndex(name, 0);
+            if (startRow < 0) continue;
+            int nStateGroups = nStates / 3;
+            std::vector<MatrixXcd> groups(nStateGroups);
+            for (int g = 0; g < nStateGroups; ++g)
+                groups[g] = cfg.resumeX.block(startRow + 3 * g, 0, 3, cfg.nKeep);
+            elementStates[name] = groups;
+        }
+        cout << "[DQsym] Resuming from stored phasor state ("
+            << nx << " x " << cfg.nKeep << ").\n";
     }
 
     // ---- Step 3: main loop ----
@@ -297,6 +548,8 @@ DQsymResult DQsym::run(Config& cfg)
         MatrixXcd u = ssm.buildInputVector(cfg.nKeep, elementStates);
 		//cout << "Input vector u at step " << k << ":\n" << u << "\n";
 
+
+        std::map<std::string, Eigen::Vector2d> vg_dq_step;
 
         for (const auto& [name, elem] : converters) {
             MMC* mmc = dynamic_cast<MMC*>(elem);
@@ -329,6 +582,7 @@ DQsymResult DQsym::run(Config& cfg)
                     break;
                 }
             }
+            vg_dq_step[name] = Vg_dq;
 
             if (elementStates.count(name)) {
                 mmc->stepControllers(cfg.dt, elementStates.at(name), Vg_dq);
@@ -343,6 +597,7 @@ DQsymResult DQsym::run(Config& cfg)
         MatrixXcd y = DSSS(dssState_, AdC, BdC, CdC, DdC,
             cfg.swOnRes, cfg.swOffRes, cfg.swType, brkVec,
             u, xo, cfg.dt, cfg.f);
+        result.xHist[k] = y;
 
 
         if (k == 6000) {
@@ -384,6 +639,28 @@ DQsymResult DQsym::run(Config& cfg)
                 groups[g] = y.block(startRow + 3 * g, 0, 3, cfg.nKeep);
 
             elementStates[name] = groups;
+        }
+
+        for (const auto& [name, elem] : converters) {
+            MMC* mmc = dynamic_cast<MMC*>(elem);
+            if (!mmc || !elementStates.count(name) || !result.stateHist.count(name))
+                continue;
+
+            const int nFull = mmc->getNumberOfInternalStates();
+            Eigen::VectorXd x = Eigen::VectorXd::Zero(nFull);
+            const int n_ctrl = nFull - 12;
+            if (n_ctrl > 0 && mmc->x_ctrl_dqsym_.size() == n_ctrl)
+                x.head(n_ctrl) = mmc->x_ctrl_dqsym_;
+            mmc->fillPlantFromHarmonics(x, elementStates[name]);
+            result.stateHist[name].col(k) = x;
+
+            const auto& groups = elementStates[name];
+            double Vdc_meas = 0.0;
+            if (groups.size() >= 4 && groups[3].rows() > 2 && groups[3].cols() > 0)
+                Vdc_meas = 2.0 * groups[3](2, 0).real();
+            const Eigen::Vector2d Vg = vg_dq_step.count(name)
+                ? vg_dq_step[name] : Eigen::Vector2d::Zero();
+            result.inputHist[name].col(k) << Vdc_meas, Vg(0), Vg(1);
         }
 
         // 3e. ABC reconstruction (pad state rows to a multiple of 3 when needed)
@@ -456,8 +733,65 @@ void DQsym::plot() const
     if (!hasRun_)
         throw std::runtime_error("plot() before run().");
 
-    plot_abc_groups_implot(result_.time, result_.DSSabcHist,
-        "State-space outputs (abc)");
+    auto result = std::make_shared<DQsymResult>(result_);
+    Network* net = net_;
+    auto live = (net && net->liveFlag()) ? net->liveFlag()
+        : std::make_shared<std::atomic<bool>>(false);
+    const std::string abcTitle = "State-space outputs (abc)";
+
+    auto analyze = [result, net, live](double t_sel)
+    {
+        if (!live || !*live || !net)
+            throw std::runtime_error("network is no longer live; re-run the study to analyze a snapshot.");
+        if (!result || result->time.empty())
+            return;
+        analyzeSnapshot(net, *result, t_sel, true);
+    };
+
+    auto cont = std::make_shared<std::function<void(double, double)>>();
+    *cont = [result, net, live, abcTitle, analyze, cont](double t_sel, double extra_t)
+    {
+        if (!live || !*live || !net)
+            throw std::runtime_error("network is no longer live; re-run the study to continue.");
+        if (!result || result->time.empty() || extra_t <= 0.0)
+            return;
+        if (static_cast<int>(result->xHist.size()) != static_cast<int>(result->time.size()))
+            throw std::runtime_error("no stored phasor history to resume from (re-run DQsym).");
+
+        const int k = nearestTimeIndex(result->time, t_sel);
+        if (k >= static_cast<int>(result->xHist.size()) || result->xHist[k].size() == 0)
+            throw std::runtime_error("snapshot at t* has no phasor state.");
+
+        Config cfg = result->cfg;
+        cfg.dt = (cfg.dt > 0.0) ? cfg.dt : 2e-5;
+        cfg.t_start = result->time[k] + cfg.dt;
+        cfg.t_end = result->time[k] + extra_t;
+        if (cfg.t_end <= cfg.t_start)
+            cfg.t_end = cfg.t_start + cfg.dt;
+        cfg.resumeX = result->xHist[k];
+
+        restoreMmcControllers(net, *result, k);
+
+        DQsym dq;
+        dq.initialize(net);
+        DQsymResult more = dq.run(cfg);
+        *result = mergeDQsymResults(*result, k, more);
+
+        plot_abc_groups_implot(result->time, result->DSSabcHist, abcTitle, analyze, *cont);
+        std::cout << "[DQsym] Continued from t = " << result->time[k]
+            << " s; now ends at t = " << result->time.back() << " s\n";
+    };
+
+    plot_abc_groups_implot(result_.time, result_.DSSabcHist, abcTitle, analyze, *cont);
+}
+
+void DQsym::analyzeAtTime(double t, bool plotResults, double fStart, double fEnd, int fPoints) const
+{
+    if (!hasRun_)
+        throw std::runtime_error("analyzeAtTime() before run().");
+    if (!net_)
+        throw std::runtime_error("analyzeAtTime: network not initialized.");
+    analyzeSnapshot(net_, result_, t, plotResults, fStart, fEnd, fPoints);
 }
 
 void DQsym::setResult(DQsymResult result)

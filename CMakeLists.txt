@@ -3,7 +3,7 @@
 #
 # This file configures how Harmony is built. It makes use of:
 #
-#   - sources.cmake
+#   - cmake/sources.cmake
 #       Defines project source (.cpp) and header files (.h)
 #       Groups source files into groups
 #
@@ -41,38 +41,55 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # -----------------------------------------------------------------------------
-# 2. Define Harmony Executable
+# 2. Shared core library + executables
 # -----------------------------------------------------------------------------
 
 # Load the list of source and header files.
-include(sources.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/sources.cmake)
 
-# Create the Harmony executable from the project source files.
+add_library(
+    harmony_core
+    STATIC
+    ${HARMONY_HEADER_FILES}
+    ${HARMONY_CORE_SOURCE_FILES}
+)
+
+add_executable(Harmony src/main.cpp)
+
 add_executable(
-    Harmony
-    ${HARMONY_HEADER_FILES}     # defined in sources.cmake
-    ${HARMONY_SOURCE_FILES}     # defined in sources.cmake
+    HarmonyUI
+    ${HARMONY_UI_SOURCE_FILES}
+    ${Ui_Header_Files}
+)
+
+# C++ examples live outside harmony_core so the library does not rebuild when
+# a demonstration case changes. Harmony, HarmonyUI, and testharmony link this.
+add_library(
+    harmony_examples
+    STATIC
+    ${Examples_Header_files}
+    ${Examples_Source_files}
 )
 
 # -----------------------------------------------------------------------------
 # 3. Pre-compiled Headers and Windows Options
 # -----------------------------------------------------------------------------
 
-# 3.1 Precompiled headers 
-# Improve compilation speed by caching commonly included files that rarely change.
-target_precompile_headers(Harmony PRIVATE
+# Slim PCH: Eigen + SymEngine + Constants only. Include_components.h and
+# Helper_Functions.h change too often and pull too much to be worth caching.
+target_precompile_headers(harmony_core PRIVATE
     <Eigen/Dense>
     <symengine/basic.h>
-    "./src/Constants.h"
-    "./src/Include_components.h"
-    "./src/Solver/Helper_Functions/Helper_Functions.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/core/Constants.h"
 )
+target_precompile_headers(Harmony REUSE_FROM harmony_core)
+target_precompile_headers(HarmonyUI REUSE_FROM harmony_core)
+target_precompile_headers(harmony_examples REUSE_FROM harmony_core)
 
-# 3.2 Windows options
 if (MSVC)
-    # Set Harmony as a starup project on Visual Studio Solution
+    # Set Harmony as a startup project on Visual Studio Solution
     set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Harmony)
-    
+
     # Add the MP compiler flag for parallel compilation
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 endif()
@@ -81,48 +98,34 @@ endif()
 # 4. Link Dependencies
 # -----------------------------------------------------------------------------
 
-# Load helper functions that configure and link third-party libraries
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependencies.cmake)
 
-# Link required external libraries
-link_eigen(Harmony)
-link_symengine(Harmony)
-link_sundials(Harmony)
-link_implot(Harmony)
-link_gurobi(Harmony)
-link_nlohmann_json(Harmony)
-
-target_include_directories(Harmony PRIVATE
+# Single include root: quoted includes are src-relative
+# (e.g. "core/Constants.h", "network/network.h", "Elements/Impedance/Resistor.h").
+set(HARMONY_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+foreach(HARMONY_TARGET IN ITEMS harmony_core harmony_examples Harmony HarmonyUI)
+    link_eigen(${HARMONY_TARGET})
+    link_symengine(${HARMONY_TARGET})
+    link_sundials(${HARMONY_TARGET})
+    link_implot(${HARMONY_TARGET})
+    link_gurobi(${HARMONY_TARGET})
+    link_nlohmann_json(${HARMONY_TARGET})
+    target_include_directories(${HARMONY_TARGET} PRIVATE ${HARMONY_INCLUDE_DIRS})
+endforeach()
+
+# MSVC static linking is left-to-right: core first (cli.obj needs the registry),
+# then examples (defines harmonyCppExampleRegistry and the example_* symbols).
+target_link_libraries(Harmony PRIVATE harmony_core harmony_examples)
+target_link_libraries(HarmonyUI PRIVATE harmony_core harmony_examples)
+
 # -----------------------------------------------------------------------------
-# 5. HarmonyUI launcher executable
+# 5. Tests (testharmony links harmony_core + harmony_examples)
 # -----------------------------------------------------------------------------
-add_executable(
-    HarmonyUI
-    ${HARMONY_HEADER_FILES}
-    ${HARMONY_UI_SOURCE_FILES}
-)
-
-target_precompile_headers(HarmonyUI PRIVATE
-    <Eigen/Dense>
-    <symengine/basic.h>
-    "./src/Constants.h"
-    "./src/Include_components.h"
-    "./src/Solver/Helper_Functions/Helper_Functions.h"
-)
-
-link_eigen(HarmonyUI)
-link_symengine(HarmonyUI)
-link_sundials(HarmonyUI)
-link_implot(HarmonyUI)
-link_gurobi(HarmonyUI)
-link_nlohmann_json(HarmonyUI)
-
-target_include_directories(HarmonyUI PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
+enable_testing()
+add_subdirectory(tests)
 
 # -----------------------------------------------------------------------------
 # 6. Optional API documentation (Doxygen)

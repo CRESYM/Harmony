@@ -10,7 +10,15 @@
  * and an extension API for custom plot tabs.
  */
 
-#include "../Constants.h"
+#include <Eigen/Dense>
+
+#include <complex>
+#include <filesystem>
+#include <functional>
+#include <string>
+#include <vector>
+
+struct GLFWwindow;
 
 /**
  * @brief Closes the visualization window and stops the GUI thread.
@@ -121,26 +129,19 @@ extern void plot_participation_factors_implot(
     const std::string& title);
 
 /**
- * @brief Plots three-phase abc waveforms over time.
- * @param t Time axis (s).
- * @param Xabc Waveform matrix (3 rows ù N samples).
- * @param title Plot window title.
- */
-extern void plot_abc_waveforms_implot(
-    const std::vector<double>& t,
-    const Eigen::MatrixXd& Xabc,
-    const std::string& title);
-
-/**
  * @brief Plots multiple abc waveform groups on shared axes.
  * @param t Time axis (s).
- * @param Xabc_groups One 3ùN matrix per signal group.
+ * @param Xabc_groups One 3?N matrix per signal group.
  * @param title Plot window title.
+ * @param on_analyze Optional callback when the user clicks Analyze at the selected time.
+ * @param on_continue Optional callback to extend the time-domain run from t*.
  */
 extern void plot_abc_groups_implot(
     const std::vector<double>& t,
     const std::vector<Eigen::MatrixXd>& Xabc_groups,
-    const std::string& title);
+    const std::string& title,
+    std::function<void(double t_sel)> on_analyze = nullptr,
+    std::function<void(double t_sel, double extra_t)> on_continue = nullptr);
 
 /**
  * @brief Container for all OPF topology and solution data needed by viz_opf().

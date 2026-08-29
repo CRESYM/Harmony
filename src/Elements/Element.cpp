@@ -3,10 +3,8 @@
  * @brief Implementation of Abstract base class for all electrical network components.
  */
 #include "Element.h"
-#include "../Bus.h"
-
-// Helper functions
-#include "../Solver/Helper_Functions/Helper_Functions.h"
+#include "network/Bus.h"
+#include "ui/Visualization.h"
 
 
 /**

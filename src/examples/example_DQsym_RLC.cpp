@@ -4,8 +4,8 @@
  */
 #include "Examples.h"
 
-#include "../Solver/DQsym/DQsym.h"
-#include "../Solver/Helper_Functions/Helper_Functions.h"
+#include "Solver/DQsym/DQsym.h"
+#include "Solver/Helper_Functions/Helper_Functions.h"
 
 void example_DQsym_RLC(bool plotting_enabled /*=true*/)
 {

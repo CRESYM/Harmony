@@ -4,9 +4,11 @@
  */
 #include "Examples.h"
 
-#include "../network.h"
-#include "../Include_components.h"
-#include "../Solver/DQsym/DQsym.h"
+#include "network/network.h"
+#include "core/Include_components.h"
+#include "Solver/DQsym/DQsym.h"
+
+#include <memory>
 
 void example_DQsym_MMC_controlled(bool plotting_enabled /*=true*/)
 {
@@ -17,7 +19,9 @@ void example_DQsym_MMC_controlled(bool plotting_enabled /*=true*/)
     const double Vdc = 200.0;
     const int    nKeep = 5;
 
-    Network net;
+    static std::unique_ptr<Network> retained;
+    retained = std::make_unique<Network>();
+    Network& net = *retained;
 
     Bus* gnd = new Bus("gnd", "GND", 1);
     Bus* ac_bus = new Bus("AC1", "AC1", 3);
@@ -97,6 +101,7 @@ void example_DQsym_MMC_controlled(bool plotting_enabled /*=true*/)
 
     if (plotting_enabled) {
         dq.plot();
+        dq.analyzeAtTime(cfg.t_end);
     }
     dq.exportCSV("DQsym_MMC_SigmaDelta.csv");
 }

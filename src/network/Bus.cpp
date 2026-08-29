@@ -3,7 +3,7 @@
  * @brief Implementation of Electrical bus (node) representation with pin count, connections, and OPF metadata.
  */
 #include "Bus.h"
-#include "./Elements/Element.h"
+#include "Elements/Element.h"
 
 // Constructor for Bus
 Bus::Bus(const std::string& name, const std::string& location, int number) : busName(name), numberPins(number), busLocation(location) {

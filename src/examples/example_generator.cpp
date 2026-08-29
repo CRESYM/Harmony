@@ -4,8 +4,8 @@
  */
 #include "Examples.h"
 
-#include "../network.h"
-#include "../Include_components.h"
+#include "network/network.h"
+#include "core/Include_components.h"
 
 void example_generator(bool plotting_enabled /*=true*/) {
 	std::vector<double> values = {0.0952, 0.5, 2.285}; // R_f, T_f, X_d

@@ -6,8 +6,8 @@
  * @brief Base class for power electronic converters with state-space models.
  */
 
-#include "../Element.h"
-#include "../../Include_control_blocks.h"
+#include "Elements/Element.h"
+#include "core/Include_control_blocks.h"
 
 /**
  * @class Converter
@@ -33,15 +33,26 @@ public:
 	Eigen::MatrixXd getC() const { return C_matrix; }
 	Eigen::MatrixXd getD() const { return D_matrix; }
 
-	// Discrete-time matrix getters
-	Eigen::MatrixXd getAd() const { return Ad_matrix; }
-	Eigen::MatrixXd getBd() const { return Bd_matrix; }
-	Eigen::MatrixXd getCd() const { return Cd_matrix; }
-	Eigen::MatrixXd getDd() const { return Dd_matrix; }
-
 	Eigen::VectorXd getEquilibriumState() const { return equilibrium_state; }
-	VectorXcd getEigenvalues() { return eigenvalues; }
-	VectorXcd getEigenvectors() { return eigenvectors; }
+
+	/** @brief Use a DQsym (or other) state as the linearization point, skipping Newton. */
+	void setEquilibriumState(const Eigen::VectorXd& x,
+		const Eigen::VectorXd& u = Eigen::VectorXd())
+	{
+		equilibrium_state = x;
+		operating_input_ = u;
+		if (u.size() < 3)
+			return;
+		V_dc = u(0);
+		V_m = std::hypot(u(1), u(2));
+		theta = std::atan2(-u(2), u(1));
+		const int p = static_cast<int>(x.size()) - 12;
+		if (p >= 0 && static_cast<int>(x.size()) >= p + 2) {
+			P = 1.5 * (u(1) * x(p) + u(2) * x(p + 1));
+			Q = 1.5 * (u(1) * x(p + 1) - u(2) * x(p));
+		}
+	}
+
 	string getACarea() const {
 		auto pos = element_location.find('_');
 		return element_location.substr(0, pos);
@@ -56,17 +67,10 @@ public:
 	virtual void solveEquilibrium() {};
 
 	virtual void computeABCD() {};
-	virtual void discretize(double Ts) { discretizeABCD(A_matrix, B_matrix, C_matrix, D_matrix, Ts, Ad_matrix, Bd_matrix, Cd_matrix, Dd_matrix); }
-
 
 	virtual Eigen::MatrixXd computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& u) {
 		return Eigen::MatrixXd::Zero(1, 1);
 	};
-	void computeEigenvalues() {
-		Eigen::EigenSolver<Eigen::MatrixXd> es(A_matrix);
-		eigenvalues = es.eigenvalues();
-		eigenvectors = es.eigenvectors();
-	}
 
 	// Compute participation factors from the state matrix A
 	// Returns: MatrixXd (n x n) where P(i,j) is participation of state i in mode j
@@ -132,12 +136,10 @@ protected:
 	// System matrices
 	MatrixXd A_matrix, B_matrix, C_matrix, D_matrix; // Continuous-time system matrices
 	MatrixXd Adelay, Bdelay, Cdelay, Ddelay; // Delay system matrices
-	MatrixXd Ad_matrix, Bd_matrix, Cd_matrix, Dd_matrix; // Discrete system matrices
 
 	int pade_order = 2; // Order of Padé approximation for delays
 	VectorXd equilibrium_state;
-	VectorXcd eigenvalues;
-	VectorXcd eigenvectors;
+	VectorXd operating_input_; // non-empty → computeABCD uses this u0 (DQsym snapshot)
 
 	VectorXcd initial_state; // Initial state for time-domain simulations
 

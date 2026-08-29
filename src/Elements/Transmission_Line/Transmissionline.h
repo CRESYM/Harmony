@@ -6,7 +6,7 @@
  * @brief Lumped-parameter transmission line model with distributed R, L, G, C.
  */
 
-#include "../Element.h"
+#include "Elements/Element.h"
 
 class Element; // Forward declaration of Element class
 

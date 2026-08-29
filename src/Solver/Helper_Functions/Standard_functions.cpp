@@ -183,22 +183,6 @@ vector<vector<complex<double>>> mat_add(const vector<vector<complex<double>>>& A
 };
 
 /**
- * @brief Subtracts one matrix from another.
- * @param A The matrix from which to subtract.
- * @param B The matrix to subtract.
- * @return The resulting matrix C = A - B.
- */
-vector<vector<complex<double>>> mat_sub(const vector<vector<complex<double>>>& A, const vector<vector<complex<double>>>& B) {
-    vector<vector<complex<double>>> C(A.size(), vector<complex<double>>(A[0].size(), 0.0));
-    for (size_t i = 0; i < A.size(); ++i) {
-        for (size_t j = 0; j < A[0].size(); ++j) {
-            C[i][j] = A[i][j] - B[i][j];
-        }
-    }
-    return C;
-};
-
-/**
  * @brief Transposes a matrix.
  * @param A The matrix to transpose.
  * @return The transposed matrix.

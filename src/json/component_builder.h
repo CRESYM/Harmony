@@ -5,8 +5,8 @@
 #include <nlohmann/json.hpp>
 using JSON = nlohmann::json;
 
-#include "../network.h"
-#include "../Include_components.h"
+#include "network/network.h"
+#include "core/Include_components.h"
 #include "json_parameters.h"
 #include "json_expression.h"
 

@@ -4,9 +4,9 @@
  */
 #include "Examples.h"
 
-#include "../network.h"
-#include "../Bus.h"
-#include "../Include_components.h"
+#include "network/network.h"
+#include "network/Bus.h"
+#include "core/Include_components.h"
 
 void example_MMC(bool plotting_enabled /*=true*/) {
 	//// Numerically computes the Jacobian matrices A = ∂f/∂x and B = ∂f/∂u at a specified operating point

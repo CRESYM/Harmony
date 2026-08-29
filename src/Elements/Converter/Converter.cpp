@@ -3,6 +3,7 @@
  * @brief Implementation of Base class for power electronic converters with state-space models.
  */
 #include "Converter.h"
+#include "ui/Visualization.h"
 
 
 Converter::~Converter() = default;

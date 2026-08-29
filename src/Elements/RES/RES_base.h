@@ -6,7 +6,7 @@
  * @brief Base class for renewable energy source (RES) plant models.
  */
 
-#include "../Element.h"
+#include "Elements/Element.h"
 
 /**
  * @class RES_base

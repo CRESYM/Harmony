@@ -3,8 +3,8 @@
  * @brief Implementation of State-space model assembly from network MNA formulation.
  */
 #include "State_Space_Model.h"
-#include "../../network.h"      
-#include "../../Include_components.h"
+#include "network/network.h"      
+#include "core/Include_components.h"
 
 static int getStateCount(Element* e) {
     int n = e->getNumberOfPlantStates();

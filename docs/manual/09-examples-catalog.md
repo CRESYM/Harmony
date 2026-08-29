@@ -125,7 +125,7 @@ JSON equivalents of bundled C++ demos are in `src/examples/json/`:
 | `passives_rlc.json` | — | R/L/C passives demo |
 | `passives_rlc_expr.json` | — | RLC with SymEngine `y_expr` / `z_expr` + named parameters |
 | `opf_csv.json` | `example_OPF_csv` | CSV OPF via `solve_opf` (`ac5` + `mtdc3`); stub network is ignored |
-| `dqsym_mmc.json` | `example_DQsym_Simple_MMC` | DQsym time-domain MMC with sources |
+| `dqsym_mmc.json` | `example_DQsym_Simple_MMC` | DQsym time-domain MMC with sources; `"snapshot_time"` linearizes at `t_end` |
 | `stability_check.json` | `example_stability_check` | Full hybrid OPF + stability + Y-matrix plots |
 
 Run with:

@@ -1,7 +1,7 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-#include "../Control_block.h"
+#include "Control/Control_block.h"
 
 /**
  * @file Controller.h

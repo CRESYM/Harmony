@@ -3,7 +3,7 @@
  * @brief Implementation of Type 3 doubly-fed induction generator (DFIG) wind turbine model.
  */
 #include "WT_type_3.h"
-#include "../../Constants.h"
+#include "core/Constants.h"
 
 WTtype3::WTtype3(const string& symbol, const std::string& location, const vector<double>& parameters)
 	: RES_base(symbol, location) {

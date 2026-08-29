@@ -4,11 +4,11 @@
  */
 #include <gtest/gtest.h>
 
-#include "../src/Elements/Impedance/Impedance.h"
-#include "../src/Elements/Converter/MMC.h"
-#include "../src/Solver/Certificate/Device_gate.h"
-#include "../src/Solver/Certificate/PnP_library.h"
-#include "../src/Solver/Certificate/Stability_certificate.h"
+#include "Elements/Impedance/Impedance.h"
+#include "Elements/Converter/MMC.h"
+#include "Solver/Certificate/Device_gate.h"
+#include "Solver/Certificate/PnP_library.h"
+#include "Solver/Certificate/Stability_certificate.h"
 
 #include <cmath>
 #include <complex>

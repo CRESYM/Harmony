@@ -143,7 +143,7 @@ After the network is built, the runner executes each entry in `computations`:
 | `y_matrix` | CSV frequency sweep; optional `"component_id"`, `"plot": true` (Bode GUI) |
 | `stability_assessment` | Requires converters in model; optional `"converter_id"`, `"location"`, `"plot"`, `"plot_type": "bode"` or `"nyquist"` |
 | `power_flow` / `opf` | Built-network OPF when `case_name` is omitted; CSV cases with `"case_name"` and optional `"dc_case_name"`; optional `"plot_result": true` |
-| `dqsym` / `time_domain` | Time-domain DQsym on the built network; optional `"plot": true` |
+| `dqsym` / `time_domain` | Time-domain DQsym on the built network; optional `"plot": true`, `"snapshot_time"` (s) to linearize MMCs at that instant |
 | `equivalent_impedance` | Not wired — use C++ API |
 
 Use `--no-plot` on the CLI to disable all JSON plot flags (same as C++ examples).
@@ -165,6 +165,13 @@ Example:
     "location": "DC",
     "plot": true,
     "plot_type": "nyquist"
+  },
+  {
+    "type": "dqsym",
+    "t_end": 0.02,
+    "output_bus_ids": ["AC1"],
+    "snapshot_time": 0.02,
+    "plot": true
   }
 ]
 ```

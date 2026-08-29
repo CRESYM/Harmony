@@ -6,7 +6,7 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
-#include "Constants.h"
+#include "core/Constants.h"
 
 #include <memory>
 
@@ -51,6 +51,8 @@ protected:
     /** When true, buses/elements registered via addBus/addElement are owned. */
     bool ownsResources_ = true;
 
+    std::shared_ptr<std::atomic<bool>> live_{ std::make_shared<std::atomic<bool>>(true) };
+
 private:
     std::unordered_map<std::string, std::unique_ptr<Bus>> ownedBuses_;
     std::unordered_map<std::string, std::unique_ptr<Element>> ownedElements_;
@@ -67,6 +69,9 @@ public:
      * @brief Destroy the network and all owned buses, elements, and grid sub-networks.
      */
     virtual ~Network();
+
+    /** @brief Shared flag cleared in the destructor; plot callbacks use this to avoid dangling Network*. */
+    std::shared_ptr<std::atomic<bool>> liveFlag() const { return live_; }
 
     /** @brief Register an owned bus (transfers ownership on root networks). */
     void addBus(const std::string& busName, std::unique_ptr<Bus> bus);

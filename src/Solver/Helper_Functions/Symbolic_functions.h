@@ -10,17 +10,10 @@
  * assembling MNA matrices and transfer functions.
  */
 
-#include "../../Constants.h"
+#include "core/Constants.h"
 
 /** @brief Symbolic representation of π. */
 extern const RCP<const Basic> PI;
-
-/** @brief Vacuum permeability (H/m). */
-extern const double mu_0;
-/** @brief Vacuum permittivity (F/m). */
-extern const double epsilon_0;
-/** @brief Euler–Mascheroni constant. */
-extern const double gamma_num;
 
 /** @brief Imaginary unit j. */
 extern RCP<const Basic> j;
@@ -36,19 +29,6 @@ extern RCP<const Basic> s;
  * @return Zero matrix of the requested dimensions.
  */
 extern DenseMatrix createZeroMatrix(int size1, int size2);
-
-/**
- * @brief Sets every entry of a SymEngine dense matrix to zero in place.
- * @param mat Matrix to zero.
- */
-extern void fillWithZero(DenseMatrix& mat);
-
-/**
- * @brief Converts an Eigen complex matrix to a SymEngine DenseMatrix.
- * @param eigenMat Input Eigen MatrixXcd.
- * @return Equivalent SymEngine dense matrix.
- */
-extern DenseMatrix eigenToSymEngineDenseMatrix(const MatrixXcd& eigenMat);
 
 /**
  * @brief Substitutes a named symbol with a real value in an expression.
@@ -121,15 +101,6 @@ extern MatrixXcd substitute_symbol(DenseMatrix, RCP<const Basic>, double);
  * @return Numeric complex matrix after substitution.
  */
 extern MatrixXcd substitute_symbol(DenseMatrix, RCP<const Basic>, complex<double>);
-
-/**
- * @brief Substitutes multiple symbols with the same real value in an expression.
- * @param expr Symbolic expression.
- * @param symbols List of symbols to replace.
- * @param value Common real substitution value.
- * @return Simplified symbolic expression after substitution.
- */
-extern RCP<const Basic> substitute_symbols(const RCP<const Basic>& expr, const std::vector<RCP<const Basic>>& symbols, double value);
 
 /**
  * @brief Evaluates a symbolic expression to a real scalar.

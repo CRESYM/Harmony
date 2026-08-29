@@ -7,7 +7,7 @@
  */
 
 #include "Converter.h"
-#include "../../Include_control_blocks.h"
+#include "core/Include_control_blocks.h"
 
 // Forward declarations
 class Controller;
@@ -74,10 +74,6 @@ public:
     MMC(const std::string& symbol, const std::string& location, const std::vector<double>& converter_params,
         const std::vector<double>& controller_params, const std::vector<double>& filter_params);
 
-    // Initialization methods
-    void init_Controller(const std::vector<double>& converter_params);// Method to initialize controllers and Filters in MMC
-    void init_Filter(const std::vector<double>& converter_params);
-    /** @brief Set operating point. Pac/Pdc use MMC machine signs (see MMC.cpp). */
     void update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc, double Pdc);
 
     /** @brief True when GFM outer-loop states are enabled. */
@@ -161,9 +157,6 @@ public:
             data["type_ac"] = element_OPF_info.at("type_ac");
     }
 
-    // One MMC arm-voltage time step
-    //vector<MatrixXcd> simulateTimeStep(const vector<MatrixXcd>& input, double Ts, int nKeep1, int nKeep2) override;
-
     // State-space model manipulation - generic MNA stamping 
     void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int,
         std::map<Element*, std::vector<RCP<const Basic>>>&) override;
@@ -189,6 +182,10 @@ public:
     void stepControllers(double dt,
         const std::vector<Eigen::MatrixXcd>& states,
         const Eigen::Vector2d& Vg_dq);
+
+    /** @brief Write the 12 plant slots of @p x from DQsym harmonic groups (shared with stepControllers). */
+    void fillPlantFromHarmonics(Eigen::VectorXd& x,
+        const std::vector<Eigen::MatrixXcd>& states) const;
     // added18/5]=== END DQsym closed-loop control ===
 
     // added18/5=== BEGIN DQsym closed-loop control (members) ===
@@ -246,6 +243,9 @@ private:
         double vMDelta_d, double vMDelta_q, double vMSigma_z) const;
     void seedPlantStateGuess(
         Eigen::VectorXd& x0, double Id, double Iq, double iSigma_z) const;
+
+    void init_Controller(const std::vector<double>& converter_params);
+    void init_Filter(const std::vector<double>& converter_params);
     
 };
 

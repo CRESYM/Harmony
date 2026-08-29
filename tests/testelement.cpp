@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
-#include "Load.h"
-#include "Bus.h"
+#include "Elements/Load/Load.h"
+#include "network/Bus.h"
 #include "utils.h"
+
+#include <filesystem>
 
 class TestElement : public testing::Test {};
 
@@ -125,7 +127,8 @@ TEST_F(TestElement, TestWriteFile) {
     l1.writeFile(1000, 2000, 100);
 
     // Read expected data
-    std::string expected = readFile("../data/l1.csv");
+    std::string expected = readFile(
+        (std::filesystem::path(__FILE__).parent_path() / "data" / "l1.csv").string());
 
     // Check file was created in the exepcted path and with the expected name
     std::string actual;

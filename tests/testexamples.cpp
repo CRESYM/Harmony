@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <filesystem> // For checking output files
-#include "Examples.h"
+#include "examples/Examples.h"
 
 class TestExamples : public testing::Test {
 protected:

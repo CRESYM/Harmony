@@ -10,7 +10,7 @@
  * used by the DQsym solver.
  */
 
-#include "../../Constants.h"
+#include "core/Constants.h"
 
 /**
  * @brief Time-domain abc waveform reconstructed from dqn coefficients.
@@ -80,14 +80,6 @@ extern void convertToPhasor(const MatrixXcd& A, const MatrixXcd& B,
  * @return Truncated matrix.
  */
 extern MatrixXcd truncateHarmonics(const MatrixXcd& X, int nColsToKeep);
-
-/**
- * @brief Reconstructs abc phase values from a 3×H dqn block at one angle.
- * @param Xdcpnz_c dqn coefficient block (3 rows).
- * @param theta Electrical angle (rad) at which to evaluate.
- * @return Three-phase abc vector [a, b, c].
- */
-extern Vector3d dqn2abc_at_time(const MatrixXcd& Xdcpnz_c, double theta);
 
 /**
  * @brief Reconstructs abc values for all 3-row output groups at one angle.

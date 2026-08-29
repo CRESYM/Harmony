@@ -1,11 +1,14 @@
 /**
  * @file Constants.h
- * @brief Central include hub for Harmony: third-party libraries, standard headers, and shared type aliases.
+ * @brief Central include hub for Harmony: math libraries, standard headers, and shared type aliases.
  *
- * Pulls in SymEngine (symbolic math), Eigen (dense/sparse linear algebra), GLFW/ImGui/Implot
- * (visualization), SUNDIALS (time integration), and Gurobi (optimization). Defines common
- * `using` aliases for SymEngine and Eigen types used across the codebase, and provides
- * the `map2dense` helper for converting string-keyed tables to Eigen matrices.
+ * Pulls in SymEngine (symbolic math) and Eigen (dense/sparse linear algebra).
+ * Defines common `using` aliases for SymEngine and Eigen types used across the
+ * codebase, and provides the `map2dense` helper for converting string-keyed
+ * tables to Eigen matrices.
+ *
+ * Plotting (GLFW/ImGui/ImPlot), SUNDIALS, and Gurobi headers are included only
+ * by the translation units that need them.
  */
 
 #ifndef CONSTANTS_H
@@ -74,8 +77,6 @@
 #include <deque>
 #include <cstdlib>
 
-#include "gurobi_c++.h"
-
 using SymEngine::RCP;
 using SymEngine::Basic;
 using SymEngine::DenseMatrix;
@@ -129,28 +130,5 @@ Eigen::MatrixXd map2dense(const Table& tbl,
     }
     return M;
 }
-
-
-// Cross-platform OpenGL headers configuration (for Implot)
-#ifdef __APPLE__
-    #define GLFW_INCLUDE_GLCOREARB
-#endif
-
-// Implot
-#include <GLFW/glfw3.h>
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-#include <implot.h>
-
-
-// SUNDIALS v7
-#include <sundials/sundials_types.h>
-#include <sundials/sundials_context.h>
-#include <cvode/cvode.h>
-#include <kinsol/kinsol.h>
-#include <nvector/nvector_serial.h>
-#include <sunmatrix/sunmatrix_dense.h>
-#include <sunlinsol/sunlinsol_dense.h>
 
 #endif // CONSTANTS_H

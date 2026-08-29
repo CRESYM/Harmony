@@ -4,10 +4,10 @@
  */
 #include "Examples.h"
 
-#include "../network.h"
-#include "../Bus.h"
-#include "../Include_components.h"
-#include "../Solver/OPF/Powerflow.h"
+#include "network/network.h"
+#include "network/Bus.h"
+#include "core/Include_components.h"
+#include "Solver/OPF/Powerflow.h"
 
 
 void example_OPF_single_area(bool plotting_enabled /*=true*/) {

@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# sources.cmake
+# cmake/sources.cmake
 #
 # This file keeps track of all Harmony source files (.cpp) and header
 # files (.h).
@@ -123,13 +123,15 @@ set(Controller_Header_Files
     src/Control/Controller/ProportionalIntegral_controller.h
     src/Control/Controller/Proportional_controller.h
 )
-set(Header_Files
-    src/Bus.h
-    src/Constants.h
-    src/Include_components.h
-    src/Include_control_blocks.h
-    src/network.h
-    src/SubNetwork.h
+set(Core_Header_Files
+    src/core/Constants.h
+    src/core/Include_components.h
+    src/core/Include_control_blocks.h
+)
+set(Network_Header_Files
+    src/network/Bus.h
+    src/network/network.h
+    src/network/SubNetwork.h
 )
 set(Ui_Shared_Header_Files
     src/ui/cli.h
@@ -144,6 +146,7 @@ set(Ui_Header_Files
 )
 set(Examples_Header_files
     src/examples/Examples.h
+    src/examples/example_registry.h
 )
 
 # -----------------------------------------------------------------------------
@@ -239,12 +242,16 @@ set(Controller_Source_Files
     src/Control/Controller/ProportionalIntegral_controller.cpp
     src/Control/Controller/Proportional_controller.cpp
 )
+set(Core_Source_Files
+    src/core/Constants.cpp
+)
+set(Network_Source_Files
+    src/network/Bus.cpp
+    src/network/network.cpp
+    src/network/SubNetwork.cpp
+)
 set(Source_Files
-    src/Bus.cpp
-    src/Constants.cpp
     src/main.cpp
-    src/network.cpp
-    src/SubNetwork.cpp
 )
 set(Json_Source_Files
     src/json/component_builder.cpp
@@ -263,6 +270,7 @@ set(Json_Header_Files
     src/json/simulation_builder.h
 )
 set(Examples_Source_files
+    src/examples/example_registry.cpp
     src/examples/example_OPF_single_area.cpp
     src/examples/example_OPF_csv.cpp
     src/examples/example_OPF_ac.cpp
@@ -311,7 +319,8 @@ set(Ui_Source_Files
 # 3. Define HARMONY_HEADER_FILES variable
 # -----------------------------------------------------------------------------
 set(HARMONY_HEADER_FILES
-    ${Header_Files}
+    ${Core_Header_Files}
+    ${Network_Header_Files}
     ${Element_Header_Files}
     ${Element_Converter_Header_Files}
     ${Element_Impedance_Header_Files}
@@ -329,7 +338,6 @@ set(HARMONY_HEADER_FILES
     ${Solver_Certificate_Header_Files}
     ${Solver_Helper_Functions_Header_Files}
     ${Solver_State_Space_Model_Header_Files}
-    ${Examples_Header_files}
     ${Json_Header_Files}
     ${Ui_Shared_Header_Files}
     ${Ui_Header_Files}
@@ -339,6 +347,8 @@ set(HARMONY_HEADER_FILES
 # 4. Define HARMONY_SOURCE_FILES variable
 # -----------------------------------------------------------------------------
 set(HARMONY_SOURCE_FILES
+    ${Core_Source_Files}
+    ${Network_Source_Files}
     ${Source_Files}
     ${Element_Source_Files}
     ${Element_Converter_Source_Files}
@@ -357,21 +367,23 @@ set(HARMONY_SOURCE_FILES
     ${Solver_Certificate_Source_Files}
     ${Solver_Helper_Functions_Source_Files}
     ${Solver_State_Space_Model_Source_Files}
-    ${Examples_Source_files}
     ${Json_Source_Files}
     ${Ui_Shared_Source_Files}
 )
 
-# HarmonyUI: same core library as Harmony, different entry point (no src/main.cpp).
-set(HARMONY_UI_SOURCE_FILES ${HARMONY_SOURCE_FILES})
-list(REMOVE_ITEM HARMONY_UI_SOURCE_FILES src/main.cpp)
-list(APPEND HARMONY_UI_SOURCE_FILES ${Ui_Source_Files})
+# Shared library sources: solver/elements/UI, not examples or src/main.cpp.
+set(HARMONY_CORE_SOURCE_FILES ${HARMONY_SOURCE_FILES})
+list(REMOVE_ITEM HARMONY_CORE_SOURCE_FILES src/main.cpp)
+
+# HarmonyUI entry point only; links against harmony_core and harmony_examples.
+set(HARMONY_UI_SOURCE_FILES ${Ui_Source_Files})
 
 # -----------------------------------------------------------------------------
 # 5. Define Visual Studio project filters
 # -----------------------------------------------------------------------------
 if(MSVC)
-    source_group("Header Files" FILES ${Header_Files})
+    source_group("Header Files\\Core" FILES ${Core_Header_Files})
+    source_group("Header Files\\Network" FILES ${Network_Header_Files})
     source_group("Header Files\\Elements" FILES ${Element_Header_Files})
     source_group("Header Files\\Elements\\Converter" FILES ${Element_Converter_Header_Files})
     source_group("Header Files\\Elements\\Impedance" FILES ${Element_Impedance_Header_Files})
@@ -396,6 +408,8 @@ if(MSVC)
 
 
     source_group("Source Files" FILES ${Source_Files})
+    source_group("Source Files\\Core" FILES ${Core_Source_Files})
+    source_group("Source Files\\Network" FILES ${Network_Source_Files})
     source_group("Source Files\\Elements" FILES ${Element_Source_Files})
     source_group("Source Files\\Elements\\Converter" FILES ${Element_Converter_Source_Files})
     source_group("Source Files\\Elements\\Impedance" FILES ${Element_Impedance_Source_Files})

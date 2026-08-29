@@ -9,7 +9,7 @@
  * and basic complex-matrix arithmetic used throughout the solver.
  */
 
-#include "../../Constants.h"
+#include "core/Constants.h"
 
 /** @brief Vacuum permeability (H/m). */
 extern const double mu_0;
@@ -76,14 +76,6 @@ extern vector<vector<complex<double>>> mul_scalar(const vector<vector<complex<do
  * @return A + B.
  */
 extern vector<vector<complex<double>>> mat_add(const vector<vector<complex<double>>>& A, const vector<vector<complex<double>>>& B);
-
-/**
- * @brief Element-wise subtraction of two complex matrices.
- * @param A Minuend.
- * @param B Subtrahend.
- * @return A - B.
- */
-extern vector<vector<complex<double>>> mat_sub(const vector<vector<complex<double>>>& A, const vector<vector<complex<double>>>& B);
 
 /**
  * @brief Transposes a complex matrix stored as nested vectors.

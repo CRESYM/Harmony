@@ -4,9 +4,9 @@
  */
 #include "Examples.h"
 
-#include "../network.h"
-#include "../Bus.h"
-#include "../Include_components.h"
+#include "network/network.h"
+#include "network/Bus.h"
+#include "core/Include_components.h"
 
 void example_transformer() {
 	std::vector<double> transformer_values = { 4.3218, 0.0, 0.7938, 0.084225, 2.0, 0.0 };

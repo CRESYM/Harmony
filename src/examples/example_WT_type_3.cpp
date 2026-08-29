@@ -4,8 +4,8 @@
  */
 #include "Examples.h"
 
-#include "../Include_components.h"
-#include "../Constants.h"
+#include "core/Include_components.h"
+#include "core/Constants.h"
 
 void example_WT_type_3(bool plotting_enabled /*=true*/) {
 	// Example parameters for WT_type_3

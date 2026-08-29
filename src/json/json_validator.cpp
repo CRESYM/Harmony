@@ -350,10 +350,13 @@ void JsonValidator::validateComputation(const JSON& calc, const unsigned index) 
 		"frequency_range", "vsc_control", "write_txt", "plot_result", "print_info",
 		"dt", "t_start", "t_end", "frequency", "n_keep", "output_bus_ids",
 		"switch_count", "switch_on_resistance", "switch_off_resistance", "switch_types",
-		"plot", "plot_type"
+		"plot", "plot_type", "snapshot_time"
 	}, ctx.c_str());
 	if (!calc.contains("type") || !calc.at("type").is_string()) {
 		throw std::invalid_argument("ERROR: computation requires string 'type'.\n");
+	}
+	if (calc.contains("snapshot_time") && !calc.at("snapshot_time").is_number()) {
+		throw std::invalid_argument("ERROR: computation 'snapshot_time' must be a number (seconds).\n");
 	}
 	if (calc.contains("plot_type")) {
 		if (!calc.at("plot_type").is_string()) {

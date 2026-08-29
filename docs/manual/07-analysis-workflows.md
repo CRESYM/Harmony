@@ -77,11 +77,17 @@ cfg.outputBuses = { bus1, bus2 };
 DQsymResult result = solver.run(cfg);
 solver.exportCSV("output.csv");
 solver.plot();
+
+// Linearize MMCs at a stored instant (no Newton): packed x,u → computeABCD
+solver.analyzeAtTime(cfg.t_end);                    // plots + CSV
+solver.analyzeAtTime(0.05, /*plotResults=*/false);  // headless: eigenvalues + TF CSV
 ```
 
-**Examples:** `Harmony --cpp dqsym_rlc`, `Harmony --cpp dqsym_simple_mmc`, `Harmony --cpp dqsym_dsss2`, `Harmony --cpp dqsym_math_operations`
+On the abc plot, **Ctrl+click** a time (or type `t*`) and click **Analyze at t\*** to linearize at that sample. **Continue from t\*** resumes the same DQsym run with the original setpoints. Linearization uses the frozen snapshot (`setEquilibriumState`); it does not re-solve Newton equilibrium.
 
-**JSON:** `"type": "dqsym"` or `"time_domain"` in the `computations` block (see [Chapter 5](05-json-input.md)).
+**Examples:** `Harmony --cpp dqsym_rlc`, `Harmony --cpp dqsym_simple_mmc`, `Harmony --cpp dqsym_mmc_controlled`, `Harmony --cpp dqsym_dsss2`, `Harmony --cpp dqsym_math_operations`
+
+**JSON:** `"type": "dqsym"` or `"time_domain"` in the `computations` block (see [Chapter 5](05-json-input.md)). Optional `"snapshot_time"` (seconds) linearizes every MMC at the nearest stored sample after the run — with `"plot": true` this opens eigenvalue, participation, and Bode/Nyquist tabs; with `--no-plot` it still prints stability/eigenvalues and writes transfer-function CSV. Optional `"frequency_range"` (or the simulation-level range) sets the Bode/Nyquist/CSV sweep.
 
 ---
 

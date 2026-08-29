@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "Capacitor.h"
-#include "Bus.h"
+#include "Elements/Impedance/Capacitor.h"
+#include "network/Bus.h"
 #include <symengine/basic.h>  
 
 

@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include "Transformer_real.h"
-#include "Transformer_Y_Y_real.h"
+#include "Elements/Transformer/Transformer_real.h"
+#include "Elements/Transformer/Transformer_Y_Y_real.h"
 
-#include "Constants.h"
+#include "core/Constants.h"
 
 class TestTransformerReal : public testing::Test {};
 

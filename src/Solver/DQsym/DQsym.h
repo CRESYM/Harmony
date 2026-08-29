@@ -10,9 +10,9 @@
  * Solver) algorithm, supporting breaker state changes during simulation.
  */
 
-#include "../../Constants.h"
-#include "../../Bus.h"
-#include "../Helper_Functions/Helper_Functions.h"
+#include "core/Constants.h"
+#include "network/Bus.h"
+#include "Solver/Helper_Functions/Helper_Functions.h"
 
 class Network; class SubNetwork; class Element;
 
@@ -42,6 +42,8 @@ struct Config {
     Eigen::VectorXi swType;
     std::function<Eigen::VectorXi(int step, double t)> breakerFunction;
     std::vector<Bus*> outputBuses;
+    /// When non-empty (nx × nKeep), resume DSSS from this phasor state instead of zeros.
+    Eigen::MatrixXcd resumeX;
 };
 
 /**
@@ -51,6 +53,13 @@ struct DQsymResult {
     std::vector<double> time;
     MatrixXi brkHistory;
     std::vector<MatrixXd> DSSabcHist;
+    /// Packed MMC x at each time (n_states × N), keyed by converter name.
+    std::map<std::string, Eigen::MatrixXd> stateHist;
+    /// Terminal u = (Vdc, Vgd, Vgq) at each time (3 × N), keyed by converter name.
+    std::map<std::string, Eigen::MatrixXd> inputHist;
+    /// Full DSSS output y (nx × nKeep) at each step; used to resume from t*.
+    std::vector<MatrixXcd> xHist;
+    Config cfg;
 };
 
 /**
@@ -90,6 +99,22 @@ public:
 
     /** @brief Opens an interactive plot of the most recent simulation results. */
     void plot() const;
+
+    /**
+     * @brief Linearize every MMC at the nearest stored time and run harmonic analysis.
+     *
+     * Applies the packed snapshot (x, u) via setEquilibriumState, then computeABCD.
+     * With @p plotResults, opens eigenvalue, participation, and Bode/Nyquist tabs.
+     * Always prints stability/eigenvalues and writes transfer-function CSV when possible.
+     *
+     * @param t Snapshot time in seconds (nearest stored sample).
+     * @param plotResults When true, register ImPlot tabs.
+     * @param fStart Bode/Nyquist start frequency (Hz).
+     * @param fEnd Bode/Nyquist end frequency (Hz).
+     * @param fPoints Number of frequency samples.
+     */
+    void analyzeAtTime(double t, bool plotResults = true,
+        double fStart = 0.1, double fEnd = 10000.0, int fPoints = 500) const;
 
     /**
      * @brief Store externally computed results so plot()/exportCSV() can be used.
