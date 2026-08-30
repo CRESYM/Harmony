@@ -147,17 +147,16 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
     }
 
     // -----------------------------
-    // 3) Expand single-cable block to multi-cable system and add mutual earth impedances
-    //    Use 0-based indices everywhere. Copy base Z[0..n_l-1, 0..n_l-1] into blocks Z[(i*n_l)..((i+1)*n_l-1), (j*n_l)..]
+    // 3) Expand the single-cable (n_l x n_l) block onto each cable's diagonal.
+    //    Off-diagonal blocks stay zero here; mutual earth return is added below.
+    //    Copying the self block into every (i,j) pair (the old loop) made bipolar
+    //    Y(f) unphysical — PowerImpedance.jl only stamps the diagonal blocks.
     // -----------------------------
-    for (int i = 0; i < static_cast<int>(n); ++i) {
-        for (int j = 0; j < static_cast<int>(n); ++j) {
-            // Copy base block Z[0..n_l-1, 0..n_l-1] into the (i,j) block
-            for (int k = 0; k < static_cast<int>(n_l); ++k) {
-                for (int l = 0; l < static_cast<int>(n_l); ++l) {
-                    Z.set((i * n_l) + k, (j * n_l) + l, Z.get(k, l));
-                    P((i * n_l) + k, (j * n_l) + l) = P(k, l);
-                }
+    for (int i = 1; i < static_cast<int>(n); ++i) {
+        for (int k = 0; k < static_cast<int>(n_l); ++k) {
+            for (int l = 0; l < static_cast<int>(n_l); ++l) {
+                Z.set((i * n_l) + k, (i * n_l) + l, Z.get(k, l));
+                P((i * n_l) + k, (i * n_l) + l) = P(k, l);
             }
         }
     }
@@ -273,16 +272,14 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
         }
     }
 
-    // Prepare Y_matrix placeholder 
+    input_pins = final_size;
+    output_pins = final_size;
     Y_matrix = createZeroMatrix(2 * final_size, 2 * final_size);
 }
 
-std::vector<std::vector<complex<double>>> Cable::compute_y_parameters(double frequency)
+std::vector<std::vector<complex<double>>> Cable::compute_y_at_omega(double omega_rad)
 {
-    // Step 1: Compute Z and Y matrices based on frequency
-    double angular_frequency = 2 * frequency * M_PI;
-    map_basic_basic m;
-    m[omega] = real_double(angular_frequency);
+    double angular_frequency = finiteOmega(omega_rad);
     int n = Z.nrows();  // Size of the original matrices
     std::vector<std::vector<complex<double>>> Y_val_exact(2 * n);
     for (int i = 0; i < 2 * n; i++)
@@ -299,16 +296,19 @@ std::vector<std::vector<complex<double>>> Cable::compute_y_parameters(double fre
     Eigen::MatrixXcd Z_inv = Z_num.inverse();  // Inverse of Z
     Eigen::MatrixXcd Yc = Z_inv * Gamma;  // Compute Yc
 
-    // Step 4: Compute Gamma_l = Gamma * length (element-wise multiplication)
-    Eigen::MatrixXcd Gamma_l = Gamma * length;
-
-    // Step 5: Calculate coth(Gamma_l) and csc(Gamma_l)
-    Eigen::MatrixXcd coth_Gamma_l = Gamma_l.cosh() * (Gamma_l.sinh()).inverse();  // coth(Γl)
-    Eigen::MatrixXcd csc_Gamma_l = (Gamma_l.sinh()).inverse();    // csc(Γl)
+    // Step 4–5: Γl, then sinh/cosh via matrix exp. Eigen's .sinh()/.cosh()
+    // return unevaluated MatrixFunctionReturnValue; chaining .inverse() on
+    // that expression is wrong for n>1 and made bipolar-cable Y(f) jagged.
+    const Eigen::MatrixXcd Gamma_l = Gamma * length;
+    const Eigen::MatrixXcd exp_p = Gamma_l.exp();
+    const Eigen::MatrixXcd exp_m = (-Gamma_l).exp();
+    const Eigen::MatrixXcd sinh_Gl = 0.5 * (exp_p - exp_m);
+    const Eigen::MatrixXcd cosh_Gl = 0.5 * (exp_p + exp_m);
+    const Eigen::MatrixXcd sinh_inv = sinh_Gl.inverse();
 
     // Step 6: Initialize the matrix blocks
-    Eigen::MatrixXcd Y11 = Yc * coth_Gamma_l;         // Yc * coth(Γl)
-    Eigen::MatrixXcd Y12 = -Yc * csc_Gamma_l;        // -Yc * csc(Γl)
+    Eigen::MatrixXcd Y11 = Yc * cosh_Gl * sinh_inv;  // Yc * coth(Γl)
+    Eigen::MatrixXcd Y12 = -Yc * sinh_inv;           // -Yc * csch(Γl)
 
     // Step 7: Fill in the Y parameters matrix
     for (int i = 0; i < Y11.rows(); ++i) {
@@ -325,6 +325,31 @@ std::vector<std::vector<complex<double>>> Cable::compute_y_parameters(double fre
     return Y_val_exact;
 }
 
+std::vector<std::vector<complex<double>>> Cable::compute_y_parameters(double frequency)
+{
+	const double omega = 2.0 * frequency * M_PI;
+	const double omega_0 = 100.0 * M_PI;
+	if (transformation && isAcLocation() && !isMmcLocation()) {
+		auto Y1 = compute_y_at_omega(omega - omega_0);
+		auto Y2 = compute_y_at_omega(omega + omega_0);
+		return apply_transformation(Y1, Y2);
+	}
+	auto Y = compute_y_at_omega(omega);
+	if (transformation && isDcLocation())
+		return reduceDcY(Y);
+	return Y;
+}
+
+void Cable::computePowerFlow(std::map<std::string, double>& branchData,
+	std::map<std::string, double>& globalParams) const
+{
+	// DC cables: series R at a low frequency so shunt C does not dominate.
+	const double f = isDcLocation() ? 1.0 : globalParams.at("omega") / (2.0 * M_PI);
+	auto Y = const_cast<Cable*>(this)->compute_y_parameters(f);
+	if (isDcLocation() && !transformation)
+		Y = reduceDcY(Y);
+	fillOpfBranchFromY(branchData, globalParams, Y);
+}
 
 void Cable::updateLayers() {
 	// Iterate through conductors and re-adjust values

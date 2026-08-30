@@ -220,12 +220,16 @@ public:
     /**
      * @brief Simulate a step response given input states (override in dynamic elements).
      * @param states Input state trajectories per channel.
-     * @param nKeep Number of states to retain in the output.
-     * @return Simulated state matrices; empty for static elements.
+     * @param nKeep Number of harmonic columns to retain in the output.
+     * @param out Filled with this step's input matrices. Callers may reuse @p out
+     *        across steps to avoid reallocating.
      */
-    virtual std::vector<MatrixXcd> simulateInputStep(
-        const std::vector<MatrixXcd>& states, int nKeep) const {
-        return {};
+    virtual void simulateInputStep(
+        const std::vector<MatrixXcd>& states, int nKeep,
+        std::vector<MatrixXcd>& out) const {
+        (void)states;
+        (void)nKeep;
+        out.clear();
     }
 
     /**
@@ -264,7 +268,20 @@ public:
     void setOPFInfo(std::map<std::string, double>& info) { element_OPF_info = info; }
 
 protected:
+	/// Fill Matpower-style r, x, b from a numeric two-port Y at the OPF frequency.
+	void fillOpfBranchFromY(std::map<std::string, double>& branchData,
+		std::map<std::string, double>& globalParams,
+		const std::vector<std::vector<std::complex<double>>>& Y) const;
+
 	bool transformation = false; // Flag to indicate if a transformation is applied (e.g. three-phase to dq-frame)
+
+	bool isAcLocation() const;
+	bool isDcLocation() const;
+	bool isMmcLocation() const;
+	static double finiteOmega(double omega);
+	/// Bipolar loop 2x2: Y_eq = T^T Y T with T = [1/2, -1/2]^T at each end.
+	std::vector<std::vector<complex<double>>> reduceDcY(
+		const std::vector<std::vector<complex<double>>>& Y) const;
 
     std::string element_symbol; // Element symbol (e.g., R, L, C)
 	std::string element_location; // Element location (it can be AC1,2,... or DC1,2,... or PEC1,2,...)

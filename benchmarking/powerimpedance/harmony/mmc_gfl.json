@@ -1,9 +1,9 @@
 {
     "simulation": {
-        "title": "mmc_powerimpedance_match",
-        "description": "Standalone MMC matched to PowerImpedanceACDC default GFL controls (plant = example_MMC, gains = PI defaults converted SI).",
-        "output_directory": "./benchmarking/mmc_powerimpedance/results",
-        "frequency_range": { "start": 1, "end": 1000, "points": 200 },
+        "title": "pi_mmc_gfl",
+        "description": "Standalone MMC matched to PowerImpedance.jl default GFL (PLL, P, Q, OCC, CCC). Plant from example_MMC; SI gains converted from PowerImpedance pu defaults with Zac=150 Ohm, Zdc=400 Ohm, Iac=666.67 A, w0=100*pi.",
+        "output_directory": "./files",
+        "frequency_range": { "start": 1, "end": 1000, "points": 81 },
         "nominal_power": 100.0,
         "nominal_voltage": 122.4744871391589,
         "dc_nominal_voltage": 200.0
@@ -56,7 +56,7 @@
         {
             "type": "y_matrix",
             "component_id": "MMC1",
-            "frequency_range": { "start": 1, "end": 1000, "points": 200 },
+            "frequency_range": { "start": 1, "end": 1000, "points": 81 },
             "plot": false
         }
     ]

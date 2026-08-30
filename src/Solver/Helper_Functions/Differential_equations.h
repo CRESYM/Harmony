@@ -48,7 +48,7 @@ struct KINSOLConfig {
 /**
  * @brief Robust equilibrium finder with a cascade of solver strategies.
  *
- * Attempts LineSearch, then Newton, relaxed warmup, and Picard + Newton
+ * Attempts Newton, then LineSearch, relaxed warmup, and Picard + Newton
  * until convergence or all strategies are exhausted.
  *
  * @param rhs ODE right-hand side.

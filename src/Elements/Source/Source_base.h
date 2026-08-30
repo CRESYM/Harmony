@@ -30,6 +30,14 @@ public:
 
 	double getZsrc() const { return Zsrc.empty() ? 0 : Zsrc[0]; }
 	double getVg() const { return V.empty() ? 0 : V[0]; }
+
+	/**
+	 * @brief Finite series-admittance Y from @ref Zsrc (ideal Z=0 → 1e-12 Ω).
+	 *
+	 * Used by AC/DC voltage sources so impedance-based TF evaluation does not
+	 * hit SymEngine `1/0` ("Not Implemented"). Generators keep their own Y.
+	 */
+	std::vector<std::vector<std::complex<double>>> yFromSeriesResistance() const;
 protected:
 	vector<double> Zsrc = {};               // Internal source impedance [Ohms]
     vector<double> V = {};                  // Voltage amplitude or DC voltage [kV]

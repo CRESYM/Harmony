@@ -24,11 +24,20 @@ class Network; class SubNetwork; class Element;
  */
 struct DSSState {
     MatrixXcd Ads, Bds, Cds, Dds;
+    /// Phasor-domain base matrices (converted once; switch-modified copies live in Ads..Dds).
+    MatrixXcd A0, B0, C0, D0;
     MatrixXcd x_old;
+    MatrixXcd x_buf, y_buf;
     VectorXi  swVec, swVecOld;
     VectorXcd yswitch;
+    VectorXcd expVec;
+    Eigen::SparseMatrix<std::complex<double>> Ads_sp, Bds_sp, Cds_sp, Dds_sp;
     int  nStates = 0, nInputs = 0, nOutputs = 0, nSwitches = 0;
+    int  expT = 0;
+    double expDt = 0.0, expF0 = 0.0;
     bool initialized = false;
+    bool hasPhasorBase = false;
+    bool useSparseA = false, useSparseB = false, useSparseC = false, useSparseD = false;
 };
 
 /**
@@ -138,7 +147,9 @@ public:
     /**
      * @brief Advances the discrete-time phasor-domain state-space system one step at a time.
      *
-     * Rebuilds switch-modified matrices whenever the breaker configuration changes.
+     * Rebuilds switch-modified matrices only when the breaker configuration changes.
+     * Converts A,B,C,D to the phasor domain once and caches them on @p st.
+     * Uses sparse Ads*x when the discrete matrices are large and sparse enough.
      * Operates directly on the supplied @p st, updating it in place.
      *
      * @param st Persistent DSSS state (matrices, previous x, switch vectors).

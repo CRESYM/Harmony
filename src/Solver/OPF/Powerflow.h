@@ -35,8 +35,8 @@ struct DCBusResult {
     int busIndex;
     double vn;
     double pn;
-    double ps, qs, vs, thetas;
-    double pc, qc, vc, thetac;
+    double ps, qs, vs, thetas;   // PCC injection [MW/MVar], voltage [kV LL-RMS], angle [rad]
+    double pc, qc, vc, thetac;   // converter-side power [MW/MVar], voltage [kV], angle [rad]
 };
 
 /**
@@ -263,7 +263,7 @@ private:
     Eigen::MatrixXd lij_dc_k;
     Eigen::VectorXd ps_dc_k, qs_dc_k;
     Eigen::VectorXd pc_dc_k, qc_dc_k;
-    Eigen::VectorXd theta_s_k, theta_c_k;
+    Eigen::VectorXd theta_s_k, theta_c_k; // PCC / converter angles [rad]
     Eigen::VectorXd v2s_dc_k, v2c_dc_k;
     Eigen::VectorXd convPloss_dc_k;
 

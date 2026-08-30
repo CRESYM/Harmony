@@ -263,9 +263,9 @@ Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& locat
 	for (int i = 0; i < groundwires->ng; ++i) {
 		x_array.push_back(x[i]);
 		y_array.push_back(y[i]);
-		r_array.push_back(conductors->rc);
-		rho_array.push_back(conductors->Rdc * 1e-3);
-		mu_array.push_back(conductors->mu_rc * mu_0);
+		r_array.push_back(groundwires->rg);
+		rho_array.push_back(groundwires->Rgdc * 1e-3);
+		mu_array.push_back(groundwires->mu_g * mu_0);
 	}
 	
 	// Calculate the number of elements in the matrices
@@ -340,33 +340,31 @@ Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& locat
 	P = kron_reduction(P, cond_noElim);
 	Z = kron_reduction(Z, cond_noElim);
 
-	// Determine Y matrix
+	// Determine Y matrix. After Kron, size is the number of retained phase
+	// conductors (number_bundles), not subconductors per bundle.
+	const int n = static_cast<int>(cond_noElim.size());
 	P = P.inverse();
-	for (int i = 0; i < conductors->number_conductors_bundle; i++)
-		for (int j = 0; j < conductors->number_conductors_bundle; j++) {
-			Y.set(i, j, mul(s, real_double(P(i,j))));
+	Y = createZeroMatrix(n, n);
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			Y.set(i, j, mul(s, real_double(P(i, j))));
 			if (i == j) {
 				Y.set(i, j, add(Y.get(i, j), real_double(conductors->gc)));
 			}
 		}
+	}
 
-
-	int n = cond_noElim.size();  // Size of the reduced matrices
 	Z.resize(n, n);
 	P.resize(n, n);
-	Y.resize(n, n);
 
 	input_pins = n;
 	output_pins = n;
 	Y_matrix.resize(2 * n, 2 * n); // Resize Y_matrix in Element class
 }
 
-std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_parameters(double frequency)
+std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_at_omega(double omega_rad)
 {
-	// Step 1: Compute Z and Y matrices based on frequency
-	double angular_frequency = 2 * frequency * M_PI;
-	map_basic_basic m;
-	m[omega] = real_double(angular_frequency);
+	double angular_frequency = finiteOmega(omega_rad);
 	int n = Z.nrows();  // Size of the original matrices
 	std::vector<std::vector<complex<double>>> Y_val_exact(2 * n);
 	for (int i = 0; i < 2 * n; i++)
@@ -383,16 +381,17 @@ std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_parameters(do
 	Eigen::MatrixXcd Z_inv = Z_num.inverse();  // Inverse of Z
 	Eigen::MatrixXcd Yc = Z_inv * Gamma;  // Compute Yc
 
-	// Step 4: Compute Gamma_l = Gamma * length (element-wise multiplication)
-	Eigen::MatrixXcd Gamma_l = Gamma * length;
-
-	// Step 5: Calculate coth(Gamma_l) and csc(Gamma_l)
-	Eigen::MatrixXcd coth_Gamma_l = Gamma_l.cosh() * (Gamma_l.sinh()).inverse();  // coth(Γl)
-	Eigen::MatrixXcd csc_Gamma_l = (Gamma_l.sinh()).inverse();    // csc(Γl)
+	// Step 4–5: Γl, then sinh/cosh via matrix exp (do not chain .sinh().inverse()).
+	const Eigen::MatrixXcd Gamma_l = Gamma * length;
+	const Eigen::MatrixXcd exp_p = Gamma_l.exp();
+	const Eigen::MatrixXcd exp_m = (-Gamma_l).exp();
+	const Eigen::MatrixXcd sinh_Gl = 0.5 * (exp_p - exp_m);
+	const Eigen::MatrixXcd cosh_Gl = 0.5 * (exp_p + exp_m);
+	const Eigen::MatrixXcd sinh_inv = sinh_Gl.inverse();
 
 	// Step 6: Initialize the matrix blocks
-	Eigen::MatrixXcd Y11 = Yc * coth_Gamma_l;         // Yc * coth(Γl)
-	Eigen::MatrixXcd Y12 = -Yc * csc_Gamma_l;        // -Yc * csc(Γl)
+	Eigen::MatrixXcd Y11 = Yc * cosh_Gl * sinh_inv;  // Yc * coth(Γl)
+	Eigen::MatrixXcd Y12 = -Yc * sinh_inv;           // -Yc * csch(Γl)
 
 	// Step 7: Fill in the Y parameters matrix
 	for (int i = 0; i < Y11.rows(); ++i) {
@@ -409,5 +408,28 @@ std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_parameters(do
 	return Y_val_exact;
 }
 
-	
+std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_parameters(double frequency)
+{
+	const double omega = 2.0 * frequency * M_PI;
+	const double omega_0 = 100.0 * M_PI;
+	if (transformation && isAcLocation() && !isMmcLocation()) {
+		auto Y1 = compute_y_at_omega(omega - omega_0);
+		auto Y2 = compute_y_at_omega(omega + omega_0);
+		return apply_transformation(Y1, Y2);
+	}
+	auto Y = compute_y_at_omega(omega);
+	if (transformation && isDcLocation())
+		return reduceDcY(Y);
+	return Y;
+}
+
+void Overhead_Line::computePowerFlow(std::map<std::string, double>& branchData,
+	std::map<std::string, double>& globalParams) const
+{
+	const double f = globalParams.at("omega") / (2.0 * M_PI);
+	auto Y = const_cast<Overhead_Line*>(this)->compute_y_parameters(f);
+	if (isDcLocation() && !transformation)
+		Y = reduceDcY(Y);
+	fillOpfBranchFromY(branchData, globalParams, Y);
+}
 

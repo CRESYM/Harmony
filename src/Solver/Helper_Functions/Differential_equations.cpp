@@ -196,20 +196,7 @@ Eigen::VectorXd findEquilibriumRobust(
     if (x0.size() == 0 || u.size() == 0)
         throw std::invalid_argument("x0 and u must be non-empty.");
 
-    // 1. LineSearch (auto-scaled state/residual vectors)
-    try {
-        KINSOLConfig c;
-        c.strategy = KINSOLStrategy::LineSearch;
-        c.max_iter = 300;
-        c = withAutoScaling(c, rhs, x0, u);
-        std::cout << "[Robust] LineSearch...\n";
-        return kinsolSolve(rhs, x0, u, c, jac);
-    }
-    catch (const std::exception& e) {
-        std::cout << "[Robust] LineSearch failed: " << e.what() << "\n";
-    }
-
-    // 2. Newton
+    // 1. Newton (MMC JSON/GFL often fails KIN_LINESEARCH then recovers here)
     try {
         KINSOLConfig c;
         c.strategy = KINSOLStrategy::Newton;
@@ -220,6 +207,19 @@ Eigen::VectorXd findEquilibriumRobust(
     }
     catch (const std::exception& e) {
         std::cout << "[Robust] Newton failed: " << e.what() << "\n";
+    }
+
+    // 2. LineSearch
+    try {
+        KINSOLConfig c;
+        c.strategy = KINSOLStrategy::LineSearch;
+        c.max_iter = 300;
+        c = withAutoScaling(c, rhs, x0, u);
+        std::cout << "[Robust] LineSearch...\n";
+        return kinsolSolve(rhs, x0, u, c, jac);
+    }
+    catch (const std::exception& e) {
+        std::cout << "[Robust] LineSearch failed: " << e.what() << "\n";
     }
 
     // 3. Relaxed warmup → tight

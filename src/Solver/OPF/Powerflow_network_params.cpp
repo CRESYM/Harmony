@@ -17,6 +17,8 @@
 #include <unordered_map>
 #include <vector>
 #include <iostream>
+#include <algorithm>
+#include <numeric>
 
 /**
  * @brief Renumber AC buses to ensure consistent indexing across all components.
@@ -633,6 +635,16 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
 
 	element->computePowerFlow(gRow, global_params); // Sets grid, area, Vg and Zsrc
 
+    if (gRow["Pmax"] == 0.0 && gRow["Pmin"] == 0.0) {
+        const double cap = 20.0 * global_params["baseMVA"];
+        gRow["Pmax"] = cap;
+        gRow["Pmin"] = -cap;
+        if (gRow["Qmax"] == 0.0 && gRow["Qmin"] == 0.0) {
+            gRow["Qmax"] = cap;
+            gRow["Qmin"] = -cap;
+        }
+    }
+
     cRow["model"] = 2.0;
     cRow["startup"] = 1500.0;
     cRow["shutdown"] = 0.0;
@@ -682,6 +694,12 @@ void PowerFlow::make_Generator(Element* element, std::map<std::string, double>& 
             std::cout << "[make_Generator] Bus " << bus_name
                 << " set as SLACK (type = 3) by generator '"
                 << element->getElementSymbol() << "'\n";
+        }
+        else if (dynamic_cast<AC_source*>(element) && it_ref == gen_info.end()) {
+            busRow["type"] = 3.0;
+            std::cout << "[make_Generator] Bus " << bus_name
+                << " set as SLACK (type = 3); AC source '"
+                << element->getElementSymbol() << "' has no Ref flag\n";
         }
         else {
             busRow["type"] = 2.0;
@@ -998,19 +1016,18 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
 	// Process branches: AC and DC branches, i.e., transmission lines, impedances, etc.
     for (const auto& [element_name, element] : elements)
     {
-        if (dynamic_cast<Impedance*>(element) ||
-            dynamic_cast<Transformer_base*>(element)) {
+        const bool lumped_imp = dynamic_cast<Impedance*>(element) != nullptr;
+        const bool transformer = dynamic_cast<Transformer_base*>(element) != nullptr;
+        const bool ohl = dynamic_cast<Overhead_Line*>(element) != nullptr;
+        const bool cable = dynamic_cast<Cable*>(element) != nullptr;
+        const bool tline = dynamic_cast<TransmissionLine*>(element) != nullptr;
+        const int pins = element->getInputPins();
 
-            if (element->getInputPins() == 3) {
-                make_BranchAC(element, global_params, print_info);
-            }
-            else if (element->getInputPins() == 2) {
-                if (include_dc)
-                    make_BranchDC(element, global_params, print_info);
-            }
-            else {
-                throw std::runtime_error("[make_OPF] Error: Unsupported branch pin number.");
-            }
+        if (ohl || transformer || (lumped_imp && pins == 3) || (tline && pins == 3)) {
+            make_BranchAC(element, global_params, print_info);
+        }
+        else if (include_dc && (cable || (lumped_imp && pins == 2) || (tline && pins == 2))) {
+            make_BranchDC(element, global_params, print_info);
         }
         else if (include_dc && dynamic_cast<MMC*>(element)) {
             make_Converter(element, global_params, print_info);
@@ -1043,6 +1060,24 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
           "basekVac","Vmmax","Vmmin","Imax","status",
           "LossA","LossB","LossCrec","LossCinv",
           "droop","Pdcset","Vdcset","dvdcset" });
+
+    // The OPF model couples converter row i to DC bus i (pn_dc(i), vn2_dc(i)).
+    // Elements come from an unordered_map, so re-order by BUSDC_I and keep
+    // conv_point in the same order before write-back.
+    if (convDC.rows() > 1
+        && static_cast<size_t>(convDC.rows()) == conv_point.size()) {
+        std::vector<int> order(static_cast<size_t>(convDC.rows()));
+        std::iota(order.begin(), order.end(), 0);
+        std::sort(order.begin(), order.end(), [&](int a, int b) {
+            return convDC(a, 0) < convDC(b, 0);
+        });
+        const MatrixXd convUnsorted = convDC;
+        const std::vector<Element*> pts = conv_point;
+        for (int i = 0; i < convDC.rows(); ++i) {
+            convDC.row(i) = convUnsorted.row(order[static_cast<size_t>(i)]);
+            conv_point[static_cast<size_t>(i)] = pts[static_cast<size_t>(order[static_cast<size_t>(i)])];
+        }
+    }
 
     MatrixXd busAC = map2dense(data.at("busAC"),
         { "bus_i","type","Pd","Qd",
@@ -1127,20 +1162,21 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
 
             // MatACDC OPF injections (ps, qs, pn) use network-injection signs:
             // inverter: ps,pn ≤ 0 (power into AC network / out of DC network).
-            // MMC dynamics use machine signs: Pac,Pdc > 0 means AC export / DC import
-            // (AC current out of converter, DC current into converter). Bridge with a sign flip.
+            // MMC machine: Pac>0 AC export, Pdc>0 DC import, Qac report Park
+            // Q = 1.5(Vq Id − Vd Iq). Bridge: Pac = -ps, Qac = -qs, Pdc = -pn.
             const double Pac_MW = -ps_dc_k(k) * baseMW_dc;
             const double Qac_MVar = -qs_dc_k(k) * baseMW_dc;
-            // AC filter-bus voltage / angle from OPF (v2s in pu^2, theta_s in deg)
-            const double Vm_kV = std::sqrt(std::max(0.0, v2s_dc_k(static_cast<Eigen::Index>(k))))
-                * global_params["ACbaseKV"];
-            const double theta_rad = theta_s_k(static_cast<Eigen::Index>(k)) * M_PI / 180.0;
+            // AC filter-bus voltage / angle from OPF (v2s in pu^2 of ACbaseKV LL-RMS,
+            // theta_s in rad). MMC V_m is peak phase: Vpeak = Vll_rms * sqrt(2/3).
+            const double Vll_rms_V = std::sqrt(std::max(0.0, v2s_dc_k(static_cast<Eigen::Index>(k))))
+                * global_params["ACbaseKV"] * 1e3;
+            const double Vm_V = Vll_rms_V * std::sqrt(2.0 / 3.0);
+            // theta_s_k is reconstructed with atan2 (radians), not degrees.
+            const double theta_rad = theta_s_k(static_cast<Eigen::Index>(k));
             // DC bus-indexed OPF quantities
             const double Vdc_kV = std::sqrt(std::max(0.0, vn2_dc_k(dc_bus_idx))) * global_params["DCbaseKV"];
             const double Pdc_MW = -pn_dc_k(dc_bus_idx) * baseMW_dc;
 
-            // Convert units
-            const double Vm_V = Vm_kV * 1e3;
             const double Pac_W = Pac_MW * 1e6;
             const double Qac_Var = Qac_MVar * 1e6;
             const double Vdc_V = Vdc_kV * 1e3;
@@ -1163,12 +1199,13 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
             if (print_info) {
                 const double theta_deg = theta_rad * 180.0 / M_PI;
                 std::cout << "[Updated MMC] " << elem->getElementSymbol()
-                    << " | Vm=" << Vm_kV << " kV, theta=" << theta_deg
+                    << " | Vm=" << Vm_V / 1e3 << " kVpk, theta=" << theta_deg
                     << " deg, Pac=" << Pac_MW << " MW, Qac=" << Qac_MVar
                     << " MVar, Vdc=" << Vdc_kV << " kV, Pdc=" << Pdc_MW
                     << " MW" << std::endl;
                 const Eigen::VectorXd x_eq = mmc->getEquilibriumState();
                 std::cout << "Equilibrium state:\n" << x_eq.tail(12).transpose() << "\n";
+                mmc->dumpLinearizationOp(elem->getElementSymbol());
             }
         }
     }

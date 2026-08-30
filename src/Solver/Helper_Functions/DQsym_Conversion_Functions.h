@@ -58,6 +58,18 @@ extern MatrixXcd dq_integrate(MatrixXcd& Zpnz_old, MatrixXcd& Xpnz_old, const Ma
 extern MatrixXcd dq_multiply(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_in);
 
 /**
+ * @brief Harmonic product written into @p out (resizes if needed; reuses storage).
+ * @param x_coef1_in First operand (3 × Hx).
+ * @param y_coef1_in Second operand (3 × Hy).
+ * @param out Product coefficients (3 × H). Existing allocation is reused when the
+ *        shape already matches.
+ * @param nColsToKeep If > 0, keep only the first this many harmonic columns
+ *        (same as truncateHarmonics after a full product). If 0, keep 2N+1.
+ */
+extern void dq_multiply_into(const MatrixXcd& x_coef1_in, const MatrixXcd& y_coef1_in,
+    MatrixXcd& out, int nColsToKeep = 0);
+
+/**
  * @brief Converts abc-stacked state-space matrices to phasor/sequence domain.
  * @param A Continuous-time state matrix (abc layout).
  * @param B Continuous-time input matrix (abc layout).
@@ -88,6 +100,26 @@ extern MatrixXcd truncateHarmonics(const MatrixXcd& X, int nColsToKeep);
  * @return One abc vector per output group.
  */
 extern std::vector<Vector3d> dqn2abc_groups_at_time(const MatrixXcd& Y, double theta);
+
+/**
+ * @brief Reconstructs abc values for selected 3-row groups of Y at one angle.
+ * @param Y Output coefficient matrix with rows grouped in triplets.
+ * @param theta Electrical angle (rad) at which to evaluate.
+ * @param groups 0-based group indices to convert. Empty means all groups.
+ * @return One abc vector per requested group, in the same order as @p groups
+ *         (or group order 0..n-1 when @p groups is empty).
+ */
+extern std::vector<Vector3d> dqn2abc_groups_at_time(const MatrixXcd& Y, double theta,
+    const std::vector<int>& groups);
+
+/**
+ * @brief Reconstructs one 3-row group of Y into @p out (no heap allocation).
+ * @param Y Output coefficient matrix with rows grouped in triplets.
+ * @param group 0-based group index (rows 3*group .. 3*group+2).
+ * @param theta Electrical angle (rad).
+ * @param out Instantaneous abc vector.
+ */
+extern void dqn2abc_group_into(const MatrixXcd& Y, int group, double theta, Vector3d& out);
 
 /**
  * @brief Simulates abc waveform reconstruction over a time interval.

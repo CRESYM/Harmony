@@ -10,7 +10,7 @@
 
 /**
  * @class Transformer_real
- * @brief Real transformer with turns ratio and phase lag.
+ * @brief Real transformer with turns ratio and phase shift (paper eq. (2)).
  * @ingroup transformer
  */
 class Transformer_real : public Transformer_base {
@@ -20,7 +20,9 @@ public:
      * @param symbol Element identifier.
      * @param location Network area or location string.
      * @param pins Number of pins (phases) per winding.
-     * @param values Turns ratio, phase shift, and winding parameter vector.
+     * @param values Six values `{R_p, L_p, R_s, L_s, a, φ}` or eight
+     *        `{R_p, L_p, R_s, L_s, R_m, L_m, a, φ}`. φ is the paper eq. (1)
+     *        phase shift in radians: Vp/Vs = a exp(jφ).
      */
     Transformer_real(const std::string& symbol, const std::string& location, int pins, const std::vector<double>& values);
 
@@ -28,11 +30,11 @@ public:
 
     double getTurnsRatio() const { return a; }
 
-    double getPhaseLag() const { return phi; }  // Method to get phase lag
+    /** @brief Paper eq. (1) phase shift φ [rad]. Alias of getPhaseShift(). */
+    double getPhaseLag() const { return getPhaseShift(); }
 
 private:
-    double a;  // Turns ratio
-    double phi; // Phase shift
+    double a = 0.0;  // Turns ratio NP/NS
 };
 
 #endif // TRANSFORMER_REAL_H

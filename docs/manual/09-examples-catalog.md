@@ -113,6 +113,7 @@ JSON equivalents of bundled C++ demos are in `src/examples/json/`:
 | `example.json` | (minimal) | Load + transformer |
 | `constructors.json` | `example_constructors` | Transmission line |
 | `transformer.json` | `example_transformer` | Delta-Y real transformer |
+| `transformer_ydelta_real.json` | `example_transformer` | Y-Δ real transformer |
 | `generator.json` | `example_generator` | Generator Y-matrix |
 | `cable.json` | `example_cable` | Cable model |
 | `ohl.json` | `example_OHL` | Overhead line |

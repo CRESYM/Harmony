@@ -27,16 +27,13 @@
 // -----------------------------------------------------------------------------
 
 static Eigen::Vector3d makeOperatingInput(
-    double V_dc, double P_dc, bool dc_voltage_control,
+    double V_dc, double /*P_dc*/, bool /*dc_voltage_control*/,
     double V_m, double theta)
 {
     const double Vgd = V_m * std::cos(theta);
     const double Vgq = -V_m * std::sin(theta);
     Eigen::Vector3d u;
-    if (dc_voltage_control)
-        u << P_dc / V_dc, Vgd, Vgq;
-    else
-        u << V_dc, Vgd, Vgq;
+    u << V_dc, Vgd, Vgq;
     return u;
 }
 
@@ -250,17 +247,15 @@ void MMC::init_Controller(const std::vector<double>& controller_params) {
                 else {
                     throw std::invalid_argument("Unsupported controller type. Only P (1) and PI (0) controllers are supported.");
 				}
-               
+
 				// Update the number of states based on the controller type and number of values
                 if (controller_name == "dc_voltage") {
-                    if (t_delay != 0) {
-                        vdc_index = number_of_states - 12 - 5 * pade_order; // Update vdc_index 
-                    }
-                    else {
-                        vdc_index = number_of_states - 12; // Update vdc_index 
-					}
+                    if (t_delay != 0)
+                        vdc_index = number_of_states - 12 - 5 * pade_order;
+                    else
+                        vdc_index = number_of_states - 12;
                     number_of_states += number_of_values;
-				}
+                }
 				else if (controller_name == "pll") {
 					number_of_states += 2; // PLL has 2 states (frequency and phase)
                 }
@@ -335,7 +330,14 @@ void MMC::init_Filter(const std::vector<double>& filter_params) {
 
                 filters[filter_name] = std::make_unique<Filter>(filter_name, filter_type, filter_order, values, filter_size);
 
-                number_of_states += filter_size*filter_order; // Update the number of states based on the number of values
+                const int n_added = filter_size * filter_order;
+                number_of_states += n_added;
+                // Filters occupy indices after PLL and before outer loops, so
+                // cached controller indices must shift.
+                if (controls.count("dc_voltage"))
+                    vdc_index += n_added;
+                if (gfm_index_ >= 0)
+                    gfm_index_ += n_added;
                 i += 4;
             }
             else {
@@ -351,7 +353,8 @@ void MMC::init_Filter(const std::vector<double>& filter_params) {
  * @param theta AC voltage phase angle [rad].
  * @param Pac Active power [W], MMC machine convention: positive = export to AC
  *        (AC current leaving the converter).
- * @param Qac Reactive power [VAr], same sign convention as Pac (standard dq Q).
+ * @param Qac Reactive power [VAr], report Park: Q = 1.5(Vq Id - Vd Iq).
+ *        With Vq≈0, Vd>0: Q>0 ⇒ Iq<0.
  * @param Vdc DC voltage [V].
  * @param Pdc DC power [W], MMC machine convention: positive = import from DC
  *        (DC current entering the converter). For a lossless inverter,
@@ -376,9 +379,9 @@ void MMC::update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc
         throw std::runtime_error("Voltage magnitude too small for dq transformation.");
     }
 
-    // From Pac = 1.5(Vd Id + Vq Iq), Qac = 1.5(Vd Iq - Vq Id).
-    const double Id = (2.0 / 3.0) * (Vgd * P - Vgq * Q) / denom;
-    const double Iq = (2.0 / 3.0) * (Vgq * P + Vgd * Q) / denom;
+    // Report Park (4.54): Pac = 1.5(Vd Id + Vq Iq), Qac = 1.5(Vq Id - Vd Iq).
+    const double Id = (2.0 / 3.0) * (Vgd * P + Vgq * Q) / denom;
+    const double Iq = (2.0 / 3.0) * (Vgq * P - Vgd * Q) / denom;
 
     // Set OCC controller reference (dq current)
     if (controls.count("occ")) {
@@ -397,7 +400,7 @@ void MMC::update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc
 
     // DC voltage control has priority over active power
     if (controls.count("dc_voltage")) {
-        controls["dc_voltage"]->setReference({ 0, Vdc });
+        controls["dc_voltage"]->setReference({ Vdc });
     }
     else if (controls.count("active_power")) {
         controls["active_power"]->setReference({ Pac });
@@ -463,7 +466,6 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     // --- Precompute constants for MMC model ---
     const double Leqac = L_arm / 2.0 + L_reactor;
     const double Reqac = R_arm / 2.0 + R_reactor;
-    const double Ce = 6.0 * C_arm / N;
     Eigen::VectorXd F = Eigen::VectorXd::Zero(number_of_states);
 
     // Extract state variables from the end of the state vector (grid dq frame).
@@ -475,7 +477,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
 
     // Port voltages/currents stay in the grid frame for the plant; controllers may
     // use PLL-rotated copies.
-    double Vdc = (controls.count("dc_voltage")) ? x(vdc_index) : u(0);
+    double Vdc = u(0);
     const double Vgd_g = u(1);
     const double Vgq_g = u(2);
     double Vgd = Vgd_g;
@@ -483,8 +485,8 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     double iDelta_d = iDelta_d_g, iDelta_q = iDelta_q_g;
     double iSigma_d = iSigma_d_g, iSigma_q = iSigma_q_g;
     double Pac = 1.5 * (Vgd_g * iDelta_d_g + Vgq_g * iDelta_q_g);
-    // Generator dq: Q = 1.5(Vd iq - Vq id); with Vq≈0, +iq ⇒ +Q.
-    double Qac = 1.5 * (Vgd_g * iDelta_q_g - Vgq_g * iDelta_d_g);
+    // Report Park: Q = 1.5(Vq id - Vd iq); with Vq≈0, Vd>0: +Q ⇒ −iq.
+    double Qac = 1.5 * (Vgq_g * iDelta_d_g - Vgd_g * iDelta_q_g);
     double Vac_mag = std::sqrt(Vgd_g * Vgd_g + Vgq_g * Vgq_g);
 
     // Extract control reference voltages (user must assign these before this call)
@@ -495,11 +497,13 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     Eigen::VectorXd state_variables;
     Eigen::Vector2d x1, u1, c1;
 
-    // Precompute transformation matrices only if PLL is present
+    // Precompute transformation matrices only if PLL is present.
+    // Neptune (56): ω_C = Δω + ω_0 for OCC/CCC decoupling. Plant DEs stay at ω_0.
     Eigen::Matrix2d T_theta = Eigen::Matrix2d::Identity();
     Eigen::Matrix2d I_theta = Eigen::Matrix2d::Identity();
     Eigen::Matrix2d T_2theta = Eigen::Matrix2d::Identity();
     Eigen::Matrix2d I_2theta = Eigen::Matrix2d::Identity();
+    double omega_c = omega_0;
 
     i = 0;
     const int plant_base = number_of_states - 12;
@@ -638,6 +642,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         F(i) = state_variables(0);
         const double delta_omega = state_variables(1);
         F(i + 1) = delta_omega; // dθ/dt = Δω (rad/s)
+        omega_c = omega_0 + delta_omega;
         i += 2;
     }
 
@@ -654,7 +659,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         const double Qac_f = x(gfm_index_ + 2);
 
         Pac = 1.5 * (Vgd_g * iDelta_d_g + Vgq_g * iDelta_q_g);
-        Qac = 1.5 * (Vgd_g * iDelta_q_g - Vgq_g * iDelta_d_g);
+        Qac = 1.5 * (Vgq_g * iDelta_d_g - Vgd_g * iDelta_q_g);
 
         const auto* gfm = controls.at("gfm").get();
         const double Kdroop_P = gfm->getParameters()[0];
@@ -762,16 +767,22 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         i += 1;
         if (has_occ) controls["occ"]->setReference(iDelta_d_ref, 0);
     } else if (has_dc_voltage_ctrl) {
-        double Idc = u(0);
-		x1 << 0, x(i+1);
-        u1 << (-Idc + 3.0 * iSigma_z) / (1.0 * Ce), x(i);
-		c1 << 0, 0; // No additional control inputs for dc_voltage
-        state_variables = controls["dc_voltage"]->define_equations(x1, u1, c1);
-		F(i) = state_variables(0);
-        F(i + 1) = state_variables(1);
-        double iDelta_d_ref = -state_variables(3);
+        // Port voltage in: SM capacitance is already in the plant (vC states).
+        // dξ/dt = Ki (v* − v), i_d^{Δ*} = −(Kp (v* − v) + ξ).
+        const auto& vdc_gains = controls["dc_voltage"]->getParameters();
+        const auto vdc_refs = controls["dc_voltage"]->getReference();
+        const double Kp_v = vdc_gains[0];
+        const double Ki_v = vdc_gains[1];
+        const double Vdc_ref = vdc_refs.empty() ? V_dc : vdc_refs[0];
+        const double e_v = Vdc_ref - Vdc;
+        // Dynamics: ξ̇ = Ki (v* − v). Equilibrium: pin i_dc = P_dc/V_dc instead,
+        // because v is an input and ξ̇ is then independent of every state.
+        F(i) = vdc_eq_idc_residual_
+            ? ((std::abs(Vdc) > 1e-3) ? P_dc / Vdc : 0.0) - 3.0 * iSigma_z
+            : Ki_v * e_v;
+        const double iDelta_d_ref = -(Kp_v * e_v + x(i));
         if (has_occ) controls["occ"]->setReference(iDelta_d_ref, 0);
-        i += 2;
+        i += 1;
     }
     else if (has_droop_ctrl) {
         x1 << Vdc, 0;
@@ -786,7 +797,8 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     if (has_reactive_power_ctrl) {
         state_variables = controls["reactive_power"]->define_equations(x(i), Qac, 0);
         F(i) = state_variables(0);
-        double iDelta_q_ref = state_variables(1);
+        // (13d): i_q^{Δ*} = −K_{P,Q}(Q*−Q) − K_{I,Q} ξ_Q  (Q = 1.5(Vq Id − Vd Iq)).
+        double iDelta_q_ref = -state_variables(1);
         i += 1;
         if (has_occ) controls["occ"]->setReference(iDelta_q_ref, 1);
     } else if (has_ac_voltage_ctrl) {
@@ -826,8 +838,8 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         }
         x1 << x(i), x(i + 1);
         u1 << iDelta_d, iDelta_q;
-        // Decoupling at nominal grid speed (grid-frame plant).
-        c1 << omega_0 * Leqac * iDelta_q + Vgd, -omega_0 * Leqac * iDelta_d + Vgq;
+        // Neptune (61): decoupling at ω_C = Δω + ω_0 (PLL frame). No PLL → ω_C = ω_0.
+        c1 << omega_c * Leqac * iDelta_q + Vgd, -omega_c * Leqac * iDelta_d + Vgq;
         state_variables = controls["occ"]->define_equations(x1, u1, c1);
         F(i) = state_variables(0);
         F(i + 1) = state_variables(1);
@@ -855,7 +867,8 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         }
         x1 << x(i), x(i + 1);
         u1 << iSigma_d, iSigma_q;
-        c1 << -2 * omega_0 * L_arm * iSigma_q, 2 * omega_0 * L_arm * iSigma_d;
+        // Neptune (63): circulating decoupling at 2ω_C.
+        c1 << -2 * omega_c * L_arm * iSigma_q, 2 * omega_c * L_arm * iSigma_d;
         state_variables = controls["ccc"]->define_equations(x1, u1, c1);
         F(i) = state_variables(0);
         F(i + 1) = state_variables(1);
@@ -1010,12 +1023,7 @@ void MMC::computeABCD() {
 	C_matrix(1, n - 12) = 1; // location of iDelta_d
 	C_matrix(2, n - 11) = 1; // location of iDelta_q
 
-    if (!controls.count("dc_voltage")) {
-		C_matrix(0, n - 10) = 3; // location of iSigma_z
-    }
-	else { // to repair the C matrix
-		C_matrix(0, vdc_index) = 1; // location of Vdc
-    }
+    C_matrix(0, n - 10) = 3; // location of iSigma_z
 
     D_matrix = Eigen::MatrixXd::Zero(3, 3);
 }
@@ -1133,7 +1141,7 @@ Eigen::MatrixXd MMC::computePlantJacobian(
 
     // Row 0: diDd/dt
     J(0, 0) = -Req / Leq;                 // d/d(iDd)
-    J(0, 1) = -w;                        // d/d(iDq)
+    J(0, 1) = w;                         // d/d(iDq)  Park: −(−ω L iq)/L
     J(0, 5) = dvMDd_vCDd / Leq;         // d/d(vCDd)
     J(0, 6) = dvMDd_vCDq / Leq;         // d/d(vCDq)
     J(0, 7) = dvMDd_vCDZd / Leq;        // d/d(vCDZd)
@@ -1143,7 +1151,7 @@ Eigen::MatrixXd MMC::computePlantJacobian(
     J(0, 11) = dvMDd_vCSz / Leq;         // d/d(vCSz)
 
     // Row 1: diDq/dt = (vMDq/Leq) - Req/Leq*iDq + w*iDd
-    J(1, 0) = w;                          // d/d(iDd)
+    J(1, 0) = -w;                         // d/d(iDd)  Park: −(+ω L id)/L
     J(1, 1) = -Req / Leq;                  // d/d(iDq)
     J(1, 5) = dvMDq_vCDd / Leq;
     J(1, 6) = dvMDq_vCDq / Leq;
@@ -1338,7 +1346,7 @@ void MMC::computeABCD_analytical()
     // For the general case with controllers, compute the modulation
     // by calling the control chain at the equilibrium point:
     int ip = number_of_states - 12;
-    double Vdc_eq = (controls.count("dc_voltage")) ? x0(vdc_index) : u0(0);
+    double Vdc_eq = u0(0);
 
     // Default modulation (controllers set these via their outputs)
     double vMDd_ref = 0, vMDq_ref = 0;
@@ -1361,12 +1369,9 @@ void MMC::computeABCD_analytical()
     double mSq = 2 * vMSq_ref / Vdc_eq;
     double mSz = 2 * vMSz_ref / Vdc_eq;  // = 1.0 at equilibrium
 
-    // Step 3: Compute exact plant Jacobian
-    double w = omega_0;
-    if (controls.count("pll")) {
-        // PLL adjusts omega at equilibrium — use equilibrium frequency
-        // For linearization, w = omega_0 (PLL tracks perfectly at eq)
-    }
+    // Step 3: Exact plant Jacobian. Electrical DEs stay at ω_0 (Neptune plant).
+    // OCC/CCC ω_C = Δω + ω_0 is in the numerical controller Jacobian of F(x,u).
+    const double w = omega_0;
 
     Eigen::MatrixXd J_plant = computePlantJacobian(w, mDd, mDq, mDZd, mDZq, mSd, mSq, mSz);
 
@@ -1382,10 +1387,7 @@ void MMC::computeABCD_analytical()
     C_matrix(1, n_total - 12) = 1;  // iDelta_d
     C_matrix(2, n_total - 11) = 1;  // iDelta_q
 
-    if (!controls.count("dc_voltage"))
-        C_matrix(0, n_total - 10) = 3;  // iSigma_z
-    else
-        C_matrix(0, vdc_index) = 1;
+    C_matrix(0, n_total - 10) = 3;  // iSigma_z
 
     D_matrix = Eigen::MatrixXd::Zero(3, 3);
 }
@@ -1401,7 +1403,7 @@ void MMC::computeOpenLoopArmRefs(
     const double Vgd = V_m * std::cos(theta);
     const double Vgq = -V_m * std::sin(theta);
 
-    // Steady-state arm voltages from diDelta/dt = 0 and diSigma_z/dt = 0.
+    // J2 = [[0, 1], [-1, 0]]: vd = R id + ωL iq + L p id, vq = R iq − ωL id + L p iq.
     vMDelta_d = Vgd + Reqac * Id + Leqac * Iq * w;
     vMDelta_q = Vgq + Reqac * Iq - Leqac * Id * w;
     vMSigma_z = Vdc / 2.0 - R_arm * iSigma_z;
@@ -1468,8 +1470,8 @@ void MMC::solveEquilibrium() {
         throw std::runtime_error("Voltage magnitude too small for dq transformation.");
     }
 
-    const double Id = (2.0 / 3.0) * (Vgd * P - Vgq * Q) / denom;
-    const double Iq = (2.0 / 3.0) * (Vgq * P + Vgd * Q) / denom;
+    const double Id = (2.0 / 3.0) * (Vgd * P + Vgq * Q) / denom;
+    const double Iq = (2.0 / 3.0) * (Vgq * P - Vgd * Q) / denom;
     const double iSigma_z = (std::abs(V_dc) > 1e-3) ? P_dc / (3.0 * V_dc) : 0.0;
 
     if (controls.count("pll") && n >= 2) {
@@ -1495,7 +1497,8 @@ void MMC::solveEquilibrium() {
     const Eigen::Vector3d u = makeOperatingInput(
         V_dc, P_dc, controls.count("dc_voltage") > 0, V_m, theta);
     if (controls.count("dc_voltage")) {
-        x0(vdc_index) = V_dc;
+        // At equilibrium e=0 so i_d^{Δ*} = −ξ ⇒ ξ = −Id.
+        x0(vdc_index) = -Id;
     }
 
     double vMDelta_d = 0.0;
@@ -1591,6 +1594,12 @@ void MMC::solveEquilibrium() {
     };
 
     open_loop_modulation_ = !has_occ && !has_gfm;
+    struct VdcEqGuard {
+        bool& flag;
+        explicit VdcEqGuard(bool& f, bool on) : flag(f) { flag = on; }
+        ~VdcEqGuard() { flag = false; }
+    };
+    VdcEqGuard vdc_eq_guard(vdc_eq_idc_residual_, controls.count("dc_voltage") > 0);
     if (has_gfm) {
         // GFM Watt-based droop gains are ~1e-8; use power-normalized residuals for
         // the nonlinear solve, and never accept open-loop modulation as the answer
@@ -1678,13 +1687,7 @@ std::vector<std::vector<complex<double>>> MMC::compute_y_parameters(double frequ
 	Eigen::MatrixXcd Y = C_c * inv_A_s * B_c + D_c;
 
     // Port currents: AC iΔ exits the converter (generator); DC 3·iΣz enters
-    // (load). Do not negate AC diagonals here.
-
-    // Legacy key "dc" (not "dc_voltage"): optional Z→Y correction for older models.
-    if (controls.count("dc")) {
-		Y(0, 0) = 1.0 / Y(0, 0);
-        Y(0, 0) = 2.0 * (Y(0, 0) - s_num *  C_arm * (6.0/N));
-    }
+    // (load). Do not negate AC diagonals here. u0 is always Vdc (true Y).
 
     std::vector<std::vector<complex<double>>> Y_val_exact(Y_matrix.nrows());
     for (int i = 0; i < Y_matrix.nrows(); ++i) {
@@ -1823,39 +1826,62 @@ void MMC::writeMNAmatrix(
 
 
 //add18/5
-std::vector<MatrixXcd> MMC::simulateInputStep(
-    const std::vector<MatrixXcd>& states, int nKeep) const
+void MMC::simulateInputStep(
+    const std::vector<MatrixXcd>& states, int nKeep,
+    std::vector<MatrixXcd>& out) const
 {
+    auto ensure3 = [nKeep](MatrixXcd& M) {
+        if (M.rows() != 3 || M.cols() != nKeep)
+            M = MatrixXcd::Zero(3, nKeep);
+        else
+            M.setZero();
+    };
+
+    if (out.size() != 4)
+        out.resize(4);
+    for (auto& M : out)
+        ensure3(M);
+
     if (states.size() < 4)
-        return { MatrixXcd::Zero(3,nKeep), MatrixXcd::Zero(3,nKeep),
-                 MatrixXcd::Zero(3,nKeep), MatrixXcd::Zero(3,nKeep) };
+        return;
 
     const MatrixXcd& iD = states[0], & iS = states[1], & vCD = states[2], & vCS = states[3];
 
-    // === BEGIN modulation source selection ===
-    MatrixXcd mD, mS;
-    if (dqsym_initialized_) {
-        // Closed-loop: use latest modulation from stepControllers
-        mD = mD_dqsym_;
-        mS = mS_dqsym_;
+    MatrixXcd mD_ol, mS_ol;
+    const MatrixXcd* mD = &mD_dqsym_;
+    const MatrixXcd* mS = &mS_dqsym_;
+    if (!dqsym_initialized_) {
+        mD_ol = MatrixXcd::Zero(3, nKeep);
+        mS_ol = MatrixXcd::Zero(3, nKeep);
+        mD_ol(0, 1) = -m_1;
+        mS_ol(2, 0) = 1.0;
+        mD = &mD_ol;
+        mS = &mS_ol;
     }
-    else {
-        // Open-loop fallback (no controllers stepped)
-        mD = MatrixXcd::Zero(3, nKeep);
-        mS = MatrixXcd::Zero(3, nKeep);
-        mD(0, 1) = -m_1;
-        mS(2, 0) = 1.0;
-    }
-    // === END modulation source selection ===
 
-    auto trunc = [nKeep](const MatrixXcd& M) { return truncateHarmonics(M, nKeep); };
+    dq_multiply_into(*mD, vCS, dq_prod_a_, nKeep);
+    dq_multiply_into(*mS, vCD, dq_prod_b_, nKeep);
+    out[0].noalias() = dq_prod_a_;
+    out[0].noalias() += dq_prod_b_;
+    out[0] *= -0.5;
 
-    MatrixXcd u_vMD = trunc(-(dq_multiply(mD, vCS) + dq_multiply(mS, vCD)) / 2.0);
-    MatrixXcd u_vMS = trunc((dq_multiply(mS, vCS) + dq_multiply(mD, vCD)) / 2.0);
-    MatrixXcd u_PD = trunc(dq_multiply(mS, iD) / 2.0 + dq_multiply(mD, iS));
-    MatrixXcd u_PS = trunc(dq_multiply(mD, iD) / 2.0 + dq_multiply(mS, iS));
+    dq_multiply_into(*mS, vCS, dq_prod_a_, nKeep);
+    dq_multiply_into(*mD, vCD, dq_prod_b_, nKeep);
+    out[1].noalias() = dq_prod_a_;
+    out[1].noalias() += dq_prod_b_;
+    out[1] *= 0.5;
 
-    return { u_vMD, u_vMS, u_PD, u_PS };
+    dq_multiply_into(*mS, iD, dq_prod_a_, nKeep);
+    dq_multiply_into(*mD, iS, dq_prod_b_, nKeep);
+    out[2].noalias() = dq_prod_a_;
+    out[2] *= 0.5;
+    out[2].noalias() += dq_prod_b_;
+
+    dq_multiply_into(*mD, iD, dq_prod_a_, nKeep);
+    dq_multiply_into(*mS, iS, dq_prod_b_, nKeep);
+    out[3].noalias() = dq_prod_a_;
+    out[3] *= 0.5;
+    out[3].noalias() += dq_prod_b_;
 }
 
 

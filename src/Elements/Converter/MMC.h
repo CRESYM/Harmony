@@ -17,6 +17,12 @@ class Filter;
  * @class MMC
  * @brief Modular Multilevel Converter with arm dynamics and control loops.
  * @ingroup converter
+ *
+ * Park (report eq. 4.54): vd = Vm cos θ, vq = −Vm sin θ.
+ * Pac = 3/2 (vd id + vq iq),  Qac = 3/2 (vq id − vd iq),  Pdc = 3 vdc iΣz.
+ * Signs: Pac>0 AC export, Qac>0 ⇒ iq<0 at vq=0, Pdc>0 DC import.
+ * OPF (MatACDC): P_G=Pac, Q_G=Qac in MW; solver uses pn=−P_G, qs=−Q_G;
+ * make_OPF writes back Pac=−ps, Qac=−qs, Pdc=−pn.
  */
 class MMC : public Converter {
 public:
@@ -114,13 +120,30 @@ public:
         for (auto& [key, value] : element_OPF_info)
 			data[key] = value; // Copy OPF info to branch data
 
-		//data["bf"] = 0.0; // conductance of the filter
-		//data["rf"] = 0.0; // Resistance of the filter
-		//data["xf"] = 0.0; // Reactance of the filter
-        data["xc"] = globalParams["omega"] * L_reactor / globalParams["ACZbase"]; // Base voltage for AC
-		data["rc"] = R_reactor / globalParams["ACZbase"]; // Resistance of the phase reactor
-        // MatACDC P_G/Q_G: OPF enforces pn = -P_G and qs = -Q_G, so pass MMC
-        // machine-convention Pac/Qac directly (inverter Pac>0 → pn<0).
+        // Match the OPF converter equivalent to the MMC plant: no AC filter /
+        // transformer, and rc+jxc = R_eq + jω L_eq with L_eq = L_arm/2 + L_reactor.
+        // MatACDC row defaults (bf=0.0887 pu, LossA=1.103 MW, xc=0.164 pu) would
+        // otherwise produce a PCC (V,P,Q,Pdc) that is not an MMC equilibrium.
+        if (!element_OPF_info.count("bf"))
+            data["bf"] = 0.0;
+        if (!element_OPF_info.count("rtf"))
+            data["rtf"] = 0.0;
+        if (!element_OPF_info.count("xtf"))
+            data["xtf"] = 0.0;
+        if (!element_OPF_info.count("LossA"))
+            data["LossA"] = 0.0;
+        if (!element_OPF_info.count("LossB"))
+            data["LossB"] = 0.0;
+        if (!element_OPF_info.count("LossCrec"))
+            data["LossCrec"] = 0.0;
+        if (!element_OPF_info.count("LossCinv"))
+            data["LossCinv"] = 0.0;
+        if (!element_OPF_info.count("xc"))
+            data["xc"] = globalParams["omega"] * L_eq / globalParams["ACZbase"];
+        if (!element_OPF_info.count("rc"))
+            data["rc"] = R_eq / globalParams["ACZbase"];
+        // MatACDC P_G/Q_G: OPF enforces pn = -P_G and qs = -Q_G.
+        // P_G/Q_G are MMC machine powers in MW (report Park Q = 1.5(Vq Id − Vd Iq)).
         data["P_g"] = P / 1e6;
         data["Q_g"] = Q / 1e6;
         data["Vtar"] = V_dc / 1e3 / globalParams["DCbaseKV"]; // Seting of DC v-control value
@@ -141,14 +164,14 @@ public:
 			data["type_dc"] = 3;
         }
         
-        // AC side control type_ac (1 = constant AC voltage control, 2 = constant reactive power control)
+        // AC side type_ac matches Powerflow_solver / MatACDC: 1 = Q, 2 = Vac.
         if (controls.count("ac_voltage")) {
             if (!element_OPF_info.count("type_ac"))
-			data["type_ac"] = 1;
+			data["type_ac"] = 2;
         }
         else if (controls.count("reactive_power")) {
             if (!element_OPF_info.count("type_ac"))
-                data["type_ac"] = 2;
+                data["type_ac"] = 1;
         }
 
         if (element_OPF_info.count("type_dc"))
@@ -163,8 +186,9 @@ public:
 
     std::vector<RCP<const Basic>> getVirtualInputSymbols() const override;
 
-    std::vector<MatrixXcd> simulateInputStep(
-        const std::vector<MatrixXcd>& states, int nKeep) const override;
+    void simulateInputStep(
+        const std::vector<MatrixXcd>& states, int nKeep,
+        std::vector<MatrixXcd>& out) const override;
 
     int getNumberOfInternalStates() const override { return number_of_states; }
 
@@ -193,6 +217,7 @@ public:
     Eigen::MatrixXcd mD_dqsym_;             // current Δ-modulation (set by stepControllers)
     Eigen::MatrixXcd mS_dqsym_;             // current Σ-modulation
     bool dqsym_initialized_ = false;        // first-call init flag
+    mutable MatrixXcd dq_prod_a_, dq_prod_b_;  // dq_multiply scratch (simulateInputStep)
 
     // Modulation references exposed by computeStateDerivatives (side-channel output).
     // Written every call; read only by stepControllers.
@@ -218,11 +243,15 @@ private:
     
 	// State variables
     int number_of_states = 12;
-	int vdc_index = 0; // Index for DC voltage in state vector
+	int vdc_index = 0; // Index of the DC-voltage PI integrator when dc_voltage is enabled
 	int gfm_index_ = -1; // Start index of GFM states (theta, Pac_f, Qac_f); -1 if disabled
 	double gfm_E_ref_ = 0.0; // GFM internal voltage magnitude reference
 	/// When true, GFM residuals use power-normalized form for KINSOL conditioning.
 	bool gfm_scale_eq_residual_ = false;
+	/// When true (equilibrium solve only), replace the Vdc-integrator residual
+	/// Ki(v*−v) with P_dc/V_dc − 3 i^Σ_z. With V_dc as a port, v=v* so the
+	/// dynamic residual is identically zero and does not pin ξ or i_d.
+	bool vdc_eq_idc_residual_ = false;
 
     // add18/5=== BEGIN plant state count (captured at construction, before non-plant states added) ===
     int n_plant_states_ = 12;   // will be overwritten in constructor with actual value

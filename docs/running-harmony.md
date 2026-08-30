@@ -216,8 +216,6 @@ Many studies write CSV frequency data to:
 
 Create `./files` if needed, or set `"output_directory"` in the JSON `simulation` section.
 
-DQsym JSON runs may write debug text files to the current directory (`state_space_output*.txt`).
-
 ---
 
 ## Troubleshooting

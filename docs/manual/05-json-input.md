@@ -116,14 +116,14 @@ See `src/examples/example.json`:
 | `load`, `load_pq` | `"values": [P, Q, …]` |
 | `ac_source`, `generator` | Requires `"voltage"` and `"values"` |
 | `resistor`, `inductor`, `capacitor` | Per-phase `"values"` array |
-| `transformer_real` | Object `"values"` with R, L, turns ratio, phase shift |
+| `transformer_real`, `transformer_yy_real`, `transformer_ydelta_real`, `transformer_deltay_real`, `transformer_deltadelta_real` | Object `"values"` with R, L, turns ratio, phase shift; optional `R_magnetizing`, `L_magnetizing` |
 | `transformer_classic`, `transformer_yy`, `transformer_deltay`, … | Object `"values"` with R, L, M |
 | `dc_source` | `"voltage"` (scalar or array), optional `"resistance"` / `"values"` |
 | `impedance`, `admittance` | Per-phase or matrix `"values"` |
 | `switch` | `"state"` (bool array) or `"closed"` (bool) |
 | `transmission_line` | `"values"`: `[R, L, G, C, length]` (5 numbers) |
 | `cable` | `"cable_type"`, `"length"`, `"earth"`, `"conductors"`, `"insulators"`, `"positions"` |
-| `overhead_line` | `"length_km"`, `"earth"`, `"conductor"`, `"groundwire"` |
+| `overhead_line` | `"length"` (m) or `"length_km"` (×1000), `"earth"`, `"conductor"` (`rc`, `Rdc`, `dsag`, `dsb`, `geometry` = `[Δxbc, ybc, …]`), `"groundwire"` (`count`, `geometry`, `mu_g`) |
 | `mmc` | `"converter_params"`; optional `"controller_params"`, `"filter_params"` |
 | `wt_type_3`, `wt_type_4`, `pv_plant` | `"parameters"` numeric array |
 | `wp_plant` | `"turbine_type"`, `"number_wt"`, `"parameters"` |

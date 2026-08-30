@@ -35,6 +35,16 @@ public:
 
 	Eigen::VectorXd getEquilibriumState() const { return equilibrium_state; }
 
+	double getP() const { return P; }
+	double getQ() const { return Q; }
+	double getPdc() const { return P_dc; }
+	double getVm() const { return V_m; }
+	double getTheta() const { return theta; }
+	double getVdc() const { return V_dc; }
+
+	/** @brief Print the voltages and powers used to linearize Y(s). */
+	void dumpLinearizationOp(const std::string& id) const;
+
 	/** @brief Use a DQsym (or other) state as the linearization point, skipping Newton. */
 	void setEquilibriumState(const Eigen::VectorXd& x,
 		const Eigen::VectorXd& u = Eigen::VectorXd())
@@ -49,7 +59,7 @@ public:
 		const int p = static_cast<int>(x.size()) - 12;
 		if (p >= 0 && static_cast<int>(x.size()) >= p + 2) {
 			P = 1.5 * (u(1) * x(p) + u(2) * x(p + 1));
-			Q = 1.5 * (u(1) * x(p + 1) - u(2) * x(p));
+			Q = 1.5 * (u(2) * x(p) - u(1) * x(p + 1));
 		}
 	}
 
@@ -119,9 +129,9 @@ public:
 
 protected:
 	double omega_0;  // Nominal frequency
-	double P;        // Active power [W]
-	double Q;        // Reactive power [VA]
-	double P_dc;     // DC power [W]
+	double P;        // Active power [W]; >0 = AC export. P = 1.5(Vd Id + Vq Iq)
+	double Q;        // Reactive power [VAr]; report Park Q = 1.5(Vq Id - Vd Iq)
+	double P_dc;     // DC power [W]; >0 = DC import. Pdc = 3 Vdc iΣz
 	double P_min;    // Min active power output [W]
 	double P_max;    // Max active power output [W]
 	double Q_min;    // Min reactive power output [VA]
@@ -151,7 +161,7 @@ protected:
 	const std::vector<std::string> controller_list = {
 		"pll",  "dc_voltage", "active_power", "ac_voltage", "reactive_power", "energy", "zcc", "occ", "ccc",
 		"droop", "gfm"
-	}; // List of controller names (gfm appended — omit trailing 0 in legacy packs; init skips missing slots)
+	}; // Trailing slot (gfm) may be omitted in legacy packs.
 	const std::vector<std::string> filter_list = {
 		"ac_voltage_dq", "ac_voltage", "active_power", "reactive_power", "dc_voltage"
 	}; // List of filter names

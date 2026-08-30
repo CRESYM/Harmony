@@ -280,15 +280,37 @@ void JsonValidator::validateByType(
 
 	if (type == "overhead_line") {
 		rejectUnknownKeys(comp, allow({
-			"length_km", "earth", "conductor", "groundwire"
+			"length", "length_km", "earth", "conductor", "groundwire"
 		}), ctx.c_str());
-		requireKeys(comp, { "length_km", "earth", "conductor", "groundwire" }, ctx.c_str());
+		requireKeys(comp, { "earth", "conductor", "groundwire" }, ctx.c_str());
+		requireExclusiveValueSpec(comp, { "length", "length_km" }, ctx.c_str());
+		if (comp.contains("length")) {
+			ComponentBuilder::findScalar("length", comp, params);
+		}
+		if (comp.contains("length_km")) {
+			ComponentBuilder::findScalar("length_km", comp, params);
+		}
+
+		const JSON& cond = comp.at("conductor");
+		requireObject(cond, (std::string(ctx) + " conductor").c_str());
+		rejectUnknownKeys(cond, {
+			"organization", "number_bundles", "geometry", "rc", "Rdc", "dsag", "dsb"
+		}, (std::string(ctx) + " conductor").c_str());
+		requireKeys(cond, { "organization", "number_bundles", "geometry" },
+			(std::string(ctx) + " conductor").c_str());
+
+		const JSON& gw = comp.at("groundwire");
+		requireObject(gw, (std::string(ctx) + " groundwire").c_str());
+		rejectUnknownKeys(gw, {
+			"count", "geometry", "mu_g"
+		}, (std::string(ctx) + " groundwire").c_str());
+		requireKeys(gw, { "count" }, (std::string(ctx) + " groundwire").c_str());
 		return;
 	}
 
 	if (type == "mmc") {
 		rejectUnknownKeys(comp, allow({
-			"converter_params", "controller_params", "filter_params"
+			"converter_params", "controller_params", "filter_params", "opf_info"
 		}), ctx.c_str());
 		params.validateNumericOrReferenceArray(comp.at("converter_params"), "'converter_params'");
 		if (comp.contains("controller_params")) {
@@ -350,7 +372,7 @@ void JsonValidator::validateComputation(const JSON& calc, const unsigned index) 
 		"frequency_range", "vsc_control", "write_txt", "plot_result", "print_info",
 		"dt", "t_start", "t_end", "frequency", "n_keep", "output_bus_ids",
 		"switch_count", "switch_on_resistance", "switch_off_resistance", "switch_types",
-		"plot", "plot_type", "snapshot_time"
+		"plot", "plot_type", "snapshot_time", "skip_opf"
 	}, ctx.c_str());
 	if (!calc.contains("type") || !calc.at("type").is_string()) {
 		throw std::invalid_argument("ERROR: computation requires string 'type'.\n");

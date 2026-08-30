@@ -6,11 +6,96 @@
 #include "network/Bus.h"
 #include "ui/Visualization.h"
 
+#include <stdexcept>
+
 
 /**
  * @brief Destructor for the Element class.
  */
 Element::~Element() {}
+
+bool Element::isAcLocation() const {
+	if (element_location.size() < 2) return false;
+	const char a = element_location[0], c = element_location[1];
+	return (a == 'A' || a == 'a') && (c == 'C' || c == 'c');
+}
+
+bool Element::isDcLocation() const {
+	if (element_location.size() < 2) return false;
+	const char d = element_location[0], c = element_location[1];
+	return (d == 'D' || d == 'd') && (c == 'C' || c == 'c');
+}
+
+bool Element::isMmcLocation() const {
+	return element_location.find('_') < element_location.length();
+}
+
+void Element::fillOpfBranchFromY(std::map<std::string, double>& branchData,
+	std::map<std::string, double>& globalParams,
+	const std::vector<std::vector<std::complex<double>>>& Y) const
+{
+	const int n = static_cast<int>(Y.size());
+	if (n < 2 || (n % 2) != 0 || Y[0].size() != static_cast<size_t>(n))
+		throw std::runtime_error("[OPF] " + element_symbol + " Y-matrix is not a square two-port.");
+	const int p = n / 2;
+
+	const std::complex<double> Y11 = Y[0][0];
+	const std::complex<double> Y12 = Y[0][static_cast<size_t>(p)];
+	if (std::abs(Y12) < 1e-18)
+		throw std::runtime_error("[OPF] " + element_symbol + " series admittance Y12 is zero.");
+
+	const bool dc = isDcLocation();
+	const double Zbase = dc ? globalParams.at("DCZbase") : globalParams.at("ACZbase");
+	const std::complex<double> Zs = -std::complex<double>(1.0, 0.0) / Y12 / Zbase;
+	const std::complex<double> Yend = Y11 + Y12;
+
+	branchData["r"] = std::real(Zs);
+	branchData["x"] = dc ? 0.0 : std::imag(Zs);
+	branchData["b"] = dc ? 0.0 : 2.0 * std::imag(Yend) * Zbase;
+	if (!dc) {
+		branchData["transformer"] = 0;
+		branchData["tap"] = 1.0;
+		branchData["shift"] = 0.0;
+		branchData["c_rating_a"] = 1.0;
+		branchData["g_fr"] = std::real(Yend);
+		branchData["b_fr"] = std::imag(Yend);
+		branchData["g_to"] = std::real(Yend);
+		branchData["b_to"] = std::imag(Yend);
+	}
+	if (element_location.size() >= 3)
+		branchData["grid"] = static_cast<int>(element_location[2] - '0');
+	for (auto& [key, value] : element_OPF_info)
+		branchData[key] = value;
+}
+
+double Element::finiteOmega(double omega) {
+	const double min_w = 1e-6;
+	if (std::abs(omega) < min_w)
+		return (omega < 0.0) ? -min_w : min_w;
+	return omega;
+}
+
+// Bipolar loop two-port. Phase order is [end1 core0, end1 core1, end2 core0, end2 core1].
+// V = V+ − V−, I = (I+ − I−)/2 with V+ = V/2, V− = −V/2:
+//   T = [1/2, −1/2]^T at each end,  Y_eq = blkdiag(T,T)^T  Y  blkdiag(T,T).
+// Same as transformation_dc on ABCD, without forming ABCD.
+std::vector<std::vector<complex<double>>> Element::reduceDcY(
+	const std::vector<std::vector<complex<double>>>& Y) const {
+	if (Y.size() == 2 && !Y[0].empty() && Y[0].size() == 2)
+		return Y;
+	if (Y.size() < 4 || Y[0].size() < 4 || (Y.size() % 2) != 0 || Y.size() != Y[0].size())
+		return Y;
+	const int n = static_cast<int>(Y.size()) / 2;
+	auto mix = [&Y](int i0, int i1, int j0, int j1) {
+		return (Y[i0][j0] + Y[i1][j1] - Y[i0][j1] - Y[i1][j0]) / 4.0;
+	};
+	std::vector<std::vector<complex<double>>> Ydc(2, std::vector<complex<double>>(2));
+	Ydc[0][0] = mix(0, 1, 0, 1);
+	Ydc[0][1] = mix(0, 1, n, n + 1);
+	Ydc[1][0] = mix(n, n + 1, 0, 1);
+	Ydc[1][1] = mix(n, n + 1, n, n + 1);
+	return Ydc;
+}
 
 /**
  * @brief Attaches a bus to a specific terminal of the element.
@@ -60,9 +145,9 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
 	m1[omega] = real_double(angular_frequency - omega_0);
 	m2[omega] = real_double(angular_frequency + omega_0);
 
-    bool is_ac = (element_location[0] == 'A' || element_location[0] == 'a') && (element_location[1] == 'C' || element_location[1] == 'c');
-	bool is_dc = (element_location[0] == 'D' || element_location[0] == 'd') && (element_location[1] == 'C' || element_location[1] == 'c');
-    bool is_mmc = (element_location.find('_') < element_location.length());
+    bool is_ac = isAcLocation();
+	bool is_dc = isDcLocation();
+    bool is_mmc = isMmcLocation();
 
     if (transformation && is_ac && !is_mmc) {
         std::vector<std::vector<complex<double>>> Y_val_exact1(Y_matrix.nrows());
@@ -84,18 +169,16 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
 		return Y;
     }
     else if (is_dc && transformation) {
-        std::vector<std::vector<complex<double>>> Y_val_exact(2);
-        for (int i = 0; i < 2; i++)
-            Y_val_exact[i].resize(2);
-
-        for (int i = 0; i < 2; ++i) {
-            for (int j = 0; j < 2; ++j) {
-                RCP<const Basic> r = subs(Y_matrix.get(2*i, 2*j), m);
+        std::vector<std::vector<complex<double>>> Y_val_exact(Y_matrix.nrows());
+        for (int i = 0; i < Y_matrix.nrows(); i++)
+            Y_val_exact[i].resize(Y_matrix.ncols());
+        for (int i = 0; i < Y_matrix.nrows(); ++i) {
+            for (int j = 0; j < Y_matrix.ncols(); ++j) {
+                RCP<const Basic> r = subs(Y_matrix.get(i, j), m);
                 Y_val_exact[i][j] = eval_complex_double(*r);
-                //cout << "Computing Y[" << i << "][" << j << "] for DC element with transformation: " << element_symbol << " equal to: " << Y_val_exact[i][j] << endl;
             }
         }
-        return Y_val_exact;
+        return reduceDcY(Y_val_exact);
     }
     else {
         std::vector<std::vector<complex<double>>> Y_val_exact(Y_matrix.nrows());
@@ -125,8 +208,9 @@ std::vector<std::vector<complex<double>>> Element::apply_transformation(std::vec
         return Y1;
     }
 
-    // Transformation matrix for abc to dq0 (Clarke-Park)
-    complex<double> ang = std::exp(complex<double>(0, 2.0 * M_PI / 3.0));
+    // Fourier kernel of Park (4.54): φ = −2π/3 so a = [1, α², α] with α = e^{j 2π/3}.
+    // φ = +2π/3 swapped phases b,c and flipped q (ω₀L) relative to the MMC DEs.
+    complex<double> ang = std::exp(complex<double>(0, -2.0 * M_PI / 3.0));
     complex<double> imag_unit(0, 1);
 
     // Using vector<vector> for transformation matrices

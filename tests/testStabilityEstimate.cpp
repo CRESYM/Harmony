@@ -5,6 +5,9 @@
 #include "Solver/Stability_Estimate/Stability_estimate.h"
 #include "Solver/OPF/Powerflow.h"
 
+#include <cmath>
+#include <tuple>
+
 class TestStabilityEstimate : public testing::Test {};
 
 TEST_F(TestStabilityEstimate, TestOperatingPoint) {
@@ -71,14 +74,16 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
 
     ///*  ---------- 2.3 Create Converters ---------- */
+    const double Vll_rms = 345.0e3;
+    const double Vm_peak = Vll_rms * std::sqrt(2.0 / 3.0);
     vector<double> converter_params1 = {
         2 * M_PI * 50,  // Omega (Nominal Frequency in rad/s)
         50.0 * 1e6,     // Active Power (P) in W
         0 * 1e6,        // Reactive Power (Q) in VA
         0.0,            // Theta (Voltage Angle in rad)
-        345.0 * 1e3,    // AC Voltage (V_m) in V
+        Vm_peak,        // AC Voltage (V_m) peak phase in V
         50 * 1e6,       // DC power (P_dc) in W
-        400.0 * 1e3,    // DC Voltage (V_dc) in kV
+        400.0 * 1e3,    // DC Voltage (V_dc) in V
         0.05,           // Arm Inductance (L_arm) in H
         1.07,           // Arm Resistance (R_arm) in Ω
         0.01,           // Capacitance per Submodule (C_arm) in F
@@ -102,15 +107,17 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
     MMC* mmc1 = new MMC("MMC1", "AC1_DC1", converter_params1, controller_params1);
     net.connectElementToBus(mmc1, 1, bus2_ac);
     net.connectElementToBus(mmc1, 2, bus1_dc);
+    map<string, double> mmc1_info = { {"type_dc", 1}, {"type_ac", 1} };
+    mmc1->setOPFInfo(mmc1_info);
 
     vector<double> converter_params2 = {
         2 * M_PI * 50,  // Omega (Nominal Frequency in rad/s)
         -50.0 * 1e6,   // Active Power (P) in W
         -10e6,              // Reactive Power (Q) in VA
         0.0,            // Theta (Voltage Angle in rad)
-        345.0 * 1e3,    // AC Voltage (V_m) in V
+        Vm_peak,        // AC Voltage (V_m) peak phase in V
         -50 * 1e6,     // DC power (P_dc) in W
-        400.0 * 1e3,    // DC Voltage (V_dc) in kV
+        400.0 * 1e3,    // DC Voltage (V_dc) in V
         0.05,           // Arm Inductance (L_arm) in H
         1.07,           // Arm Resistance (R_arm) in Ω
         0.01,           // Capacitance per Submodule (C_arm) in F
@@ -121,7 +128,7 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
     };
     std::vector<double> controller_params2 = {
         1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
-        1, 0, 2, 82, 2, 0, 400e3, // DC voltage controller parameters
+        1, 0, 2, 82, 1, 400e3, // DC voltage controller parameters
         0, // active power
         0, // AC voltage
         1, 0, 6.6667e-07, 3.3333e-04, 1, -10e6, // reactive power
@@ -134,6 +141,8 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
     MMC* mmc2 = new MMC("MMC2", "AC2_DC1", converter_params2, controller_params2);
     net.connectElementToBus(mmc2, 1, bus3_ac);
     net.connectElementToBus(mmc2, 2, bus2_dc);
+    map<string, double> mmc2_info = { {"type_dc", 2}, {"type_ac", 1} };
+    mmc2->setOPFInfo(mmc2_info);
 
     ///*----- 3 OPF Implementatiopn ----- */
     PowerFlow pf;
@@ -157,6 +166,34 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
         GTEST_SKIP() << "OPF did not succeed (Gurobi license may be required)";
     }
 
+    auto eqPowers = [](const MMC& mmc) {
+        const Eigen::VectorXd x = mmc.getEquilibriumState();
+        const int p = static_cast<int>(x.size()) - 12;
+        EXPECT_GE(p, 0) << "MMC '" << mmc.getElementSymbol()
+            << "' has no plant equilibrium after OPF";
+        if (p < 0)
+            return std::tuple<double, double, double>(0.0, 0.0, 0.0);
+        const double vgd = mmc.getVm() * std::cos(mmc.getTheta());
+        const double vgq = -mmc.getVm() * std::sin(mmc.getTheta());
+        const double pac = 1.5 * (vgd * x(p) + vgq * x(p + 1));
+        const double qac = 1.5 * (vgq * x(p) - vgd * x(p + 1));
+        const double pdc = 3.0 * mmc.getVdc() * x(p + 2);
+        return std::tuple<double, double, double>(pac, qac, pdc);
+    };
+
+    // After make_OPF, plant currents must reproduce the OPF write-back (Pac, Qac, Pdc).
+    {
+        const auto [pac, qac, pdc] = eqPowers(*mmc1);
+        EXPECT_NEAR(pac, mmc1->getP(), 2e6) << "MMC1 Pac at equilibrium vs OPF";
+        EXPECT_NEAR(qac, mmc1->getQ(), 2e6) << "MMC1 Qac at equilibrium vs OPF";
+        EXPECT_NEAR(pdc, mmc1->getPdc(), 3e6) << "MMC1 Pdc at equilibrium vs OPF";
+    }
+    {
+        const auto [pac, qac, pdc] = eqPowers(*mmc2);
+        EXPECT_NEAR(qac, mmc2->getQ(), 2e6) << "MMC2 Qac at equilibrium vs OPF";
+        EXPECT_NEAR(pdc, mmc2->getPdc(), 2e6) << "MMC2 Pdc at equilibrium vs OPF";
+    }
+
     // Making Stability Estimate Object
     StabilityEstimate* stability = new StabilityEstimate();
     stability->add_areas(&net);
@@ -169,11 +206,14 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
     complex<double> yeq1 = y1 * (1.0 / Zsrc) / (y1 + 1.0 / Zsrc);
     
 
-    MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], 1000);
+	MatrixXcd Y_params = stability->compute_equivalent_admittance_parameters_num(dc_grids["DC1"], 1000);
 	MatrixXcd Y_expected(2, 2);
-    Y_expected << 1.0 / DCR1, -1.0 / DCR1,
-		-1.0 / DCR1, 1.0 / DCR1;
-	EXPECT_TRUE(Y_params.isApprox(Y_expected, 1e-3));
+    // 2-pin DC branch, scalar ports: go and return, loop R = 2 R_pole.
+    const double y_dc = 1.0 / (2.0 * DCR1);
+    Y_expected << y_dc, -y_dc,
+		-y_dc, y_dc;
+	EXPECT_TRUE(Y_params.isApprox(Y_expected, 1e-3))
+        << "DC1 Y=\n" << Y_params << "\nexpected=\n" << Y_expected;
 
     MatrixXcd Y_params_ac1 = stability->compute_equivalent_admittance_parameters_num(ac_grids["AC1"], 1000);
 	MatrixXcd Y_expected_ac1(2, 2);

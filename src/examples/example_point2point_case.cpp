@@ -147,7 +147,7 @@ void example_point2point_case() {
     };
     std::vector<double> controller_params2 = { 
         1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
-        1, 0, 2, 82, 2, 0, 440e3, // DC voltage controller parameters
+        1, 0, 2, 82, 1, 440e3, // DC voltage controller parameters
         0, // active power
         0, // AC voltage
         1, 0, 6.6667e-07, 3.3333e-04, 1, -20e6, // reactive power

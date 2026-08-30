@@ -162,6 +162,8 @@ public:
 
 	// Function to compute Y parameters
 	virtual std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency) override;
+	void computePowerFlow(std::map<std::string, double>& branchData,
+		std::map<std::string, double>& globalParams) const override;
 
 	virtual void printElementValues() override;
 
@@ -184,6 +186,8 @@ private:
 	DenseMatrix Z;
 	DenseMatrix Y;
 	MatrixXd P; //DenseMatrix P;
+
+	std::vector<std::vector<complex<double>>> compute_y_at_omega(double omega_rad);
 };
 
 #endif

@@ -11,6 +11,8 @@
 
 #include <cctype>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
 
 
 namespace {
@@ -44,6 +46,58 @@ FrequencyRange parseFrequencyRangeLocal(const JSON& rangeJson) {
 	}
 	range.points = std::max(range.points, 2);
 	return range;
+}
+
+bool networkHasAcDcOpf(const Network& network) {
+	bool hasMmc = false;
+	bool hasAcSource = false;
+	bool hasDc = false;
+	for (const auto& entry : network.getElements()) {
+		Element* elem = entry.second;
+		if (!elem) {
+			continue;
+		}
+		if (dynamic_cast<MMC*>(elem)) {
+			hasMmc = true;
+		}
+		if (dynamic_cast<AC_source*>(elem)) {
+			hasAcSource = true;
+		}
+		if (dynamic_cast<Cable*>(elem)) {
+			hasDc = true;
+		}
+	}
+	for (const auto& entry : network.getBuses()) {
+		Bus* bus = entry.second;
+		if (bus && bus->getPinNumber() == 2) {
+			hasDc = true;
+		}
+	}
+	return hasMmc && hasAcSource && hasDc;
+}
+
+void linearizeConverters(Network& network, const char* tag) {
+	std::filesystem::create_directories("./files");
+	{
+		std::ofstream hdr("./files/harmony_linearization_op.csv", std::ios::trunc);
+		hdr << "id,Pac_MW,Qac_MVAR,Pdc_MW,Vac_pu,theta_deg,Vdc_kV,Vgd_kV,Vgq_kV,"
+			"Id_A,Iq_A,iSz_A,Pac_ss_MW,Qac_ss_MW,Pdc_ss_MW\n";
+	}
+	for (const auto& [id, elem] : network.getElements()) {
+		auto* conv = dynamic_cast<Converter*>(elem);
+		if (!conv) {
+			continue;
+		}
+		try {
+			conv->solveEquilibrium();
+			conv->computeABCD();
+			conv->dumpLinearizationOp(id);
+		}
+		catch (const std::exception& ex) {
+			std::cerr << "[" << tag << "] '" << id << "' linearisation failed: "
+				<< ex.what() << "\n";
+		}
+	}
 }
 
 void runYMatrix(const JSON& calc, Network& network, const JSON& defaultRange, const bool plottingEnabled) {
@@ -256,6 +310,7 @@ void ComputationRunner::registerBuiltins() {
 	};
 
 	handlers_["stability_assessment"] = [this](const JSON& calc, Network& net, const JSON& simCfg) {
+		linearizeConverters(net, "stability_assessment");
 		net.add_areas();
 		StabilityEstimate stability;
 		stability.add_areas(&net);
@@ -264,6 +319,10 @@ void ComputationRunner::registerBuiltins() {
 			const FrequencyRange range = parseFrequencyRangeLocal(
 				calc.value("frequency_range", simCfg.value("frequency_range", JSON::object())));
 			stability.writeFileTF(
+				calc.at("converter_id").get<std::string>(),
+				calc.at("location").get<std::string>(),
+				range.start, range.end, range.points);
+			stability.writeFileZin(
 				calc.at("converter_id").get<std::string>(),
 				calc.at("location").get<std::string>(),
 				range.start, range.end, range.points);
@@ -299,6 +358,7 @@ int ComputationRunner::runAll(
 	}
 
 	int failures = 0;
+	bool opfAlreadyRun = false;
 	for (const auto& calc : sim.at("computations")) {
 		if (!calc.contains("type")) {
 			std::cerr << "[WARN] Skipping computation without 'type'.\n";
@@ -315,8 +375,33 @@ int ComputationRunner::runAll(
 			continue;
 		}
 
+		const bool isStability =
+			(type == "stability_assessment" || type == "stability_assesment");
+		if (isStability
+			&& !opfAlreadyRun
+			&& !calc.value("skip_opf", false)
+			&& networkHasAcDcOpf(network)) {
+			JSON opfCalc = JSON::object();
+			opfCalc["vsc_control"] = calc.value("vsc_control", true);
+			opfCalc["write_txt"] = calc.value("write_txt", false);
+			opfCalc["print_info"] = calc.value("print_info", true);
+			std::cout << "[stability_assessment] Running AC-DC OPF before linearisation.\n";
+			try {
+				runOpf(opfCalc, network, simulationConfig, plottingEnabled_);
+				opfAlreadyRun = true;
+			}
+			catch (const std::exception& e) {
+				std::cerr << "[WARN] AC-DC OPF before stability_assessment failed: "
+					<< e.what() << '\n';
+				++failures;
+			}
+		}
+
 		try {
 			it->second(calc, network, simulationConfig);
+			if (type == "power_flow" || type == "opf") {
+				opfAlreadyRun = true;
+			}
 		}
 		catch (const std::exception& e) {
 			std::cerr << "[WARN] Computation '" << type << "' failed: " << e.what() << '\n';

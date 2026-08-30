@@ -13,13 +13,13 @@ Transformer_real::Transformer_real(const std::string& symbol, const std::string&
         R = { values[0], values[2] };  // Primary and secondary resistances
         L = { values[1], values[3] };  // Primary and secondary reactances
         a = values[4];  // Turns ratio
-        phi = values[5]; // Phase shift
+        phase_shift = values[5];
     }
     else if (values.size() == 8) {
         R = { values[0], values[2], values[4] };  // Primary, secondary and magnetization resistances
         L = { values[1], values[3], values[5] };  // Primary, secondary and magnetization reactances
         a = values[6];  // Turns ratio
-        phi = values[7]; // Phase shift
+        phase_shift = values[7];
         Y_m = add(div(integer(1), real_double(R[2])), div(integer(1), mul(j, mul(omega, real_double(L[2])))));
     }
     else {
@@ -39,8 +39,9 @@ Transformer_real::Transformer_real(const std::string& symbol, const std::string&
     // and calculate primary and secondary side impedances
     RCP<const Basic> Z_p = add(real_double(R[0]), mul(j,mul(omega, real_double(L[0]))));
     RCP<const Basic> Z_s = add(real_double(R[1]), mul(j, mul(omega, real_double(L[1]))));
-    RCP<const Basic> phaseFactor = exp(mul(neg(j), real_double(phi)));  // Phase shift factor
-    RCP<const Basic> a_val = mul(real_double(a), phaseFactor); // Turns ratio symbol
+    // Paper eq. (1): Vp/Vs = a exp(jφ)
+    RCP<const Basic> phaseFactor = exp(mul(j, real_double(phase_shift)));
+    RCP<const Basic> a_val = mul(real_double(a), phaseFactor);
 
     RCP<const Basic> Y_11 = div(integer(1), add(Z_p, div(integer(1), add(Y_m, div(integer(1), mul(a_val, mul(a_val, Z_s)))))));
     RCP<const Basic> Y_12 = div(neg(a_val), add(Z_p, mul(mul(a_val, mul(a_val, Z_s)), add(mul(Y_m, Z_p), integer(1)))));

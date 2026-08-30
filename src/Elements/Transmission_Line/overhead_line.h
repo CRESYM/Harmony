@@ -46,12 +46,12 @@ private:
 		/**
 		 * @brief Construct a conductor bundle with organization and geometry parameters.
 		 * @param organization Bundle arrangement symbol (flat, vertical, delta, etc.).
-		 * @param nb Vector of bundle counts per phase group.
-		 * @param geo Geometry parameter vector (spacing, sag, radius, etc.).
-		 * @param ybc Height of the lowest bundle above ground (m).
-		 * @param dybc Vertical offset between bundles (m).
-		 * @param dxbc Horizontal offset between lowest bundles (m).
-		 * @param dtxbc Horizontal offset in bundle group (m).
+		 * @param numbers Bundle count and optional subconductors per bundle.
+		 * @param values_distances Geometry: [Δxbc, ybc] or with Δybc / Δ̃xbc.
+		 * @param rc Conductor radius (m).
+		 * @param Rdc DC resistance of the entire conductor (Ω/m).
+		 * @param dsag Sag offset (m).
+		 * @param dsb Subconductor spacing (m).
 		 * @param positions Optional absolute (x, y) positions per subconductor.
 		 */
 		Conductors(std::string, std::vector<int>&, std::vector<double>&, double, double, double, double, std::tuple<std::vector<double>, std::vector<double>>); // Default constructor for organization
@@ -84,15 +84,15 @@ private:
 		/**
 		 * @brief Construct ground wire geometry from parameter tuples.
 		 * @param ng Number of ground wires (typically 0 or 2).
-		 * @param geo Geometry parameter vector (offsets, radius, sag, resistance).
-		 * @param dxg Horizontal offset between ground wires (m).
-		 * @param dyg Vertical offset from lowest conductor (m).
+		 * @param values Geometry: [Rgdc, rg, dgsag, Δyg] with optional Δxg.
+		 * @param ybc Height of the lowest phase bundle (m), used to place the wires.
+		 * @param mu_g Relative permeability of the ground wire.
 		 * @param positions Optional absolute (x, y) positions per ground wire.
 		 */
 		Groundwires(int, std::vector<double>&, double, double, std::tuple<std::vector<double>, std::vector<double>>);
 	};
 
-	double length = 0;  // line length [km]
+	double length = 0;  // line length [m]
 	std::unique_ptr<Conductors> conductors;
 	std::unique_ptr<Groundwires> groundwires;
 
@@ -112,10 +112,10 @@ public:
 	 * @brief Construct an overhead line with earth, conductor, and ground-wire data.
 	 * @param symbol Element identifier.
 	 * @param location Network area or location string.
-	 * @param length Line length (km).
+	 * @param length Line length (m).
 	 * @param earth Earth parameters tuple (mu_r, epsilon_r, resistivity).
-	 * @param conductor Conductor bundle tuple (organization, counts, geometry, offsets).
-	 * @param groundwire Ground wire tuple (count, geometry, horizontal/vertical offsets).
+	 * @param conductor Tuple (organization, counts, geometry, rc, Rdc, dsag, dsb).
+	 * @param groundwire Tuple (count, geometry [Rgdc, rg, dgsag, Δyg, Δxg], mu_g).
 	 */
 	Overhead_Line(const std::string& symbol, const std::string& location, double length, std::tuple<double, double, double> earth,
 		std::tuple<std::string, std::vector<int>, std::vector<double>, double, double, double, double> conductor,
@@ -125,6 +125,11 @@ public:
 
 	// Function to compute Y parameters
 	virtual vector<vector<complex<double>>> compute_y_parameters(double omega_num) override;
+	void computePowerFlow(std::map<std::string, double>& branchData,
+		std::map<std::string, double>& globalParams) const override;
+
+private:
+	std::vector<std::vector<complex<double>>> compute_y_at_omega(double omega_rad);
 };
 
 #endif // OVERHEAD_LINE_H

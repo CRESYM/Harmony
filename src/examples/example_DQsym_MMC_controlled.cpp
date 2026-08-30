@@ -33,7 +33,7 @@ void example_DQsym_MMC_controlled(bool plotting_enabled /*=true*/)
 
     std::vector<double> controller_params = {
         1, 0, 180, 3200, 1, 0.0, //1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
-        0, // 1, 0, 8.0, 272.0, 2, 0, Vdc, // DC voltage controller parameters
+        0, // 1, 0, 8.0, 272.0, 1, Vdc, // DC voltage controller parameters
         0, // active power
         0, // AC voltage
         0, //1, 0, 6.6667e-07, 3.3333e-04, 1, 0, // reactive power

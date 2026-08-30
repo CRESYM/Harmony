@@ -42,11 +42,21 @@ public:
    
     void computePowerFlow(std::map<std::string, double>& branchData,
         std::map<std::string, double>& global) const override;
-   
+
+    double getPhaseShift() const { return phase_shift; }
+
 protected:
+    /**
+     * @brief Apply paper eqs. (9)–(12): Y ← blkdiag(Ti_p, Ti_s) Y' blkdiag(Tv_p, Tv_s).
+     * @param deltaPrimary If true, replace the primary 3×3 identity with Ti / Tv.
+     * @param deltaSecondary If true, replace the secondary 3×3 identity with Ti / Tv.
+     */
+    void applyWindingConnection(bool deltaPrimary, bool deltaSecondary);
+
     std::vector<double> R;  // Resistances for primary and secondary windings, and for magnetization resistance if given
     std::vector<double> L;  // Inductances for primary and secondary windings, and for the magnetization inductance if given
     int m_pins = 0; // Store the pins value passed in the constructor
+    double phase_shift = 0.0; // Paper eq. (1) phase shift φ [rad]; unused (0) for classic models
     
     //// Voltage variables for primary and secondary windings OPF
     //std::complex<double> voltage_primary;   // Primary winding voltage

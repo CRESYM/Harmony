@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "Elements/Load/Load.h"
+#include "Elements/Source/DC_source.h"
 #include "network/Bus.h"
 #include "utils.h"
 
@@ -278,4 +279,18 @@ TEST_F(TestElement, TestGetOtherBuses) {
     // Stop GTest capturing Harmony's output to std::cerr
     testing::internal::GetCapturedStderr();
     testing::internal::GetCapturedStdout();
+}
+
+// Two uncoupled DC conductors reduce to a loop two-port: Z_loop = 2 Z.
+TEST_F(TestElement, ReduceDcYBipolarLoop) {
+    DC_source src("src", "DC1", 2, 800e3, 10.0);
+    src.setTransformation(true);
+    const auto Y = src.compute_y_parameters(50.0);
+    ASSERT_EQ(Y.size(), 2u);
+    ASSERT_EQ(Y[0].size(), 2u);
+    EXPECT_NEAR(Y[0][0].real(), 0.05, 1e-12);
+    EXPECT_NEAR(Y[0][1].real(), -0.05, 1e-12);
+    EXPECT_NEAR(Y[1][0].real(), -0.05, 1e-12);
+    EXPECT_NEAR(Y[1][1].real(), 0.05, 1e-12);
+    EXPECT_NEAR(Y[0][0].imag(), 0.0, 1e-12);
 }

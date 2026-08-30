@@ -64,10 +64,12 @@ set(Element_Transformer_Header_Files
     src/Elements/Transformer/Transformer_base.h
     src/Elements/Transformer/Transformer_classic.h
     src/Elements/Transformer/Transformer_Delta_Delta.h
+    src/Elements/Transformer/Transformer_Delta_Delta_real.h
     src/Elements/Transformer/Transformer_Delta_Y.h
     src/Elements/Transformer/Transformer_Delta_Y_real.h
     src/Elements/Transformer/Transformer_real.h
     src/Elements/Transformer/Transformer_Y_Delta.h
+    src/Elements/Transformer/Transformer_Y_Delta_real.h
     src/Elements/Transformer/Transformer_Y_Y.h
     src/Elements/Transformer/Transformer_Y_Y_real.h
 )
@@ -183,10 +185,12 @@ set(Element_Transformer_Source_Files
     src/Elements/Transformer/Transformer_base.cpp
     src/Elements/Transformer/Transformer_classic.cpp
     src/Elements/Transformer/Transformer_Delta_Delta.cpp
+    src/Elements/Transformer/Transformer_Delta_Delta_real.cpp
     src/Elements/Transformer/Transformer_Delta_Y.cpp
     src/Elements/Transformer/Transformer_Delta_Y_real.cpp
     src/Elements/Transformer/Transformer_real.cpp
     src/Elements/Transformer/Transformer_Y_Delta.cpp
+    src/Elements/Transformer/Transformer_Y_Delta_real.cpp
     src/Elements/Transformer/Transformer_Y_Y.cpp
     src/Elements/Transformer/Transformer_Y_Y_real.cpp
 )
