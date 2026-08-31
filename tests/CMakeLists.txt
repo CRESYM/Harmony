@@ -61,7 +61,7 @@ link_implot(testharmony)
 link_gurobi(testharmony)
 link_nlohmann_json(testharmony)
 
-target_link_libraries(testharmony PRIVATE harmony_core harmony_examples)
+target_link_libraries(testharmony PRIVATE harmony_core harmony_examples harmony_core)
 
 include(FetchContent)
 FetchContent_Declare(

@@ -117,10 +117,11 @@ foreach(HARMONY_TARGET IN ITEMS harmony_core harmony_examples Harmony HarmonyUI)
     target_include_directories(${HARMONY_TARGET} PRIVATE ${HARMONY_INCLUDE_DIRS})
 endforeach()
 
-# MSVC static linking is left-to-right: core first (cli.obj needs the registry),
-# then examples (defines harmonyCppExampleRegistry and the example_* symbols).
-target_link_libraries(Harmony PRIVATE harmony_core harmony_examples)
-target_link_libraries(HarmonyUI PRIVATE harmony_core harmony_examples)
+# Circular static archives: cli in core needs the example registry; examples
+# need certificate/element symbols from core. GNU ld does not rescan an
+# archive already visited, so list core again after examples.
+target_link_libraries(Harmony PRIVATE harmony_core harmony_examples harmony_core)
+target_link_libraries(HarmonyUI PRIVATE harmony_core harmony_examples harmony_core)
 
 # -----------------------------------------------------------------------------
 # 5. Tests (testharmony links harmony_core + harmony_examples)
