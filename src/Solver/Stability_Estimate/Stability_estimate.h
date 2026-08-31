@@ -62,8 +62,38 @@ public:
      * @param frequency  Evaluation frequency in Hz.
      * @return  Y-parameter matrix of size (sum_pins × sum_pins) where sum_pins
      *          is the total number of pins across all output buses.
+     *
+     * Park A0 follows @ref getParkPerComponent (default true: per element).
      */
     MatrixXcd compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double frequency);
+
+    /**
+     * @brief Same as the two-argument overload, with an explicit Park mode.
+     * @param park_per_component  True: Park each AC stamp. False: assemble
+     *        abc Y and apply A0 once to the AC-block port admittance.
+     */
+    MatrixXcd compute_equivalent_admittance_parameters_num(
+        SubNetwork* subnet, double frequency, bool park_per_component);
+
+    /**
+     * @brief Same as the three-argument overload, with an explicit Yeff flag.
+     * @param yeff  True: block Park with C± Schur correction (eq. 18).
+     */
+    MatrixXcd compute_equivalent_admittance_parameters_num(
+        SubNetwork* subnet, double frequency, bool park_per_component, bool yeff);
+
+    /** @brief Park A0 per AC element (true, default) or once per AC block (false). */
+    void setParkPerComponent(bool flag) { park_per_component_ = flag; }
+    bool getParkPerComponent() const { return park_per_component_; }
+
+    /**
+     * @brief Use Yeff (paper eq. 18) on the assembled AC-block abc Y.
+     *
+     * When true, Park is applied once per AC block (same as
+     * @ref setParkPerComponent false) and the C± Schur correction is included.
+     */
+    void setYeff(bool flag) { yeff_ = flag; }
+    bool getYeff() const { return yeff_; }
 
     /**
      * @brief MIMO transfer function at a single frequency.
@@ -173,6 +203,9 @@ private:
      */
     bool compute_cut_admittances(string converter_name, string location, double frequency,
                                  MatrixXcd& Yn, MatrixXcd& Yeq);
+
+    bool park_per_component_ = true;
+    bool yeff_ = false;
 };
 
 #endif

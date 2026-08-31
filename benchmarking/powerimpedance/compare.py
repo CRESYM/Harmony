@@ -87,6 +87,7 @@ CASES = [
         "id": "p2p_zin",
         "title": "P2P HVDC driving-point Z at c2 AC (B6, full network)",
         "harmony_csv": "c2_AC_Zin.csv",
+        "harmony_block_csv": "c2_AC_Zin_block.csv",
         "pi_csv": "pi_p2p_Z.csv",
         "spot_hz": [10, 50, 100, 500, 1000],
         "named_entries": ["Zdd", "Zdq", "Zqd", "Zqq"],
@@ -96,6 +97,7 @@ CASES = [
         "id": "p2p_tf",
         "title": "P2P HVDC MIMO TF H = Yn Zeq at c2 AC",
         "harmony_csv": "c2_AC.csv",
+        "harmony_block_csv": "c2_AC_block.csv",
         "pi_csv": "pi_p2p_H.csv",
         "spot_hz": [10, 50, 100, 500, 1000],
         "named_entries": ["Hdd", "Hdq", "Hqd", "Hqq"],
@@ -260,6 +262,16 @@ def compare_case(case: dict) -> dict:
             "spectrum": spectrum,
         }
     )
+    block_name = case.get("harmony_block_csv")
+    if block_name and (RESULTS / block_name).exists():
+        b_rows = parse_harmony(RESULTS / block_name)
+        b_rows, p_rows2, _, _ = prepare_rows(case, b_rows, p_rows)
+        bf = [frob_rel(nearest(b_rows, pf)[1], pv) for pf, pv in p_rows2]
+        out["mean_frob_rel_block"] = sum(bf) / len(bf)
+        out["max_frob_rel_block"] = max(bf)
+        hb = [frob_rel(nearest(h_rows, pf)[1], nearest(b_rows, pf)[1]) for pf, _ in p_rows2]
+        out["mean_frob_rel_block_vs_percomp"] = sum(hb) / len(hb)
+        out["max_frob_rel_block_vs_percomp"] = max(hb)
     return out
 
 
@@ -297,7 +309,8 @@ def unwrap_deg(phases):
     return out
 
 
-H_COLOR = "#1d4ed8"  # blue
+H_COLOR = "#1d4ed8"  # blue, per-component A0
+BLOCK_COLOR = "#0f766e"  # teal, block A0
 PI_COLOR = "#c2410c"  # orange-red
 
 
@@ -324,7 +337,7 @@ def _save_overlay(fig, out_path: Path) -> list:
     return [str(svg)]
 
 
-def plot_overlay(case: dict, h_rows, p_rows, out_path: Path) -> list:
+def plot_overlay(case: dict, h_rows, p_rows, out_path: Path, h_block_rows=None) -> list:
     import matplotlib.pyplot as plt
 
     labels = labels_for(case, len(p_rows[0][1]))
@@ -340,23 +353,33 @@ def plot_overlay(case: dict, h_rows, p_rows, out_path: Path) -> list:
         constrained_layout=True,
     )
     mark = max(1, len(freqs_p) // 10)
+    harm_label = "Harmony block A0" if h_block_rows is None else "Harmony per-component"
     for col, name in enumerate(wanted):
         k = entry_index(labels, name)
         mag_h, ph_h, mag_p, ph_p = [], [], [], []
+        mag_b, ph_b = [], []
         for pf, pv in p_rows:
             _, hv = nearest(h_rows, pf)
             mag_h.append(mag_db(hv[k]))
             ph_h.append(phase_deg(hv[k]))
             mag_p.append(mag_db(pv[k]))
             ph_p.append(phase_deg(pv[k]))
+            if h_block_rows is not None:
+                _, bv = nearest(h_block_rows, pf)
+                mag_b.append(mag_db(bv[k]))
+                ph_b.append(phase_deg(bv[k]))
         ph_h = unwrap_deg(ph_h)
         ph_p = unwrap_deg(ph_p)
+        if mag_b:
+            ph_b = unwrap_deg(ph_b)
         axm = axes[0][col]
         axp = axes[1][col]
         axr = axes[2][col]
-        # Harmony drawn first (thicker, underneath) so dash gaps show blue when the
-        # traces agree; PowerImpedance on top in a contrasting orange with markers.
-        axm.plot(freqs_p, mag_h, color=H_COLOR, lw=3.2, ls="-", zorder=2, label="Harmony")
+        axm.plot(freqs_p, mag_h, color=H_COLOR, lw=3.2, ls="-", zorder=2, label=harm_label)
+        if mag_b:
+            axm.plot(
+                freqs_p, mag_b, color=BLOCK_COLOR, lw=2.0, ls="-", zorder=3, label="Harmony block A0"
+            )
         axm.plot(
             freqs_p,
             mag_p,
@@ -369,10 +392,14 @@ def plot_overlay(case: dict, h_rows, p_rows, out_path: Path) -> list:
             markerfacecolor="white",
             markeredgecolor=PI_COLOR,
             markeredgewidth=1.6,
-            zorder=3,
+            zorder=4,
             label="PowerImpedance",
         )
-        axp.plot(freqs_p, ph_h, color=H_COLOR, lw=3.2, ls="-", zorder=2, label="Harmony")
+        axp.plot(freqs_p, ph_h, color=H_COLOR, lw=3.2, ls="-", zorder=2, label=harm_label)
+        if mag_b:
+            axp.plot(
+                freqs_p, ph_b, color=BLOCK_COLOR, lw=2.0, ls="-", zorder=3, label="Harmony block A0"
+            )
         axp.plot(
             freqs_p,
             ph_p,
@@ -385,21 +412,33 @@ def plot_overlay(case: dict, h_rows, p_rows, out_path: Path) -> list:
             markerfacecolor="white",
             markeredgecolor=PI_COLOR,
             markeredgewidth=1.6,
-            zorder=3,
+            zorder=4,
             label="PowerImpedance",
         )
         rel = []
+        rel_b = []
         for pf, pv in p_rows:
             _, hv = nearest(h_rows, pf)
             rel.append(max(rel_err(hv[k], pv[k]), 1e-16))
-        axr.plot(freqs_p, rel, color="#334155", lw=2.0)
+            if h_block_rows is not None:
+                _, bv = nearest(h_block_rows, pf)
+                rel_b.append(max(rel_err(bv[k], pv[k]), 1e-16))
+        axr.plot(freqs_p, rel, color="#334155", lw=2.0, label=harm_label + " vs PI")
+        if rel_b:
+            axr.plot(freqs_p, rel_b, color=BLOCK_COLOR, lw=1.8, label="block A0 vs PI")
         axr.set_yscale("log")
         _style_axes(axm, ylabel="Magnitude [dB]" if col == 0 else None, title=name)
         _style_axes(axp, ylabel="Phase [deg]" if col == 0 else None)
-        _style_axes(axr, ylabel="|H-PI|/max(|H|,|PI|)" if col == 0 else None, xlabel="Frequency [Hz]")
+        err_ylabel = "|H-PI|/max(|H|,|PI|)" if col == 0 else None
+        _style_axes(axr, ylabel=err_ylabel, xlabel="Frequency [Hz]")
         axr.set_ylim(1e-8, 2.0)
+        if col == 0 and rel_b:
+            axr.legend(loc="best", frameon=True, fontsize=8)
     axes[0][0].legend(loc="best", frameon=True, fontsize=9)
-    fig.suptitle(case["title"], fontsize=13)
+    title = case["title"]
+    if h_block_rows is not None:
+        title = title + " (per-component vs block A0 vs PI)"
+    fig.suptitle(title, fontsize=13)
     return _save_overlay(fig, out_path)
 
 
@@ -417,6 +456,16 @@ def print_case(summary: dict) -> None:
         f"{summary['mean_frob_rel']:.4e} / {summary['median_frob_rel']:.4e} / "
         f"{summary['max_frob_rel']:.4e} / {summary['min_frob_rel']:.4e}"
     )
+    if "mean_frob_rel_block" in summary:
+        print(
+            f"  block A0 vs PI     mean/max = "
+            f"{summary['mean_frob_rel_block']:.4e} / {summary['max_frob_rel_block']:.4e}"
+        )
+        print(
+            f"  block vs per-comp  mean/max = "
+            f"{summary['mean_frob_rel_block_vs_percomp']:.4e} / "
+            f"{summary['max_frob_rel_block_vs_percomp']:.4e}"
+        )
     for t in summary["spot_checks"]:
         top = sorted(t["entries"], key=lambda e: e["rel_err"], reverse=True)[:3]
         print(
@@ -446,8 +495,12 @@ def main() -> None:
             h_rows = parse_harmony(RESULTS / case["harmony_csv"])
             p_rows = parse_pi(RESULTS / case["pi_csv"])
             h_rows, p_rows, _, _ = prepare_rows(case, h_rows, p_rows)
+            h_block = None
+            block_name = case.get("harmony_block_csv")
+            if block_name and (RESULTS / block_name).exists():
+                h_block = parse_harmony(RESULTS / block_name)
             out_base = RESULTS / f"overlay_{case['id']}"
-            plot_overlay(case, h_rows, p_rows, out_base)
+            plot_overlay(case, h_rows, p_rows, out_base, h_block_rows=h_block)
             print(f"  plot {out_base.with_suffix('.svg')}")
         except Exception as exc:
             print(f"  plot skipped: {exc}")

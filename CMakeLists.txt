@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 4.0)
+
 # -----------------------------------------------------------------------------
 # Harmony CMake Configuration
 #
@@ -32,7 +34,6 @@
 # -----------------------------------------------------------------------------
 # 1. Project Setup
 # -----------------------------------------------------------------------------
-cmake_minimum_required(VERSION 4.0)
 project(Harmony)
 
 # Set the C++ Standard (GoogleTest requires >= 14)
@@ -131,52 +132,3 @@ add_subdirectory(tests)
 # 6. Optional API documentation (Doxygen)
 # -----------------------------------------------------------------------------
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/doxygen.cmake)
-
-# ==============================================================================
-# 7. Create MSI Installer on Windows (currently disabled)
-# ==============================================================================
-if(MSVC AND FALSE)
-    # Find path to symengine dll and add it as a link directory
-    get_target_property(SYMENGINE_DLL_PATH symengine LOCATION)
-    get_filename_component(SYMENGINE_DLL_DIR "${SYMENGINE_DLL_PATH}" DIRECTORY)
-    target_link_directories(Harmony PRIVATE ${SYMENGINE_DLL_DIR})
-
-
-    # Find path to dlls required by symengine, which are in the same dir as the symengine dll
-    file(GLOB FLINT_DLL_PATH "${SYMENGINE_DLL_DIR}/flint*.dll")
-    file(GLOB LIBGMP_DLL_PATH "${SYMENGINE_DLL_DIR}/libgmp*.dll")
-    file(GLOB LIBMPFR_DLL_PATH "${SYMENGINE_DLL_DIR}/libmpfr*.dll")
-    file(GLOB LIBWINPTHREAD_DLL_PATH "${SYMENGINE_DLL_DIR}/libwinpthread*.dll")
-    file(GLOB LIBMPC_DLL_PATH "${SYMENGINE_DLL_DIR}/libmpc*.dll")
-    file(GLOB LIBMPC_DLL_PATH "${SYMENGINE_DLL_DIR}/libmpc*.dll")
-    file(GLOB LIBGCC_DLL_PATH "${SYMENGINE_DLL_DIR}/libgcc*.dll")
-
-    # Find path to Harmony User Manual
-    file(GLOB HARMONY_USER_GUIDE ${CMAKE_SOURCE_DIR}/*.pdf)
-
-    # Print msgs to screen
-    message(STATUS "Copying Harmony binary, LICENSE, and dependencies to install/Harmony")
-    message(STATUS "Copying Harmony.exe to install/Harmony/bin")
-    message(STATUS "Copying LICENSE to install/Harmony")
-    message(STATUS "Copying Harmony user guide to install/Harmony/doc")
-    message(STATUS "Copying ${SYMENGINE_DLL_PATH} to install/Harmony/bin")
-    message(STATUS "Copying symengine dependencies to install/Harmony/bin")
-
-    # Copy the files to the installation directory
-    set(INSTALL_DIR ${CMAKE_SOURCE_DIR}/install/Harmony)
-    add_custom_command(TARGET Harmony POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${INSTALL_DIR}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${INSTALL_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${INSTALL_DIR}/doc
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/Release/Harmony.exe ${INSTALL_DIR}/bin/Harmony.exe
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${INSTALL_DIR}
-        COMMAND ${CMAKE_COMMAND} -E copy ${SYMENGINE_DLL_PATH} ${INSTALL_DIR}/bin/
-        COMMAND ${CMAKE_COMMAND} -E copy ${FLINT_DLL_PATH} ${INSTALL_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${LIBGMP_DLL_PATH} ${INSTALL_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${LIBMPFR_DLL_PATH} ${INSTALL_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${LIBWINPTHREAD_DLL_PATH} ${INSTALL_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${LIBMPC_DLL_PATH} ${INSTALL_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${LIBGCC_DLL_PATH} ${INSTALL_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${HARMONY_USER_GUIDE} ${INSTALL_DIR}/doc
-    )
-endif()

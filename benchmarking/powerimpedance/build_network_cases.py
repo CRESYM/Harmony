@@ -235,6 +235,7 @@ def write_p2p():
                     "location": "AC",
                     "frequency_range": {"start": 10, "end": 1000, "points": 41},
                     "plot": False,
+                    "park_per_component": False,
                 },
             ],
         },

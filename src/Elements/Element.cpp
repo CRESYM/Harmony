@@ -194,6 +194,14 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
     }
 }
 
+std::vector<std::vector<complex<double>>> Element::compute_y_parameters_abc(double frequency) {
+    const bool saved = transformation;
+    transformation = false;
+    auto Y = compute_y_parameters(frequency);
+    transformation = saved;
+    return Y;
+}
+
 /**
  * @brief Applies a transformation (e.g., abc to dq) to the admittance matrices.
  * @param Y1 The admittance matrix computed at angular frequency (omega - omega_0).
@@ -201,60 +209,7 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
  * @return The transformed 2D vector of complex numbers representing the Y-parameter matrix in the new frame.
  */
 std::vector<std::vector<complex<double>>> Element::apply_transformation(std::vector<std::vector<complex<double>>>& Y1, std::vector<std::vector<complex<double>>>& Y2) {
-    
-    // The transformation is applied to a 6x6 matrix, so we expect Y1 and Y2 to be of that size.
-    if (Y1.size() != 6 || Y1[0].size() != 6 || Y2.size() != 6 || Y2[0].size() != 6) {
-        // Return Y1 if dimensions are not as expected, or handle error appropriately
-        return Y1;
-    }
-
-    // Fourier kernel of Park (4.54): φ = −2π/3 so a = [1, α², α] with α = e^{j 2π/3}.
-    // φ = +2π/3 swapped phases b,c and flipped q (ω₀L) relative to the MMC DEs.
-    complex<double> ang = std::exp(complex<double>(0, -2.0 * M_PI / 3.0));
-    complex<double> imag_unit(0, 1);
-
-    // Using vector<vector> for transformation matrices
-    vector<vector<complex<double>>> a(3, vector<complex<double>>(3));   
-    a[0] = { 1.0, ang, ang * ang };
-    a[1] = { imag_unit, imag_unit*ang, imag_unit*ang * ang };
-    a[2] = { 0.0, 0.0, 0.0 };
-	vector<vector<complex<double>>> a_tran = mat_transpose(a);
-
-    vector<vector<complex<double>>> a_conj(3, vector<complex<double>>(3));
-    a_conj[0] = { 1.0, conj(ang), conj(ang * ang) };
-    a_conj[1] = { -imag_unit, -imag_unit * conj(ang), -imag_unit * conj(ang * ang) };
-    a_conj[2] = { 0.0, 0.0, 0.0 };
-	vector<vector<complex<double>>> a_conj_tran = mat_transpose(a_conj);
-    
-	// Admittance at angular frequency omega - omega_0
-    auto Y11 = get_block(Y1, 0, 0, 3, 3);
-    auto Y12 = get_block(Y1, 0, 3, 3, 3);
-    auto Y21 = get_block(Y1, 3, 0, 3, 3);
-    auto Y22 = get_block(Y1, 3, 3, 3, 3);
-
-	// Admittance at angular frequency omega + omega_0
-    auto Y2_11 = get_block(Y2, 0, 0, 3, 3);
-    auto Y2_12 = get_block(Y2, 0, 3, 3, 3);
-    auto Y2_21 = get_block(Y2, 3, 0, 3, 3);
-    auto Y2_22 = get_block(Y2, 3, 3, 3, 3);
-
-    // Perform transformation: Y_dq = T_inv * Y_abc * T
-    auto Y11_dq = mul_scalar(mat_add(mat_mul(mat_mul(a, Y11), a_conj_tran), mat_mul(mat_mul(a_conj, Y2_11), a_tran)), 1.0 / 6.0);
-	auto Y12_dq = mul_scalar(mat_add(mat_mul(mat_mul(a, Y12), a_conj_tran), mat_mul(mat_mul(a_conj, Y2_12), a_tran)), 1.0 / 6.0);
-	auto Y21_dq = mul_scalar(mat_add(mat_mul(mat_mul(a, Y21), a_conj_tran), mat_mul(mat_mul(a_conj, Y2_21), a_tran)), 1.0 / 6.0);
-	auto Y22_dq = mul_scalar(mat_add(mat_mul(mat_mul(a, Y22), a_conj_tran), mat_mul(mat_mul(a_conj, Y2_22), a_tran)), 1.0 / 6.0);
-
-    // Combine transformed blocks into a single matrix
-    vector<vector<complex<double>>> Y_dq(4, vector<complex<double>>(4));
-    for (int i = 0; i < 2; ++i) {
-        for (int j = 0; j < 2; ++j) {
-            Y_dq[i][j] = Y11_dq[i][j];
-            Y_dq[i][j + 2] = Y12_dq[i][j];
-            Y_dq[i + 2][j] = Y21_dq[i][j];
-            Y_dq[i + 2][j + 2] = Y22_dq[i][j];
-        }
-    }
-    return Y_dq;
+    return apply_park_A0(Y1, Y2);
 }
 
 /**

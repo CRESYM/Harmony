@@ -28,18 +28,18 @@ runs:
           else
             export PATH="${GUROBI_BIN}:$PATH"
           fi
-          cd tests/build
+          cd build
           ctest -C Release --output-on-failure -j1 ${{ inputs.ctest_args }}
         elif [ "${{ runner.os }}" = "Linux" ]; then
           export PATH="${GUROBI}/bin:$PATH"
           export LD_LIBRARY_PATH="${GUROBI}/lib:${LD_LIBRARY_PATH:-}"
           export GRB_LICENSE_FILE=/opt/gurobi/gurobi.lic
-          cd tests/build
+          cd build
           ctest --output-on-failure -j1 ${{ inputs.ctest_args }}
         else
           export PATH="${GUROBI}/bin:$PATH"
           export DYLD_LIBRARY_PATH="${GUROBI}/lib:${DYLD_LIBRARY_PATH:-}"
           export GRB_LICENSE_FILE=/Library/gurobi/gurobi.lic
-          cd tests/build
+          cd build
           ctest --output-on-failure -j1 ${{ inputs.ctest_args }}
         fi

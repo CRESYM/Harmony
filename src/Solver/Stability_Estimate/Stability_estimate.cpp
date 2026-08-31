@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <unordered_set>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -106,8 +107,11 @@ void StabilityEstimate::print_summary() const {
     for (const auto& [name, sub] : dc_grids)  { (void)name; if (sub) sub->printInfo(); }
 }
 
+// Matches Element::compute_y_parameters (omega_0 = 100π).
+static constexpr double kParkF0Hz = 50.0;
+
 // ─────────────────────────────────────────────────────────────────────────────
-// compute_equivalent_admittance_parameters_num
+// assemblePassivePortY
 //
 // Implements adjusted MNA eq. (2) of Lekic et al. (CIGRE 2026):
 //
@@ -119,57 +123,28 @@ void StabilityEstimate::print_summary() const {
 // Converters are skipped during element stamping.
 // ─────────────────────────────────────────────────────────────────────────────
 
-MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
-        SubNetwork* subnet, double frequency) {
-
-    if (!subnet)
-        throw std::invalid_argument("Null SubNetwork pointer.");
-
-    // Determine how many pins each output port contributes.
-    // - DC subnets: always 1 (scalar port, matching the converter model).
-    // - AC subnets with Park transform: 2 (dq frame).
-    // - AC subnets without transform: 3 (abc frame).
-    int pins_per_port;
-    {
-        std::string nm = subnet->getName();
-        if (strStartsWith(nm, "DC") || strStartsWith(nm, "dc")) {
-            pins_per_port = 1;
-        } else if (subnet->getTransformation()) {
-            pins_per_port = 2;
-        } else {
-            pins_per_port = 3;
-        }
-    }
-
-    // --- Collect output ports and assign matrix positions ---
+static MatrixXcd assemblePassivePortY(
+        SubNetwork* subnet, double frequency, int pins_per_port, bool abc_y)
+{
     std::unordered_map<std::string, Bus*> output_buses = subnet->getOutputs();
-
-    // For DC subnets and dq AC subnets the effective port pin count differs
-    // from the physical bus pin count.  The MNA matrix is sized by
-    // pins_per_port, not by bus->getPinNumber().
-    auto effectivePins = [&](Bus* /*b*/) -> int {
-        return pins_per_port;
-    };
 
     int pos = 0;
     std::unordered_map<Bus*, int> bus_pos;
     std::unordered_map<Bus*, int> bus_cur_pos;
 
     for (auto& [bname, bus] : output_buses) {
-        bus_pos[bus]     = pos;  pos += effectivePins(bus);
-        bus_cur_pos[bus] = pos;  pos += effectivePins(bus);
+        bus_pos[bus]     = pos;  pos += pins_per_port;
+        bus_cur_pos[bus] = pos;  pos += pins_per_port;
     }
 
-    // Remaining (internal) buses
     for (const auto& [bname, bus] : subnet->getBuses()) {
         if (bus->isGround()) continue;
         if (bus_pos.find(bus) == bus_pos.end()) {
             bus_pos[bus] = pos;
-            pos += effectivePins(bus);
+            pos += pins_per_port;
         }
     }
 
-    // --- Assemble admittance matrix Y (pos × pos) ---
     Eigen::MatrixXcd Y = Eigen::MatrixXcd::Zero(pos, pos);
     Eigen::VectorXcd z = Eigen::VectorXcd::Zero(pos);
 
@@ -181,13 +156,14 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
             if (econn.find(bus) == econn.end() || bus->isGround()) continue;
 
             Bus* other = elem->getOtherBus(bus);
-            std::vector<std::vector<std::complex<double>>> Ye =
-                elem->compute_y_parameters(frequency);
+            std::vector<std::vector<std::complex<double>>> Ye = abc_y
+                ? elem->compute_y_parameters_abc(frequency)
+                : elem->compute_y_parameters(frequency);
 
             int bp = bus_pos.at(bus);
             int t  = econn.at(bus) - 1;
             int to = 1 - t;
-            int p  = pins_per_port;   // effective pins per terminal
+            int p  = pins_per_port;
 
             for (int i = 0; i < p; ++i) {
                 for (int j = 0; j < p; ++j) {
@@ -204,27 +180,22 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
         }
     }
 
-    // Current-source rows for output ports
     for (auto& [bname, bus] : output_buses) {
         int bp = bus_pos.at(bus);
         int cp = bus_cur_pos.at(bus);
-        int p  = effectivePins(bus);
-        for (int i = 0; i < p; ++i) {
+        for (int i = 0; i < pins_per_port; ++i) {
             Y(bp + i, cp + i) = -1.0;
             Y(cp + i, bp + i) =  1.0;
         }
     }
 
-    // --- Y-parameter extraction: excite each port pin in turn ---
-    int total_out_pins = 0;
-    for (auto& [bname, bus] : output_buses) total_out_pins += effectivePins(bus);
+    int total_out_pins = static_cast<int>(output_buses.size()) * pins_per_port;
     MatrixXcd Y_params = MatrixXcd::Zero(total_out_pins, total_out_pins);
 
     int col_idx = 0;
     for (auto& [bname, bus] : output_buses) {
         int cp = bus_cur_pos.at(bus);
-        int p  = effectivePins(bus);
-        for (int i = 0; i < p; ++i) {
+        for (int i = 0; i < pins_per_port; ++i) {
             z.setZero();
             z(cp + i) = std::complex<double>(1.0, 0.0);
             Eigen::VectorXcd sol = Y.partialPivLu().solve(z);
@@ -232,16 +203,62 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
             int row_idx = 0;
             for (auto& [bname2, bus2] : output_buses) {
                 int cp2 = bus_cur_pos.at(bus2);
-                int p2  = effectivePins(bus2);
-                for (int j = 0; j < p2; ++j)
+                for (int j = 0; j < pins_per_port; ++j)
                     Y_params(row_idx + j, col_idx) = sol(cp2 + j);
-                row_idx += p2;
+                row_idx += pins_per_port;
             }
             ++col_idx;
         }
     }
 
     return Y_params;
+}
+
+MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
+        SubNetwork* subnet, double frequency) {
+    return compute_equivalent_admittance_parameters_num(
+        subnet, frequency, park_per_component_, yeff_);
+}
+
+MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
+        SubNetwork* subnet, double frequency, bool park_per_component) {
+    return compute_equivalent_admittance_parameters_num(
+        subnet, frequency, park_per_component, false);
+}
+
+MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
+        SubNetwork* subnet, double frequency, bool park_per_component, bool yeff) {
+
+    if (!subnet)
+        throw std::invalid_argument("Null SubNetwork pointer.");
+
+    const std::string nm = subnet->getName();
+    const bool is_dc = strStartsWith(nm, "DC") || strStartsWith(nm, "dc");
+
+    if (is_dc)
+        return assemblePassivePortY(subnet, frequency, 1, false);
+
+    if (!subnet->getTransformation())
+        return assemblePassivePortY(subnet, frequency, 3, true);
+
+    // AC + Park: Yeff and block A0 assemble abc Y; per-component stamps dq Y.
+    if (yeff) {
+        const double f0 = kParkF0Hz;
+        MatrixXcd Y_m3 = assemblePassivePortY(subnet, frequency - 3.0 * f0, 3, true);
+        MatrixXcd Y_m1 = assemblePassivePortY(subnet, frequency - f0, 3, true);
+        MatrixXcd Y_p1 = assemblePassivePortY(subnet, frequency + f0, 3, true);
+        MatrixXcd Y_p3 = assemblePassivePortY(subnet, frequency + 3.0 * f0, 3, true);
+        return vectorToMatrix(apply_park_Yeff(
+            matrixToVector(Y_m3), matrixToVector(Y_m1),
+            matrixToVector(Y_p1), matrixToVector(Y_p3)));
+    }
+
+    if (park_per_component)
+        return assemblePassivePortY(subnet, frequency, 2, false);
+
+    MatrixXcd Y_minus = assemblePassivePortY(subnet, frequency - kParkF0Hz, 3, true);
+    MatrixXcd Y_plus  = assemblePassivePortY(subnet, frequency + kParkF0Hz, 3, true);
+    return vectorToMatrix(apply_park_A0(matrixToVector(Y_minus), matrixToVector(Y_plus)));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -616,8 +633,9 @@ MatrixXcd StabilityEstimate::compute_driving_point_impedance(
 
 void StabilityEstimate::writeFileTF(string converter_name, string location,
         double start_frequency, double end_frequency, int number_of_points) {
+    const std::string tag = yeff_ ? "_yeff" : "";
     writeComplexMatrixCsv(
-        "./files/" + converter_name + "_" + location + ".csv",
+        "./files/" + converter_name + "_" + location + tag + ".csv",
         number_of_points, start_frequency, end_frequency,
         [&](double frequency) {
             return compute_transfer_function(converter_name, location, frequency);
@@ -626,8 +644,9 @@ void StabilityEstimate::writeFileTF(string converter_name, string location,
 
 void StabilityEstimate::writeFileZin(string converter_name, string location,
         double start_frequency, double end_frequency, int number_of_points) {
+    const std::string tag = yeff_ ? "_yeff" : "";
     writeComplexMatrixCsv(
-        "./files/" + converter_name + "_" + location + "_Zin.csv",
+        "./files/" + converter_name + "_" + location + tag + "_Zin.csv",
         number_of_points, start_frequency, end_frequency,
         [&](double frequency) {
             return compute_driving_point_impedance(converter_name, location, frequency);

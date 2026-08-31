@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 4.0)
+
 # -----------------------------------------------------------------------------
 # testharmony — GoogleTest suite linked against harmony_core and harmony_examples.
 #

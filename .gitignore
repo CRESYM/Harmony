@@ -278,6 +278,7 @@ files/
 # python benchmarking/powerimpedance/run_all.py
 benchmarking/powerimpedance/results/*.csv
 benchmarking/powerimpedance/results/timings.json
+benchmarking/unbalanced_yeff/results/*.csv
 
 # Legacy input_file build artifacts (module moved to src/json/)
 input_file/

@@ -314,6 +314,10 @@ void ComputationRunner::registerBuiltins() {
 		net.add_areas();
 		StabilityEstimate stability;
 		stability.add_areas(&net);
+		if (calc.contains("park_per_component"))
+			stability.setParkPerComponent(calc.at("park_per_component").get<bool>());
+		if (calc.contains("yeff"))
+			stability.setYeff(calc.at("yeff").get<bool>());
 		stability.print_summary();
 		if (calc.contains("converter_id") && calc.contains("location")) {
 			const FrequencyRange range = parseFrequencyRangeLocal(

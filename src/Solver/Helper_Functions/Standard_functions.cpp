@@ -216,4 +216,147 @@ extern vector<vector<complex<double>>> get_block(const vector<vector<complex<dou
     return block;
 };
 
+namespace {
+
+struct ParkKernels {
+    vector<vector<complex<double>>> a;
+    vector<vector<complex<double>>> a_tran;
+    vector<vector<complex<double>>> a_conj;
+    vector<vector<complex<double>>> a_conj_tran;
+};
+
+ParkKernels makeParkKernels()
+{
+    // Fourier kernel of Park (4.54): φ = −2π/3 so a = [1, α², α] with α = e^{j 2π/3}.
+    const complex<double> ang = std::exp(complex<double>(0, -2.0 * M_PI / 3.0));
+    const complex<double> imag_unit(0, 1);
+    ParkKernels k;
+    k.a.assign(3, vector<complex<double>>(3));
+    k.a[0] = { 1.0, ang, ang * ang };
+    k.a[1] = { imag_unit, imag_unit * ang, imag_unit * ang * ang };
+    k.a[2] = { 0.0, 0.0, 0.0 };
+    k.a_tran = mat_transpose(k.a);
+    k.a_conj.assign(3, vector<complex<double>>(3));
+    k.a_conj[0] = { 1.0, conj(ang), conj(ang * ang) };
+    k.a_conj[1] = { -imag_unit, -imag_unit * conj(ang), -imag_unit * conj(ang * ang) };
+    k.a_conj[2] = { 0.0, 0.0, 0.0 };
+    k.a_conj_tran = mat_transpose(k.a_conj);
+    return k;
+}
+
+bool parkAbcSquare(const vector<vector<complex<double>>>& Y, int& nabc)
+{
+    if (Y.empty() || Y[0].empty())
+        return false;
+    nabc = static_cast<int>(Y.size());
+    if (nabc % 3 != 0 || static_cast<int>(Y[0].size()) != nabc)
+        return false;
+    return true;
+}
+
+enum class ParkMapKind { A0, Cminus, Cplus };
+
+vector<vector<complex<double>>> apply_park_map(
+    const vector<vector<complex<double>>>& Y_a,
+    const vector<vector<complex<double>>>& Y_b,
+    ParkMapKind kind)
+{
+    int nabc = 0;
+    if (!parkAbcSquare(Y_a, nabc))
+        return Y_a;
+    if (kind == ParkMapKind::A0) {
+        int nabc_b = 0;
+        if (!parkAbcSquare(Y_b, nabc_b) || nabc_b != nabc)
+            return Y_a;
+    }
+    const int nports = nabc / 3;
+    const ParkKernels k = makeParkKernels();
+    vector<vector<complex<double>>> Y_dq(
+        static_cast<size_t>(2 * nports),
+        vector<complex<double>>(static_cast<size_t>(2 * nports), { 0.0, 0.0 }));
+
+    for (int pi = 0; pi < nports; ++pi) {
+        for (int pj = 0; pj < nports; ++pj) {
+            auto Ya = get_block(Y_a, 3 * pi, 3 * pj, 3, 3);
+            vector<vector<complex<double>>> blk;
+            if (kind == ParkMapKind::A0) {
+                auto Yb = get_block(Y_b, 3 * pi, 3 * pj, 3, 3);
+                blk = mul_scalar(
+                    mat_add(mat_mul(mat_mul(k.a, Ya), k.a_conj_tran),
+                            mat_mul(mat_mul(k.a_conj, Yb), k.a_tran)),
+                    1.0 / 6.0);
+            }
+            else if (kind == ParkMapKind::Cminus) {
+                blk = mul_scalar(mat_mul(mat_mul(k.a, Ya), k.a_tran), 1.0 / 6.0);
+            }
+            else {
+                blk = mul_scalar(mat_mul(mat_mul(k.a_conj, Ya), k.a_conj_tran), 1.0 / 6.0);
+            }
+            for (int i = 0; i < 2; ++i)
+                for (int j = 0; j < 2; ++j)
+                    Y_dq[static_cast<size_t>(2 * pi + i)][static_cast<size_t>(2 * pj + j)] = blk[i][j];
+        }
+    }
+    return Y_dq;
+}
+
+MatrixXcd invertParkBlock(const MatrixXcd& A)
+{
+    if (A.size() == 0)
+        return A;
+    MatrixXcd Ause = A;
+    if (!Ause.allFinite())
+        Ause = MatrixXcd::Identity(A.rows(), A.cols()) * 1e-12;
+    Eigen::FullPivLU<MatrixXcd> lu(Ause);
+    if (!lu.isInvertible()) {
+        Ause += MatrixXcd::Identity(Ause.rows(), Ause.cols()) * 1e-12;
+        lu.compute(Ause);
+    }
+    return lu.solve(MatrixXcd::Identity(Ause.rows(), Ause.cols()));
+}
+
+} // namespace
+
+vector<vector<complex<double>>> apply_park_A0(
+    const vector<vector<complex<double>>>& Y_minus,
+    const vector<vector<complex<double>>>& Y_plus)
+{
+    return apply_park_map(Y_minus, Y_plus, ParkMapKind::A0);
+}
+
+vector<vector<complex<double>>> apply_park_C_minus(
+    const vector<vector<complex<double>>>& Y_minus)
+{
+    return apply_park_map(Y_minus, Y_minus, ParkMapKind::Cminus);
+}
+
+vector<vector<complex<double>>> apply_park_C_plus(
+    const vector<vector<complex<double>>>& Y_plus)
+{
+    return apply_park_map(Y_plus, Y_plus, ParkMapKind::Cplus);
+}
+
+vector<vector<complex<double>>> apply_park_Yeff(
+    const vector<vector<complex<double>>>& Y_m3,
+    const vector<vector<complex<double>>>& Y_m1,
+    const vector<vector<complex<double>>>& Y_p1,
+    const vector<vector<complex<double>>>& Y_p3)
+{
+    const auto A0_w = apply_park_A0(Y_m1, Y_p1);
+    const auto A0_m2 = apply_park_A0(Y_m3, Y_m1);
+    const auto A0_p2 = apply_park_A0(Y_p1, Y_p3);
+    const auto Cm_w = apply_park_C_minus(Y_m1);
+    const auto Cp_w = apply_park_C_plus(Y_p1);
+    const auto Cp_m2 = apply_park_C_plus(Y_m1);
+    const auto Cm_p2 = apply_park_C_minus(Y_p1);
+
+    const MatrixXcd A0 = vectorToMatrix(A0_w);
+    const MatrixXcd corr_m = vectorToMatrix(Cm_w) * invertParkBlock(vectorToMatrix(A0_m2))
+        * vectorToMatrix(Cp_m2);
+    const MatrixXcd corr_p = vectorToMatrix(Cp_w) * invertParkBlock(vectorToMatrix(A0_p2))
+        * vectorToMatrix(Cm_p2);
+    const MatrixXcd Yeff = A0 - corr_m - corr_p;
+    return matrixToVector(Yeff);
+}
+
 

@@ -147,10 +147,9 @@ CSV OPF reads `src/data/` relative to the repo (auto-detected from the working d
 
 GitHub Actions workflows on Windows, Linux, and macOS:
 
-- **`windows_build_and_test.yml`**, **`linux_build_and_test.yml`**, **`macos_build_and_test.yml`** — build **Harmony** and **HarmonyUI**, then run unit tests
-- **`windows_run_examples.yml`**, etc. — run bundled C++ examples via `ctest`
+- **`windows_build_and_test.yml`**, **`linux_build_and_test.yml`**, **`macos_build_and_test.yml`** — build **Harmony**, **HarmonyUI**, and `testharmony`, then run unit tests and bundled C++ examples via `ctest`
 
-HarmonyUI is compile-tested on all three platforms; example workflows use the CLI with `--no-plot` (no GUI on headless runners).
+HarmonyUI is compile-tested on all three platforms; example tests use the CLI with `--no-plot` (no GUI on headless runners).
 
 ---
 

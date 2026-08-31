@@ -24,6 +24,18 @@ Latest PowerImpedance.jl (v0.3.0) results on this tree:
 Overlays (SVG only) and how to regenerate them:
 [`powerimpedance/README.md`](powerimpedance/README.md).
 
+## Unbalanced AC $Y_{\mathrm{eff}}$
+
+Block Park $A_0$ vs $Y_{\mathrm{eff}}$ (eq. 18) on a one-MMC RLC network with
+one phase resistance changed: [`unbalanced_yeff/`](unbalanced_yeff/).
+
+```bash
+python benchmarking/unbalanced_yeff/run.py
+```
+
+Overlays (SVG only) and formulae:
+[`unbalanced_yeff/README.md`](unbalanced_yeff/README.md).
+
 ## Benchmarking examples:
 - Three-phase transformer models as published here:
 ```

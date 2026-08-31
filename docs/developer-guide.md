@@ -39,7 +39,7 @@ API comments: use Doxygen `/** … */` so they appear in the generated reference
 
 1. Add `tests/test*.cpp` and list the file in `tests/CMakeLists.txt`.
 2. Build `testharmony` from the repository `build/` tree as in [installation.md — Testing](installation.md#testing) / [Manual Ch. 2](manual/02-getting-started.md#27-running-the-test-suite).
-3. Keep examples gated behind `TestExamples` where CI splits unit vs example runs.
+3. Keep examples in the `TestExamples` GoogleTest suite so CI can report unit and example results as separate steps.
 
 ## Adding examples
 

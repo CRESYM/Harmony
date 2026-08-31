@@ -36,8 +36,7 @@ Workflows under `.github/workflows/`:
 
 | Workflow | Role |
 |----------|------|
-| `*_build_and_test.yml` | Build + `ctest` excluding `TestExamples` |
-| `*_run_examples.yml` | Build + `ctest -R TestExamples` |
+| `*_build_and_test.yml` | Build Harmony/HarmonyUI/`testharmony`, then `ctest` (unit tests, then `TestExamples`) |
 | `docs.yml` | Doxygen API docs artifact |
 
 Shared steps: `.github/actions/setup-env`, `build-harmony`, `run-ctest`.

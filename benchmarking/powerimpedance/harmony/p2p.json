@@ -441,7 +441,8 @@
                 "end": 1000,
                 "points": 41
             },
-            "plot": false
+            "plot": false,
+            "park_per_component": false
         }
     ]
 }

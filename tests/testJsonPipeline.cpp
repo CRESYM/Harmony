@@ -45,7 +45,8 @@ static bool needsOpfCsvCwd(const fs::path& path) {
 
 static bool isHeavyJsonRun(const fs::path& path) {
 	const std::string stem = path.stem().string();
-	return stem == "opf_csv" || stem == "stability_check" || stem == "dqsym_mmc";
+	return stem == "opf_csv" || stem == "stability_check" || stem == "dqsym_mmc"
+		|| stem == "mmc_unbalanced_rlc";
 }
 
 

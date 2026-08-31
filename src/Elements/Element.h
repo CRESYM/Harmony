@@ -68,6 +68,12 @@ public:
 	void setTransformation(bool flag) { transformation = flag; }
 
     /**
+     * @brief Query whether coordinate transformation is enabled for this element.
+     * @return Current transformation flag.
+     */
+    bool getTransformation() const { return transformation; }
+
+    /**
      * @brief Get the element type symbol.
      * @return Symbol string (e.g. "R", "L", "C").
      */
@@ -179,6 +185,14 @@ public:
      * @return Complex Y-parameter matrix as nested vectors.
      */
     virtual std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency);
+
+    /**
+     * @brief Abc-frame Y-parameters at @p frequency, even if transformation is enabled.
+     *
+     * Used when Park A0 is applied to an assembled AC-block equivalent rather than
+     * per component. Restores the element's transformation flag before returning.
+     */
+    std::vector<std::vector<complex<double>>> compute_y_parameters_abc(double frequency);
 
     /**
      * @brief Get the symbolic or stored Y-parameter matrix.

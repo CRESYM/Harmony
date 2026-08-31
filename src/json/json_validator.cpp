@@ -372,7 +372,7 @@ void JsonValidator::validateComputation(const JSON& calc, const unsigned index) 
 		"frequency_range", "vsc_control", "write_txt", "plot_result", "print_info",
 		"dt", "t_start", "t_end", "frequency", "n_keep", "output_bus_ids",
 		"switch_count", "switch_on_resistance", "switch_off_resistance", "switch_types",
-		"plot", "plot_type", "snapshot_time", "skip_opf"
+		"plot", "plot_type", "snapshot_time", "skip_opf", "park_per_component", "yeff"
 	}, ctx.c_str());
 	if (!calc.contains("type") || !calc.at("type").is_string()) {
 		throw std::invalid_argument("ERROR: computation requires string 'type'.\n");
@@ -392,5 +392,11 @@ void JsonValidator::validateComputation(const JSON& calc, const unsigned index) 
 			throw std::invalid_argument(
 				"ERROR: computation 'plot_type' must be 'bode' or 'nyquist'.\n");
 		}
+	}
+	if (calc.contains("park_per_component") && !calc.at("park_per_component").is_boolean()) {
+		throw std::invalid_argument("ERROR: computation 'park_per_component' must be a boolean.\n");
+	}
+	if (calc.contains("yeff") && !calc.at("yeff").is_boolean()) {
+		throw std::invalid_argument("ERROR: computation 'yeff' must be a boolean.\n");
 	}
 }
