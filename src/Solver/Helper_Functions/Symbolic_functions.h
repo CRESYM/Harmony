@@ -110,18 +110,18 @@ extern MatrixXcd substitute_symbol(DenseMatrix, RCP<const Basic>, complex<double
 extern 	double eval_basic(const RCP<const Basic>& expr);
 
 /**
- * @brief Kron-reduces a real matrix by eliminating specified nodes.
+ * @brief Kron-reduces a real matrix, keeping the listed nodes.
  * @param matrix Input admittance/impedance matrix.
- * @param nodes Indices of nodes to eliminate.
- * @return Reduced matrix.
+ * @param no_eliminate Indices of nodes to retain (empty keep-list yields a 0×0 result).
+ * @return Reduced matrix. If every node is retained, the input is returned unchanged.
  */
 extern MatrixXd kron_reduction(MatrixXd, vector<int>);
 
 /**
- * @brief Kron-reduces a symbolic dense matrix by eliminating specified nodes.
+ * @brief Kron-reduces a symbolic dense matrix, keeping the listed nodes.
  * @param matrix Input symbolic matrix.
- * @param nodes Indices of nodes to eliminate.
- * @return Symbolically reduced matrix.
+ * @param no_eliminate Indices of nodes to retain (empty keep-list yields a 0×0 result).
+ * @return Symbolically reduced matrix. If every node is retained, the input is returned unchanged.
  */
 extern DenseMatrix kron_reduction(DenseMatrix, vector<int>);
 

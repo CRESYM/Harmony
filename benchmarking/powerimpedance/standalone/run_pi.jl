@@ -215,7 +215,9 @@ function run_mmc_c1()
             ),
             occ = PI.InnerCurrentPIControl(
                 pi_ctrl = PI.PIControl(Kp = 0.7691, Ki = 522.7654),
-                activate_ω_c_multiplication = false,
+                # Harmony OCC decoupling uses ω_C = Δω + ω_0 (PLL). Keep PI's
+                # default ω_c multiplier on; false frozen the vq column.
+                activate_ω_c_multiplication = true,
             ),
         ),
         sigma_control = PI.ΣdqzControlTEC(
@@ -265,7 +267,9 @@ function run_mmc_c2()
             ),
             occ = PI.InnerCurrentPIControl(
                 pi_ctrl = PI.PIControl(Kp = 0.7691, Ki = 522.7654),
-                activate_ω_c_multiplication = false,
+                # Harmony OCC decoupling uses ω_C = Δω + ω_0 (PLL). Keep PI's
+                # default ω_c multiplier on; false frozen the vq column.
+                activate_ω_c_multiplication = true,
             ),
         ),
         sigma_control = PI.ΣdqzControlTEC(

@@ -78,7 +78,9 @@ function p2p_mmc_c1()
             ),
             occ = PowerImpedance.InnerCurrentPIControl(
                 pi_ctrl = PowerImpedance.PIControl(Kp = 0.7691, Ki = 522.7654),
-                activate_ω_c_multiplication = false,
+                # Harmony OCC decoupling uses ω_C = Δω + ω_0 (PLL). Keep PI's
+                # default ω_c multiplier on; false froze the vq column of Yn.
+                activate_ω_c_multiplication = true,
             ),
         ),
         sigma_control = PowerImpedance.ΣdqzControlTEC(
@@ -124,7 +126,9 @@ function p2p_mmc_c2()
             ),
             occ = PowerImpedance.InnerCurrentPIControl(
                 pi_ctrl = PowerImpedance.PIControl(Kp = 0.7691, Ki = 522.7654),
-                activate_ω_c_multiplication = false,
+                # Harmony OCC decoupling uses ω_C = Δω + ω_0 (PLL). Keep PI's
+                # default ω_c multiplier on; false froze the vq column of Yn.
+                activate_ω_c_multiplication = true,
             ),
         ),
         sigma_control = PowerImpedance.ΣdqzControlTEC(
@@ -309,6 +313,7 @@ function run_p2p_network()
     Zin_al = [qalign(Z) for Z in Zin]
     Zeq_al = [qalign(Z) for Z in Zeq]
     Hs = Vector{Matrix{ComplexF64}}(undef, length(omegas))
+    Yns = Vector{Matrix{ComplexF64}}(undef, length(omegas))
     freqs = omegas ./ (2π)
     t = @elapsed begin
         for i in eachindex(omegas)
@@ -316,9 +321,12 @@ function run_p2p_network()
             zdc = Zdc[i]
             Ydc_ext = inv(isa(zdc, Number) ? zdc : zdc[1, 1])
             Yn = ac_yn_from_ss(Y3, Ydc_ext)
+            Yns[i] = Yn
             Hs[i] = Yn * Zeq_al[i]
         end
         write_y_csv(joinpath(OUTDIR, "pi_p2p_Z.csv"), freqs, Zin_al)
+        write_y_csv(joinpath(OUTDIR, "pi_p2p_Zeq.csv"), freqs, Zeq_al)
+        write_y_csv(joinpath(OUTDIR, "pi_p2p_Yn.csv"), freqs, Yns)
         write_y_csv(joinpath(OUTDIR, "pi_p2p_H.csv"), freqs, Hs)
     end
     @printf("TIMING  p2p_H  %.4f\n", t)

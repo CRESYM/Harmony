@@ -1,39 +1,44 @@
 ## PowerImpedance.jl
 
-Standalone Y(f) comparisons against the newest
-[PowerImpedance.jl](https://github.com/Electa-Git/PowerImpedance.jl) package
-(resistor, Y-Y / Δ-Y transformers, aerial cable, overhead line, GFL MMC) live in
-[`powerimpedance/`](powerimpedance/). Reproduce with:
+Standalone $Y(f)$, OHL/cable topologies, and P2P HVDC vs
+[PowerImpedance.jl](https://github.com/Electa-Git/PowerImpedance.jl) 0.3.0:
+[`powerimpedance/`](powerimpedance/).
+
+```
+powerimpedance/standalone/   resistor, transformer, cable, OHL, MMC
+powerimpedance/lines/        named towers and coaxial layouts
+powerimpedance/p2p/          Zin, Zeq, Yn, H at c2 AC
+```
 
 ```bash
 python benchmarking/powerimpedance/run_all.py
 ```
 
-Latest PowerImpedance.jl (v0.3.0) results on this tree:
+Typical wall on this machine: **5–8 min** for the full suite (Julia compile
+included). See [`powerimpedance/README.md`](powerimpedance/README.md).
 
-| Case | Mean Frobenius rel | Notes |
-|------|--------------------|-------|
-| 10 Ω resistor | 0 | exact |
-| Y-Y transformer | 1.1e-6 | same windings as `example_transformer` |
-| Aerial cable | 1.6e-4 | `example_cable` layers |
-| OHL | 2.7e-4 | two-bundle flat `example_OHL` |
-| GFL MMC | 7.2e-4 | composable API; AC-row sign aligned |
-| P2P c1 / c2 $Y_{\mathrm{ac}}$ | 7.4e-4 / 9.4e-4 | Vdc+Q and P+Q |
-| P2P $Z_{\mathrm{in}}$ / $H$ at B6 | 5.2e-2 / 0.20 | OPF $V_{\mathrm{ac}}$ still differs |
-
-Overlays (SVG only) and how to regenerate them:
-[`powerimpedance/README.md`](powerimpedance/README.md).
+| Case | Mean Frobenius rel |
+|------|--------------------|
+| 10 Ω resistor | 0 |
+| Y-Y transformer | $1.1\times 10^{-6}$ |
+| Aerial cable / OHL | $1.6\times 10^{-4}$ / $2.7\times 10^{-4}$ |
+| GFL / c1 / c2 MMC $Y_{\mathrm{ac}}$ | $7.2$ / $7.4$ / $6.7\times 10^{-4}$ |
+| P2P $Y_n$ / $Z_{\mathrm{eq}}$ / $H$ | $2.8\times 10^{-4}$ / $4.6\times 10^{-3}$ / $4.6\times 10^{-3}$ |
 
 ## Unbalanced AC $Y_{\mathrm{eff}}$
 
-Block Park $A_0$ vs $Y_{\mathrm{eff}}$ (eq. 18) on a one-MMC RLC network with
-one phase resistance changed: [`unbalanced_yeff/`](unbalanced_yeff/).
+Block Park $A_0$ vs $Y_{\mathrm{eff}}$ (eq. 18): [`unbalanced_yeff/`](unbalanced_yeff/).
+
+```
+unbalanced_yeff/rlc/    lab and 2 GW RLC
+unbalanced_yeff/ohl/    2 GW untransposed OHL
+```
 
 ```bash
 python benchmarking/unbalanced_yeff/run.py
 ```
 
-Overlays (SVG only) and formulae:
+Typical wall: **1–2 min** for all five cases.
 [`unbalanced_yeff/README.md`](unbalanced_yeff/README.md).
 
 ## Benchmarking examples:

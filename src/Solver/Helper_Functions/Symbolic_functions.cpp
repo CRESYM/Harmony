@@ -136,20 +136,39 @@ double eval_basic(const RCP<const Basic>& expr) {
 }
 
 MatrixXd kron_reduction(MatrixXd matrix, vector<int> no_eliminate) {
+	if (no_eliminate.empty()) {
+		return MatrixXd(0, 0);
+	}
 	vector<int> eliminate; 
 	for (int i = 0; i < matrix.rows(); i++) { 
 		if (std::find(no_eliminate.begin(), no_eliminate.end(), i) == no_eliminate.end()) eliminate.push_back(i); 
-	} 
+	}
+	if (eliminate.empty()) {
+		return matrix(no_eliminate, no_eliminate);
+	}
 	MatrixXd M = matrix(no_eliminate, no_eliminate) - matrix(no_eliminate, eliminate) * matrix(eliminate, eliminate).inverse() * matrix(eliminate, no_eliminate); 
 	
 	return M;
 }
 
 DenseMatrix kron_reduction(DenseMatrix matrix, vector<int> no_eliminate) {
+	if (no_eliminate.empty()) {
+		return createZeroMatrix(0, 0);
+	}
 	vector<int> eliminate;
 	for (int i = 0; i < matrix.nrows(); i++) {
 		if (std::find(no_eliminate.begin(), no_eliminate.end(), i) == no_eliminate.end())
 			eliminate.push_back(i);
+	}
+	if (eliminate.empty()) {
+		DenseMatrix kept = createZeroMatrix(no_eliminate.size(), no_eliminate.size());
+		for (size_t i = 0; i < no_eliminate.size(); ++i) {
+			for (size_t j = 0; j < no_eliminate.size(); ++j) {
+				kept.set(static_cast<int>(i), static_cast<int>(j),
+					matrix.get(no_eliminate[i], no_eliminate[j]));
+			}
+		}
+		return kept;
 	}
 	DenseMatrix M1 = createZeroMatrix(no_eliminate.size(), no_eliminate.size());
 	DenseMatrix M2 = createZeroMatrix(no_eliminate.size(), eliminate.size());

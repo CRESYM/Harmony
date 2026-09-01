@@ -1,9 +1,9 @@
 {
     "simulation": {
-        "title": "mmc_unbalanced_rlc",
-        "description": "One MMC with DC source, AC source, and 3-phase R-L-C (phase-c R unbalance). Compares block A0 vs block Yeff on the MMC AC-side TF.",
+        "title": "mmc_unbalanced_rlc_strong",
+        "description": "Same MMC RLC network with phase-c unbalance on R, L, and C so C± stays visible across 10–1000 Hz.",
         "output_directory": "./files",
-        "frequency_range": { "start": 10, "end": 1000, "points": 31 }
+        "frequency_range": { "start": 10, "end": 1000, "points": 81 }
     },
     "buses": [
         { "id": "gnd", "location": "GND", "pins": 1, "enabled": true },
@@ -70,7 +70,7 @@
             "location": "AC1",
             "type": "resistor",
             "pins": 3,
-            "values": [1.0, 1.0, 5.0],
+            "values": [1.0, 1.0, 10.0],
             "connected_buses": [
                 { "bus_id": "Bsrc", "terminal": 1 },
                 { "bus_id": "Bmid", "terminal": 2 }
@@ -82,7 +82,7 @@
             "location": "AC1",
             "type": "inductor",
             "pins": 3,
-            "values": [0.01],
+            "values": [0.002, 0.002, 0.02],
             "connected_buses": [
                 { "bus_id": "Bmid", "terminal": 1 },
                 { "bus_id": "Bpcc", "terminal": 2 }
@@ -94,7 +94,7 @@
             "location": "AC1",
             "type": "capacitor",
             "pins": 3,
-            "values": [2.0e-5],
+            "values": [2.0e-5, 2.0e-5, 2.0e-6],
             "connected_buses": [
                 { "bus_id": "Bpcc", "terminal": 1 },
                 { "bus_id": "gnd", "terminal": 2 }
@@ -111,7 +111,7 @@
             "skip_opf": true,
             "park_per_component": false,
             "yeff": false,
-            "frequency_range": { "start": 10, "end": 1000, "points": 31 },
+            "frequency_range": { "start": 10, "end": 1000, "points": 81 },
             "plot": false
         },
         {
@@ -121,7 +121,7 @@
             "skip_opf": true,
             "park_per_component": false,
             "yeff": true,
-            "frequency_range": { "start": 10, "end": 1000, "points": 31 },
+            "frequency_range": { "start": 10, "end": 1000, "points": 81 },
             "plot": false
         }
     ]

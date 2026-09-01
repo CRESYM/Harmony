@@ -1,12 +1,15 @@
 """Write Harmony JSON cases for the PowerImpedance P2P HVDC example."""
 from __future__ import annotations
 
+import copy
 import json
 import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+PI_ROOT = ROOT.parent
 HARMONY = ROOT / "harmony"
+STANDALONE_HARMONY = PI_ROOT / "standalone" / "harmony"
 
 # geometry = [Δxbc, ybc]; rc/Rdc/dsag/dsb match C++ Conductors(...).
 P2P_OHL = {
@@ -165,81 +168,123 @@ def y_matrix(cid, start, end, points):
     }
 
 
-def dump(name, payload):
-    path = HARMONY / name
+def dump(name, payload, dest=None):
+    folder = dest or HARMONY
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / name
     path.write_text(json.dumps(payload, indent=4) + "\n", encoding="utf-8")
     print("wrote", path)
 
 
-def write_p2p():
-    dump(
-        "p2p.json",
-        {
-            "simulation": {
-                "title": "pi_p2p",
-                "description": "PowerImpedance P2P HVDC topology in Harmony (dq cut at c2 AC).",
-                "output_directory": "./files",
-                "frequency_range": {"start": 10, "end": 1000, "points": 41},
-                "nominal_power": 1000.0,
-                "nominal_voltage": 380.0,
-                "dc_nominal_voltage": 800.0,
-            },
-            "buses": buses(
-                ("B2", 3, "AC1"),
-                ("B3", 3, "AC1"),
-                ("B6", 3, "AC2"),
-                ("B7", 3, "AC2"),
-                ("B4", 2, "DC1"),
-                ("B5", 2, "DC1"),
-            ),
-            "components": [
-                {
-                    "id": "g4",
-                    "location": "AC1",
-                    "type": "ac_source",
-                    "pins": 3,
-                    "voltage": 380000.0,
-                    "values": [1e-6],
-                    "connected_bus": {"bus_id": "B2", "terminal": 1},
-                    "enabled": True,
-                },
-                {
-                    "id": "g1",
-                    "location": "AC2",
-                    "type": "ac_source",
-                    "pins": 3,
-                    "voltage": 380000.0,
-                    "values": [1e-6],
-                    "connected_bus": {"bus_id": "B7", "terminal": 1},
-                    "enabled": True,
-                },
-                ohl("tl1", 25.0, "B2", "B3", "AC1"),
-                ohl("tl78", 90.0, "B6", "B7", "AC2"),
-                cable_dc(),
-                mmc("c1", "AC1_DC1", "B3", "B4", -100e6, 100e6, True, 0.06, 0.535),
-                mmc("c2", "AC2_DC1", "B6", "B5", 100e6, 100e6, False, 0.0461, 0.4103),
-            ],
-            "computations": [
-                {"type": "network_summary"},
-                {
-                    "type": "power_flow",
-                    "vsc_control": True,
-                    "write_txt": False,
-                    "plot_result": False,
-                    "print_info": True,
-                },
-                y_matrix("dc_line", 10, 1000, 41),
-                {
-                    "type": "stability_assessment",
-                    "converter_id": "c2",
-                    "location": "AC",
-                    "frequency_range": {"start": 10, "end": 1000, "points": 41},
-                    "plot": False,
-                    "park_per_component": False,
-                },
-            ],
+# Power-flow linearisation point used by the overlay JSON (skip Harmony OPF).
+# Indices in converter_params: Pac, Qac, theta, Vm, Pdc, Vdc.
+P2P_PI_OP = {
+    "c1": [-100316619.29, 100000000.0, -0.006596211679321095, 307649.6295688735, -100165413.04, 800000.0],
+    "c2": [100000000.0, 100000000.0, 0.031205439828107417, 304179.4385933678, 100136222.4, 799766.85551],
+}
+
+
+def p2p_payload():
+    return {
+        "simulation": {
+            "title": "pi_p2p",
+            "description": "PowerImpedance P2P HVDC topology in Harmony (dq cut at c2 AC).",
+            "output_directory": "./files",
+            "frequency_range": {"start": 10, "end": 1000, "points": 41},
+            "nominal_power": 1000.0,
+            "nominal_voltage": 380.0,
+            "dc_nominal_voltage": 800.0,
         },
+        "buses": buses(
+            ("B2", 3, "AC1"),
+            ("B3", 3, "AC1"),
+            ("B6", 3, "AC2"),
+            ("B7", 3, "AC2"),
+            ("B4", 2, "DC1"),
+            ("B5", 2, "DC1"),
+        ),
+        "components": [
+            {
+                "id": "g4",
+                "location": "AC1",
+                "type": "ac_source",
+                "pins": 3,
+                "voltage": 380000.0,
+                "values": [1e-6],
+                "connected_bus": {"bus_id": "B2", "terminal": 1},
+                "enabled": True,
+            },
+            {
+                "id": "g1",
+                "location": "AC2",
+                "type": "ac_source",
+                "pins": 3,
+                "voltage": 380000.0,
+                "values": [1e-6],
+                "connected_bus": {"bus_id": "B7", "terminal": 1},
+                "enabled": True,
+            },
+            ohl("tl1", 25.0, "B2", "B3", "AC1"),
+            ohl("tl78", 90.0, "B6", "B7", "AC2"),
+            cable_dc(),
+            mmc("c1", "AC1_DC1", "B3", "B4", -100e6, 100e6, True, 0.06, 0.535),
+            mmc("c2", "AC2_DC1", "B6", "B5", 100e6, 100e6, False, 0.0461, 0.4103),
+        ],
+        "computations": [
+            {"type": "network_summary"},
+            {
+                "type": "power_flow",
+                "vsc_control": True,
+                "write_txt": False,
+                "plot_result": False,
+                "print_info": True,
+            },
+            y_matrix("dc_line", 10, 1000, 41),
+            {
+                "type": "stability_assessment",
+                "converter_id": "c2",
+                "location": "AC",
+                "frequency_range": {"start": 10, "end": 1000, "points": 41},
+                "plot": False,
+                "park_per_component": False,
+            },
+        ],
+    }
+
+
+def write_p2p():
+    dump("p2p.json", p2p_payload())
+
+
+def write_p2p_pi_op():
+    payload = copy.deepcopy(p2p_payload())
+    payload["simulation"]["title"] = "pi_p2p_pi_op"
+    payload["simulation"]["description"] = (
+        "P2P HVDC linearised at the PowerImpedance power-flow operating point "
+        "(Harmony OPF skipped)."
     )
+    for comp in payload["components"]:
+        cid = comp.get("id")
+        if cid not in P2P_PI_OP:
+            continue
+        pac, qac, theta, vm, pdc, vdc = P2P_PI_OP[cid]
+        conv = list(comp["converter_params"])
+        conv[1:7] = [pac, qac, theta, vm, pdc, vdc]
+        comp["converter_params"] = conv
+    payload["computations"] = [
+        {"type": "network_summary"},
+        y_matrix("dc_line", 10, 1000, 41),
+        {
+            "type": "stability_assessment",
+            "converter_id": "c2",
+            "location": "AC",
+            "frequency_range": {"start": 10, "end": 1000, "points": 41},
+            "plot": False,
+            "park_per_component": False,
+            "skip_opf": True,
+        },
+    ]
+    dump("p2p_pi_op.json", payload)
 
 
 def write_mmc_c1():
@@ -264,6 +309,7 @@ def write_mmc_c1():
             ],
             "computations": [y_matrix("c1", 1, 1000, 81)],
         },
+        STANDALONE_HARMONY,
     )
 
 
@@ -289,12 +335,14 @@ def write_mmc_c2(q_ac=100e6, name="mmc_c2.json", cid="c2"):
             ],
             "computations": [y_matrix(cid, 1, 1000, 81)],
         },
+        STANDALONE_HARMONY,
     )
 
 
 if __name__ == "__main__":
     HARMONY.mkdir(parents=True, exist_ok=True)
     write_p2p()
+    write_p2p_pi_op()
     write_mmc_c1()
     write_mmc_c2()
 

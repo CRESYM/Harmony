@@ -6,7 +6,6 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-RESULTS = ROOT / "results"
 
 HARM_PAT = re.compile(
     r"([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)\+1i\*\(([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)\)"
@@ -14,7 +13,7 @@ HARM_PAT = re.compile(
 
 NAMES = ["Hdd", "Hdq", "Hqd", "Hqq"]
 A0_COLOR = "#1d4ed8"
-YEFF_COLOR = "#0f766e"
+YEFF_COLOR = "#dc2626"
 
 
 def parse_harmony(path: Path):
@@ -150,16 +149,20 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--dir", default="rlc/results", help="Folder with CSVs and output SVG")
     parser.add_argument("--a0", default="MMC1_AC.csv")
     parser.add_argument("--yeff", default="MMC1_AC_yeff.csv")
     parser.add_argument("--out", default="overlay_H.svg")
     parser.add_argument("--title", default="")
     args = parser.parse_args()
-    a0 = parse_harmony(RESULTS / args.a0)
-    yeff = parse_harmony(RESULTS / args.yeff)
+    outdir = Path(args.dir)
+    if not outdir.is_absolute():
+        outdir = ROOT / outdir
+    a0 = parse_harmony(outdir / args.a0)
+    yeff = parse_harmony(outdir / args.yeff)
     if not a0 or not yeff:
-        raise FileNotFoundError(f"Need {RESULTS / args.a0} and {RESULTS / args.yeff}")
-    svg = RESULTS / args.out
+        raise FileNotFoundError(f"Need {outdir / args.a0} and {outdir / args.yeff}")
+    svg = outdir / args.out
     stats = plot_tf(a0, yeff, svg, title=args.title or None)
     print(
         f"wrote {svg}  samples={stats['n']}  "

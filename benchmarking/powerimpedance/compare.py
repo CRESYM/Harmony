@@ -1,19 +1,30 @@
-"""Compare Harmony vs PowerImpedance.jl standalone Y(f) CSVs."""
+"""Compare Harmony vs PowerImpedance.jl Y(f) CSVs."""
 from __future__ import annotations
 
 import argparse
 import csv
 import math
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-RESULTS = ROOT / "results"
 REPO = ROOT.parents[1]
+if str(ROOT / "lines") not in sys.path:
+    sys.path.insert(0, str(ROOT / "lines"))
+
+
+def results_dir(case=None, suite=None) -> Path:
+    name = suite or (case or {}).get("suite", "standalone")
+    path = ROOT / name / "results"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
 
 CASES = [
     {
         "id": "resistor",
+        "suite": "standalone",
         "title": "10 Ohm series resistor",
         "harmony_csv": "R1.csv",
         "pi_csv": "pi_resistor.csv",
@@ -22,6 +33,7 @@ CASES = [
     },
     {
         "id": "transformer_yy",
+        "suite": "standalone",
         "title": "Y-Y real transformer (example windings)",
         "harmony_csv": "T_YY.csv",
         "pi_csv": "pi_transformer_yy.csv",
@@ -30,6 +42,7 @@ CASES = [
     },
     {
         "id": "cable",
+        "suite": "standalone",
         "title": "Aerial coaxial cable (example_cable layers)",
         "harmony_csv": "cable.csv",
         "pi_csv": "pi_cable.csv",
@@ -38,6 +51,7 @@ CASES = [
     },
     {
         "id": "ohl",
+        "suite": "standalone",
         "title": "Two-bundle flat OHL (example_OHL)",
         "harmony_csv": "ohl.csv",
         "pi_csv": "pi_ohl.csv",
@@ -46,6 +60,7 @@ CASES = [
     },
     {
         "id": "mmc_gfl",
+        "suite": "standalone",
         "title": "MMC GFL (example_MMC plant + PI default GFL)",
         "harmony_csv": "MMC1.csv",
         "pi_csv": "pi_mmc_gfl.csv",
@@ -57,6 +72,7 @@ CASES = [
     },
     {
         "id": "mmc_c1",
+        "suite": "standalone",
         "title": "P2P c1 MMC Vdc+Q",
         "harmony_csv": "c1.csv",
         "pi_csv": "pi_mmc_c1.csv",
@@ -67,6 +83,7 @@ CASES = [
     },
     {
         "id": "mmc_c2",
+        "suite": "standalone",
         "title": "P2P c2 MMC P+Q",
         "harmony_csv": "c2.csv",
         "pi_csv": "pi_mmc_c2.csv",
@@ -77,6 +94,7 @@ CASES = [
     },
     {
         "id": "p2p_cable",
+        "suite": "p2p",
         "title": "P2P bipolar DC cable (100 km, two cores)",
         "harmony_csv": "dc_line.csv",
         "pi_csv": "pi_p2p_cable.csv",
@@ -85,6 +103,7 @@ CASES = [
     },
     {
         "id": "p2p_zin",
+        "suite": "p2p",
         "title": "P2P HVDC driving-point Z at c2 AC (B6, full network)",
         "harmony_csv": "c2_AC_Zin.csv",
         "harmony_block_csv": "c2_AC_Zin_block.csv",
@@ -95,6 +114,7 @@ CASES = [
     },
     {
         "id": "p2p_tf",
+        "suite": "p2p",
         "title": "P2P HVDC MIMO TF H = Yn Zeq at c2 AC",
         "harmony_csv": "c2_AC.csv",
         "harmony_block_csv": "c2_AC_block.csv",
@@ -103,7 +123,35 @@ CASES = [
         "named_entries": ["Hdd", "Hdq", "Hqd", "Hqq"],
         "plot_entries": ["Hdd", "Hdq", "Hqd", "Hqq"],
     },
+    {
+        "id": "p2p_yn",
+        "suite": "p2p",
+        "title": "P2P converter Yn at c2 AC (DC port closed)",
+        "harmony_csv": "c2_AC_Yn.csv",
+        "pi_csv": "pi_p2p_Yn.csv",
+        "spot_hz": [10, 50, 100, 500, 1000],
+        "named_entries": ["Ydd", "Ydq", "Yqd", "Yqq"],
+        "plot_entries": ["Ydd", "Ydq", "Yqd", "Yqq"],
+    },
+    {
+        "id": "p2p_zeq",
+        "suite": "p2p",
+        "title": "P2P grid Zeq at c2 AC (c2 removed)",
+        "harmony_csv": "c2_AC_Zeq.csv",
+        "pi_csv": "pi_p2p_Zeq.csv",
+        "spot_hz": [10, 50, 100, 500, 1000],
+        "named_entries": ["Zdd", "Zdq", "Zqd", "Zqq"],
+        "plot_entries": ["Zdd", "Zdq", "Zqd", "Zqq"],
+    },
 ]
+
+
+try:
+    from line_cases import compare_cases as _line_compare_cases
+
+    CASES.extend(_line_compare_cases())
+except ImportError:
+    pass
 
 
 HARM_PAT = re.compile(
@@ -186,8 +234,9 @@ def frob_rel(a, b):
 
 
 def compare_case(case: dict) -> dict:
-    harm_path = RESULTS / case["harmony_csv"]
-    pi_path = RESULTS / case["pi_csv"]
+    outdir = results_dir(case)
+    harm_path = outdir / case["harmony_csv"]
+    pi_path = outdir / case["pi_csv"]
     out = {
         "id": case["id"],
         "title": case["title"],
@@ -260,11 +309,12 @@ def compare_case(case: dict) -> dict:
             "min_frob_rel": min(frobs),
             "spot_checks": table,
             "spectrum": spectrum,
+            "entry_rel": _entry_rel_stats(h_rows, p_rows, labels[:n_p]),
         }
     )
     block_name = case.get("harmony_block_csv")
-    if block_name and (RESULTS / block_name).exists():
-        b_rows = parse_harmony(RESULTS / block_name)
+    if block_name and (outdir / block_name).exists():
+        b_rows = parse_harmony(outdir / block_name)
         b_rows, p_rows2, _, _ = prepare_rows(case, b_rows, p_rows)
         bf = [frob_rel(nearest(b_rows, pf)[1], pv) for pf, pv in p_rows2]
         out["mean_frob_rel_block"] = sum(bf) / len(bf)
@@ -273,6 +323,81 @@ def compare_case(case: dict) -> dict:
         out["mean_frob_rel_block_vs_percomp"] = sum(hb) / len(hb)
         out["max_frob_rel_block_vs_percomp"] = max(hb)
     return out
+
+
+def _entry_rel_stats(h_rows, p_rows, labels):
+    out = []
+    for k, name in enumerate(labels):
+        errs = []
+        hi = []
+        for pf, pv in p_rows:
+            _, hv = nearest(h_rows, pf)
+            e = rel_err(hv[k], pv[k])
+            errs.append(e)
+            if pf >= 400.0:
+                hi.append(e)
+        out.append(
+            {
+                "name": name,
+                "mean": sum(errs) / len(errs),
+                "max": max(errs),
+                "mean_hi": (sum(hi) / len(hi)) if hi else None,
+                "max_hi": max(hi) if hi else None,
+            }
+        )
+    return out
+
+
+def inv2(a, b, c, d):
+    det = a * d - b * c
+    return [d / det, -b / det, -c / det, a / det]
+
+
+def mul2(A, B):
+    a11, a12, a21, a22 = A
+    b11, b12, b21, b22 = B
+    return [
+        a11 * b11 + a12 * b21,
+        a11 * b12 + a12 * b22,
+        a21 * b11 + a22 * b21,
+        a21 * b12 + a22 * b22,
+    ]
+
+
+def write_harmony_csv(path: Path, rows) -> None:
+    lines = []
+    for f, vals in rows:
+        parts = [f"{f}"] + [f"{z.real}+1i*({z.imag})" for z in vals]
+        lines.append(",".join(parts) + ",")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def recover_p2p_yn_zeq() -> bool:
+    """Recover Harmony Yn and Zeq from H = Yn Zeq and Zin = (Yn + Yeq)^{-1}."""
+    outdir = results_dir(suite="p2p")
+    h_path = outdir / "c2_AC.csv"
+    z_path = outdir / "c2_AC_Zin.csv"
+    if not h_path.exists() or not z_path.exists():
+        return False
+    h_rows = parse_harmony(h_path)
+    z_rows = parse_harmony(z_path)
+    if not h_rows or not z_rows:
+        return False
+    yn_rows = []
+    zeq_rows = []
+    for f, hv in h_rows:
+        _, zv = nearest(z_rows, f)
+        inv_iph = inv2(1 + hv[0], hv[1], hv[2], 1 + hv[3])
+        inv_z = inv2(*zv)
+        yeq = mul2(inv_iph, inv_z)
+        yn = [inv_z[k] - yeq[k] for k in range(4)]
+        zeq = inv2(*yeq)
+        yn_rows.append((f, yn))
+        zeq_rows.append((f, zeq))
+    write_harmony_csv(outdir / "c2_AC_Yn.csv", yn_rows)
+    write_harmony_csv(outdir / "c2_AC_Zeq.csv", zeq_rows)
+    print(f"recovered {outdir / 'c2_AC_Yn.csv'} and {outdir / 'c2_AC_Zeq.csv'}")
+    return True
 
 
 def mag_db(z: complex) -> float:
@@ -456,6 +581,12 @@ def print_case(summary: dict) -> None:
         f"{summary['mean_frob_rel']:.4e} / {summary['median_frob_rel']:.4e} / "
         f"{summary['max_frob_rel']:.4e} / {summary['min_frob_rel']:.4e}"
     )
+    if summary.get("entry_rel"):
+        for e in summary["entry_rel"]:
+            hi = ""
+            if e["mean_hi"] is not None:
+                hi = f"  f>=400 Hz mean/max={e['mean_hi']:.3e}/{e['max_hi']:.3e}"
+            print(f"  {e['name']:6s}  mean/max rel={e['mean']:.3e}/{e['max']:.3e}{hi}")
     if "mean_frob_rel_block" in summary:
         print(
             f"  block A0 vs PI     mean/max = "
@@ -481,7 +612,8 @@ def main() -> None:
     args = parser.parse_args()
     wanted = set(args.case) if args.case else None
 
-    RESULTS.mkdir(parents=True, exist_ok=True)
+    if wanted is None or wanted & {"p2p_yn", "p2p_zeq"}:
+        recover_p2p_yn_zeq()
     summaries = []
     for case in CASES:
         if wanted and case["id"] not in wanted:
@@ -492,14 +624,15 @@ def main() -> None:
         if args.no_plot or not summary.get("ok"):
             continue
         try:
-            h_rows = parse_harmony(RESULTS / case["harmony_csv"])
-            p_rows = parse_pi(RESULTS / case["pi_csv"])
+            outdir = results_dir(case)
+            h_rows = parse_harmony(outdir / case["harmony_csv"])
+            p_rows = parse_pi(outdir / case["pi_csv"])
             h_rows, p_rows, _, _ = prepare_rows(case, h_rows, p_rows)
             h_block = None
             block_name = case.get("harmony_block_csv")
-            if block_name and (RESULTS / block_name).exists():
-                h_block = parse_harmony(RESULTS / block_name)
-            out_base = RESULTS / f"overlay_{case['id']}"
+            if block_name and (outdir / block_name).exists():
+                h_block = parse_harmony(outdir / block_name)
+            out_base = outdir / f"overlay_{case['id']}"
             plot_overlay(case, h_rows, p_rows, out_base, h_block_rows=h_block)
             print(f"  plot {out_base.with_suffix('.svg')}")
         except Exception as exc:
@@ -513,6 +646,25 @@ def main() -> None:
                 f"  {s['id']:16s}  mean Frob={s['mean_frob_rel']:.4e}  "
                 f"max={s['max_frob_rel']:.4e}"
             )
+        line_ids = {s["id"] for s in ok if s["id"].startswith(("ohl_", "cable_"))}
+        if line_ids:
+            path = results_dir(suite="lines") / "line_topology_summary.md"
+            rows = [s for s in ok if s["id"] in line_ids]
+            lines = [
+                "# Harmony vs PowerImpedance line topologies",
+                "",
+                "Relative Frobenius |Y_H-Y_PI|/|Y_PI| on the shared log grid.",
+                "",
+                "| Case | Mean | Max | Samples |",
+                "|------|------|-----|---------|",
+            ]
+            for s in rows:
+                lines.append(
+                    f"| `{s['id']}` | ${s['mean_frob_rel']:.3e}$ | ${s['max_frob_rel']:.3e}$ "
+                    f"| {s['pi_samples']} |"
+                )
+            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            print(f"wrote {path}")
 
 
 if __name__ == "__main__":

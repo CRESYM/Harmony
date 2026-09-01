@@ -78,7 +78,6 @@ double Element::finiteOmega(double omega) {
 // Bipolar loop two-port. Phase order is [end1 core0, end1 core1, end2 core0, end2 core1].
 // V = V+ − V−, I = (I+ − I−)/2 with V+ = V/2, V− = −V/2:
 //   T = [1/2, −1/2]^T at each end,  Y_eq = blkdiag(T,T)^T  Y  blkdiag(T,T).
-// Same as transformation_dc on ABCD, without forming ABCD.
 std::vector<std::vector<complex<double>>> Element::reduceDcY(
 	const std::vector<std::vector<complex<double>>>& Y) const {
 	if (Y.size() == 2 && !Y[0].empty() && Y[0].size() == 2)

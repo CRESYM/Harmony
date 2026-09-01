@@ -34,7 +34,7 @@ private:
 		double dsag = 0; //sag offset    [m] 
 		double dsb = 0; // subconductor spacing (symmetric)  [m] 
 		double rc = 0; //conductor radius  [m] 
-		double Rdc = 0; //DC resistance for the entire conductor [Ω/m] 
+		double Rdc = 0; // DC resistance of the entire conductor [Ω/km] 
 		double gc = 1e-11; // shunt conductance  
 		double mu_rc = 1; // relative conductor permeability μᵣᶜ
 		std::tuple<std::vector<double>, std::vector<double>> positions = { {},{} }; //add absolute positions manually, 
@@ -49,7 +49,7 @@ private:
 		 * @param numbers Bundle count and optional subconductors per bundle.
 		 * @param values_distances Geometry: [Δxbc, ybc] or with Δybc / Δ̃xbc.
 		 * @param rc Conductor radius (m).
-		 * @param Rdc DC resistance of the entire conductor (Ω/m).
+		 * @param Rdc DC resistance of the entire conductor (Ω/km).
 		 * @param dsag Sag offset (m).
 		 * @param dsb Subconductor spacing (m).
 		 * @param positions Optional absolute (x, y) positions per subconductor.
@@ -77,14 +77,14 @@ private:
 		double deltaYg = 0; // vertical offset between the lowest conductor and groundwires  [m] Δyg
 		double rg = 0; // ground wire radius  [m] rg
 		double dgsag = 0; // sag offset [m] dgsag
-		double Rgdc = 0; // groundwire DC resistance [Ω/m] Rgdc
+		double Rgdc = 0; // groundwire DC resistance [Ω/km]
 		double mu_g = 1; // relative groundwire permeability μᵣ
 		std::tuple<std::vector<double>, std::vector<double>> positions; // add absolute positions manually
 
 		/**
 		 * @brief Construct ground wire geometry from parameter tuples.
 		 * @param ng Number of ground wires (typically 0 or 2).
-		 * @param values Geometry: [Rgdc, rg, dgsag, Δyg] with optional Δxg.
+		 * @param values Geometry: [Rgdc, rg, dgsag, Δyg] with optional Δxg (Rgdc in Ω/km).
 		 * @param ybc Height of the lowest phase bundle (m), used to place the wires.
 		 * @param mu_g Relative permeability of the ground wire.
 		 * @param positions Optional absolute (x, y) positions per ground wire.

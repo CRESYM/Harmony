@@ -360,10 +360,10 @@ TEST_F(TestStabilityEstimate, AcBlockParkMatchesPerComponent) {
     }
 }
 
-TEST_F(TestStabilityEstimate, P2PPowerImpedanceBlockVsPerComponent) {
+TEST_F(TestStabilityEstimate, P2PBlockParkVsPerComponent) {
     const std::filesystem::path jsonPath =
         std::filesystem::path(__FILE__).parent_path().parent_path()
-        / "benchmarking" / "powerimpedance" / "harmony" / "p2p.json";
+        / "benchmarking" / "powerimpedance" / "p2p" / "harmony" / "p2p.json";
     ASSERT_TRUE(std::filesystem::exists(jsonPath)) << jsonPath;
 
     std::ifstream in(jsonPath);
