@@ -8,34 +8,33 @@
 #include "core/Constants.h"
 
 void example_PV_plant(bool plotting_enabled /*=true*/) {
-	// Example usage of the PVplant class
 	vector<double> pv_parameters = {
-		2.8e6,		// P_pv: Rated power of the PV plant in watts
-		6570,		// I_pv: Rated current of the PV plant in amperes
-		720,		// N_s: Number of series-connected modules
-		2760,		// N_p: Number of parallel-connected strings
-		1.5,		// n: ideally factor of the diode
-		2.5,		// I_sc: Short-circuit current of a single module at STC
-		1e-9,		// I0: Reverse saturation current of the diode
-		7.2e-3,     // C_pv: Capacitance of the PV array in farads
-		900.0,		// V_dc: DC link voltage in volts
-		16e-6,      // L_boost: Inductance of the boost converter in henries
-		70e-3,      // C_dc: Capacitance of the DC link in farads
-		-0.0202,	// kp_boost: Proportional gain for the boost converter voltage control loop
-		-0.00202,	// ki_boost: Integral gain for the boost converter voltage control loop
-		103e-6,		// L_1: Inductance of the filter in henries
-		0,			// R_1: Resistance of the filter in ohms
-		120e-6,		// C_f: Capacitance of the filter in farads
-		0.08,		// R_c: Resistance of the filter in ohms
-		55e-6,		// L_2: Grid-side inductance in henries
-		380.0,		// V_g: Grid voltage in volts
-		50.0,	    // f_g: Grid frequency in hertz
-		1.0,		// K_p_dc: Proportional gain of the DC voltage controller
-		500.0,		// K_i_dc: Integral gain of the DC voltage controller
-		0.45,		// K_p_i: Proportional gain of the current controller
-		69.7,		// K_i_i: Integral gain of the current controller
-		0.5,		// K_p_pll: Proportional gain of the PLL
-		1.0			// K_i_pll: Integral gain of the PLL
+		1009603.68,	// P_pv (W), RTDS array MPP
+		2000.8,		// I_pv (A), Np*Imp
+		1044.0,		// N_s
+		656.0,		// N_p
+		1.9267367660446415, // n (MATLAB MPP diode fit)
+		3.35,		// I_sc (A), module
+		1.7250567519501773e-05, // I0 (A)
+		7.2e-3,		// C_pv (F)
+		800.0,		// V_dc (V)
+		250e-6,		// L_boost (H)
+		32e-3,		// C_dc (F), Zhao RTDS analytical value
+		0.002,		// kp_boost
+		0.04,		// ki_boost
+		63e-6,		// L_1 (H)
+		0.0,		// R_1 (Ohm)
+		1500e-6,	// C_f (F)
+		0.051,		// R_c (Ohm)
+		0.0,		// L_2 (H)
+		315.0,		// V_g L-L rms (V)
+		50.0,		// f_g (Hz)
+		16.20032898666123,	// K_p_dc
+		324.0065797332246,	// K_i_dc
+		0.19845,	// K_p_i
+		9.9225,		// K_i_i
+		0.732885617235351,	// K_p_pll
+		4.88590411490234	// K_i_pll
 	};
 
 	PVplant* pv = new PVplant("PV1", "AC1", pv_parameters);

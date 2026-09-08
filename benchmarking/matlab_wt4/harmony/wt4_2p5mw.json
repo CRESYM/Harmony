@@ -1,9 +1,9 @@
 {
     "simulation": {
-        "title": "wt_type_4",
-        "description": "2.5 MW / 690 V / 50 Hz type-4 GSC Y-matrix. OP from P, Q.",
+        "title": "wt4_2p5mw",
+        "description": "Harmony WT4 Y(f) vs MATLAB WT4_RTDS_Implementation_v2 reduced-L.",
         "output_directory": "./files",
-        "frequency_range": { "start": 1, "end": 1000, "points": 15 }
+        "frequency_range": { "start": 1, "end": 1000, "points": 200 }
     },
     "buses": [
         { "id": "bus1", "location": "AC1", "pins": 3, "enabled": true }

@@ -1,9 +1,9 @@
 {
     "simulation": {
-        "title": "wt_type_3",
-        "description": "2.5 MW / 690 V / 50 Hz DFIG Y-matrix. OP from P, Q, slip.",
+        "title": "wt3_2p5mw",
+        "description": "Harmony WT3 Y(f) vs MATLAB WT3_DFIG_SequenceImpedance_2p5MW_v6_directEval.",
         "output_directory": "./files",
-        "frequency_range": { "start": 1, "end": 1000, "points": 15 }
+        "frequency_range": { "start": 1, "end": 1000, "points": 200 }
     },
     "buses": [
         { "id": "bus1", "location": "AC1", "pins": 3, "enabled": true }

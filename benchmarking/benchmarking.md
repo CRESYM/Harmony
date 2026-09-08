@@ -41,6 +41,46 @@ python benchmarking/unbalanced_yeff/run.py
 Typical wall: **1–2 min** for all five cases.
 [`unbalanced_yeff/README.md`](unbalanced_yeff/README.md).
 
+## MATLAB PV $Y_{dq}$
+
+Standalone plant admittance vs `PV_RTDS_ZhaoValidatedEngine.m`
+($C_{\mathrm{dc}}=32\,\mathrm{mF}$, $Z=-A^{-1}B$):
+[`matlab_pv/`](matlab_pv/).
+
+```bash
+python benchmarking/matlab_pv/run.py
+```
+
+Harmony **blue**, MATLAB **orange**. Overlay: [`matlab_pv/results/overlay_Y.svg`](matlab_pv/results/overlay_Y.svg).
+
+Typical wall: **~16 s**. Mean Frobenius relative error $2.0\times 10^{-6}$.
+
+## MATLAB WT3 $Y_{dq}$
+
+Standalone DFIG admittance vs `WT3_DFIG_SequenceImpedance_2p5MW_v6_directEval.m`:
+[`matlab_wt3/`](matlab_wt3/).
+
+```bash
+python benchmarking/matlab_wt3/run.py
+```
+
+Harmony **blue**, MATLAB **orange**. Overlay: [`matlab_wt3/results/overlay_Y.svg`](matlab_wt3/results/overlay_Y.svg).
+
+Typical wall: **~18 s**. Mean Frobenius relative error $1.7\times 10^{-6}$.
+
+## MATLAB WT4 $Y_{dq}$
+
+Standalone type-4 GSC admittance vs `WT4_RTDS_Implementation_v2_EquationConsistent.m`
+(reduced-$L$, $Y=BA^{-1}$): [`matlab_wt4/`](matlab_wt4/).
+
+```bash
+python benchmarking/matlab_wt4/run.py
+```
+
+Harmony **blue**, MATLAB **orange**. Overlay: [`matlab_wt4/results/overlay_Y.svg`](matlab_wt4/results/overlay_Y.svg).
+
+Typical wall: **~26 s**. Mean Frobenius relative error $3.0\times 10^{-6}$.
+
 ## Benchmarking examples:
 - Three-phase transformer models as published here:
 ```

@@ -1,9 +1,9 @@
 {
     "simulation": {
-        "title": "pv_plant",
-        "description": "MATLAB PV_RTDS_ZhaoValidatedEngine unit (1 MW, 315 V, 50 Hz, Cdc=32 mF, Z=-A\\B).",
+        "title": "pv_zhao_rtds",
+        "description": "Harmony PV Y(f) vs MATLAB PV_RTDS_ZhaoValidatedEngine (1 MW, 315 V, 50 Hz, Cdc=32 mF, Z=-A\\B).",
         "output_directory": "./files",
-        "frequency_range": { "start": 1, "end": 1000, "points": 15 }
+        "frequency_range": { "start": 1, "end": 1000, "points": 200 }
     },
     "buses": [
         { "id": "bus1", "location": "AC1", "pins": 3, "enabled": true }
