@@ -3,10 +3,26 @@
 Thank you for considering making a contribution to Harmony! This document explains how to make changes to the project, whether you are adding a new feature, fixing a bug, improving the documentation or doing something else. 
 
 This document contains the following sections:
+- [Reporting bugs, requesting features or asking for help](#reporting-bugs-requesting-features-or-asking-for-help)
 - [Internal Contributors](#internal-contributors) - procedure for contributors who have access to the Harmony repository.
 - [External Contributors](#external-contributors) - procedure for contributing through a fork of the Harmony repository.
 - [Git Flow Description](#git-flow) – overview of the branching workflow used by Harmony.
 - [Frequently Asked Questions](#frequently-asked-questions) - solutions to common Git problems and links to further resources.
+
+## Reporting bugs, requesting features or asking for help
+
+We use GitHub issues to report bugs, request new features and ask questions or get help with using Harmony.
+
+Before opening a new issue, check whether a similar issue already exists. If you find an existing issue that describes the same problem or request, add a comment to it rather than creating a duplicate issue.
+
+To open an issue, go to the [Issues tab](https://github.com/CRESYM/Harmony/issues) and click the _New issue_ button. Harmony provides different forms for reporting bugs, requesting features or asking for help. Select the option that best matches your situation. If none of the available forms is suitable, select _Blank issue_.
+
+When creating an issue, fill in the fields providing as much details as possible. Where relevant, attach screenshots, log files, example input files or other files that can help developers understand the problem. You can attach files and images by dragging and dropping them into the issue.
+
+Try to keep each issue focused on one problem or request. If you identify an unrelated problem while working on an issue, consider opening a separate issue for it.
+
+Please note that you need a GitHub account to be able to open new issues.
+
 
 ## Internal Contributors
 
