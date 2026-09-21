@@ -7,9 +7,6 @@ on:
   # Runs at 2:00 AM UTC on Mondays
   schedule:
     - cron: '0 2 * * 1'
-  # When a pull request to merge a branch into main or develop is opened/updated
-  pull_request:
-    branches: [ "main", "develop"]
   push:
     branches: ["feature/60-test-coverage-report"]
 
@@ -53,10 +50,22 @@ jobs:
           cmake --build . --config Release -j4
           ctest -j 4
 
-      # Generate test coverage report in html format
+      # Generate test coverage report using lcov
+      # First, measure the coverage and store result in coverage.info
+      # Second, remove sys, conda and googletest from the report
+      # Finally, generate report in html format
       - name: Generate test coverage report
         shell: bash -l {0}
         run: |
+          cd tests/build
           lcov --capture --directory . --output-file coverage.info --ignore-errors inconsistent,unsupported,format
           lcov --remove coverage.info '/usr/*' '*/googletest/*' '/opt/miniconda3/*' '/Library/*' --output-file coverage.info --ignore-errors inconsistent,unsupported,format
           genhtml coverage.info --output-directory coverage_report --ignore-errors inconsistent,unsupported,format,unused,category
+          
+      # Store html report as an artifact
+      - name: Store html report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: harmony-test-coverage
+          path: tests/build/coverage_report
+          retention-days: 30
