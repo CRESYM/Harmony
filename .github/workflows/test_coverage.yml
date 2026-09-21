@@ -59,7 +59,7 @@ jobs:
         run: |
           cd tests/build
           lcov --capture --directory . --output-file coverage.info --ignore-errors inconsistent,unsupported,format
-          lcov --remove coverage.info '/usr/*' '*/googletest/*' '/opt/miniconda3/*' '/Library/*' --output-file coverage.info --ignore-errors inconsistent,unsupported,format
+          lcov --remove coverage.info '/usr/*' '*/googletest/*' '*/miniconda3/*' '/Library/*' --output-file coverage.info --ignore-errors inconsistent,unsupported,format,unused
           
       - name: GenHTML
         shell: bash -l {0}
