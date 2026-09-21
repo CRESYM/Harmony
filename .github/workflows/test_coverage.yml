@@ -7,10 +7,8 @@ on:
   # Runs at 2:00 AM UTC on Mondays
   schedule:
     - cron: '0 2 * * 1'
-  push:
-    branches: ["feature/60-test-coverage-report"]
 
-# This workflow defines one job: build-and-test
+# This workflow defines one job: report_test_coverage
 jobs:
   report_test_coverage:
     
@@ -53,18 +51,13 @@ jobs:
       # Generate test coverage report using lcov
       # First, measure the coverage and store result in coverage.info
       # Second, remove sys, conda and googletest from the report
-      # Finally, generate report in html format
+      # Finally, generate report in html format and store it in tests/build/coverage_report
       - name: Generate test coverage report
         shell: bash -l {0}
         run: |
           cd tests/build
           lcov --capture --directory . --output-file coverage.info --ignore-errors inconsistent,unsupported,format
           lcov --remove coverage.info '/usr/*' '*/googletest/*' '*/miniconda3/*' '/Library/*' --output-file coverage.info --ignore-errors inconsistent,unsupported,format,unused
-          
-      - name: GenHTML
-        shell: bash -l {0}
-        run: |
-          cd tests/build
           genhtml coverage.info --output-directory coverage_report --ignore-errors inconsistent,unsupported,format,unused,category
 
       # Store html report as an artifact
