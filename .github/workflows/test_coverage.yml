@@ -60,8 +60,13 @@ jobs:
           cd tests/build
           lcov --capture --directory . --output-file coverage.info --ignore-errors inconsistent,unsupported,format
           lcov --remove coverage.info '/usr/*' '*/googletest/*' '/opt/miniconda3/*' '/Library/*' --output-file coverage.info --ignore-errors inconsistent,unsupported,format
-          genhtml coverage.info --output-directory coverage_report --ignore-errors inconsistent,unsupported,format,unused,category
           
+      - name: GenHTML
+        shell: bash -l {0}
+        run: |
+          cd tests/build
+          genhtml coverage.info --output-directory coverage_report --ignore-errors inconsistent,unsupported,format,unused,category
+
       # Store html report as an artifact
       - name: Store html report as artifact
         uses: actions/upload-artifact@v4
