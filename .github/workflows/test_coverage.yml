@@ -1,0 +1,69 @@
+name: Test Coverage
+
+# Workflow triggers tell GitHub when to run the workflow:
+on:
+  # Allows workflow to be triggered manually from the GitHub UI (Actions tab)
+  workflow_dispatch:
+  # Runs at 2:00 AM UTC on Mondays
+  schedule:
+    - cron: '0 2 * * 1'
+
+# This workflow defines one job: report_test_coverage
+jobs:
+  report_test_coverage:
+    
+    # Use macos-latest runner.
+    # See https://github.com/actions/runner-images for a list of available runners.
+    runs-on: macos-latest
+    
+    steps:
+
+      # Checkout a copy of this repository on the runner
+      # We use the "checkout" GitHub Action
+      # https://github.com/actions/checkout
+      - uses: actions/checkout@v4
+
+      # Install dependencies
+      # Call .github/actions/setup-env/action.yml
+      # This script creates the conda env and installs Gurobi and its license
+      - name: Install dependencies
+        uses: ./.github/actions/setup-env
+        with:
+          gurobi_wlsaccessid: ${{ secrets.GUROBI_WLSACCESSID }}
+          gurobi_wlssecret: ${{ secrets.GUROBI_WLSSECRET }}
+          gurobi_licenseid: ${{ secrets.GUROBI_LICENSEID }}
+
+      # Install lcov on the runner (used to measure test coverage)
+      - name: Install lcov
+        shell: bash -l {0}
+        run: brew install lcov
+
+      # Build the tests linking to lcov
+      - name: Build and run the tests
+        shell: bash -l {0}
+        run: |
+          mkdir tests/build
+          cd tests/build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DGUROBI_PATH="/Library/gurobi1301/macos_universal2" -DENABLE_TEST_COVERAGE=ON
+          cmake --build . --config Release -j4
+          ctest -j 4
+
+      # Generate test coverage report using lcov
+      # First, measure the coverage and store result in coverage.info
+      # Second, remove sys, conda and googletest from the report
+      # Finally, generate report in html format and store it in tests/build/coverage_report
+      - name: Generate test coverage report
+        shell: bash -l {0}
+        run: |
+          cd tests/build
+          lcov --capture --directory . --output-file coverage.info --ignore-errors inconsistent,unsupported,format
+          lcov --remove coverage.info '/usr/*' '*/googletest/*' '*/miniconda3/*' '/Library/*' --output-file coverage.info --ignore-errors inconsistent,unsupported,format,unused
+          genhtml coverage.info --output-directory coverage_report --ignore-errors inconsistent,unsupported,format,unused,category
+
+      # Store html report as an artifact
+      - name: Store html report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: harmony-test-coverage
+          path: tests/build/coverage_report
+          retention-days: 30
