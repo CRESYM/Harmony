@@ -3,7 +3,7 @@
  * @brief Runnable example: AC-only OPF from bundled CSV case data.
  */
 #include "Examples.h"
-#include "../Solver/OPF/Powerflow.h"
+#include "Solver/OPF/Powerflow.h"
 
 void example_OPF_ac(bool plotting_enabled /*=true*/)
 {

@@ -53,7 +53,7 @@ Also available from **HarmonyUI** (Launcher → C++ examples).
 
 ## 8.4 Unit tests
 
-Build `testharmony` from `tests/`, then:
+Build `testharmony` from the repository `build/` tree, then:
 
 ```bash
 testharmony.exe --gtest_filter=GeometricCertificates*

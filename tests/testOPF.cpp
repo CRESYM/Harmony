@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "../src/Solver/OPF/Powerflow.h"
-#include "../src/network.h"
+#include "Solver/OPF/Powerflow.h"
+#include "network/network.h"
 
 
 TEST(OPFSmoke, LoadCaseDataDoesNotCrash) {

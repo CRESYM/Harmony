@@ -1,0 +1,442 @@
+{
+    "simulation": {
+        "title": "pi_p2p_pi_op",
+        "description": "P2P HVDC linearised at the PowerImpedance power-flow operating point (Harmony OPF skipped).",
+        "output_directory": "./files",
+        "frequency_range": {
+            "start": 10,
+            "end": 1000,
+            "points": 41
+        },
+        "nominal_power": 1000.0,
+        "nominal_voltage": 380.0,
+        "dc_nominal_voltage": 800.0
+    },
+    "buses": [
+        {
+            "id": "B2",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "B3",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "B6",
+            "location": "AC2",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "B7",
+            "location": "AC2",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "B4",
+            "location": "DC1",
+            "pins": 2,
+            "enabled": true
+        },
+        {
+            "id": "B5",
+            "location": "DC1",
+            "pins": 2,
+            "enabled": true
+        }
+    ],
+    "components": [
+        {
+            "id": "g4",
+            "location": "AC1",
+            "type": "ac_source",
+            "pins": 3,
+            "voltage": 380000.0,
+            "values": [
+                1e-06
+            ],
+            "connected_bus": {
+                "bus_id": "B2",
+                "terminal": 1
+            },
+            "enabled": true
+        },
+        {
+            "id": "g1",
+            "location": "AC2",
+            "type": "ac_source",
+            "pins": 3,
+            "voltage": 380000.0,
+            "values": [
+                1e-06
+            ],
+            "connected_bus": {
+                "bus_id": "B7",
+                "terminal": 1
+            },
+            "enabled": true
+        },
+        {
+            "id": "tl1",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length_km": 25.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "flat",
+                "number_bundles": [
+                    3,
+                    1
+                ],
+                "geometry": [
+                    10.0,
+                    30.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.0
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    7.5,
+                    6.5
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "B2",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "B3",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "tl78",
+            "location": "AC2",
+            "type": "overhead_line",
+            "length_km": 90.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "flat",
+                "number_bundles": [
+                    3,
+                    1
+                ],
+                "geometry": [
+                    10.0,
+                    30.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.0
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    7.5,
+                    6.5
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "B6",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "B7",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "dc_line",
+            "location": "DC1",
+            "type": "cable",
+            "cable_type": "underground",
+            "length": 100000.0,
+            "earth": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "conductors": [
+                {
+                    "id": "C1",
+                    "ri": 0.0,
+                    "ro": 0.02425,
+                    "resistivity": 1.72e-08
+                },
+                {
+                    "id": "C2",
+                    "ri": 0.04175,
+                    "ro": 0.04625,
+                    "resistivity": 2.2e-07
+                },
+                {
+                    "id": "C3",
+                    "ri": 0.04975,
+                    "ro": 0.06055,
+                    "resistivity": 1.8e-07,
+                    "permeability": 10.0
+                }
+            ],
+            "insulators": [
+                {
+                    "id": "I1",
+                    "ri": 0.02425,
+                    "ro": 0.04175,
+                    "permittivity": 2.3
+                },
+                {
+                    "id": "I2",
+                    "ri": 0.04625,
+                    "ro": 0.04975,
+                    "permittivity": 2.3
+                },
+                {
+                    "id": "I3",
+                    "ri": 0.06055,
+                    "ro": 0.06575,
+                    "permittivity": 2.3
+                }
+            ],
+            "positions": [
+                [
+                    -0.5,
+                    1.0
+                ],
+                [
+                    0.5,
+                    1.0
+                ]
+            ],
+            "pins": 2,
+            "connected_buses": [
+                {
+                    "bus_id": "B4",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "B5",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "c1",
+            "location": "AC1_DC1",
+            "type": "mmc",
+            "converter_params": [
+                314.1592653589793,
+                -100316619.29,
+                100000000.0,
+                -0.006596211679321095,
+                307649.6295688735,
+                -100165413.04,
+                800000.0,
+                0.05,
+                1.07,
+                0.01,
+                400.0,
+                0.06,
+                0.535,
+                0.0
+            ],
+            "controller_params": [
+                1,
+                0,
+                0.0002835110150884121,
+                0.012723974357167933,
+                1,
+                0,
+                1,
+                0,
+                0.013429220081048125,
+                0.04028766024314437,
+                1,
+                800000.0,
+                0,
+                0,
+                1,
+                0,
+                2.1486752129677e-07,
+                6.750256562307197e-05,
+                1,
+                100000000.0,
+                0,
+                0,
+                1,
+                0,
+                111.05804,
+                75487.32376,
+                2,
+                2148.6752129676997,
+                0.0,
+                1,
+                0,
+                67.072,
+                30842.496,
+                2,
+                0.0,
+                0.0,
+                0,
+                0
+            ],
+            "connected_buses": [
+                {
+                    "bus_id": "B3",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "B4",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true,
+            "opf_info": {
+                "LossA": 0.0,
+                "LossB": 0.0,
+                "LossCrec": 0.0,
+                "LossCinv": 0.0,
+                "bf": 0.0
+            }
+        },
+        {
+            "id": "c2",
+            "location": "AC2_DC1",
+            "type": "mmc",
+            "converter_params": [
+                314.1592653589793,
+                100000000.0,
+                100000000.0,
+                0.031205439828107417,
+                304179.4385933678,
+                100136222.4,
+                799766.85551,
+                0.05,
+                1.07,
+                0.01,
+                400.0,
+                0.0461,
+                0.4103,
+                0.0
+            ],
+            "controller_params": [
+                1,
+                0,
+                0.0002835110150884121,
+                0.012723974357167933,
+                1,
+                0,
+                0,
+                1,
+                0,
+                2.1486752129677e-07,
+                6.750256562307197e-05,
+                1,
+                100000000.0,
+                0,
+                1,
+                0,
+                2.1486752129677e-07,
+                6.750256562307197e-05,
+                1,
+                100000000.0,
+                0,
+                0,
+                1,
+                0,
+                111.05804,
+                75487.32376,
+                2,
+                2148.6752129676997,
+                0.0,
+                1,
+                0,
+                67.072,
+                30842.496,
+                2,
+                0.0,
+                0.0,
+                0,
+                0
+            ],
+            "connected_buses": [
+                {
+                    "bus_id": "B6",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "B5",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true,
+            "opf_info": {
+                "LossA": 0.0,
+                "LossB": 0.0,
+                "LossCrec": 0.0,
+                "LossCinv": 0.0,
+                "bf": 0.0
+            }
+        }
+    ],
+    "computations": [
+        {
+            "type": "network_summary"
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "dc_line",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 41
+            },
+            "plot": false
+        },
+        {
+            "type": "stability_assessment",
+            "converter_id": "c2",
+            "location": "AC",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 41
+            },
+            "plot": false,
+            "park_per_component": false,
+            "skip_opf": true
+        }
+    ]
+}

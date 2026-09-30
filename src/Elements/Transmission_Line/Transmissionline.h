@@ -6,7 +6,7 @@
  * @brief Lumped-parameter transmission line model with distributed R, L, G, C.
  */
 
-#include "../Element.h"
+#include "Elements/Element.h"
 
 class Element; // Forward declaration of Element class
 
@@ -29,7 +29,7 @@ public:
     ~TransmissionLine() {}
 
 	void computePowerFlow(std::map<std::string, double>& branchData,
-		const std::map<std::string, double>& global) const;
+		std::map<std::string, double>& globalParams) const override;
 
    // void compute_y_parameters(double R, double L, double G, double C, double length);
 private:

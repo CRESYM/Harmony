@@ -50,13 +50,16 @@ jobs:
           if [ -n "${CONDA_PREFIX:-}" ] && [ -d "${CONDA_PREFIX}/Library/bin" ]; then
             export PATH="${CONDA_PREFIX}/Library/bin:$PATH"
           fi
-          mkdir tests/build
-          cd tests/build
-          cmake .. -DGUROBI_PATH="C:\gurobi1301\win64"
-          cmake --build . --config Release -j4
+          cmake --build build --config Release --target testharmony -j4
 
       - name: Run the tests (except examples)
         uses: ./.github/actions/run-ctest
         with:
           gurobi_path: 'C:\gurobi1301\win64'
           ctest_args: '-E TestExamples'
+
+      - name: Run the example tests
+        uses: ./.github/actions/run-ctest
+        with:
+          gurobi_path: 'C:\gurobi1301\win64'
+          ctest_args: '-R TestExamples'

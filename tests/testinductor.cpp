@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "Inductor.h"
-#include "Bus.h"
+#include "Elements/Impedance/Inductor.h"
+#include "network/Bus.h"
 #include <symengine/basic.h>
 
 

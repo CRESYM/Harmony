@@ -26,9 +26,9 @@
  * buses are handled identically.
  */
 
-#include "../../Constants.h"
-#include "../Helper_Functions/Symbolic_functions.h"
-#include "../../SubNetwork.h"
+#include "core/Constants.h"
+#include "Solver/Helper_Functions/Symbolic_functions.h"
+#include "network/SubNetwork.h"
 
 class Bus;
 class Element;
@@ -62,8 +62,38 @@ public:
      * @param frequency  Evaluation frequency in Hz.
      * @return  Y-parameter matrix of size (sum_pins × sum_pins) where sum_pins
      *          is the total number of pins across all output buses.
+     *
+     * Park A0 follows @ref getParkPerComponent (default true: per element).
      */
     MatrixXcd compute_equivalent_admittance_parameters_num(SubNetwork* subnet, double frequency);
+
+    /**
+     * @brief Same as the two-argument overload, with an explicit Park mode.
+     * @param park_per_component  True: Park each AC stamp. False: assemble
+     *        abc Y and apply A0 once to the AC-block port admittance.
+     */
+    MatrixXcd compute_equivalent_admittance_parameters_num(
+        SubNetwork* subnet, double frequency, bool park_per_component);
+
+    /**
+     * @brief Same as the three-argument overload, with an explicit Yeff flag.
+     * @param yeff  True: block Park with C± Schur correction (eq. 18).
+     */
+    MatrixXcd compute_equivalent_admittance_parameters_num(
+        SubNetwork* subnet, double frequency, bool park_per_component, bool yeff);
+
+    /** @brief Park A0 per AC element (true, default) or once per AC block (false). */
+    void setParkPerComponent(bool flag) { park_per_component_ = flag; }
+    bool getParkPerComponent() const { return park_per_component_; }
+
+    /**
+     * @brief Use Yeff (paper eq. 18) on the assembled AC-block abc Y.
+     *
+     * When true, Park is applied once per AC block (same as
+     * @ref setParkPerComponent false) and the C± Schur correction is included.
+     */
+    void setYeff(bool flag) { yeff_ = flag; }
+    bool getYeff() const { return yeff_; }
 
     /**
      * @brief MIMO transfer function at a single frequency.
@@ -86,10 +116,25 @@ public:
     MatrixXcd compute_transfer_function(string converter_name, string location, double frequency);
 
     /**
+     * @brief Driving-point impedance at the converter cut: Zin = (Yn + Yeq)^{-1}.
+     *
+     * Same partition as compute_transfer_function (H = Yn · Yeq^{-1}). On the
+     * AC side this is the 2×2 dq impedance seen at the converter PCC, including
+     * the converter with the DC grid closed around the other terminals.
+     */
+    MatrixXcd compute_driving_point_impedance(string converter_name, string location, double frequency);
+
+    /**
      * @brief Write transfer function data to a CSV file over a frequency sweep.
      */
     void writeFileTF(string converter_name, string location,
                      double start_frequency, double end_frequency, int number_of_points);
+
+    /**
+     * @brief Write driving-point Zin to ./files/{converter}_{location}_Zin.csv.
+     */
+    void writeFileZin(string converter_name, string location,
+                      double start_frequency, double end_frequency, int number_of_points);
 
     /**
      * @brief Bode plot of the transfer function over a frequency sweep.
@@ -140,16 +185,27 @@ private:
      *        all other ports are terminated with @p Y_closing.
      *
      * Implements eqs. (13)-(14): partitions the DC Y-parameter matrix around
-     * the input port and applies the Schur complement.
+     * the input port and applies the Schur complement
+     *   Y_eq = Y11 − Y12 (Y_closing + Y22)^{-1} Y21.
      *
      * @param sub         DC subnetwork.
      * @param bus_name    Name of the input (main-converter) DC bus.
      * @param Y_param     Multi-port DC admittance matrix.
      * @param Y_closing   Block-diagonal closing admittance from other converters.
-     * @return  Equivalent closing impedance matrix (p × p).
+     * @return  Equivalent closing admittance matrix (p × p).
      */
-    MatrixXcd compute_closing_impedance(SubNetwork* sub, string& bus_name,
-                                        MatrixXcd& Y_param, MatrixXcd& Y_closing);
+    MatrixXcd compute_closing_admittance(SubNetwork* sub, string& bus_name,
+                                         MatrixXcd& Y_param, MatrixXcd& Y_closing);
+
+    /**
+     * @brief Converter-side Yn and grid-side Yeq at the named cut.
+     * @return false if the converter or area cannot be resolved.
+     */
+    bool compute_cut_admittances(string converter_name, string location, double frequency,
+                                 MatrixXcd& Yn, MatrixXcd& Yeq);
+
+    bool park_per_component_ = true;
+    bool yeff_ = false;
 };
 
 #endif

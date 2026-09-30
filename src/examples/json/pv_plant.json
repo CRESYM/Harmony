@@ -1,7 +1,7 @@
 {
     "simulation": {
         "title": "pv_plant",
-        "description": "JSON equivalent of example_PV_plant.cpp — PV inverter plant Y-matrix.",
+        "description": "MATLAB PV_RTDS_ZhaoValidatedEngine unit (1 MW, 315 V, 50 Hz, Cdc=32 mF, Z=-A\\B).",
         "output_directory": "./files",
         "frequency_range": { "start": 1, "end": 1000, "points": 15 }
     },
@@ -14,9 +14,11 @@
             "location": "AC1",
             "type": "pv_plant",
             "parameters": [
-                2800000.0, 6570.0, 720.0, 2760.0, 1.5, 2.5, 1e-9, 0.0072, 900.0,
-                1.6e-05, 0.07, -0.0202, -0.00202, 0.000103, 0.0, 0.00012, 0.08,
-                5.5e-05, 380.0, 50.0, 1.0, 500.0, 0.45, 69.7, 0.5, 1.0
+                1009603.68, 2000.8, 1044.0, 656.0, 1.9267367660446415, 3.35,
+                1.7250567519501773e-05, 0.0072, 800.0, 0.00025, 0.032, 0.002, 0.04,
+                6.3e-05, 0.0, 0.0015, 0.051, 0.0, 315.0, 50.0,
+                16.20032898666123, 324.0065797332246, 0.19845, 9.9225,
+                0.732885617235351, 4.88590411490234
             ],
             "connected_bus": { "bus_id": "bus1", "terminal": 1 },
             "enabled": true

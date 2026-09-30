@@ -1,0 +1,30 @@
+{
+    "simulation": {
+        "title": "pv_zhao_rtds",
+        "description": "Harmony PV Y(f) vs MATLAB PV_RTDS_ZhaoValidatedEngine (1 MW, 315 V, 50 Hz, Cdc=32 mF, Z=-A\\B).",
+        "output_directory": "./files",
+        "frequency_range": { "start": 1, "end": 1000, "points": 200 }
+    },
+    "buses": [
+        { "id": "bus1", "location": "AC1", "pins": 3, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "PV1",
+            "location": "AC1",
+            "type": "pv_plant",
+            "parameters": [
+                1009603.68, 2000.8, 1044.0, 656.0, 1.9267367660446415, 3.35,
+                1.7250567519501773e-05, 0.0072, 800.0, 0.00025, 0.032, 0.002, 0.04,
+                6.3e-05, 0.0, 0.0015, 0.051, 0.0, 315.0, 50.0,
+                16.20032898666123, 324.0065797332246, 0.19845, 9.9225,
+                0.732885617235351, 4.88590411490234
+            ],
+            "connected_bus": { "bus_id": "bus1", "terminal": 1 },
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "y_matrix", "component_id": "PV1" }
+    ]
+}
