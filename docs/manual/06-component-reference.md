@@ -75,15 +75,23 @@ All transformers take a **pin count** (phases per winding) and a **values vector
 
 Six values: `[R_p, L_p, R_s, L_s, turns_ratio, phase_shift_rad]`
 
+Optional magnetizing branch (paper \(Y_m\)): eight values
+`[R_p, L_p, R_s, L_s, R_m, L_m, turns_ratio, phase_shift_rad]`.
+`phase_shift_rad` is \(\varphi\) in \(V_P/V_S = a\exp(j\varphi)\).
+
 ```cpp
 Transformer_real("T1", "AC1", 3, { 1.0, 0.04, 1.0, 0.04, 1.0, 0.0 });
 ```
+
+Topology variants from the Y-Y base via \(T_v\), \(T_i\):
+`TransformerYY_real`, `TransformerYDelta_real`, `TransformerDeltaY_real`,
+`TransformerDeltaDelta_real`.
 
 ### Classic transformer (`Transformer_classic` and variants)
 
 Five values: `[R_p, L_p, R_s, L_s, M]`
 
-Topology variants: `TransformerYY`, `TransformerDeltaY`, `TransformerYDelta`, `TransformerDeltaDelta`, plus `_real` counterparts with turns ratio and phase shift.
+Topology variants: `TransformerYY`, `TransformerDeltaY`, `TransformerYDelta`, `TransformerDeltaDelta`.
 
 See `src/examples/example_transformer.cpp` for wiring comparisons.
 
@@ -95,7 +103,7 @@ See `src/examples/example_transformer.cpp` for wiring comparisons.
 
 Requires bundle geometry, conductor data, and ground-wire parameters. See `example_OHL.cpp`.
 
-Key inputs: line length [km], earth `(μ_r, ε_r, ρ)`, conductor organization (flat, vertical, delta, …), ground-wire count and spacing.
+Key inputs: line length in metres (JSON may use `length_km` × 1000), earth `(μ_r, ε_r, ρ)`, conductor organization (flat, vertical, delta, …), `rc` / `Rdc` / `dsag` / `dsb`, ground-wire count and `mu_g`.
 
 ### Cable (`Cable`)
 
@@ -150,7 +158,7 @@ Named controllers (in order): `pll`, `dc_voltage`, `active_power`, `ac_voltage`,
 
 Each slot begins with an enable flag (`0` = off, `1` = on). Disabled controllers occupy one number; enabled controllers add type (`0` = PI, `1` = P), gains, output dimension, and reference value(s). In JSON, use per-controller enable names (e.g. `"pll_enable": 0.0`, `"active_power_enable": 1.0`) so it is clear which blocks are off — see [`mmc_named_params.json`](../../src/examples/json/mmc_named_params.json).
 
-Each enabled controller consumes a fixed-length parameter sub-vector in `controller_params`. See `example_MMC.cpp` and `example_stability_check.cpp` for tuned sets.
+Each enabled controller consumes a fixed-length parameter sub-vector in `controller_params`. DC-voltage control uses one PI integrator with pack `1, 0, Kp, Ki, 1, Vdc` (port voltage in; submodule energy stays in the plant). See `example_MMC.cpp` and `example_stability_check.cpp` for tuned sets.
 
 ### Typical workflow
 

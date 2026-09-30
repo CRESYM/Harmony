@@ -1,0 +1,241 @@
+{
+    "simulation": {
+        "title": "mmc_unbalanced_ohl_conc_2gw",
+        "description": "2 GW, +/-525 kV bipolar MMC on a 250 km untransposed 400 kV offset-vertical twin-bundle OHL (block A0 vs Yeff).",
+        "output_directory": "./files",
+        "frequency_range": {
+            "start": 10,
+            "end": 1000,
+            "points": 81
+        },
+        "nominal_power": 2000.0,
+        "nominal_voltage": 400.0,
+        "dc_nominal_voltage": 1050.0
+    },
+    "buses": [
+        {
+            "id": "gnd",
+            "location": "GND",
+            "pins": 1,
+            "enabled": true
+        },
+        {
+            "id": "Bsrc",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "Bpcc",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "Bdc",
+            "location": "DC1",
+            "pins": 2,
+            "enabled": true
+        }
+    ],
+    "components": [
+        {
+            "id": "MMC1",
+            "location": "AC1_DC1",
+            "type": "mmc",
+            "converter_params": [
+                314.1592653589793,
+                2000000000.0,
+                0.0,
+                0.0,
+                326598.6323710904,
+                2000000000.0,
+                1050000.0,
+                0.05,
+                1.07,
+                0.01,
+                400.0,
+                0.025464790894703253,
+                0.2272,
+                0.0
+            ],
+            "controller_params": [
+                1,
+                0,
+                0.0002693354643339915,
+                0.012087775639309536,
+                1,
+                0,
+                0,
+                1,
+                0,
+                2.041241452319315e-07,
+                6.412743734191837e-05,
+                1,
+                2000000000.0,
+                0,
+                1,
+                0,
+                2.041241452319315e-07,
+                6.412743734191837e-05,
+                1,
+                0.0,
+                0,
+                0,
+                1,
+                0,
+                61.528,
+                41821.232,
+                2,
+                4082.48290463863,
+                0.0,
+                1,
+                0,
+                57.771,
+                26565.50925,
+                2,
+                0.0,
+                0.0,
+                0,
+                0
+            ],
+            "connected_buses": [
+                {
+                    "bus_id": "Bpcc",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "Bdc",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "Vs_dc",
+            "location": "DC1",
+            "type": "dc_source",
+            "pins": 2,
+            "voltage": [
+                525000.0,
+                -525000.0
+            ],
+            "resistance": 0.5,
+            "connected_buses": [
+                {
+                    "bus_id": "Bdc",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "gnd",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "Vs_ac",
+            "location": "AC1",
+            "type": "ac_source",
+            "pins": 3,
+            "voltage": 400000.0,
+            "values": [
+                0.01
+            ],
+            "connected_buses": [
+                {
+                    "bus_id": "Bsrc",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "gnd",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "OHL1",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length_km": 250.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "concentric",
+                "number_bundles": [
+                    3,
+                    2
+                ],
+                "geometry": [
+                    4.0,
+                    12.0,
+                    9.0,
+                    4.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.4572
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    35.0,
+                    8.0
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "Bsrc",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "Bpcc",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        {
+            "type": "print_connections"
+        },
+        {
+            "type": "stability_assessment",
+            "converter_id": "MMC1",
+            "location": "AC",
+            "skip_opf": true,
+            "park_per_component": false,
+            "yeff": false,
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 81
+            },
+            "plot": false
+        },
+        {
+            "type": "stability_assessment",
+            "converter_id": "MMC1",
+            "location": "AC",
+            "skip_opf": true,
+            "park_per_component": false,
+            "yeff": true,
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 81
+            },
+            "plot": false
+        }
+    ]
+}

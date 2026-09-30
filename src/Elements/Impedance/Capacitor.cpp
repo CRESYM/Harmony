@@ -29,8 +29,8 @@ Capacitor::Capacitor(const std::string& symbol, const std::string& location, int
                 throw std::invalid_argument("Capacitance must be positive.");
 			}
             RCP<const Basic> sC = mul(real_double(C[i]), s);  // s * C
-            int a = 2 * i;
-            int b = 2 * i + 1;
+            int a = i;
+            int b = i + pins;
             Y_matrix.set(a, a, sC);                       // Y(i,i)
             Y_matrix.set(a, b, mul(integer(-1), sC));     // Y(i,j)
             Y_matrix.set(b, a, mul(integer(-1), sC));     // Y(j,i)

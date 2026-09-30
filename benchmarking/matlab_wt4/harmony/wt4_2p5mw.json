@@ -1,0 +1,30 @@
+{
+    "simulation": {
+        "title": "wt4_2p5mw",
+        "description": "Harmony WT4 Y(f) vs MATLAB WT4_RTDS_Implementation_v2 reduced-L.",
+        "output_directory": "./files",
+        "frequency_range": { "start": 1, "end": 1000, "points": 200 }
+    },
+    "buses": [
+        { "id": "bus1", "location": "AC1", "pins": 3, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "PMSG",
+            "location": "AC1",
+            "type": "wt_type_4",
+            "parameters": [
+                690.0, 50.0, 2500000.0, 0.0, 1200.0,
+                0.05325027336821547, 0.3550018224547698,
+                0.19044, 9.522,
+                0.00075, 1230000.0, 4.74e-13,
+                0.0, 0.00012
+            ],
+            "connected_bus": { "bus_id": "bus1", "terminal": 1 },
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "y_matrix", "component_id": "PMSG" }
+    ]
+}

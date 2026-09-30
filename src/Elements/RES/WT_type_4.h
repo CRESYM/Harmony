@@ -12,6 +12,9 @@
  * @class WTtype4
  * @brief Type 4 wind turbine with full-scale back-to-back converter and filter.
  * @ingroup res
+ *
+ * Constructor pack (14 values): Vm, f1, Pwt, Qwt, Vdc, Kp_pll, Ki_pll, Kpi,
+ * Kii, Tdelay, wn, zeta, Rf, Lf. dq currents follow from P, Q at Vq = 0.
  */
 class WTtype4 : public RES_base {
 	friend class PowerFlow;
@@ -20,41 +23,32 @@ public:
 	 * @brief Construct a Type 4 wind turbine from a parameter vector.
 	 * @param symbol Element identifier.
 	 * @param location Network area or location string.
-	 * @param parameters Packed grid, control, filter, and reference parameters.
+	 * @param parameters Packed grid, control, and filter parameters.
 	 */
 	WTtype4(const string& symbol, const std::string& location, const vector<double>& parameters);
 
 	~WTtype4() {}
 
 private:
-	// Grid parameters
-	double Vm = 34.5e3;					// Grid voltage magnitude (V)
+	double Vm = 690.0;					// Grid voltage, line-to-line rms (V)
 	double f1 = 50.0;					// Grid frequency (Hz)
-	double Pwt = 3.2e6;					// Wind turbine power (W)
-	double Vdc = 1000;					// DC link voltage (V)
+	double Pwt = 2.5e6;					// Wind turbine power (W)
+	double Qwt = 0.0;					// Reactive power (var)
+	double Vdc = 1200.0;				// DC link voltage (V)
 
-	// PLL Parameters 
-	double Kp_pll = 0.93;				// PLL proportional gain
-	double Ki_pll = 50;					// PLL integral gain
+	double Kp_pll = 0.05325027336821547;	// PLL proportional gain (1/V)
+	double Ki_pll = 0.3550018224547698;	// PLL integral gain (1/(V s))
 
-	// Current Controller 
-	double Kpi = 0.053;					// Proportional gain
-	double Kii = 30.59;					// Integral gain
+	double Kpi = 0.19044;				// Current PI proportional gain (Ohm)
+	double Kii = 9.522;					// Current PI integral gain (Ohm/s)
 
-	// Delay
-	double Tdelay = 0.001;				// Delay in seconds
+	double Tdelay = 0.00075;			// PWM Padé delay (s)
 
-	// Second-order filter parameters
-	double wn = 1.23e6;					// Natural frequency (rad/s)
-	double zeta = 0.707;				// Damping ratio
+	double wn = 1.23e6;					// Measurement-filter natural frequency (rad/s)
+	double zeta = 4.74e-13;				// Measurement-filter damping ratio
 
-	// Filter Parameters - 2 values
-	double Rf = 0.095;					// Filter resistance (Ohms)
-	double Lf = 0.0045;					// Filter inductance (H)
-
-	// reference values
-	double Id_ref = -75.73l;			// Reference Id current (A)
-	double Iq_ref = 0.0;				// Reference Iq current (A)
+	double Rf = 0.0;					// Filter resistance (Ohm)
+	double Lf = 0.00012;				// Filter inductance (H)
 };
 
 #endif

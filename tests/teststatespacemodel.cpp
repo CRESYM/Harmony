@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "network.h"
-#include "Bus.h"
-#include "Include_components.h"
+#include "network/network.h"
+#include "network/Bus.h"
+#include "core/Include_components.h"
 
 class TestStateSpaceModel : public testing::Test {};
 

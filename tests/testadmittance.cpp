@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "Admittance.h"
+#include "Elements/Impedance/Admittance.h"
 
 class TestAdmittance : public testing::Test {};
 

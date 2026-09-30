@@ -1,0 +1,122 @@
+{
+    "simulation": {
+        "title": "pi_p2p_mmc_c2",
+        "description": "Standalone P2P c2: P+Q, Lr=0.0461 H, Rr=0.4103 Ohm.",
+        "output_directory": "./files",
+        "frequency_range": {
+            "start": 1,
+            "end": 1000,
+            "points": 81
+        },
+        "nominal_power": 1000.0,
+        "nominal_voltage": 380.0,
+        "dc_nominal_voltage": 800.0
+    },
+    "buses": [
+        {
+            "id": "ac_bus",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "dc_bus",
+            "location": "DC1",
+            "pins": 2,
+            "enabled": true
+        }
+    ],
+    "components": [
+        {
+            "id": "c2",
+            "location": "AC1_DC1",
+            "type": "mmc",
+            "converter_params": [
+                314.1592653589793,
+                100000000.0,
+                100000000.0,
+                0.0,
+                310268.7007525359,
+                100000000.0,
+                800000.0,
+                0.05,
+                1.07,
+                0.01,
+                400.0,
+                0.0461,
+                0.4103,
+                0.0
+            ],
+            "controller_params": [
+                1,
+                0,
+                0.0002835110150884121,
+                0.012723974357167933,
+                1,
+                0,
+                0,
+                1,
+                0,
+                2.1486752129677e-07,
+                6.750256562307197e-05,
+                1,
+                100000000.0,
+                0,
+                1,
+                0,
+                2.1486752129677e-07,
+                6.750256562307197e-05,
+                1,
+                100000000.0,
+                0,
+                0,
+                1,
+                0,
+                111.05804,
+                75487.32376,
+                2,
+                2148.6752129676997,
+                0.0,
+                1,
+                0,
+                67.072,
+                30842.496,
+                2,
+                0.0,
+                0.0,
+                0,
+                0
+            ],
+            "connected_buses": [
+                {
+                    "bus_id": "ac_bus",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "dc_bus",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true,
+            "opf_info": {
+                "LossA": 0.0,
+                "LossB": 0.0,
+                "LossCrec": 0.0,
+                "LossCinv": 0.0,
+                "bf": 0.0
+            }
+        }
+    ],
+    "computations": [
+        {
+            "type": "y_matrix",
+            "component_id": "c2",
+            "frequency_range": {
+                "start": 1,
+                "end": 1000,
+                "points": 81
+            },
+            "plot": false
+        }
+    ]
+}

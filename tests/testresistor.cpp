@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "Resistor.h"
-#include "Bus.h"
-#include "Constants.h"
+#include "Elements/Impedance/Resistor.h"
+#include "network/Bus.h"
+#include "core/Constants.h"
 
 #include <symengine/basic.h>
 

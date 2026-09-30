@@ -168,14 +168,11 @@ Create this folder if an example fails to write (the test CMake target creates i
 
 ## 2.7 Running the test suite
 
-Unit tests use GoogleTest and link the full library (excluding `main.cpp`):
+Unit tests use GoogleTest and link `harmony_core` and `harmony_examples` (same `build/` as Harmony):
 
 ```bash
-cd tests
-mkdir build && cd build
-cmake .. -DGUROBI_PATH="/path/to/gurobi"
-cmake --build . --config Release
-ctest
+cmake --build build --config Release --target testharmony
+ctest --test-dir build -C Release
 ```
 
 Tests cover network wiring, individual elements, MMC Y-matrices, state-space formation, stability estimation, and OPF smoke tests.
@@ -200,7 +197,7 @@ Tests cover network wiring, individual elements, MMC Y-matrices, state-space for
 
 Regenerate the build directory when you:
 
-- Add or remove `.cpp` / `.h` files (update `sources.cmake`)
+- Add or remove `.cpp` / `.h` files (update `cmake/sources.cmake`)
 
 - Change `CMakeLists.txt` or dependencies
 

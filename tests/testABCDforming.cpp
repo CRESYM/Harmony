@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include "State_Space_Model.h"
-#include "network.h"
-#include "Bus.h"
-#include "Include_components.h"
+#include "Solver/State_Space_Model/State_Space_Model.h"
+#include "network/network.h"
+#include "network/Bus.h"
+#include "core/Include_components.h"
 
 class TestABCDmatrices : public testing::Test {};
 

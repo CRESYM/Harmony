@@ -110,7 +110,7 @@ cd build
 cmake .. -DGUROBI_PATH="gurobi_installation_dir_config"
 ```
 
-The VS Solution or makefile will be generated inside the `build` directory. The VS Solution or makefile needs to be regenerated every time you make changes to any CMake files, including `sources.cmake` or `CMakeLists.txt`. These changes can include, for example: adding a new `.h` or `.cpp` file to the project or adding a dependency on a third-party library. To regenerate the solution or makefile, re-run the `cmake .. -DGUROBI_PATH="gurobi_installation_dir_config"` command from the `build` folder.
+The VS Solution or makefile will be generated inside the `build` directory. The VS Solution or makefile needs to be regenerated every time you make changes to any CMake files, including `cmake/sources.cmake` or `CMakeLists.txt`. These changes can include, for example: adding a new `.h` or `.cpp` file to the project or adding a dependency on a third-party library. To regenerate the solution or makefile, re-run the `cmake .. -DGUROBI_PATH="gurobi_installation_dir_config"` command from the `build` folder.
 
 **5.** (Optional, Windows) Open the VS Solution created in the previous step. Do so by selecting File->Open->Project/Solution on the top menu. Choose the file `<path-to-harmony/build/Harmony.sln>`. Carry out your development as usual, making changes to the project's source files and saving them.
 
@@ -172,28 +172,14 @@ cd <path-to-harmony>/build
 
 Harmony has a set of tests that helps ensure the code behaves as expected and produces the desired results. The procedure to compile and run the tests is very similar to the one used to compile Harmony. 
 
-To run the tests, execute the following commands, starting from the *root level* of the repository, with the harmony conda environment activated:
+To run the tests, configure Harmony from the repository root (same `build/` as the apps), with the harmony conda environment activated:
 
 ```bash
-# Open the tests directory
-cd tests
-
-# Create a build directory
-mkdir build
-cd build
-
-# Configure the CMake project specifying the path to your Gurobi installation, for example:
-#   Windows:  cmake .. -DGUROBI_PATH="C:/gurobi1202/win64"
-#   Linux:    cmake .. -DGUROBI_PATH="/opt/gurobi1301/linux64"
-#   MacOS:    cmake .. -DGUROBI_PATH="/Library/gurobi1200/macos_universal2"
-cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" 
-
-# Compile the tests. 
-# Replace 4 with the number of CPU cores you wish to use for parallel compilation
-cmake --build . --config Release -j 4
+# Compile testharmony against harmony_core and harmony_examples
+cmake --build build --config Release --target testharmony -j 4
 
 # Run the tests
-ctest -j 4
+ctest --test-dir build -C Release
 ```
 
 

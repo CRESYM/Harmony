@@ -11,7 +11,7 @@
  * compositional DW/SRG interconnection theorem with network DW shells.
  */
 
-#include "../../Constants.h"
+#include "core/Constants.h"
 
 #include <complex>
 #include <vector>

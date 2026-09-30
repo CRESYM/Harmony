@@ -12,9 +12,9 @@
  * matrix rows/columns.
  */
 
-#include "../../Elements/Element.h"
-#include "../../Bus.h"
-#include "../../network.h"
+#include "Elements/Element.h"
+#include "network/Bus.h"
+#include "network/network.h"
 
 class Network; class Element; class Bus;
 
@@ -262,6 +262,13 @@ public:
     MatrixXcd buildInputVector(int nKeep,
         const std::map<std::string, std::vector<MatrixXcd>>& elementStates) const;
 
+    /**
+     * @brief Fills a caller-owned input matrix (reuses @p u when the shape matches).
+     */
+    void buildInputVector(int nKeep,
+        const std::map<std::string, std::vector<MatrixXcd>>& elementStates,
+        MatrixXcd& u) const;
+
     /** @brief Prints input, state, and output index mappings to stdout. */
     void printMapping() const;
 
@@ -297,6 +304,7 @@ private:
 
    
     std::vector<InputGroup> input_groups;
+    mutable std::vector<MatrixXcd> input_step_scratch_;
 
 
     void finalizeCounts(Network*);
