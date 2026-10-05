@@ -4,6 +4,32 @@
  */
 #include "Source_base.h"
 
+#include <cmath>
+
+std::vector<std::vector<std::complex<double>>> Source_base::yFromSeriesResistance() const
+{
+	const int pins = input_pins;
+	const int n = 2 * pins;
+	std::vector<std::vector<std::complex<double>>> Y(
+		static_cast<size_t>(n),
+		std::vector<std::complex<double>>(static_cast<size_t>(n), { 0.0, 0.0 }));
+	for (int i = 0; i < pins; ++i) {
+		double z = 0.0;
+		if (i < static_cast<int>(Zsrc.size()))
+			z = Zsrc[static_cast<size_t>(i)];
+		else if (!Zsrc.empty())
+			z = Zsrc[0];
+		if (!std::isfinite(z) || std::abs(z) < 1e-12)
+			z = 1e-12;
+		const std::complex<double> g(1.0 / z, 0.0);
+		Y[static_cast<size_t>(i)][static_cast<size_t>(i)] = g;
+		Y[static_cast<size_t>(pins + i)][static_cast<size_t>(pins + i)] = g;
+		Y[static_cast<size_t>(i)][static_cast<size_t>(pins + i)] = -g;
+		Y[static_cast<size_t>(pins + i)][static_cast<size_t>(i)] = -g;
+	}
+	return Y;
+}
+
 // Power flow computations for AC and DC networks
 void Source_base::computePowerFlow(std::map<std::string, double>& gen,
     std::map<std::string, double>& globalParams) const {

@@ -78,8 +78,8 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 	double I_1q = I_2q + Vcfd * omega_g * C_f; // q-axis current through the filter inductor
 	//cout << Vcfd << " " << Vcfq << " " << I_1d << " " << I_1q << endl;
 
-	double V_sd = V_pccd - omega_g * L_1 * I_1q - R_1 * I_1d - omega_g * L_2 * I_2q;
-	double V_sq = V_pccq + omega_g * L_1 * I_1d - R_1 * I_1q + omega_g * L_2 * I_2d;
+	double V_sd = V_pccd + R_1 * I_1d - omega_g * L_1 * I_1q - omega_g * L_2 * I_2q;
+	double V_sq = V_pccq + R_1 * I_1q + omega_g * L_1 * I_1d + omega_g * L_2 * I_2d;
 
 	double Md0 = 2.0 * V_sd / V_dc;
 	double Mq0 = 2.0 * V_sq / V_dc;
@@ -97,9 +97,8 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 	Gi.set(0, 0, gi); // d-axis
 	Gi.set(1, 1, gi); // q-axis
 	DenseMatrix Gv = createZeroMatrix(2, 2);
-	RCP<const Basic> kv = mul(gi, real_double(1.0 / V_dc));
-	Gv.set(0, 0, kv); // d-axis
-	Gv.set(1, 1, kv); // q-axis
+	Gv.set(0, 0, real_double(1.0 / V_dc));
+	Gv.set(1, 1, real_double(1.0 / V_dc));
 	//cout << Gi.__str__() << endl;
 	//cout << Gv.__str__() << endl;
 
@@ -119,9 +118,9 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 	// Boost controller
 	RCP<const Basic> gb = add(real_double(kp_boost), div(real_double(ki_boost), s));
 	// PV coefficient
-	double Tn = 298.18; // nominal temperature
-	double k = 1.380625e-23; // Boltzmann's constant
-	double q = 1.60217e-19; // unit electric charge
+	double Tn = 298.15;
+	double k = 1.380649e-23;
+	double q = 1.602176634e-19;
 	double k_pv = -q * (N_p * I0 + N_p * I_sc - I_pv) / (N_s * n * k * Tn);
 	double k_mp = pow(N_s * n * k * Tn / q, 2) / (N_p * I0 * V_pv * exp(q * V_pv / (N_s * n * k * Tn)) + I_pv / V_pv * pow(N_s * n * k * Tn / q, 2));
 	double lambda = k_pv * k_mp;
@@ -147,7 +146,7 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 	zdc = div(zdc, denom); // zdc = zdc / denom
 
 	DenseMatrix Zdc = createZeroMatrix(2, 2);
-	Zdc.set(0, 0, zdc); // DC voltage response to perturbation in the duty cycle
+	Zdc.set(0, 0, neg(zdc));
 
 
 	// Calculation of the impedances
@@ -279,9 +278,10 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 	mul_dense_scalar(H5, minus_one, H5); // H5 = -Ja*Fa^-1*Fc
 	add_dense_dense(H5, Jc, H5); // H5 = Jc - Ja*Fa^-1*Fc
 
+	// Zhao RTDS engine: Zpv = -A^{-1} B, Y = -B^{-1} A  (H4=B, H5=A)
 	Y_matrix.resize(2, 2);
-	inverse_LU(H5, H5); // H5 = (Jc - Ja*Fa^-1*Fc)^-1
-	mul_dense_scalar(H5, minus_one, Y_matrix); // Y_matrix = -(Jc - Ja*Fa^-1*Fc)^-1
-	mul_dense_dense(Y_matrix, H4, Y_matrix); // Y_matrix = -(Jc - Ja*Fa^-1*Fc)^-1 * (Ja*Fa^-1*Fb + Jb)
-	inverse_LU(Y_matrix, Y_matrix); // Y_matrix = [-(Jc - Ja*Fa^-1*Fc)^-1 * (Ja*Fa^-1*Fb + Jb)]^-1
+	DenseMatrix Binv = createZeroMatrix(2, 2);
+	inverse_LU(H4, Binv);
+	mul_dense_dense(Binv, H5, Y_matrix);
+	mul_dense_scalar(Y_matrix, minus_one, Y_matrix);
 }

@@ -4,6 +4,8 @@
  */
 #include "Cable.h"
 
+#include <algorithm>
+
 /**
  * @brief Constructs a new Cable object.
  * @details This constructor initializes a cable element with its physical and electrical properties. It performs extensive calculations to model the cable's behavior, including impedance and admittance matrix computations using symbolic mathematics. The constructor handles various configurations, such as single-core, multi-layer cables, and multi-cable systems, and accounts for earth return path effects.
@@ -22,20 +24,39 @@
 Cable::Cable(const string& symbol, const std::string& location, int pins, const string& type_constructor,
 	double length_constructor, std::tuple<double, double, double> earth, 
 	std::map<string, Conductor*> conductors_constructor, std::map<string, Insulator*> insulators_constructor,
-	std::vector<std::pair<double, double>> positions_constructor)
+	std::vector<std::pair<double, double>> positions_constructor, bool eliminate_constructor)
 	: Element(symbol, location, pins, pins), earth_parameters(earth),
-	type(type_constructor), conductors(conductors_constructor), insulators(insulators_constructor), 
-	positions(positions_constructor), length(length_constructor)
-    // --- Begin replacement constructor body ---
+	type(type_constructor), positions(positions_constructor), length(length_constructor),
+	eliminate(eliminate_constructor)
 {
+	for (auto& [key, conductor] : conductors_constructor) {
+		conductors[key].reset(conductor);
+	}
+	for (auto& [key, insulator] : insulators_constructor) {
+		insulators[key].reset(insulator);
+	}
     updateLayers();
 
     // Ground parameters
     double mu_g = std::get<0>(earth_parameters) * mu_0;     // ground permeability (relative * mu0)
     double epsilon_g = std::get<1>(earth_parameters) * epsilon_0; // ground permittivity
     double sigma_g = 1.0 / std::get<2>(earth_parameters);       // ground conductivity
-    double rho_g = 1.0 / sigma_g;                            // ground resistivity
-    double g_const = 1e-11;
+    double rho_g = 1.0 / sigma_g;
+
+    auto layer_keys = [](const auto& m, const std::vector<std::string>& preferred) {
+        std::vector<std::string> keys;
+        for (const auto& k : preferred) {
+            if (m.find(k) != m.end())
+                keys.push_back(k);
+        }
+        for (const auto& kv : m) {
+            if (std::find(keys.begin(), keys.end(), kv.first) == keys.end())
+                keys.push_back(kv.first);
+        }
+        return keys;
+    };
+    const auto conductor_keys = layer_keys(conductors, { "C1", "C2", "C3", "C4" });
+    const auto insulator_keys = layer_keys(insulators, { "I1", "I2", "I3", "I4" });
 
     // Make sizes
     const size_t n_l = conductors.size(); // number of layers per cable
@@ -50,9 +71,9 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
     // -----------------------------
     // 1) Build series impedance for a single cable layer stack (Z[0:n_l-1,0:n_l-1])
     // -----------------------------
-    int i_layer = 0; // index of current conducting layer
-    for (const auto& pair : conductors) {
-        const auto& conductor = pair.second;
+    int i_layer = 0;
+    for (const auto& key : conductor_keys) {
+        const auto& conductor = conductors.at(key);
         double r_i = conductor->ri;
         double r_o = conductor->ro;
         double mu_layer = conductor->permeability * mu_0;
@@ -76,7 +97,7 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
         }
         else {
             // solid conductor
-            RCP<const Basic> coth_approx = coth(mul(m, real_double(0.733 * r_o))); // used same style as original
+            RCP<const Basic> coth_approx = coth(mul(m, real_double(0.733 * r_o)));
             Z_bb = add(mul(real_double(rho / (2.0 * M_PI * r_o)), mul(m, coth_approx)),
                 real_double(0.3179 * rho / (M_PI * r_o * r_o)));
         }
@@ -92,24 +113,6 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
             Z.set(i_layer - 1, i_layer - 1, add(Z.get(i_layer - 1, i_layer - 1), Z_aa));
         }
 
-        // If this is the outermost conductor (last layer), add ground return Zg
-        if (i_layer == static_cast<int>(n_l) - 1) {
-            RCP<const Basic> m_g = sqrt(mul(s, real_double(mu_g / rho_g)));
-            double H = 2.0 * positions[0].second;
-
-            // compute maximum radius among conductors and insulators
-            double d_ij = 0.0;
-            for (const auto& cPair : conductors) d_ij = std::max(d_ij, cPair.second->ro);
-            for (const auto& iPair : insulators) d_ij = std::max(d_ij, iPair.second->ro);
-
-            RCP<const Basic> Z_g = mul(mul(s, real_double(mu_g / (2.0 * M_PI))),
-                sub(sub(real_double(0.5),
-                    log(mul(m_g, real_double(gamma_num * d_ij / 2.0)))),
-                    mul(m_g, real_double(2.0 * H / 3.0))));
-            Z.set(i_layer, i_layer, add(Z.get(i_layer, i_layer), Z_g));
-        }
-
-        // increment layer index (IMPORTANT: do this every iteration)
         ++i_layer;
     }
 
@@ -118,8 +121,8 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
     //    add P_i to the submatrix P[0:insIndex, 0:insIndex].
     // -----------------------------
     int insIndex = 0;
-    for (const auto& insPair : insulators) {
-        Insulator* ins = insPair.second;
+    for (const auto& key : insulator_keys) {
+        Insulator* ins = insulators.at(key).get();
         double r_i = ins->ri;
         double r_o = ins->ro;
         double mu_layer = ins->permeability * mu_0;
@@ -131,10 +134,9 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
         // diagonal addition to Z (insulator self impedance)
         Z.set(insIndex, insIndex, add(Z.get(insIndex, insIndex), Z_i));
 
-        // P[0:insIndex, 0:insIndex] += P_i (match Julia P[1:i,1:i] += ones(i,i)*P_i)
+        // P[0:insIndex, 0:insIndex] += P_i
         for (int r = 0; r <= insIndex; ++r) {
             for (int c = 0; c <= insIndex; ++c) {
-                // P is Eigen::MatrixXd (or Matrix-like). Add P_i to each element.
                 P(r, c) += P_i;
             }
         }
@@ -143,24 +145,39 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
     }
 
     // -----------------------------
-    // 3) Expand single-cable block to multi-cable system and add mutual earth impedances
-    //    Use 0-based indices everywhere. Copy base Z[0..n_l-1, 0..n_l-1] into blocks Z[(i*n_l)..((i+1)*n_l-1), (j*n_l)..]
+    // 3) Expand the single-cable (n_l x n_l) block onto each cable's diagonal.
+    //    Off-diagonal blocks stay zero here; mutual earth return is added below.
     // -----------------------------
-    for (int i = 0; i < static_cast<int>(n); ++i) {
-        for (int j = 0; j < static_cast<int>(n); ++j) {
-            // Copy base block Z[0..n_l-1, 0..n_l-1] into the (i,j) block
-            for (int k = 0; k < static_cast<int>(n_l); ++k) {
-                for (int l = 0; l < static_cast<int>(n_l); ++l) {
-                    Z.set((i * n_l) + k, (j * n_l) + l, Z.get(k, l));
-                    P((i * n_l) + k, (j * n_l) + l) = P(k, l);
-                }
+    for (int i = 1; i < static_cast<int>(n); ++i) {
+        for (int k = 0; k < static_cast<int>(n_l); ++k) {
+            for (int l = 0; l < static_cast<int>(n_l); ++l) {
+                Z.set((i * n_l) + k, (i * n_l) + l, Z.get(k, l));
+                P((i * n_l) + k, (i * n_l) + l) = P(k, l);
             }
         }
     }
 
-    // Add earth return (mutual) impedances and mutual coupling between different cables
+    // Self earth-return on the outer layer of each cable (H = 2 y_i).
+    if (n_l > 0 && n > 0) {
+        RCP<const Basic> m_g = sqrt(mul(s, real_double(mu_g / rho_g)));
+        double d_outer = 0.0;
+        for (const auto& cPair : conductors) d_outer = std::max(d_outer, cPair.second->ro);
+        for (const auto& iPair : insulators) d_outer = std::max(d_outer, iPair.second->ro);
+        const int outer = static_cast<int>(n_l) - 1;
+        for (int i = 0; i < static_cast<int>(n); ++i) {
+            const double H = 2.0 * positions[i].second;
+            RCP<const Basic> Z_g = mul(mul(s, real_double(mu_g / (2.0 * M_PI))),
+                sub(sub(real_double(0.5),
+                    log(mul(m_g, real_double(gamma_num * d_outer / 2.0)))),
+                    mul(m_g, real_double(2.0 * H / 3.0))));
+            const int idx = i * static_cast<int>(n_l) + outer;
+            Z.set(idx, idx, add(Z.get(idx, idx), Z_g));
+        }
+    }
+
+    // Mutual earth-return between cables (outer layer only, j > i).
     for (int i = 0; i < static_cast<int>(n); ++i) {
-        for (int j = i + 1; j < static_cast<int>(n); ++j) { // j > i as in Julia
+        for (int j = i + 1; j < static_cast<int>(n); ++j) {
             RCP<const Basic> m_g = sqrt(mul(s, real_double(mu_g / rho_g)));
             double H = positions[i].second + positions[j].second;
             double dx = positions[i].first - positions[j].first;
@@ -181,7 +198,7 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
     }
 
     // -----------------------------
-    // 4) Reduction for core/sheath/armor (same algorithm as Julia, translated to 0-based)
+    // 4) Reduction for core/sheath/armor (0-based layer indices)
     // -----------------------------
     for (int k = 0; k < static_cast<int>(n); ++k) {
         for (int l = 0; l < static_cast<int>(n); ++l) {
@@ -241,27 +258,21 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
     }
 
     // -----------------------------
-    // 6) Kron reduction (prepare cond_noElim) and compute matrices Y and reduced Z
-    //    cond_noElim = [0, n_l, 2*n_l, ...]
+    // 6) Kron reduction: keep core indices [0, n_l, 2 n_l, ...] when eliminate is set.
+    //    Otherwise retain every layer.
     // -----------------------------
     std::vector<int> cond_noElim;
     if (eliminate) {
         for (int idx = 0; idx < static_cast<int>(n); ++idx) {
-            cond_noElim.push_back(idx * static_cast<int>(n_l)); // 0-based core index
+            cond_noElim.push_back(idx * static_cast<int>(n_l));
         }
         P = kron_reduction(P, cond_noElim);
         Z = kron_reduction(Z, cond_noElim);
     }
 
-    // invert P to build Y = s * P^-1
-    //MatrixXd P_inv = P.inverse();
     Eigen::LLT<Eigen::MatrixXd> llt(P);
     MatrixXd P_inv = llt.solve(Eigen::MatrixXd::Identity(P.rows(), P.cols()));
-    int final_size = static_cast<int>(cond_noElim.size());
-    // resize/reassign Z to final_size x final_size (assuming kron_reduction returned full-size DenseMatrix,
-    // but we still ensure Z size matches)
-    Z.resize(final_size, final_size);
-    // Build Y symbolic matrix using s * P_inv
+    const int final_size = Z.nrows();
     Y = createZeroMatrix(Z.nrows(), Z.ncols());
     for (int r = 0; r < Y.nrows(); ++r) {
         for (int c = 0; c < Y.ncols(); ++c) {
@@ -269,27 +280,14 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
         }
     }
 
-    // Prepare Y_matrix placeholder 
+    input_pins = final_size;
+    output_pins = final_size;
     Y_matrix = createZeroMatrix(2 * final_size, 2 * final_size);
 }
 
-// Destructor definition
-Cable::~Cable() {
-	for (auto& [key, conductor] : conductors)
-		delete conductor;
-	conductors.clear();
-
-	for (auto& [key, insulator] : insulators)
-		delete insulator;
-	insulators.clear();
-}
-
-std::vector<std::vector<complex<double>>> Cable::compute_y_parameters(double frequency)
+std::vector<std::vector<complex<double>>> Cable::compute_y_at_omega(double omega_rad)
 {
-    // Step 1: Compute Z and Y matrices based on frequency
-    double angular_frequency = 2 * frequency * M_PI;
-    map_basic_basic m;
-    m[omega] = real_double(angular_frequency);
+    double angular_frequency = finiteOmega(omega_rad);
     int n = Z.nrows();  // Size of the original matrices
     std::vector<std::vector<complex<double>>> Y_val_exact(2 * n);
     for (int i = 0; i < 2 * n; i++)
@@ -306,16 +304,19 @@ std::vector<std::vector<complex<double>>> Cable::compute_y_parameters(double fre
     Eigen::MatrixXcd Z_inv = Z_num.inverse();  // Inverse of Z
     Eigen::MatrixXcd Yc = Z_inv * Gamma;  // Compute Yc
 
-    // Step 4: Compute Gamma_l = Gamma * length (element-wise multiplication)
-    Eigen::MatrixXcd Gamma_l = Gamma * length;
-
-    // Step 5: Calculate coth(Gamma_l) and csc(Gamma_l)
-    Eigen::MatrixXcd coth_Gamma_l = Gamma_l.cosh() * (Gamma_l.sinh()).inverse();  // coth(Γl)
-    Eigen::MatrixXcd csc_Gamma_l = (Gamma_l.sinh()).inverse();    // csc(Γl)
+    // Step 4–5: Γl, then sinh/cosh via matrix exp. Eigen's .sinh()/.cosh()
+    // return unevaluated MatrixFunctionReturnValue; chaining .inverse() on
+    // that expression is wrong for n>1 and made bipolar-cable Y(f) jagged.
+    const Eigen::MatrixXcd Gamma_l = Gamma * length;
+    const Eigen::MatrixXcd exp_p = Gamma_l.exp();
+    const Eigen::MatrixXcd exp_m = (-Gamma_l).exp();
+    const Eigen::MatrixXcd sinh_Gl = 0.5 * (exp_p - exp_m);
+    const Eigen::MatrixXcd cosh_Gl = 0.5 * (exp_p + exp_m);
+    const Eigen::MatrixXcd sinh_inv = sinh_Gl.inverse();
 
     // Step 6: Initialize the matrix blocks
-    Eigen::MatrixXcd Y11 = Yc * coth_Gamma_l;         // Yc * coth(Γl)
-    Eigen::MatrixXcd Y12 = -Yc * csc_Gamma_l;        // -Yc * csc(Γl)
+    Eigen::MatrixXcd Y11 = Yc * cosh_Gl * sinh_inv;  // Yc * coth(Γl)
+    Eigen::MatrixXcd Y12 = -Yc * sinh_inv;           // -Yc * csch(Γl)
 
     // Step 7: Fill in the Y parameters matrix
     for (int i = 0; i < Y11.rows(); ++i) {
@@ -332,6 +333,31 @@ std::vector<std::vector<complex<double>>> Cable::compute_y_parameters(double fre
     return Y_val_exact;
 }
 
+std::vector<std::vector<complex<double>>> Cable::compute_y_parameters(double frequency)
+{
+	const double omega = 2.0 * frequency * M_PI;
+	const double omega_0 = 100.0 * M_PI;
+	if (transformation && isAcLocation() && !isMmcLocation()) {
+		auto Y1 = compute_y_at_omega(omega - omega_0);
+		auto Y2 = compute_y_at_omega(omega + omega_0);
+		return apply_transformation(Y1, Y2);
+	}
+	auto Y = compute_y_at_omega(omega);
+	if (transformation && isDcLocation())
+		return reduceDcY(Y);
+	return Y;
+}
+
+void Cable::computePowerFlow(std::map<std::string, double>& branchData,
+	std::map<std::string, double>& globalParams) const
+{
+	// DC cables: series R at a low frequency so shunt C does not dominate.
+	const double f = isDcLocation() ? 1.0 : globalParams.at("omega") / (2.0 * M_PI);
+	auto Y = const_cast<Cable*>(this)->compute_y_parameters(f);
+	if (isDcLocation() && !transformation)
+		Y = reduceDcY(Y);
+	fillOpfBranchFromY(branchData, globalParams, Y);
+}
 
 void Cable::updateLayers() {
 	// Iterate through conductors and re-adjust values
@@ -345,9 +371,6 @@ void Cable::updateLayers() {
 				double area = conductor->area;
 				if (area != 0) {
 					conductor->resistivity = (conductor->resistivity * M_PI * pow(conductor->ro, 2) / area);
-
-					// Update the conductor in the Cable object
-					updateConductor("C1", conductor);
 				}
 			}
 		}

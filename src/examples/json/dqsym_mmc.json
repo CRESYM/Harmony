@@ -77,6 +77,7 @@
             "switch_off_resistance": [1000000.0],
             "switch_types": [0],
             "output_bus_ids": ["AC1"],
+            "snapshot_time": 0.02,
             "plot": true
         }
     ]

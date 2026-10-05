@@ -1,0 +1,128 @@
+{
+    "simulation": {
+        "title": "mmc_unbalanced_rlc_strong",
+        "description": "Same MMC RLC network with phase-c unbalance on R, L, and C so C± stays visible across 10–1000 Hz.",
+        "output_directory": "./files",
+        "frequency_range": { "start": 10, "end": 1000, "points": 81 }
+    },
+    "buses": [
+        { "id": "gnd", "location": "GND", "pins": 1, "enabled": true },
+        { "id": "Bsrc", "location": "AC1", "pins": 3, "enabled": true },
+        { "id": "Bmid", "location": "AC1", "pins": 3, "enabled": true },
+        { "id": "Bpcc", "location": "AC1", "pins": 3, "enabled": true },
+        { "id": "Bdc", "location": "DC1", "pins": 2, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "MMC1",
+            "location": "AC1_DC1",
+            "type": "mmc",
+            "converter_params": [
+                314.1592653589793, 0.0, 0.0, 0.0, 200.0, 0.0, 400.0,
+                0.0529, 0.1663, 0.0017568, 36.0, 0.01, 10.0, 0.0
+            ],
+            "controller_params": [
+                0,
+                0,
+                1, 0, 0.000257, 0.0032, 1, 1000.0,
+                0,
+                0,
+                0,
+                0,
+                1, 0, 48.0, 480.0, 2, 0.0, 0.0,
+                0,
+                0
+            ],
+            "connected_buses": [
+                { "bus_id": "Bpcc", "terminal": 1 },
+                { "bus_id": "Bdc", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "Vs_dc",
+            "location": "DC1",
+            "type": "dc_source",
+            "pins": 2,
+            "voltage": [200.0, -200.0],
+            "resistance": 0.1,
+            "connected_buses": [
+                { "bus_id": "Bdc", "terminal": 1 },
+                { "bus_id": "gnd", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "Vs_ac",
+            "location": "AC1",
+            "type": "ac_source",
+            "pins": 3,
+            "voltage": 200.0,
+            "values": [0.5],
+            "connected_buses": [
+                { "bus_id": "Bsrc", "terminal": 1 },
+                { "bus_id": "gnd", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "R1",
+            "location": "AC1",
+            "type": "resistor",
+            "pins": 3,
+            "values": [1.0, 1.0, 10.0],
+            "connected_buses": [
+                { "bus_id": "Bsrc", "terminal": 1 },
+                { "bus_id": "Bmid", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "L1",
+            "location": "AC1",
+            "type": "inductor",
+            "pins": 3,
+            "values": [0.002, 0.002, 0.02],
+            "connected_buses": [
+                { "bus_id": "Bmid", "terminal": 1 },
+                { "bus_id": "Bpcc", "terminal": 2 }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "C1",
+            "location": "AC1",
+            "type": "capacitor",
+            "pins": 3,
+            "values": [2.0e-5, 2.0e-5, 2.0e-6],
+            "connected_buses": [
+                { "bus_id": "Bpcc", "terminal": 1 },
+                { "bus_id": "gnd", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "print_connections" },
+        {
+            "type": "stability_assessment",
+            "converter_id": "MMC1",
+            "location": "AC",
+            "skip_opf": true,
+            "park_per_component": false,
+            "yeff": false,
+            "frequency_range": { "start": 10, "end": 1000, "points": 81 },
+            "plot": false
+        },
+        {
+            "type": "stability_assessment",
+            "converter_id": "MMC1",
+            "location": "AC",
+            "skip_opf": true,
+            "park_per_component": false,
+            "yeff": true,
+            "frequency_range": { "start": 10, "end": 1000, "points": 81 },
+            "plot": false
+        }
+    ]
+}

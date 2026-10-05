@@ -3,8 +3,8 @@
  * @brief Implementation of State-space model assembly from network MNA formulation.
  */
 #include "State_Space_Model.h"
-#include "../../network.h"      
-#include "../../Include_components.h"
+#include "network/network.h"      
+#include "core/Include_components.h"
 
 static int getStateCount(Element* e) {
     int n = e->getNumberOfPlantStates();
@@ -473,35 +473,44 @@ MatrixXcd StateSpaceModel::buildInputVector(
     int nKeep,
     const std::map<std::string, std::vector<MatrixXcd>>& elementStates) const
 {
-    int nu = (mode_ == SSMMode::DQsym) ? B_dqsym.cols() : B.cols();
-    MatrixXcd u = MatrixXcd::Zero(nu, nKeep);
+    MatrixXcd u;
+    buildInputVector(nKeep, elementStates, u);
+    return u;
+}
+
+void StateSpaceModel::buildInputVector(
+    int nKeep,
+    const std::map<std::string, std::vector<MatrixXcd>>& elementStates,
+    MatrixXcd& u) const
+{
+    int nu = (mode_ == SSMMode::DQsym) ? static_cast<int>(B_dqsym.cols()) : static_cast<int>(B.cols());
+    if (u.rows() != nu || u.cols() != nKeep)
+        u = MatrixXcd::Zero(nu, nKeep);
+    else
+        u.setZero();
+
+    static const std::vector<MatrixXcd> kNoStates;
 
     for (const auto& g : input_groups) {
         std::string name = g.element->getElementSymbol();
 
         if (!g.isVirtual) {
-            // ===== Source element: call simulateInputStep({}) =====
-            auto vals = g.element->simulateInputStep({}, nKeep);
-            if (vals.empty()) continue;
-            const MatrixXcd& V = vals[0];
+            g.element->simulateInputStep(kNoStates, nKeep, input_step_scratch_);
+            if (input_step_scratch_.empty()) continue;
+            const MatrixXcd& V = input_step_scratch_[0];
 
             if (mode_ == SSMMode::DQsym) {
-                // Each source's V may have different row count:
-                //  - DC source: V.rows() = pins * 3 (pre-expanded layout)
-                //  - AC source: V.rows() = 3 (sequence components)
-                // Place V's rows into u, skipping out-of-bounds reads
                 for (int p = 0; p < g.rawCols; ++p) {
                     int base = g.dqsymStartCol + p * 3;
                     for (int ph = 0; ph < 3; ++ph) {
                         int v_row = 3 * p + ph;
-                        if (v_row >= V.rows()) continue;   // source's V exhausted
+                        if (v_row >= V.rows()) continue;
                         if (base + ph < nu)
                             u.row(base + ph) = V.row(v_row);
                     }
                 }
             }
             else {
-                // Standard mode: direct placement
                 for (int p = 0; p < g.rawCols && p < V.rows(); ++p) {
                     int col = g.rawStartCol + p;
                     if (col < nu)
@@ -510,18 +519,15 @@ MatrixXcd StateSpaceModel::buildInputVector(
             }
         }
         else {
-            // ===== Virtual input: call simulateInputStep(states) =====
-            std::vector<MatrixXcd> states;
+            const std::vector<MatrixXcd>* states = &kNoStates;
             auto it = elementStates.find(name);
             if (it != elementStates.end())
-                states = it->second;
+                states = &it->second;
 
-            auto feedback = g.element->simulateInputStep(states, nKeep);
-            // feedback = [u_vMΔ(3×nKeep), u_vMΣ(3×nKeep), u_PΔ(3×nKeep), u_PΣ(3×nKeep)]
-            // Already in groups of 3 — place directly
+            g.element->simulateInputStep(*states, nKeep, input_step_scratch_);
 
             int col = (mode_ == SSMMode::DQsym) ? g.dqsymStartCol : g.rawStartCol;
-            for (const auto& fb : feedback) {
+            for (const auto& fb : input_step_scratch_) {
                 for (int ph = 0; ph < fb.rows() && ph < 3; ++ph) {
                     if (col < nu)
                         u.row(col) = fb.row(ph);
@@ -530,8 +536,6 @@ MatrixXcd StateSpaceModel::buildInputVector(
             }
         }
     }
-
-    return u;
 }
 
 // ===================================================================

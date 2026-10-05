@@ -45,13 +45,16 @@ jobs:
       - name: Build the tests
         shell: bash -l {0}
         run: |
-          mkdir tests/build
-          cd tests/build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DGUROBI_PATH="$GITHUB_WORKSPACE/dependencies/gurobi1301/linux64"
-          cmake --build . --config Release -j4
+          cmake --build build --config Release --target testharmony -j4
 
       - name: Run the tests (except examples)
         uses: ./.github/actions/run-ctest
         with:
           gurobi_path: ${{ github.workspace }}/dependencies/gurobi1301/linux64
           ctest_args: '-E TestExamples'
+
+      - name: Run the example tests
+        uses: ./.github/actions/run-ctest
+        with:
+          gurobi_path: ${{ github.workspace }}/dependencies/gurobi1301/linux64
+          ctest_args: '-R TestExamples'

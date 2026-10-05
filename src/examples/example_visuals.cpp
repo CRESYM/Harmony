@@ -4,7 +4,7 @@
  */
 #include "Examples.h"
 
-#include "../Include_components.h"
+#include "core/Include_components.h"
 
 void example_visuals(bool plotting_enabled /*=true*/) {
 	//// TL constructor check

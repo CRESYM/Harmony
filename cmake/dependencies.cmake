@@ -52,7 +52,6 @@ function(link_sundials TARGET_NAME)
     target_link_libraries(
         ${TARGET_NAME}
         PRIVATE
-        SUNDIALS::cvode
         SUNDIALS::kinsol
         SUNDIALS::sunmatrixdense
         SUNDIALS::sunlinsoldense

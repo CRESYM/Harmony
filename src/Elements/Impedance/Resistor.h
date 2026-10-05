@@ -6,7 +6,7 @@
  * @brief Resistor element for nodal admittance (MNA) stamping.
  */
 
-#include "../Element.h"
+#include "Elements/Element.h"
 
 /**
  * @class Resistor

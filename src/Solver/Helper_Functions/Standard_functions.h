@@ -9,7 +9,7 @@
  * and basic complex-matrix arithmetic used throughout the solver.
  */
 
-#include "../../Constants.h"
+#include "core/Constants.h"
 
 /** @brief Vacuum permeability (H/m). */
 extern const double mu_0;
@@ -54,16 +54,6 @@ extern vector<vector<complex<double>>> matrixToVector(const MatrixXcd& mat);
 extern vector<vector<double>> matrixToVector(const MatrixXd& mat);
 
 /**
- * @brief Stacks four input matrices into a single block column.
- * @param u1 First input block.
- * @param u2 Second input block.
- * @param u3 Third input block.
- * @param u4 Fourth input block.
- * @return Vertically stacked complex matrix.
- */
-extern MatrixXcd stack_u_4x_3xN(const MatrixXcd& u1, const MatrixXcd& u2, const MatrixXcd& u3, const MatrixXcd& u4);
-
-/**
  * @brief Complex matrix multiplication using nested vectors.
  * @param A Left operand.
  * @param B Right operand.
@@ -88,14 +78,6 @@ extern vector<vector<complex<double>>> mul_scalar(const vector<vector<complex<do
 extern vector<vector<complex<double>>> mat_add(const vector<vector<complex<double>>>& A, const vector<vector<complex<double>>>& B);
 
 /**
- * @brief Element-wise subtraction of two complex matrices.
- * @param A Minuend.
- * @param B Subtrahend.
- * @return A - B.
- */
-extern vector<vector<complex<double>>> mat_sub(const vector<vector<complex<double>>>& A, const vector<vector<complex<double>>>& B);
-
-/**
  * @brief Transposes a complex matrix stored as nested vectors.
  * @param A Input matrix.
  * @return Transpose of A.
@@ -113,5 +95,44 @@ extern vector<vector<complex<double>>> mat_transpose(const vector<vector<complex
  */
 extern vector<vector<complex<double>>> get_block(const vector<vector<complex<double>>>& Y, int r_off, int c_off, int r_num, int c_num);
 
+/**
+ * @brief Park A0 map of an n-port abc admittance (paper eq. 9).
+ *
+ * Y_minus is Yabc(j(ω−ωo)), Y_plus is Yabc(j(ω+ωo)). Each port is 3×3 abc;
+ * the result is 2×2 dq per port (size 2n × 2n). Coupling blocks C± are not
+ * included (Tier 1). Matrices whose size is not a multiple of 3 are returned
+ * unchanged (Y_minus).
+ */
+extern vector<vector<complex<double>>> apply_park_A0(
+    const vector<vector<complex<double>>>& Y_minus,
+    const vector<vector<complex<double>>>& Y_plus);
+
+/**
+ * @brief Coupling C− of an n-port abc admittance (paper eq. 10).
+ *
+ * C−(ω) = (1/6) a Yabc(j(ω−ωo)) aᵀ. Size 2n × 2n.
+ */
+extern vector<vector<complex<double>>> apply_park_C_minus(
+    const vector<vector<complex<double>>>& Y_minus);
+
+/**
+ * @brief Coupling C+ of an n-port abc admittance (paper eq. 11).
+ *
+ * C+(ω) = (1/6) a* Yabc(j(ω+ωo)) aᴴ. Size 2n × 2n.
+ */
+extern vector<vector<complex<double>>> apply_park_C_plus(
+    const vector<vector<complex<double>>>& Y_plus);
+
+/**
+ * @brief Effective dq admittance Yeff (paper eq. 18) for an n-port abc Y.
+ *
+ * Y_m3, Y_m1, Y_p1, Y_p3 are Yabc at ω−3ωo, ω−ωo, ω+ωo, ω+3ωo.
+ * Yeff = A0(ω) − C−(ω) A0(ω−2ωo)⁻¹ C+(ω−2ωo) − C+(ω) A0(ω+2ωo)⁻¹ C−(ω+2ωo).
+ */
+extern vector<vector<complex<double>>> apply_park_Yeff(
+    const vector<vector<complex<double>>>& Y_m3,
+    const vector<vector<complex<double>>>& Y_m1,
+    const vector<vector<complex<double>>>& Y_p1,
+    const vector<vector<complex<double>>>& Y_p3);
 
 #endif // _STANDARD_FUNCTIONS_H_

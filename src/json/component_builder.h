@@ -5,8 +5,8 @@
 #include <nlohmann/json.hpp>
 using JSON = nlohmann::json;
 
-#include "../network.h"
-#include "../Include_components.h"
+#include "network/network.h"
+#include "core/Include_components.h"
 #include "json_parameters.h"
 #include "json_expression.h"
 
@@ -58,9 +58,11 @@ private:
 	static Transformer_real* buildTransformerReal(const JSON& comp, const JsonParameterTable& params);
 	static Transformer_classic* buildTransformerClassic(const JSON& comp, const JsonParameterTable& params);
 	static TransformerDeltaDelta* buildTransformerDeltaDelta(const JSON& comp, const JsonParameterTable& params);
+	static TransformerDeltaDelta_real* buildTransformerDeltaDeltaReal(const JSON& comp, const JsonParameterTable& params);
 	static TransformerDeltaY_real* buildTransformerDeltaYReal(const JSON& comp, const JsonParameterTable& params);
 	static TransformerDeltaY* buildTransformerDeltaY(const JSON& comp, const JsonParameterTable& params);
 	static TransformerYDelta* buildTransformerYDelta(const JSON& comp, const JsonParameterTable& params);
+	static TransformerYDelta_real* buildTransformerYDeltaReal(const JSON& comp, const JsonParameterTable& params);
 	static TransformerYY_real* buildTransformerYYReal(const JSON& comp, const JsonParameterTable& params);
 	static TransformerYY* buildTransformerYY(const JSON& comp, const JsonParameterTable& params);
 

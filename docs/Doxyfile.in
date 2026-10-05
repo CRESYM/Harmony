@@ -80,7 +80,7 @@ INPUT                  = @CMAKE_SOURCE_DIR@/src \
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.h *.hpp *.cpp *.md *.dox
 RECURSIVE              = YES
-EXCLUDE                = @CMAKE_SOURCE_DIR@/src/Solver/Helper_Functions/stb_image_write.h
+EXCLUDE                = @CMAKE_SOURCE_DIR@/src/ui/stb_image_write.h
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = */build/* \
                          */tests/*

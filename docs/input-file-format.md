@@ -56,6 +56,8 @@ Reference them anywhere a **numeric array** or scalar is accepted — passives `
 
 MMC controllers are fixed-order slots: `pll`, `dc_voltage`, `active_power`, `ac_voltage`, `reactive_power`, `energy`, `zcc`, `occ`, `ccc`, `droop`, optional trailing `gfm`. Each slot starts with an enable flag (`0`/`1` or a named parameter such as `"ac_voltage_enable": 0.0`). Disabled slots use a single entry; enabled slots continue with controller type, gains, output count, and references. Legacy packs may omit `gfm` (treated as disabled). See [`mmc_named_params.json`](../src/examples/json/mmc_named_params.json).
 
+`dc_voltage` treats \(v_\mathrm{dc}\) as the DC port voltage and keeps submodule energy in the plant \(v_C\) states; the outer loop is one PI integrator. Pack: `1, 0, Kp, Ki, 1, Vdc`.
+
 GFM pack (when enabled): `1, 0, Kdroop_P, Kdroop_Q, 4, Tf_P, Tf_Q, Rvirt, Lvirt`. Disable `pll`, outer `active_power` / `reactive_power` / `ac_voltage` / `dc_voltage`, and `occ` when using GFM (GFM sets `vMDelta` directly).
 
 Rules:
@@ -156,14 +158,14 @@ For all other types, `pins` on the component must match the connected bus pin co
 | `load`, `load_pq` | `values`: `[P, Q, …]` per phase |
 | `ac_source`, `generator` | Requires `voltage` + `values`; optional `opf_info` for built-network OPF |
 | `resistor`, `inductor`, `capacitor` | `values`: per-phase parameters |
-| `transformer_real` | `values`: `{R_primary, L_primary, R_secondary, L_secondary, turns_ratio, phase_shift}` |
+| `transformer_real`, `transformer_yy_real`, `transformer_ydelta_real`, `transformer_deltay_real`, `transformer_deltadelta_real` | `values`: `{R_primary, L_primary, R_secondary, L_secondary, turns_ratio, phase_shift}`; optional `R_magnetizing`, `L_magnetizing` |
 | `transformer_classic`, `transformer_yy`, `transformer_deltay`, … | `values`: `{R_primary, L_primary, R_secondary, L_secondary, M}` |
 | `dc_source` | `voltage` (number or array); optional `resistance` / `values` |
 | `impedance`, `admittance` | Numeric `values` array |
 | `switch` | `state` (bool array) or `closed` (bool) |
 | `transmission_line` | `values`: `[R, L, G, C, length]` |
 | `cable` | `cable_type`, `length`, `earth`, `conductors`, `insulators`, `positions`; optional `pins` (default 1) |
-| `overhead_line` | `length_km`, `earth`, `conductor`, `groundwire` — no `pins` |
+| `overhead_line` | `length` (m) or `length_km` (×1000), `earth`, `conductor`, `groundwire` — no `pins`. Conductor: `organization`, `number_bundles`, `geometry` `[Δxbc, ybc, …]`, `rc`, `Rdc`, `dsag`, `dsb`. Groundwire: `count`, `geometry` `[Rgdc, rg, dgsag, Δyg, Δxg]`, `mu_g` |
 | `mmc` | `converter_params`; optional `controller_params`, `filter_params` — no `pins` |
 | `wt_type_3`, `wt_type_4`, `pv_plant` | `parameters` — no `pins` |
 | `wp_plant` | `turbine_type`, `number_wt`, `parameters` |
@@ -181,7 +183,7 @@ Each entry has a `type` field (case-insensitive).
 | `y_matrix` (`y_matrx`) | Frequency sweep to CSV. Optional `component_id`, `frequency_range`, `"plot": true` for Bode GUI |
 | `stability_assessment` | `StabilityEstimate` after `add_areas`. Optional: `converter_id`, `location`, `frequency_range`, `"plot": true`, `"plot_type": "bode"` or `"nyquist"` |
 | `power_flow` / `opf` | **CSV mode:** `"case_name"` (AC prefix) + optional `"dc_case_name"` → calls `solve_opf` like `example_OPF_csv` (network components ignored). **Built-network mode:** omit `case_name` → `make_OPF` on JSON components (like `stability_check`). Optional `"plot_result": true` |
-| `time_domain` / `dqsym` | DQsym time-domain run (`dt`, `t_end`, `frequency`, `output_bus_ids`, …). Optional `"plot": true` for ABC waveforms |
+| `time_domain` / `dqsym` | DQsym time-domain run (`dt`, `t_end`, `frequency`, `output_bus_ids`, …). Optional `"plot": true` for ABC waveforms. Optional `"snapshot_time"` (seconds) linearizes MMCs at that instant (`analyzeAtTime`); optional `"frequency_range"` for the TF sweep |
 | `equivalent_impedance` | Not wired — use C++ API |
 
 JSON plot flags are honored only when the CLI is run without `--no-plot`.

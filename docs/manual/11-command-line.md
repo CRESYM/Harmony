@@ -128,7 +128,7 @@ JSON format and component types: [Chapter 5](05-json-input.md) and [`../input-fi
 | `wt_type_3`, `wt_type_4`, `pv_plant` | RES models |
 | `state_space`, `constructors`, `transformer` | Learning / component demos |
 
-Run `./build/Harmony --list-cpp` (or `build\Release\Harmony.exe --list-cpp` on Windows) for the full list registered in `src/cli.cpp`.
+Run `./build/Harmony --list-cpp` (or `build\Release\Harmony.exe --list-cpp` on Windows) for the full list registered in `src/ui/cli.cpp`.
 
 ---
 
@@ -142,7 +142,7 @@ When using `--json`, the `computations` array in the file runs after the network
 | `y_matrix` | Y-parameter frequency sweep to CSV |
 | `stability_assessment` | Impedance-based stability (needs converters in model) |
 | `opf`, `power_flow` | OPF; requires `"case_name"` (CSV prefix under `src/data/`); optional `"plot_result": true` |
-| `dqsym`, `time_domain` | DQsym time-domain run on the built network; optional `"plot": true` |
+| `dqsym`, `time_domain` | DQsym time-domain run on the built network; optional `"plot": true`, `"snapshot_time"` |
 
 Plot flags in JSON are ignored when you pass `--no-plot` on the CLI.
 
@@ -156,9 +156,13 @@ Example DQsym block:
   "t_end": 0.1,
   "frequency": 50,
   "n_keep": 5,
-  "output_bus_ids": ["bus1"]
+  "output_bus_ids": ["bus1"],
+  "snapshot_time": 0.1,
+  "plot": true
 }
 ```
+
+`"snapshot_time"` linearizes each MMC at the nearest stored sample (frozen `x,u`, not Newton). With `"plot": true`, Harmony opens eigenvalue / participation / Bode-Nyquist tabs; with `--no-plot` it still writes transfer-function CSV. Optional `"frequency_range"` overrides the default 0.1 Hz–10 kHz sweep.
 
 ---
 
@@ -191,6 +195,6 @@ More build and environment issues: [Chapter 10](10-troubleshooting.md).
 
 ## 11.8 Adding new examples (developers)
 
-To expose a new C++ example on the command line, register it in `src/cli.cpp`. You do not need to edit `src/main.cpp` or rebuild to switch between already-registered examples. New examples appear automatically in **HarmonyUI** dropdowns after rebuild.
+To expose a new C++ example on the command line, register it in `src/ui/cli.cpp`. You do not need to edit `src/main.cpp` or rebuild to switch between already-registered examples. New examples appear automatically in **HarmonyUI** dropdowns after rebuild.
 
 [← Troubleshooting](10-troubleshooting.md) | [Manual index](README.md) | [Next: HarmonyUI →](12-harmony-ui.md)

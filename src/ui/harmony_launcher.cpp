@@ -4,11 +4,20 @@
  */
 #include "harmony_launcher.h"
 
-#include "Constants.h"
+#include "core/Constants.h"
 #include "cli.h"
-#include "ui/harmony_banner_gui.h"
+#include "harmony_banner_gui.h"
 #include "log_capture.h"
-#include "Solver/Helper_Functions/Visualization.h"
+#include "Visualization.h"
+
+#ifdef __APPLE__
+    #define GLFW_INCLUDE_GLCOREARB
+#endif
+#include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <implot.h>
 
 #include <algorithm>
 #include <atomic>

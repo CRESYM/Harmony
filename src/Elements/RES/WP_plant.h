@@ -24,9 +24,9 @@ public:
 	 * @param parameters Packed plant and turbine parameters.
 	 */
 	WPplant(const string& symbol, const std::string& location, int turbine_type, int number_WT, const vector<double>& parameters);
-	~WPplant() override;
+	~WPplant() override = default;
 private:
-	RES_base* wind_turbine = nullptr;
+	std::unique_ptr<RES_base> wind_turbine;
 };
 
 #endif // !WP_PLANT_H_

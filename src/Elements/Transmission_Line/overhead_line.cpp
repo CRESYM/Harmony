@@ -4,6 +4,8 @@
  */
 #include "overhead_line.h"
 
+#include <algorithm>
+
 
 // Define constructors for Conductors
 Overhead_Line::Conductors::Conductors(std::string organization, std::vector<int>& numbers, std::vector<double>& values_distances, double rc, double Rdc, double dsag, double dsb = 0, std::tuple<std::vector<double>, std::vector<double>> pos = { {},{} })
@@ -18,6 +20,8 @@ Overhead_Line::Conductors::Conductors(std::string organization, std::vector<int>
 		throw std::invalid_argument("It is possible to add up to 2 arguments: number of conductor bundles and number of subconductors per bundle.");
 		exit(2);
 	}
+	if (number_conductors_bundle < 1)
+		number_conductors_bundle = 1;
 
 	if (values_distances.size() == 2) {
 		deltaXbc = values_distances[0]; ybc = values_distances[1];
@@ -48,8 +52,10 @@ Overhead_Line::Conductors::Conductors(std::string organization, std::vector<int>
 	else if (organization == "offset")
 		estimate_offset();
 	else if (organization == "absolute") {
-		if (std::get<0>(positions).size() != number_bundles) {
-			throw std::invalid_argument("Uncorrect absolute positions. Number of positions does not match the number of bundles.");
+		positions = pos;
+		if (std::get<0>(positions).size() != static_cast<size_t>(number_bundles)
+			|| std::get<1>(positions).size() != static_cast<size_t>(number_bundles)) {
+			throw std::invalid_argument("Incorrect absolute positions. Number of positions does not match the number of bundles.");
 			exit(2);
 		}
 	}
@@ -154,7 +160,7 @@ void Overhead_Line::Conductors::estimate_concentric() {
 		}
 	}
 	else {
-		throw std::invalid_argument("Delta cannot be constructed from " + std::to_string(number_bundles) + " conductors.");
+		throw std::invalid_argument("Concentric cannot be constructed from " + std::to_string(number_bundles) + " conductors.");
 		exit(2);
 	}
 }
@@ -175,63 +181,77 @@ void Overhead_Line::Conductors::estimate_offset() {
 		}
 	}
 	else {
-		throw std::invalid_argument("Delta cannot be constructed from " + std::to_string(number_bundles) + " conductors.");
+		throw std::invalid_argument("Offset cannot be constructed from " + std::to_string(number_bundles) + " conductors.");
 		exit(2);
 	}
 }
 
 std::tuple<std::vector<double>, std::vector<double>> Overhead_Line::Conductors::bundle_position() {
-	if (number_bundles == 1) {
+	// Ring of subconductors uses n_sb, not the number of phases.
+	if (number_conductors_bundle <= 1) {
 		return std::make_tuple(std::vector<double>{0}, std::vector<double>{0});
 	}
-	else {
-		const double phi = 2.0 * M_PI / number_bundles;
-		const double r = dsb / 2 / sin(phi / 2);
-		double phi_s = M_PI / 2;
-		if (number_bundles % 2 == 0) {
-			phi_s += phi / 2;
-		}
-
-		std::vector<double> xsb;
-		std::vector<double> ysb;
-		for (int i = 0; i < number_bundles; ++i) {
-			xsb.push_back(r * cos(phi_s));
-			ysb.push_back(r * sin(phi_s));
-			phi_s += phi;
-		}
-
-		return std::make_tuple(xsb, ysb);
+	const int nsub = number_conductors_bundle;
+	const double phi = 2.0 * M_PI / nsub;
+	const double half = std::sin(phi / 2.0);
+	if (std::abs(half) < 1e-18) {
+		return std::make_tuple(std::vector<double>(static_cast<size_t>(nsub), 0.0),
+			std::vector<double>(static_cast<size_t>(nsub), 0.0));
 	}
+	const double r = dsb / 2.0 / half;
+	double phi_s = M_PI / 2.0;
+	if (nsub % 2 == 0) {
+		phi_s += phi / 2.0;
+	}
+
+	std::vector<double> xsb;
+	std::vector<double> ysb;
+	xsb.reserve(static_cast<size_t>(nsub));
+	ysb.reserve(static_cast<size_t>(nsub));
+	for (int i = 0; i < nsub; ++i) {
+		xsb.push_back(r * std::cos(phi_s));
+		ysb.push_back(r * std::sin(phi_s));
+		phi_s += phi;
+	}
+	return std::make_tuple(xsb, ysb);
 }
 
 // Groundwires definition
 Overhead_Line::Groundwires::Groundwires(int ng, std::vector<double>& values, double ybc, double mu_g = 1.0, std::tuple<std::vector<double>, std::vector<double>> pos = { {},{} })
 	: ng(ng), mu_g(mu_g)
 {
-	if (values.size() < 4) {
-		throw std::invalid_argument("Illegal number of parameters. It must be at least 5 (Rgdc, rg, dgsag, DeltaYg) with additional parameters (DeltaXg, mu_g)");
-		exit(2);
+	if (ng <= 0) {
+		positions = { {}, {} };
+		return;
 	}
+	if (values.size() < 2) {
+		throw std::invalid_argument("Illegal number of parameters. Need at least Rgdc and rg.");
+	}
+	Rgdc = values[0];
+	rg = values[1];
+	if (values.size() >= 3)
+		dgsag = values[2];
+	if (values.size() >= 4)
+		deltaYg = values[3];
+	if (values.size() >= 5)
+		deltaXg = values[4];
 
-	Rgdc = values[0]; rg = values[1];
-	dgsag = values[2]; deltaYg = values[3];
-	deltaXg = (values.size() == 5) ? values[4] : 0;
+	if (std::get<0>(pos).size() == static_cast<size_t>(ng)
+		&& std::get<1>(pos).size() == static_cast<size_t>(ng)) {
+		positions = pos;
+		return;
+	}
+	if (values.size() < 4) {
+		throw std::invalid_argument("Illegal number of parameters. Need at least 4 (Rgdc, rg, dgsag, DeltaYg); DeltaXg is optional.");
+	}
 
 	std::vector<double> x;
 	std::vector<double> y;
 	for (int i = 0; i < ng; i++) {
 		x.push_back(deltaXg * (-(ng - 1.0) / 2 + i));
-		y.push_back(deltaYg + ybc -2.0 / 3.0 * dgsag); 
+		y.push_back(deltaYg + ybc - 2.0 / 3.0 * dgsag);
 	}
 	positions = std::make_tuple(x, y);
-}
-
-
-Overhead_Line::~Overhead_Line() {
-	delete conductors;
-	conductors = nullptr;
-	delete groundwires;
-	groundwires = nullptr;
 }
 
 
@@ -239,8 +259,8 @@ Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& locat
 	std::tuple<std::string, std::vector<int>, std::vector<double>, double, double, double, double> conductor,
 	std::tuple<int, std::vector<double>, double> groundwire) : length(len), earthParameters(earth), Element(symbol, location, 1, 1) {
 
-	conductors = new Conductors(std::get<0>(conductor), std::get<1>(conductor), std::get<2>(conductor), std::get<3>(conductor), std::get<4>(conductor), std::get<5>(conductor), std::get<6>(conductor));
-	groundwires = new Groundwires(std::get<0>(groundwire), std::get<1>(groundwire), conductors->ybc, std::get<2>(groundwire));
+	conductors = std::make_unique<Conductors>(std::get<0>(conductor), std::get<1>(conductor), std::get<2>(conductor), std::get<3>(conductor), std::get<4>(conductor), std::get<5>(conductor), std::get<6>(conductor));
+	groundwires = std::make_unique<Groundwires>(std::get<0>(groundwire), std::get<1>(groundwire), conductors->ybc, std::get<2>(groundwire));
 
 	// Calculate earth parameters
 	RCP<const Basic> mu_earth = real_double(std::get<0>(earthParameters) * mu_0);
@@ -271,9 +291,9 @@ Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& locat
 	for (int i = 0; i < groundwires->ng; ++i) {
 		x_array.push_back(x[i]);
 		y_array.push_back(y[i]);
-		r_array.push_back(conductors->rc);
-		rho_array.push_back(conductors->Rdc * 1e-3);
-		mu_array.push_back(conductors->mu_rc * mu_0);
+		r_array.push_back(groundwires->rg);
+		rho_array.push_back(groundwires->Rgdc * 1e-3);
+		mu_array.push_back(groundwires->mu_g * mu_0);
 	}
 	
 	// Calculate the number of elements in the matrices
@@ -318,24 +338,23 @@ Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& locat
 		}
 	}	
 	
-	// Kron reduction preparation
+	// Kron: keep the first subconductor of each phase bundle (eliminates
+	// extra subconductors and ground wires).
+	const int nsb = std::max(conductors->number_conductors_bundle, 1);
 	std::vector<int> cond_noElim;
-	if (conductors->number_conductors_bundle != 0) {
-		for (int i = 0; i < conductors->number_bundles; ++i) {
-			cond_noElim.push_back((i * conductors->number_conductors_bundle));
-		}
+	for (int i = 0; i < conductors->number_bundles; ++i) {
+		cond_noElim.push_back(i * nsb);
+	}
+	if (nsb > 1) {
 		for (int iPhase = 0; iPhase < conductors->number_bundles; ++iPhase) {
-			int keep_idx = cond_noElim[iPhase]; // index to keep (0-based)
-			int start = iPhase * conductors->number_conductors_bundle + 1;              // first subconductor to eliminate in this bundle
-			int end = (iPhase + 1) * conductors->number_conductors_bundle - 1;			// last subconductor to eliminate
-
+			int keep_idx = cond_noElim[iPhase];
+			int start = iPhase * nsb + 1;
+			int end = (iPhase + 1) * nsb - 1;
 			for (int ic = start; ic <= end; ++ic) {
-				// Subtract Z/P[:,iCond] from Z/P[:,cond_noElim_curr]
 				for (int i = 0; i < Num; ++i) {
 					Z.set(i, ic, sub(Z.get(i, ic), Z.get(i, keep_idx)));
 					P(i, ic) -= P(i, keep_idx);
 				}
-				// Subtract Z/P[iCond,:] from Z/P[cond_noElim_curr,:]
 				for (int j = 0; j < Num; ++j) {
 					Z.set(ic, j, sub(Z.get(ic, j), Z.get(keep_idx, j)));
 					P(ic, j) -= P(keep_idx, j);
@@ -344,37 +363,34 @@ Overhead_Line::Overhead_Line(const std::string& symbol, const std::string& locat
 		}
 	}
 
-	// Invoke kron reduction
 	P = kron_reduction(P, cond_noElim);
 	Z = kron_reduction(Z, cond_noElim);
 
-	// Determine Y matrix
+	// Determine Y matrix. After Kron, size is the number of retained phase
+	// conductors (number_bundles), not subconductors per bundle.
+	const int n = static_cast<int>(cond_noElim.size());
 	P = P.inverse();
-	for (int i = 0; i < conductors->number_conductors_bundle; i++)
-		for (int j = 0; j < conductors->number_conductors_bundle; j++) {
-			Y.set(i, j, mul(s, real_double(P(i,j))));
+	Y = createZeroMatrix(n, n);
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			Y.set(i, j, mul(s, real_double(P(i, j))));
 			if (i == j) {
 				Y.set(i, j, add(Y.get(i, j), real_double(conductors->gc)));
 			}
 		}
+	}
 
-
-	int n = cond_noElim.size();  // Size of the reduced matrices
 	Z.resize(n, n);
 	P.resize(n, n);
-	Y.resize(n, n);
 
 	input_pins = n;
 	output_pins = n;
 	Y_matrix.resize(2 * n, 2 * n); // Resize Y_matrix in Element class
 }
 
-std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_parameters(double frequency)
+std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_at_omega(double omega_rad)
 {
-	// Step 1: Compute Z and Y matrices based on frequency
-	double angular_frequency = 2 * frequency * M_PI;
-	map_basic_basic m;
-	m[omega] = real_double(angular_frequency);
+	double angular_frequency = finiteOmega(omega_rad);
 	int n = Z.nrows();  // Size of the original matrices
 	std::vector<std::vector<complex<double>>> Y_val_exact(2 * n);
 	for (int i = 0; i < 2 * n; i++)
@@ -391,16 +407,17 @@ std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_parameters(do
 	Eigen::MatrixXcd Z_inv = Z_num.inverse();  // Inverse of Z
 	Eigen::MatrixXcd Yc = Z_inv * Gamma;  // Compute Yc
 
-	// Step 4: Compute Gamma_l = Gamma * length (element-wise multiplication)
-	Eigen::MatrixXcd Gamma_l = Gamma * length;
-
-	// Step 5: Calculate coth(Gamma_l) and csc(Gamma_l)
-	Eigen::MatrixXcd coth_Gamma_l = Gamma_l.cosh() * (Gamma_l.sinh()).inverse();  // coth(Γl)
-	Eigen::MatrixXcd csc_Gamma_l = (Gamma_l.sinh()).inverse();    // csc(Γl)
+	// Step 4–5: Γl, then sinh/cosh via matrix exp (do not chain .sinh().inverse()).
+	const Eigen::MatrixXcd Gamma_l = Gamma * length;
+	const Eigen::MatrixXcd exp_p = Gamma_l.exp();
+	const Eigen::MatrixXcd exp_m = (-Gamma_l).exp();
+	const Eigen::MatrixXcd sinh_Gl = 0.5 * (exp_p - exp_m);
+	const Eigen::MatrixXcd cosh_Gl = 0.5 * (exp_p + exp_m);
+	const Eigen::MatrixXcd sinh_inv = sinh_Gl.inverse();
 
 	// Step 6: Initialize the matrix blocks
-	Eigen::MatrixXcd Y11 = Yc * coth_Gamma_l;         // Yc * coth(Γl)
-	Eigen::MatrixXcd Y12 = -Yc * csc_Gamma_l;        // -Yc * csc(Γl)
+	Eigen::MatrixXcd Y11 = Yc * cosh_Gl * sinh_inv;  // Yc * coth(Γl)
+	Eigen::MatrixXcd Y12 = -Yc * sinh_inv;           // -Yc * csch(Γl)
 
 	// Step 7: Fill in the Y parameters matrix
 	for (int i = 0; i < Y11.rows(); ++i) {
@@ -417,5 +434,28 @@ std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_parameters(do
 	return Y_val_exact;
 }
 
-	
+std::vector<std::vector<complex<double>>> Overhead_Line::compute_y_parameters(double frequency)
+{
+	const double omega = 2.0 * frequency * M_PI;
+	const double omega_0 = 100.0 * M_PI;
+	if (transformation && isAcLocation() && !isMmcLocation()) {
+		auto Y1 = compute_y_at_omega(omega - omega_0);
+		auto Y2 = compute_y_at_omega(omega + omega_0);
+		return apply_transformation(Y1, Y2);
+	}
+	auto Y = compute_y_at_omega(omega);
+	if (transformation && isDcLocation())
+		return reduceDcY(Y);
+	return Y;
+}
+
+void Overhead_Line::computePowerFlow(std::map<std::string, double>& branchData,
+	std::map<std::string, double>& globalParams) const
+{
+	const double f = globalParams.at("omega") / (2.0 * M_PI);
+	auto Y = const_cast<Overhead_Line*>(this)->compute_y_parameters(f);
+	if (isDcLocation() && !transformation)
+		Y = reduceDcY(Y);
+	fillOpfBranchFromY(branchData, globalParams, Y);
+}
 

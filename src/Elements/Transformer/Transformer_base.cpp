@@ -12,6 +12,53 @@ Transformer_base::Transformer_base(const std::string& symbol, const std::string&
 // Destructor
 Transformer_base::~Transformer_base() = default;
 
+void Transformer_base::applyWindingConnection(bool deltaPrimary, bool deltaSecondary) {
+    if (m_pins != 3) {
+        throw std::invalid_argument("Invalid number of pins. It must be 3!");
+    }
+
+    // Paper eqs. (4)–(5): Ti and Tv, each scaled by 1/√3.
+    auto Ti = DenseMatrix(3, 3, {
+        integer(1), zero, integer(-1),
+        integer(-1), integer(1), zero,
+        zero, integer(-1), integer(1)
+    });
+    mul_dense_scalar(Ti, real_double(1.0 / sqrt(3.0)), Ti);
+    auto Tv = DenseMatrix(3, 3, {
+        one, minus_one, zero,
+        zero, one, minus_one,
+        minus_one, zero, one
+    });
+    mul_dense_scalar(Tv, real_double(1.0 / sqrt(3.0)), Tv);
+
+    auto N1 = createZeroMatrix(6, 6);
+    auto N2 = createZeroMatrix(6, 6);
+    for (int i = 0; i < 3; i++) {
+        if (!deltaPrimary) {
+            N1.set(i, i, integer(1));
+            N2.set(i, i, integer(1));
+        }
+        if (!deltaSecondary) {
+            N1.set(3 + i, 3 + i, integer(1));
+            N2.set(3 + i, 3 + i, integer(1));
+        }
+        for (int j = 0; j < 3; j++) {
+            if (deltaPrimary) {
+                N1.set(i, j, Ti.get(i, j));
+                N2.set(i, j, Tv.get(i, j));
+            }
+            if (deltaSecondary) {
+                N1.set(3 + i, 3 + j, Ti.get(i, j));
+                N2.set(3 + i, 3 + j, Tv.get(i, j));
+            }
+        }
+    }
+
+    DenseMatrix tmp = createZeroMatrix(6, 6);
+    mul_dense_dense(N1, Y_matrix, tmp);
+    mul_dense_dense(tmp, N2, Y_matrix);
+}
+
 void Transformer_base::computePowerFlow(std::map<std::string, double>& branchData,
     std::map<std::string, double>& globalParams) const
 {
@@ -45,7 +92,7 @@ void Transformer_base::computePowerFlow(std::map<std::string, double>& branchDat
 
         branchData["transformer"] = 1;
         branchData["tap"] = tap;
-        branchData["shift"] = 0;
+        branchData["shift"] = phase_shift;
 
         branchData["r"] = std::real(Zs);
         branchData["x"] = std::imag(Zs);

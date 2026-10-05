@@ -9,10 +9,10 @@ Contributor-facing extension tips: [Developer guide](developer-guide.md).
 
 | Entry | Purpose |
 |-------|---------|
-| Root `CMakeLists.txt` | `Harmony` and `HarmonyUI` targets |
-| `sources.cmake` | Shared source/header lists |
+| Root `CMakeLists.txt` | `harmony_core`, `harmony_examples`, `Harmony`, `HarmonyUI`, and `testharmony` |
+| `cmake/sources.cmake` | Shared source/header lists |
 | `cmake/dependencies.cmake` | `link_eigen`, `link_symengine`, `link_sundials`, `link_implot`, `link_gurobi`, … |
-| `tests/CMakeLists.txt` | Separate test project (`testharmony`) |
+| `tests/CMakeLists.txt` | GoogleTest executable; links `harmony_core` and `harmony_examples` |
 | `-DBUILD_DOCS=ON` | Doxygen HTML ([doxygen/README.md](doxygen/README.md)) |
 
 Gurobi path is always passed as `-DGUROBI_PATH=…` (see [installation.md](installation.md)).
@@ -28,7 +28,7 @@ Prefer documenting the conda path in [installation.md](installation.md); do not 
 
 ## ImPlot / ImGui
 
-Plotting links through `link_implot` in `cmake/dependencies.cmake` (imgui, implot, glfw, OpenGL). Visualization entry points are under `src/Solver/Helper_Functions/Visualization.*` and HarmonyUI (`src/ui/`). User-facing plot behaviour: [Manual Ch. 12](manual/12-harmony-ui.md).
+Plotting links through `link_implot` in `cmake/dependencies.cmake` (imgui, implot, glfw, OpenGL). Visualization lives under `src/ui/`. User-facing plot behaviour: [Manual Ch. 12](manual/12-harmony-ui.md).
 
 ## GitHub Actions pipelines
 
@@ -36,8 +36,7 @@ Workflows under `.github/workflows/`:
 
 | Workflow | Role |
 |----------|------|
-| `*_build_and_test.yml` | Build + `ctest` excluding `TestExamples` |
-| `*_run_examples.yml` | Build + `ctest -R TestExamples` |
+| `*_build_and_test.yml` | Build Harmony/HarmonyUI/`testharmony`, then `ctest` (unit tests, then `TestExamples`) |
 | `docs.yml` | Doxygen API docs artifact |
 
 Shared steps: `.github/actions/setup-env`, `build-harmony`, `run-ctest`.
