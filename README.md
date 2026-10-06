@@ -179,10 +179,10 @@ Start at the **[documentation index](docs/README.md)** — it maps the user manu
 
 
 ## Contributors
-- **Aleksandra Lekić**, development of the mathematical framework, development of individual components, and their spectral representation and formulation, design of the toolbox, different functionality interconnections, harmonic stability solver, supervision, and acquisition of the funding
+- **Aleksandra Lekić**, development of the mathematical framework, individual components, design of the toolbox, harmonic stability solver, supervision, and acquisition of the funding
 - **Robert Dimitrovski**, dynamic phasor formulation, development of a core of DQsym, funding acquisition and supervision
 - **Haixiao Li**, design of the power flow strategy, and formulation of the power flow solution
-- **Saif Alsarayreh**, dynamic phasor formulation, model design, and implementation
+- **Saif Alsarayreh**, dynamic phasor formulation, model design, and implementation, stability assessment
 - **Muhammad Noman Ashraf**, GFM control
 - **Azadeh Kermansaravi**, programming of the part of the toolbox
 - **Yasel Quintero**, documentation, installation setup, cross-platform compatibility, testing, issuing, release
