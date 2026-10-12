@@ -19,8 +19,8 @@
             "earth": [1.0, 1.0, 1.0],
             "conductors": [
                 { "id": "C1", "ri": 0.0, "ro": 0.02425, "resistivity": 1.72e-8 },
-                { "id": "C2", "ri": 0.04175, "ro": 0.04625, "resistivity": 2.2e-8 },
-                { "id": "C3", "ri": 0.04975, "ro": 0.06055, "resistivity": 1.8e-8, "permeability": 10.0 }
+                { "id": "C2", "ri": 0.04175, "ro": 0.04625, "resistivity": 2.2e-7 },
+                { "id": "C3", "ri": 0.04975, "ro": 0.06055, "resistivity": 1.8e-7, "permeability": 10.0 }
             ],
             "insulators": [
                 { "id": "I1", "ri": 0.02425, "ro": 0.04175, "permittivity": 2.3 },

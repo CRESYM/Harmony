@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include <complex>
 
-#include "../network.h"
-#include "../Bus.h"
-#include "../Include_components.h"
-#include "../Solver/Stability_Estimate/Stability_estimate.h"
+#include "network/network.h"
+#include "network/Bus.h"
+#include "core/Include_components.h"
+#include "Solver/Stability_Estimate/Stability_estimate.h"
 
 
 namespace {
@@ -14,10 +14,7 @@ MatrixXcd yFromAbcd(
 	const Eigen::MatrixXd& B,
 	const Eigen::MatrixXd& C,
 	const Eigen::MatrixXd& D,
-	double frequency,
-	bool applyDcCorrection,
-	double C_arm,
-	int numSubmodules)
+	double frequency)
 {
 	const double omega_num = 2.0 * M_PI * frequency;
 	const std::complex<double> s(0.0, omega_num);
@@ -27,13 +24,7 @@ MatrixXcd yFromAbcd(
 	const Eigen::MatrixXcd Dc = D.cast<std::complex<double>>();
 	const int n = static_cast<int>(A.rows());
 
-	Eigen::MatrixXcd Y = Cc * (s * Eigen::MatrixXcd::Identity(n, n) - Ac).inverse() * Bc + Dc;
-
-	if (applyDcCorrection) {
-		Y(0, 0) = 1.0 / Y(0, 0);
-		Y(0, 0) = 2.0 * (Y(0, 0) - s * C_arm * (6.0 / numSubmodules));
-	}
-	return Y;
+	return Cc * (s * Eigen::MatrixXcd::Identity(n, n) - Ac).inverse() * Bc + Dc;
 }
 
 Eigen::Vector3d operatingInput(double Vdc, double Vm, double theta) {
@@ -97,8 +88,7 @@ TEST_F(TestMMC, TestYMatrix) {
 	EXPECT_TRUE(Y.allFinite());
 
 	const MatrixXcd Y_ref = yFromAbcd(
-		mmc.getA(), mmc.getB(), mmc.getC(), mmc.getD(),
-		f, false, 0.01, 400);
+		mmc.getA(), mmc.getB(), mmc.getC(), mmc.getD(), f);
 	EXPECT_TRUE(Y.isApprox(Y_ref, 1e-9))
 		<< "compute_y_parameters must match the ABCD frequency response.";
 
@@ -164,9 +154,46 @@ TEST_F(TestMMC, TestGfmModeEquilibrium) {
 	const double Id_h = x_eq(plant);
 	const double Iq_h = x_eq(plant + 1);
 	// True GFM SS: Pac=Pref ⇒ Id=2P/(3V) when Vgq=0; Iq ≠ 0 from Q–V droop / plant.
-	// Q = 1.5(Vd iq − Vq id); golden Iq is the closed-loop droop equilibrium (not Iq_ref=0).
+	// Report Park Q = 1.5(Vq id − Vd iq). Qref=0; Iq is GFM droop/plant, not OCC inversion.
 	EXPECT_NEAR(Id_h, (2.0 / 3.0) * Pac / Vm, 1e-3);
-	EXPECT_NEAR(Iq_h, 14.0664, 0.05);
+	EXPECT_NEAR(Iq_h, 8.326, 0.05);
+}
+
+TEST_F(TestMMC, TestYMatrixVdcControl) {
+	const double f = 50.0;
+	const double omega = 2.0 * M_PI * f;
+	const double Vdc = 440e3;
+	const double Vm = 345e3;
+	std::vector<double> converter_params = {
+		omega, -50.0e6, -20e6, 0.0, Vm, -50e6, Vdc,
+		0.05, 1.07, 0.01, 400, 0.0005, 0.0001, 0.0
+	};
+	std::vector<double> controller_params = {
+		1, 0, 0.001103374, 0.00073, 1, 0,
+		1, 0, 2, 82, 1, Vdc,
+		0, 0,
+		1, 0, 6.6667e-07, 3.3333e-04, 1, -20e6,
+		1, 0, 120, 400, 1, 0,
+		1, 0, 19.93, 4500, 1, -41.66,
+		1, 0, 117.93, 8.5e4, 2, -89.71, 0,
+		1, 0, 19.93, 4500, 2, 0, 0,
+		0
+	};
+
+	MMC mmc("MMC2", "AC2_DC1", converter_params, controller_params);
+	ASSERT_NO_THROW(mmc.solveEquilibrium());
+	mmc.computeABCD();
+
+	const MatrixXcd Y = vectorToMatrix(mmc.compute_y_parameters(f));
+	EXPECT_EQ(Y.rows(), 3);
+	EXPECT_EQ(Y.cols(), 3);
+	EXPECT_TRUE(Y.allFinite());
+
+	const MatrixXcd H = yFromAbcd(
+		mmc.getA(), mmc.getB(), mmc.getC(), mmc.getD(), f);
+	EXPECT_TRUE(Y.isApprox(H, 1e-9))
+		<< "dc_voltage must export Y = C(sI-A)^{-1}B (Vdc is the DC port voltage).";
+	EXPECT_GT(std::abs(Y(0, 0)), 1e-12);
 }
 
 TEST_F(TestMMC, TestOpfPowerFlowSignConvention) {
@@ -200,6 +227,15 @@ TEST_F(TestMMC, TestOpfPowerFlowSignConvention) {
 	mmc.computePowerFlow(row, globals);
 	EXPECT_NEAR(row.at("P_g"), Pac / 1e6, 1e-9);
 	EXPECT_NEAR(row.at("Q_g"), Qac / 1e6, 1e-9);
+	EXPECT_NEAR(row.at("bf"), 0.0, 1e-12);
+	EXPECT_NEAR(row.at("LossA"), 0.0, 1e-12);
+	EXPECT_NEAR(row.at("LossB"), 0.0, 1e-12);
+	EXPECT_NEAR(row.at("LossCrec"), 0.0, 1e-12);
+	EXPECT_NEAR(row.at("LossCinv"), 0.0, 1e-12);
+	const double Leq = 50e-3 / 2.0 + 0.06;
+	const double Req = 1.07 / 2.0 + 0.535;
+	EXPECT_NEAR(row.at("xc"), omega * Leq / globals.at("ACZbase"), 1e-9);
+	EXPECT_NEAR(row.at("rc"), Req / globals.at("ACZbase"), 1e-9);
 
 	// Simulated OPF inverter injections (MatACDC): ps,qs,pn ≤ 0 → MMC Pac=-ps.
 	const double ps_MW = -Pac / 1e6;

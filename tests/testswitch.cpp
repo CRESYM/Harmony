@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "Switch.h"
-#include "Bus.h"
+#include "Elements/Switch/Switch.h"
+#include "network/Bus.h"
 #include <symengine/basic.h>
 
 using namespace SymEngine;   

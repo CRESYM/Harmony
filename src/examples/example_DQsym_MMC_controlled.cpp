@@ -4,9 +4,11 @@
  */
 #include "Examples.h"
 
-#include "../network.h"
-#include "../Include_components.h"
-#include "../Solver/DQsym/DQsym.h"
+#include "network/network.h"
+#include "core/Include_components.h"
+#include "Solver/DQsym/DQsym.h"
+
+#include <memory>
 
 void example_DQsym_MMC_controlled(bool plotting_enabled /*=true*/)
 {
@@ -17,7 +19,9 @@ void example_DQsym_MMC_controlled(bool plotting_enabled /*=true*/)
     const double Vdc = 200.0;
     const int    nKeep = 5;
 
-    Network net;
+    static std::unique_ptr<Network> retained;
+    retained = std::make_unique<Network>();
+    Network& net = *retained;
 
     Bus* gnd = new Bus("gnd", "GND", 1);
     Bus* ac_bus = new Bus("AC1", "AC1", 3);
@@ -29,7 +33,7 @@ void example_DQsym_MMC_controlled(bool plotting_enabled /*=true*/)
 
     std::vector<double> controller_params = {
         1, 0, 180, 3200, 1, 0.0, //1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
-        0, // 1, 0, 8.0, 272.0, 2, 0, Vdc, // DC voltage controller parameters
+        0, // 1, 0, 8.0, 272.0, 1, Vdc, // DC voltage controller parameters
         0, // active power
         0, // AC voltage
         0, //1, 0, 6.6667e-07, 3.3333e-04, 1, 0, // reactive power
@@ -97,6 +101,7 @@ void example_DQsym_MMC_controlled(bool plotting_enabled /*=true*/)
 
     if (plotting_enabled) {
         dq.plot();
+        dq.analyzeAtTime(cfg.t_end);
     }
     dq.exportCSV("DQsym_MMC_SigmaDelta.csv");
 }

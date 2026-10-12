@@ -10,16 +10,16 @@
  */
 #include "Examples.h"
 
-#include "../network.h"
-#include "../Bus.h"
-#include "../Include_components.h"
-#include "../Solver/Certificate/Device_gate.h"
-#include "../Solver/Certificate/Local_vs_system.h"
-#include "../Solver/Certificate/Operating_region.h"
-#include "../Solver/Certificate/PnP_library.h"
-#include "../Solver/Certificate/Stability_certificate.h"
-#include "../Solver/Certificate/Tuning_assistant.h"
-#include "../Solver/Stability_Estimate/Stability_estimate.h"
+#include "network/network.h"
+#include "network/Bus.h"
+#include "core/Include_components.h"
+#include "Solver/Certificate/Device_gate.h"
+#include "Solver/Certificate/Local_vs_system.h"
+#include "Solver/Certificate/Operating_region.h"
+#include "Solver/Certificate/PnP_library.h"
+#include "Solver/Certificate/Stability_certificate.h"
+#include "Solver/Certificate/Tuning_assistant.h"
+#include "Solver/Stability_Estimate/Stability_estimate.h"
 
 
 namespace {

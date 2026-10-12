@@ -1,7 +1,7 @@
 #ifndef _CONTROL_BLOCK_H_
 #define _CONTROL_BLOCK_H_
 
-#include "../Constants.h"
+#include "core/Constants.h"
 
 /**
  * @file Control_block.h

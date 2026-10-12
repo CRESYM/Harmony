@@ -3,16 +3,53 @@
  * @brief Implementation of Base class for power electronic converters with state-space models.
  */
 #include "Converter.h"
+#include "ui/Visualization.h"
+
+#include <fstream>
 
 
-Converter::~Converter() {
-    for (auto& [name, controller] : controls)
-        delete controller;
-    controls.clear();
+Converter::~Converter() = default;
 
-    for (auto& [name, filter] : filters)
-        delete filter;
-    filters.clear();
+void Converter::dumpLinearizationOp(const std::string& id) const
+{
+	const double v_ln_pk = 380e3 * std::sqrt(2.0 / 3.0);
+	const double vgd = V_m * std::cos(theta);
+	const double vgq = -V_m * std::sin(theta);
+	double id_a = 0.0, iq = 0.0, isz = 0.0;
+	const int n = static_cast<int>(equilibrium_state.size());
+	const int p = n - 12;
+	if (p >= 0 && n >= p + 3) {
+		id_a = equilibrium_state(p);
+		iq = equilibrium_state(p + 1);
+		isz = equilibrium_state(p + 2);
+	}
+	const double pac_ss = 1.5 * (vgd * id_a + vgq * iq);
+	const double qac_ss = 1.5 * (vgq * id_a - vgd * iq);
+	const double pdc_ss = 3.0 * V_dc * isz;
+	const double vac_pu = (v_ln_pk > 0.0) ? V_m / v_ln_pk : 0.0;
+	std::cout << "OP_MMC id=" << id
+		<< " Pac_MW=" << P / 1e6
+		<< " Qac_MVAR=" << Q / 1e6
+		<< " Pdc_MW=" << P_dc / 1e6
+		<< " Vac_pu=" << vac_pu
+		<< " theta_deg=" << theta * 180.0 / M_PI
+		<< " Vdc_kV=" << V_dc / 1e3
+		<< " Vgd_kV=" << vgd / 1e3
+		<< " Vgq_kV=" << vgq / 1e3
+		<< " Id_A=" << id_a
+		<< " Iq_A=" << iq
+		<< " iSz_A=" << isz
+		<< " Pac_ss_MW=" << pac_ss / 1e6
+		<< " Qac_ss_MW=" << qac_ss / 1e6
+		<< " Pdc_ss_MW=" << pdc_ss / 1e6
+		<< "\n";
+	std::ofstream csv("./files/harmony_linearization_op.csv", std::ios::app);
+	if (csv)
+		csv << id << "," << P / 1e6 << "," << Q / 1e6 << "," << P_dc / 1e6 << ","
+			<< vac_pu << "," << theta * 180.0 / M_PI << "," << V_dc / 1e3 << ","
+			<< vgd / 1e3 << "," << vgq / 1e3 << "," << id_a << "," << iq << ","
+			<< isz << "," << pac_ss / 1e6 << "," << qac_ss / 1e6 << ","
+			<< pdc_ss / 1e6 << "\n";
 }
 
 
@@ -81,7 +118,7 @@ void Converter::plotParticipationFactors() {
 
     // Make labels for states and modes
 	std::vector<std::string> state_labels;
-    for (auto control : controls) {
+    for (const auto& control : controls) {
 		int n = control.second->getNumberOfSignals();
 		if (control.first == "pll") n = 2; // PLL has always 2 states
 		if (control.first == "gfm") n = 3; // theta, Pac_f, Qac_f
@@ -89,7 +126,7 @@ void Converter::plotParticipationFactors() {
             state_labels.push_back(control.first + "_" + to_string(i + 1));
         } 
 	}
-    for (auto filter : filters) {
+    for (const auto& filter : filters) {
         for (int i = 0; i < filter.second->getFilterSize(); ++i) {
             state_labels.push_back(filter.first + "_" + to_string(i + 1));
         }

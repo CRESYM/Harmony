@@ -31,5 +31,4 @@ private:
     // inherited from parent class
 };
 
-#endif // TRANSFORMER_DELTA_Y_H
-#pragma once
+#endif

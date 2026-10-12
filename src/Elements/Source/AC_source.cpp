@@ -141,11 +141,28 @@ void AC_source::printElementValues() {
 	printElementInfo();
 }
 
-// LIKELY NEED TO MODIFY THIS FUNCTION TO ACCOUNT FOR PHASE SHIFT IN AC SOURCE
-std::vector<MatrixXcd> AC_source::simulateInputStep(
-    const std::vector<MatrixXcd>& /*states*/, int nKeep) const
+std::vector<std::vector<complex<double>>> AC_source::compute_y_parameters(double /*frequency*/)
 {
-    MatrixXcd Vi = MatrixXcd::Zero(3, nKeep);
-	Vi(0, 1) = std::complex<double>(V[0], 0.0);
-    return { Vi };
+	auto Y1 = yFromSeriesResistance();
+	if (transformation && input_pins == 3) {
+		auto Y2 = Y1;
+		return apply_transformation(Y1, Y2);
+	}
+	return Y1;
+}
+
+// LIKELY NEED TO MODIFY THIS FUNCTION TO ACCOUNT FOR PHASE SHIFT IN AC SOURCE
+void AC_source::simulateInputStep(
+    const std::vector<MatrixXcd>& /*states*/, int nKeep,
+    std::vector<MatrixXcd>& out) const
+{
+    if (out.size() != 1)
+        out.resize(1);
+    auto& Vi = out[0];
+    if (Vi.rows() != 3 || Vi.cols() != nKeep)
+        Vi = MatrixXcd::Zero(3, nKeep);
+    else
+        Vi.setZero();
+    if (nKeep > 1)
+        Vi(0, 1) = std::complex<double>(V[0], 0.0);
 }

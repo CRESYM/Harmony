@@ -120,6 +120,14 @@ DC_source::DC_source(const std::string& symbol, const std::string& location, int
         }
 }
 
+std::vector<std::vector<complex<double>>> DC_source::compute_y_parameters(double /*frequency*/)
+{
+	auto Y = yFromSeriesResistance();
+	if (transformation && isDcLocation())
+		return reduceDcY(Y);
+	return Y;
+}
+
 void DC_source::writeMNAmatrix(SymEngine::DenseMatrix& matrix,
     std::unordered_map<Bus*, int>& bus_indices, int location,
     std::map<Element*, std::vector<RCP<const Basic>>>& symbol_map)
@@ -156,13 +164,18 @@ void DC_source::writeMNAmatrix(SymEngine::DenseMatrix& matrix,
     symbol_map[this] = symbols;
 }
 
-std::vector<MatrixXcd> DC_source::simulateInputStep(
-    const std::vector<MatrixXcd>& /*states*/, int nKeep) const
+void DC_source::simulateInputStep(
+    const std::vector<MatrixXcd>& /*states*/, int nKeep,
+    std::vector<MatrixXcd>& out) const
 {
-    MatrixXcd Vi = MatrixXcd::Zero(input_pins * 3, nKeep);
-    for (int p = 0; p < input_pins; ++p) {
+    const int rows = input_pins * 3;
+    if (out.size() != 1)
+        out.resize(1);
+    auto& Vi = out[0];
+    if (Vi.rows() != rows || Vi.cols() != nKeep)
+        Vi = MatrixXcd::Zero(rows, nKeep);
+    else
+        Vi.setZero();
+    for (int p = 0; p < input_pins; ++p)
         Vi(p * 3 + 2, 0) = complex<double>(V[p], 0.0);
-    }        
-
-    return { Vi };
 }

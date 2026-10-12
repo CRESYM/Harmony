@@ -1,0 +1,1412 @@
+{
+    "simulation": {
+        "title": "line_topologies",
+        "description": "All Harmony OHL organizations and coaxial cable layouts vs PowerImpedance.",
+        "output_directory": "./files",
+        "frequency_range": {
+            "start": 10,
+            "end": 1000,
+            "points": 21
+        }
+    },
+    "buses": [
+        {
+            "id": "ohl_flat2_a",
+            "location": "AC1",
+            "pins": 2,
+            "enabled": true
+        },
+        {
+            "id": "ohl_flat2_b",
+            "location": "AC1",
+            "pins": 2,
+            "enabled": true
+        },
+        {
+            "id": "ohl_flat3_a",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_flat3_b",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_flat3_nogw_a",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_flat3_nogw_b",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_flat6_a",
+            "location": "AC1",
+            "pins": 6,
+            "enabled": true
+        },
+        {
+            "id": "ohl_flat6_b",
+            "location": "AC1",
+            "pins": 6,
+            "enabled": true
+        },
+        {
+            "id": "ohl_vert3_a",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_vert3_b",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_vert6_a",
+            "location": "AC1",
+            "pins": 6,
+            "enabled": true
+        },
+        {
+            "id": "ohl_vert6_b",
+            "location": "AC1",
+            "pins": 6,
+            "enabled": true
+        },
+        {
+            "id": "ohl_delta3_a",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_delta3_b",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_delta6_a",
+            "location": "AC1",
+            "pins": 6,
+            "enabled": true
+        },
+        {
+            "id": "ohl_delta6_b",
+            "location": "AC1",
+            "pins": 6,
+            "enabled": true
+        },
+        {
+            "id": "ohl_conc3_a",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_conc3_b",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_off3_a",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_off3_b",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_conc6_a",
+            "location": "AC1",
+            "pins": 6,
+            "enabled": true
+        },
+        {
+            "id": "ohl_conc6_b",
+            "location": "AC1",
+            "pins": 6,
+            "enabled": true
+        },
+        {
+            "id": "ohl_vert3_twin_a",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_vert3_twin_b",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_2gw_a",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "ohl_2gw_b",
+            "location": "AC1",
+            "pins": 3,
+            "enabled": true
+        },
+        {
+            "id": "cable_aerial_a",
+            "location": "DC1",
+            "pins": 1,
+            "enabled": true
+        },
+        {
+            "id": "cable_aerial_b",
+            "location": "DC1",
+            "pins": 1,
+            "enabled": true
+        },
+        {
+            "id": "cable_ug_single_a",
+            "location": "DC1",
+            "pins": 1,
+            "enabled": true
+        },
+        {
+            "id": "cable_ug_single_b",
+            "location": "DC1",
+            "pins": 1,
+            "enabled": true
+        },
+        {
+            "id": "cable_ug_bipolar_a",
+            "location": "DC1",
+            "pins": 2,
+            "enabled": true
+        },
+        {
+            "id": "cable_ug_bipolar_b",
+            "location": "DC1",
+            "pins": 2,
+            "enabled": true
+        },
+        {
+            "id": "cable_ug_staggered_a",
+            "location": "DC1",
+            "pins": 2,
+            "enabled": true
+        },
+        {
+            "id": "cable_ug_staggered_b",
+            "location": "DC1",
+            "pins": 2,
+            "enabled": true
+        },
+        {
+            "id": "cable_aerial_bipolar_a",
+            "location": "DC1",
+            "pins": 2,
+            "enabled": true
+        },
+        {
+            "id": "cable_aerial_bipolar_b",
+            "location": "DC1",
+            "pins": 2,
+            "enabled": true
+        }
+    ],
+    "components": [
+        {
+            "id": "ohl_flat2",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length": 50000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "flat",
+                "number_bundles": [
+                    2,
+                    2
+                ],
+                "geometry": [
+                    10.0,
+                    30.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.4572
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    7.5,
+                    6.5
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "ohl_flat2_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "ohl_flat2_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "ohl_flat3",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length": 50000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "flat",
+                "number_bundles": [
+                    3,
+                    1
+                ],
+                "geometry": [
+                    10.0,
+                    30.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.0
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    7.5,
+                    6.5
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "ohl_flat3_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "ohl_flat3_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "ohl_flat3_nogw",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length": 50000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "flat",
+                "number_bundles": [
+                    3,
+                    1
+                ],
+                "geometry": [
+                    10.0,
+                    30.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.0
+            },
+            "groundwire": {
+                "count": 0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "ohl_flat3_nogw_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "ohl_flat3_nogw_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "ohl_flat6",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length": 50000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "flat",
+                "number_bundles": [
+                    6,
+                    1
+                ],
+                "geometry": [
+                    10.0,
+                    30.0,
+                    9.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.0
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    7.5,
+                    6.5
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "ohl_flat6_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "ohl_flat6_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "ohl_vert3",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length": 50000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "vertical",
+                "number_bundles": [
+                    3,
+                    1
+                ],
+                "geometry": [
+                    10.0,
+                    30.0,
+                    9.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.0
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    7.5,
+                    6.5
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "ohl_vert3_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "ohl_vert3_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "ohl_vert6",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length": 50000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "vertical",
+                "number_bundles": [
+                    6,
+                    1
+                ],
+                "geometry": [
+                    10.0,
+                    30.0,
+                    9.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.0
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    7.5,
+                    6.5
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "ohl_vert6_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "ohl_vert6_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "ohl_delta3",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length": 50000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "delta",
+                "number_bundles": [
+                    3,
+                    1
+                ],
+                "geometry": [
+                    10.0,
+                    30.0,
+                    9.0,
+                    4.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.0
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    7.5,
+                    6.5
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "ohl_delta3_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "ohl_delta3_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "ohl_delta6",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length": 50000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "delta",
+                "number_bundles": [
+                    6,
+                    1
+                ],
+                "geometry": [
+                    10.0,
+                    30.0,
+                    9.0,
+                    4.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.0
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    7.5,
+                    6.5
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "ohl_delta6_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "ohl_delta6_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "ohl_conc3",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length": 50000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "concentric",
+                "number_bundles": [
+                    3,
+                    1
+                ],
+                "geometry": [
+                    10.0,
+                    30.0,
+                    9.0,
+                    4.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.0
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    7.5,
+                    6.5
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "ohl_conc3_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "ohl_conc3_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "ohl_off3",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length": 50000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "offset",
+                "number_bundles": [
+                    3,
+                    1
+                ],
+                "geometry": [
+                    10.0,
+                    30.0,
+                    9.0,
+                    4.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.0
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    7.5,
+                    6.5
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "ohl_off3_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "ohl_off3_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "ohl_conc6",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length": 50000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "concentric",
+                "number_bundles": [
+                    6,
+                    1
+                ],
+                "geometry": [
+                    10.0,
+                    30.0,
+                    9.0,
+                    4.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.0
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    7.5,
+                    6.5
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "ohl_conc6_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "ohl_conc6_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "ohl_vert3_twin",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length": 50000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "vertical",
+                "number_bundles": [
+                    3,
+                    2
+                ],
+                "geometry": [
+                    10.0,
+                    30.0,
+                    9.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.4572
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    7.5,
+                    6.5
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "ohl_vert3_twin_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "ohl_vert3_twin_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "ohl_2gw",
+            "location": "AC1",
+            "type": "overhead_line",
+            "length": 150000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "conductor": {
+                "organization": "vertical",
+                "number_bundles": [
+                    3,
+                    2
+                ],
+                "geometry": [
+                    4.0,
+                    12.0,
+                    9.0
+                ],
+                "rc": 0.015,
+                "Rdc": 0.063,
+                "dsag": 10.0,
+                "dsb": 0.4572
+            },
+            "groundwire": {
+                "count": 2,
+                "geometry": [
+                    0.92,
+                    0.0062,
+                    10.0,
+                    35.0,
+                    8.0
+                ],
+                "mu_g": 1.0
+            },
+            "connected_buses": [
+                {
+                    "bus_id": "ohl_2gw_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "ohl_2gw_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "cable_aerial",
+            "location": "DC1",
+            "type": "cable",
+            "cable_type": "aerial",
+            "length": 100000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "pins": 1,
+            "conductors": [
+                {
+                    "id": "C1",
+                    "ri": 0.0,
+                    "ro": 0.02425,
+                    "resistivity": 1.72e-08
+                },
+                {
+                    "id": "C2",
+                    "ri": 0.04175,
+                    "ro": 0.04625,
+                    "resistivity": 2.2e-07
+                },
+                {
+                    "id": "C3",
+                    "ri": 0.04975,
+                    "ro": 0.06055,
+                    "resistivity": 1.8e-07,
+                    "permeability": 10.0
+                }
+            ],
+            "insulators": [
+                {
+                    "id": "I1",
+                    "ri": 0.02425,
+                    "ro": 0.04175,
+                    "permittivity": 2.3
+                },
+                {
+                    "id": "I2",
+                    "ri": 0.04625,
+                    "ro": 0.04975,
+                    "permittivity": 2.3
+                },
+                {
+                    "id": "I3",
+                    "ri": 0.06055,
+                    "ro": 0.06575,
+                    "permittivity": 2.3
+                }
+            ],
+            "positions": [
+                [
+                    0.0,
+                    1.0
+                ]
+            ],
+            "connected_buses": [
+                {
+                    "bus_id": "cable_aerial_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "cable_aerial_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "cable_ug_single",
+            "location": "DC1",
+            "type": "cable",
+            "cable_type": "underground",
+            "length": 100000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "pins": 1,
+            "conductors": [
+                {
+                    "id": "C1",
+                    "ri": 0.0,
+                    "ro": 0.02425,
+                    "resistivity": 1.72e-08
+                },
+                {
+                    "id": "C2",
+                    "ri": 0.04175,
+                    "ro": 0.04625,
+                    "resistivity": 2.2e-07
+                },
+                {
+                    "id": "C3",
+                    "ri": 0.04975,
+                    "ro": 0.06055,
+                    "resistivity": 1.8e-07,
+                    "permeability": 10.0
+                }
+            ],
+            "insulators": [
+                {
+                    "id": "I1",
+                    "ri": 0.02425,
+                    "ro": 0.04175,
+                    "permittivity": 2.3
+                },
+                {
+                    "id": "I2",
+                    "ri": 0.04625,
+                    "ro": 0.04975,
+                    "permittivity": 2.3
+                },
+                {
+                    "id": "I3",
+                    "ri": 0.06055,
+                    "ro": 0.06575,
+                    "permittivity": 2.3
+                }
+            ],
+            "positions": [
+                [
+                    0.0,
+                    1.0
+                ]
+            ],
+            "connected_buses": [
+                {
+                    "bus_id": "cable_ug_single_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "cable_ug_single_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "cable_ug_bipolar",
+            "location": "DC1",
+            "type": "cable",
+            "cable_type": "underground",
+            "length": 100000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "pins": 2,
+            "conductors": [
+                {
+                    "id": "C1",
+                    "ri": 0.0,
+                    "ro": 0.02425,
+                    "resistivity": 1.72e-08
+                },
+                {
+                    "id": "C2",
+                    "ri": 0.04175,
+                    "ro": 0.04625,
+                    "resistivity": 2.2e-07
+                },
+                {
+                    "id": "C3",
+                    "ri": 0.04975,
+                    "ro": 0.06055,
+                    "resistivity": 1.8e-07,
+                    "permeability": 10.0
+                }
+            ],
+            "insulators": [
+                {
+                    "id": "I1",
+                    "ri": 0.02425,
+                    "ro": 0.04175,
+                    "permittivity": 2.3
+                },
+                {
+                    "id": "I2",
+                    "ri": 0.04625,
+                    "ro": 0.04975,
+                    "permittivity": 2.3
+                },
+                {
+                    "id": "I3",
+                    "ri": 0.06055,
+                    "ro": 0.06575,
+                    "permittivity": 2.3
+                }
+            ],
+            "positions": [
+                [
+                    -0.5,
+                    1.0
+                ],
+                [
+                    0.5,
+                    1.0
+                ]
+            ],
+            "connected_buses": [
+                {
+                    "bus_id": "cable_ug_bipolar_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "cable_ug_bipolar_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "cable_ug_staggered",
+            "location": "DC1",
+            "type": "cable",
+            "cable_type": "underground",
+            "length": 100000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "pins": 2,
+            "conductors": [
+                {
+                    "id": "C1",
+                    "ri": 0.0,
+                    "ro": 0.02425,
+                    "resistivity": 1.72e-08
+                },
+                {
+                    "id": "C2",
+                    "ri": 0.04175,
+                    "ro": 0.04625,
+                    "resistivity": 2.2e-07
+                },
+                {
+                    "id": "C3",
+                    "ri": 0.04975,
+                    "ro": 0.06055,
+                    "resistivity": 1.8e-07,
+                    "permeability": 10.0
+                }
+            ],
+            "insulators": [
+                {
+                    "id": "I1",
+                    "ri": 0.02425,
+                    "ro": 0.04175,
+                    "permittivity": 2.3
+                },
+                {
+                    "id": "I2",
+                    "ri": 0.04625,
+                    "ro": 0.04975,
+                    "permittivity": 2.3
+                },
+                {
+                    "id": "I3",
+                    "ri": 0.06055,
+                    "ro": 0.06575,
+                    "permittivity": 2.3
+                }
+            ],
+            "positions": [
+                [
+                    -0.5,
+                    0.8
+                ],
+                [
+                    0.5,
+                    1.2
+                ]
+            ],
+            "connected_buses": [
+                {
+                    "bus_id": "cable_ug_staggered_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "cable_ug_staggered_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        },
+        {
+            "id": "cable_aerial_bipolar",
+            "location": "DC1",
+            "type": "cable",
+            "cable_type": "aerial",
+            "length": 100000.0,
+            "earth": [
+                1.0,
+                1.0,
+                100.0
+            ],
+            "pins": 2,
+            "conductors": [
+                {
+                    "id": "C1",
+                    "ri": 0.0,
+                    "ro": 0.02425,
+                    "resistivity": 1.72e-08
+                },
+                {
+                    "id": "C2",
+                    "ri": 0.04175,
+                    "ro": 0.04625,
+                    "resistivity": 2.2e-07
+                },
+                {
+                    "id": "C3",
+                    "ri": 0.04975,
+                    "ro": 0.06055,
+                    "resistivity": 1.8e-07,
+                    "permeability": 10.0
+                }
+            ],
+            "insulators": [
+                {
+                    "id": "I1",
+                    "ri": 0.02425,
+                    "ro": 0.04175,
+                    "permittivity": 2.3
+                },
+                {
+                    "id": "I2",
+                    "ri": 0.04625,
+                    "ro": 0.04975,
+                    "permittivity": 2.3
+                },
+                {
+                    "id": "I3",
+                    "ri": 0.06055,
+                    "ro": 0.06575,
+                    "permittivity": 2.3
+                }
+            ],
+            "positions": [
+                [
+                    -0.5,
+                    1.0
+                ],
+                [
+                    0.5,
+                    1.0
+                ]
+            ],
+            "connected_buses": [
+                {
+                    "bus_id": "cable_aerial_bipolar_a",
+                    "terminal": 1
+                },
+                {
+                    "bus_id": "cable_aerial_bipolar_b",
+                    "terminal": 2
+                }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        {
+            "type": "y_matrix",
+            "component_id": "ohl_flat2",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "ohl_flat3",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "ohl_flat3_nogw",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "ohl_flat6",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "ohl_vert3",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "ohl_vert6",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "ohl_delta3",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "ohl_delta6",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "ohl_conc3",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "ohl_off3",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "ohl_conc6",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "ohl_vert3_twin",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "ohl_2gw",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "cable_aerial",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "cable_ug_single",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "cable_ug_bipolar",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "cable_ug_staggered",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        },
+        {
+            "type": "y_matrix",
+            "component_id": "cable_aerial_bipolar",
+            "frequency_range": {
+                "start": 10,
+                "end": 1000,
+                "points": 21
+            },
+            "plot": false
+        }
+    ]
+}

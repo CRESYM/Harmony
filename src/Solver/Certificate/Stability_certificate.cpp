@@ -4,8 +4,11 @@
  */
 #include "Stability_certificate.h"
 
-#include "../../Elements/Element.h"
-#include "../Stability_Estimate/Stability_estimate.h"
+#include "Elements/Element.h"
+#include "Solver/Stability_Estimate/Stability_estimate.h"
+
+#include <imgui.h>
+#include <implot.h>
 
 #include <algorithm>
 #include <cmath>

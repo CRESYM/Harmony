@@ -1,0 +1,34 @@
+{
+    "simulation": {
+        "title": "pi_resistor",
+        "description": "Single-phase 10 Ohm series resistor vs PowerImpedance.jl impedance(z=10, pins=1).",
+        "output_directory": "./files",
+        "frequency_range": { "start": 10, "end": 10000, "points": 11 }
+    },
+    "buses": [
+        { "id": "bus1", "location": "AC1", "pins": 1, "enabled": true },
+        { "id": "bus2", "location": "AC1", "pins": 1, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "R1",
+            "location": "AC1",
+            "type": "resistor",
+            "pins": 1,
+            "values": [10.0],
+            "connected_buses": [
+                { "bus_id": "bus1", "terminal": 1 },
+                { "bus_id": "bus2", "terminal": 2 }
+            ],
+            "enabled": true
+        }
+    ],
+    "computations": [
+        {
+            "type": "y_matrix",
+            "component_id": "R1",
+            "frequency_range": { "start": 10, "end": 10000, "points": 11 },
+            "plot": false
+        }
+    ]
+}

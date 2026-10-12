@@ -52,7 +52,7 @@ TransmissionLine::TransmissionLine(const std::string& symbol, const std::string&
 }
 
 void TransmissionLine::computePowerFlow(std::map<std::string, double>& branchData,
-    const std::map<std::string, double>& globalParams) const
+    std::map<std::string, double>& globalParams) const
 {
     using cd = std::complex<double>;
 

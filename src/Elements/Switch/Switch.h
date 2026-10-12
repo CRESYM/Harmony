@@ -6,7 +6,7 @@
  * @brief Multi-phase switch element for open/closed branch control.
  */
 
-#include "../Element.h"
+#include "Elements/Element.h"
 
 /**
  * @class Switch

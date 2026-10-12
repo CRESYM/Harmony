@@ -8,9 +8,15 @@
  */
 #include "Stability_estimate.h"
 
-#include "../../network.h"
-#include "../../Include_components.h"
-#include "../../Bus.h"
+#include "network/network.h"
+#include "core/Include_components.h"
+#include "network/Bus.h"
+#include "ui/Visualization.h"
+
+#include <filesystem>
+#include <fstream>
+#include <functional>
+#include <unordered_set>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -37,6 +43,47 @@ static bool strStartsWith(const std::string& s, const char* prefix) {
     return true;
 }
 
+/// Solve A X = B. Ridge only if A is singular or non-finite (ideal source).
+static MatrixXcd solveRegularized(const MatrixXcd& A, const MatrixXcd& B)
+{
+    if (A.size() == 0)
+        throw std::runtime_error("solveRegularized: empty matrix.");
+    if (A.rows() != A.cols())
+        throw std::runtime_error("solveRegularized: A must be square.");
+    if (B.rows() != A.rows())
+        throw std::runtime_error("solveRegularized: right-hand side row mismatch.");
+    MatrixXcd Ause = A;
+    if (!Ause.allFinite())
+        Ause = MatrixXcd::Identity(A.rows(), A.cols()) * 1e-12;
+    Eigen::FullPivLU<MatrixXcd> lu(Ause);
+    if (!lu.isInvertible()) {
+        Ause += MatrixXcd::Identity(Ause.rows(), Ause.cols()) * 1e-12;
+        lu.compute(Ause);
+    }
+    return lu.solve(B);
+}
+
+/// Invert Y via LU solve against I (never form Y.inverse() explicitly).
+static MatrixXcd invertRegularized(const MatrixXcd& Y)
+{
+    return solveRegularized(Y, MatrixXcd::Identity(Y.rows(), Y.cols()));
+}
+
+/// H = Yn · Yeq^{-1} by solving Yeq^T H^T = Yn^T.
+static MatrixXcd mulRightInverse(const MatrixXcd& Yn, const MatrixXcd& Yeq)
+{
+    return solveRegularized(Yeq.transpose(), Yn.transpose()).transpose();
+}
+
+static std::complex<double> yAt(const std::vector<std::vector<std::complex<double>>>& Ye, int r, int c)
+{
+    if (r < 0 || c < 0 || r >= static_cast<int>(Ye.size()))
+        return { 0.0, 0.0 };
+    if (Ye[static_cast<size_t>(r)].empty() || c >= static_cast<int>(Ye[static_cast<size_t>(r)].size()))
+        return { 0.0, 0.0 };
+    return Ye[static_cast<size_t>(r)][static_cast<size_t>(c)];
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // add_areas / print_summary
 // ─────────────────────────────────────────────────────────────────────────────
@@ -60,8 +107,11 @@ void StabilityEstimate::print_summary() const {
     for (const auto& [name, sub] : dc_grids)  { (void)name; if (sub) sub->printInfo(); }
 }
 
+// Matches Element::compute_y_parameters (omega_0 = 100π).
+static constexpr double kParkF0Hz = 50.0;
+
 // ─────────────────────────────────────────────────────────────────────────────
-// compute_equivalent_admittance_parameters_num
+// assemblePassivePortY
 //
 // Implements adjusted MNA eq. (2) of Lekic et al. (CIGRE 2026):
 //
@@ -73,57 +123,28 @@ void StabilityEstimate::print_summary() const {
 // Converters are skipped during element stamping.
 // ─────────────────────────────────────────────────────────────────────────────
 
-MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
-        SubNetwork* subnet, double frequency) {
-
-    if (!subnet)
-        throw std::invalid_argument("Null SubNetwork pointer.");
-
-    // Determine how many pins each output port contributes.
-    // - DC subnets: always 1 (scalar port, matching the converter model).
-    // - AC subnets with Park transform: 2 (dq frame).
-    // - AC subnets without transform: 3 (abc frame).
-    int pins_per_port;
-    {
-        std::string nm = subnet->getName();
-        if (strStartsWith(nm, "DC") || strStartsWith(nm, "dc")) {
-            pins_per_port = 1;
-        } else if (subnet->getTransformation()) {
-            pins_per_port = 2;
-        } else {
-            pins_per_port = 3;
-        }
-    }
-
-    // --- Collect output ports and assign matrix positions ---
+static MatrixXcd assemblePassivePortY(
+        SubNetwork* subnet, double frequency, int pins_per_port, bool abc_y)
+{
     std::unordered_map<std::string, Bus*> output_buses = subnet->getOutputs();
-
-    // For DC subnets and dq AC subnets the effective port pin count differs
-    // from the physical bus pin count.  The MNA matrix is sized by
-    // pins_per_port, not by bus->getPinNumber().
-    auto effectivePins = [&](Bus* /*b*/) -> int {
-        return pins_per_port;
-    };
 
     int pos = 0;
     std::unordered_map<Bus*, int> bus_pos;
     std::unordered_map<Bus*, int> bus_cur_pos;
 
     for (auto& [bname, bus] : output_buses) {
-        bus_pos[bus]     = pos;  pos += effectivePins(bus);
-        bus_cur_pos[bus] = pos;  pos += effectivePins(bus);
+        bus_pos[bus]     = pos;  pos += pins_per_port;
+        bus_cur_pos[bus] = pos;  pos += pins_per_port;
     }
 
-    // Remaining (internal) buses
     for (const auto& [bname, bus] : subnet->getBuses()) {
         if (bus->isGround()) continue;
         if (bus_pos.find(bus) == bus_pos.end()) {
             bus_pos[bus] = pos;
-            pos += effectivePins(bus);
+            pos += pins_per_port;
         }
     }
 
-    // --- Assemble admittance matrix Y (pos × pos) ---
     Eigen::MatrixXcd Y = Eigen::MatrixXcd::Zero(pos, pos);
     Eigen::VectorXcd z = Eigen::VectorXcd::Zero(pos);
 
@@ -135,22 +156,23 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
             if (econn.find(bus) == econn.end() || bus->isGround()) continue;
 
             Bus* other = elem->getOtherBus(bus);
-            std::vector<std::vector<std::complex<double>>> Ye =
-                elem->compute_y_parameters(frequency);
+            std::vector<std::vector<std::complex<double>>> Ye = abc_y
+                ? elem->compute_y_parameters_abc(frequency)
+                : elem->compute_y_parameters(frequency);
 
             int bp = bus_pos.at(bus);
             int t  = econn.at(bus) - 1;
             int to = 1 - t;
-            int p  = pins_per_port;   // effective pins per terminal
+            int p  = pins_per_port;
 
             for (int i = 0; i < p; ++i) {
                 for (int j = 0; j < p; ++j) {
-                    Y(bp + i, bp + j) += Ye[t * p + i][t * p + j];
+                    Y(bp + i, bp + j) += yAt(Ye, t * p + i, t * p + j);
                     if (other && !other->isGround()) {
                         int op = bus_pos.at(other);
-                        Y(bp + i, op + j) += Ye[t  * p + i][to * p + j];
-                        Y(op + i, bp + j) += Ye[to * p + i][t  * p + j];
-                        Y(op + i, op + j) += Ye[to * p + i][to * p + j];
+                        Y(bp + i, op + j) += yAt(Ye, t  * p + i, to * p + j);
+                        Y(op + i, bp + j) += yAt(Ye, to * p + i, t  * p + j);
+                        Y(op + i, op + j) += yAt(Ye, to * p + i, to * p + j);
                     }
                 }
             }
@@ -158,27 +180,22 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
         }
     }
 
-    // Current-source rows for output ports
     for (auto& [bname, bus] : output_buses) {
         int bp = bus_pos.at(bus);
         int cp = bus_cur_pos.at(bus);
-        int p  = effectivePins(bus);
-        for (int i = 0; i < p; ++i) {
+        for (int i = 0; i < pins_per_port; ++i) {
             Y(bp + i, cp + i) = -1.0;
             Y(cp + i, bp + i) =  1.0;
         }
     }
 
-    // --- Y-parameter extraction: excite each port pin in turn ---
-    int total_out_pins = 0;
-    for (auto& [bname, bus] : output_buses) total_out_pins += effectivePins(bus);
+    int total_out_pins = static_cast<int>(output_buses.size()) * pins_per_port;
     MatrixXcd Y_params = MatrixXcd::Zero(total_out_pins, total_out_pins);
 
     int col_idx = 0;
     for (auto& [bname, bus] : output_buses) {
         int cp = bus_cur_pos.at(bus);
-        int p  = effectivePins(bus);
-        for (int i = 0; i < p; ++i) {
+        for (int i = 0; i < pins_per_port; ++i) {
             z.setZero();
             z(cp + i) = std::complex<double>(1.0, 0.0);
             Eigen::VectorXcd sol = Y.partialPivLu().solve(z);
@@ -186,16 +203,62 @@ MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
             int row_idx = 0;
             for (auto& [bname2, bus2] : output_buses) {
                 int cp2 = bus_cur_pos.at(bus2);
-                int p2  = effectivePins(bus2);
-                for (int j = 0; j < p2; ++j)
+                for (int j = 0; j < pins_per_port; ++j)
                     Y_params(row_idx + j, col_idx) = sol(cp2 + j);
-                row_idx += p2;
+                row_idx += pins_per_port;
             }
             ++col_idx;
         }
     }
 
     return Y_params;
+}
+
+MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
+        SubNetwork* subnet, double frequency) {
+    return compute_equivalent_admittance_parameters_num(
+        subnet, frequency, park_per_component_, yeff_);
+}
+
+MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
+        SubNetwork* subnet, double frequency, bool park_per_component) {
+    return compute_equivalent_admittance_parameters_num(
+        subnet, frequency, park_per_component, false);
+}
+
+MatrixXcd StabilityEstimate::compute_equivalent_admittance_parameters_num(
+        SubNetwork* subnet, double frequency, bool park_per_component, bool yeff) {
+
+    if (!subnet)
+        throw std::invalid_argument("Null SubNetwork pointer.");
+
+    const std::string nm = subnet->getName();
+    const bool is_dc = strStartsWith(nm, "DC") || strStartsWith(nm, "dc");
+
+    if (is_dc)
+        return assemblePassivePortY(subnet, frequency, 1, false);
+
+    if (!subnet->getTransformation())
+        return assemblePassivePortY(subnet, frequency, 3, true);
+
+    // AC + Park: Yeff and block A0 assemble abc Y; per-component stamps dq Y.
+    if (yeff) {
+        const double f0 = kParkF0Hz;
+        MatrixXcd Y_m3 = assemblePassivePortY(subnet, frequency - 3.0 * f0, 3, true);
+        MatrixXcd Y_m1 = assemblePassivePortY(subnet, frequency - f0, 3, true);
+        MatrixXcd Y_p1 = assemblePassivePortY(subnet, frequency + f0, 3, true);
+        MatrixXcd Y_p3 = assemblePassivePortY(subnet, frequency + 3.0 * f0, 3, true);
+        return vectorToMatrix(apply_park_Yeff(
+            matrixToVector(Y_m3), matrixToVector(Y_m1),
+            matrixToVector(Y_p1), matrixToVector(Y_p3)));
+    }
+
+    if (park_per_component)
+        return assemblePassivePortY(subnet, frequency, 2, false);
+
+    MatrixXcd Y_minus = assemblePassivePortY(subnet, frequency - kParkF0Hz, 3, true);
+    MatrixXcd Y_plus  = assemblePassivePortY(subnet, frequency + kParkF0Hz, 3, true);
+    return vectorToMatrix(apply_park_A0(matrixToVector(Y_minus), matrixToVector(Y_plus)));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -242,33 +305,41 @@ MatrixXcd StabilityEstimate::computeConverterDcAdmittance(
     // Converter Y-parameters  (p_dc + p_ac) × (p_dc + p_ac)
     MatrixXcd Yc = vectorToMatrix(conv->compute_y_parameters(frequency));
     if (!Yc.allFinite()) {
-        // Equilibrium may not have converged; return zero admittance as fallback
         return MatrixXcd::Zero(p_dc, p_dc);
     }
+    if (Yc.rows() < p_dc + p_ac || Yc.cols() < p_dc + p_ac) {
+        throw std::runtime_error("Converter Y-matrix is smaller than p_dc+p_ac.");
+    }
+    if (Y_eq_AC.rows() != p_ac || Y_eq_AC.cols() != p_ac) {
+        throw std::runtime_error(
+            "AC equivalent Y is " + std::to_string(Y_eq_AC.rows()) + "x"
+            + std::to_string(Y_eq_AC.cols()) + ", expected " + std::to_string(p_ac)
+            + "x" + std::to_string(p_ac) + ".");
+    }
 
-    // Partition:  row/col 0..p_dc-1 = DC,  p_dc..end = AC
     MatrixXcd Y_dc = Yc.block(0,     0,     p_dc, p_dc);
     MatrixXcd B    = Yc.block(0,     p_dc,  p_dc, p_ac);
     MatrixXcd A    = Yc.block(p_dc,  0,     p_ac, p_dc);
     MatrixXcd Y_dq = Yc.block(p_dc,  p_dc,  p_ac, p_ac);
 
-    // Y_eq,conv = Y_dc + B · (Y_eq,AC − Y_dq)^{-1} · A      (eq. 12)
-    return Y_dc + B * (Y_eq_AC - Y_dq).inverse() * A;
+    return Y_dc + B * solveRegularized(Y_eq_AC - Y_dq, A);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// compute_closing_impedance
+// compute_closing_admittance
 //
 // Implements eqs. (13)-(14) of Lekic et al.
 //
 // Partitions the DC multi-port Y-parameter matrix around the input port
-// (the main-converter bus) and closes the remaining ports with Y_closing:
+// (the main-converter bus) and closes the remaining ports with Y_closing.
+// With i2 = −Y_closing·v2 the Schur complement is
 //
-//   Y_eq = Y_11 + Y_12 · (Y_closing + Y_22)^{-1} · Y_21      (eq. 14)
-//   Z_eq = Y_eq^{-1}
+//   Y_eq = Y_11 − Y_12 · (Y_closing + Y_22)^{-1} · Y_21      (eq. 14)
+//
+// The admittance is returned directly so later steps do not invert Y→Z→Y.
 // ─────────────────────────────────────────────────────────────────────────────
 
-MatrixXcd StabilityEstimate::compute_closing_impedance(
+MatrixXcd StabilityEstimate::compute_closing_admittance(
         SubNetwork* sub, string& bus_name,
         MatrixXcd& Y_parameters, MatrixXcd& Y_closing) {
 
@@ -288,13 +359,16 @@ MatrixXcd StabilityEstimate::compute_closing_impedance(
         }
     }
     if (input_idx == -1)
-        throw std::runtime_error("compute_closing_impedance: bus '" + bus_name + "' not found.");
+        throw std::runtime_error("compute_closing_admittance: bus '" + bus_name + "' not found.");
 
     int N = total_ports - 1;   // number of other ports
 
     if (N == 0) {
-        // Single port: closing admittance directly gives the equivalent
-        return Y_closing.inverse();
+        // Single converter: no other DC ports to terminate. Closing admittance
+        // is the passive DC Y at this port.
+        if (Y_parameters.size() == 0)
+            throw std::runtime_error("compute_closing_admittance: empty DC Y-parameters.");
+        return Y_parameters;
     }
 
     // Partition Y_parameters (total_ports×total_ports) around input_idx
@@ -336,13 +410,43 @@ MatrixXcd StabilityEstimate::compute_closing_impedance(
 
     // Terminate other ports with Y_closing: i2 = -Y_closing·v2
     // Schur complement: Y_eq = Y11 - Y12·(Y_closing + Y22)^{-1}·Y21
-    // Return the equivalent impedance: Z_eq = Y_eq^{-1}
-    MatrixXcd Y_eq = Y11 - Y12 * (Y_closing + Y22).inverse() * Y21;
-    return Y_eq.inverse();
+    return Y11 - Y12 * solveRegularized(Y_closing + Y22, Y21);
+}
+
+static double logFrequency(double start_frequency, double end_frequency,
+        int number_of_points, int p)
+{
+    const int n = std::max(number_of_points, 2);
+    if (start_frequency <= 0.0 || end_frequency <= 0.0) {
+        return start_frequency + p * (end_frequency - start_frequency) / (n - 1);
+    }
+    const double ratio = std::pow(end_frequency / start_frequency,
+            static_cast<double>(p) / static_cast<double>(n - 1));
+    return start_frequency * ratio;
+}
+
+static void writeComplexMatrixCsv(const std::string& path,
+        int number_of_points, double start_frequency, double end_frequency,
+        const std::function<MatrixXcd(double)>& eval)
+{
+    std::filesystem::create_directories("./files");
+    std::ofstream myfile(path);
+    if (!myfile)
+        throw std::runtime_error("cannot open " + path);
+    const int n = std::max(number_of_points, 2);
+    for (int p = 0; p < n; ++p) {
+        const double frequency = logFrequency(start_frequency, end_frequency, n, p);
+        MatrixXcd M = eval(frequency);
+        myfile << frequency << ",";
+        for (int i = 0; i < M.rows(); ++i)
+            for (int j = 0; j < M.cols(); ++j)
+                myfile << M(i, j).real() << "+1i*(" << M(i, j).imag() << "),";
+        myfile << "\n";
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// compute_transfer_function  (MIMO, dimension-agnostic)
+// compute_cut_admittances  (MIMO, dimension-agnostic)
 //
 // Implements the full 5-step procedure of Lekic et al. (CIGRE 2026):
 //
@@ -351,21 +455,23 @@ MatrixXcd StabilityEstimate::compute_closing_impedance(
 //   Step 3  For each non-main converter, stamp its Y-matrix into the passive
 //           AC-grid MNA to obtain Y_eq,conv (eq. 12 generalised).
 //   Step 4  Close the DC grid around the main converter (eqs. 13-14).
-//   Step 5  Form H = Y_n · Z_eq (eqs. 15/17 for DC/AC cut).
+//   Step 5  Return Yn (converter, other port closed) and Yeq (grid).
+//           H = Yn · Yeq^{-1},  Zin = (Yn + Yeq)^{-1}.
 // ─────────────────────────────────────────────────────────────────────────────
 
-MatrixXcd StabilityEstimate::compute_transfer_function(
-        string converter_name, string location, double frequency) {
+bool StabilityEstimate::compute_cut_admittances(
+        string converter_name, string location, double frequency,
+        MatrixXcd& Yn, MatrixXcd& Yeq) {
 
     // ── Step 1: identify main converter ──────────────────────────────────────
     if (converters.find(converter_name) == converters.end()) {
         std::cerr << "Error: converter '" << converter_name << "' not found.\n";
-        return MatrixXcd::Zero(1, 1);
+        return false;
     }
     Converter* conv_main = dynamic_cast<Converter*>(converters.at(converter_name));
     if (!conv_main) {
         std::cerr << "Error: '" << converter_name << "' is not a Converter.\n";
-        return MatrixXcd::Zero(1, 1);
+        return false;
     }
 
     std::string ac_area = conv_main->getACarea();
@@ -383,7 +489,7 @@ MatrixXcd StabilityEstimate::compute_transfer_function(
     }
     if (!main_ac_bus || !main_dc_bus) {
         std::cerr << "Error: main converter has no AC or DC bus.\n";
-        return MatrixXcd::Zero(1, 1);
+        return false;
     }
 
     SubNetwork* ac_sub_main_early = ac_grids.count(ac_area) ? ac_grids.at(ac_area) : nullptr;
@@ -430,14 +536,14 @@ MatrixXcd StabilityEstimate::compute_transfer_function(
     // eqs. (13)-(14)
     if (!dc_grids.count(dc_area)) {
         std::cerr << "Error: DC subnetwork '" << dc_area << "' not found.\n";
-        return MatrixXcd::Zero(p_dc, p_dc);
+        return false;
     }
     if (!Y_dc_matrices.count(dc_area)) {
         std::cerr << "Error: DC admittance for '" << dc_area << "' not computed.\n";
-        return MatrixXcd::Zero(p_dc, p_dc);
+        return false;
     }
     std::string dc_busname = main_dc_bus->getBusName();
-    MatrixXcd Z_dc = compute_closing_impedance(
+    MatrixXcd Y_dc_ext = compute_closing_admittance(
         dc_grids.at(dc_area), dc_busname,
         Y_dc_matrices.at(dc_area), Y_closing);
 
@@ -449,7 +555,12 @@ MatrixXcd StabilityEstimate::compute_transfer_function(
         std::cerr << "Warning: converter '" << converter_name
                   << "' Y-parameters are non-finite at " << frequency
                   << " Hz (equilibrium may not have converged).\n";
-        return dc_cut ? MatrixXcd::Zero(p_dc, p_dc) : MatrixXcd::Zero(p_ac, p_ac);
+        Yn = dc_cut ? MatrixXcd::Zero(p_dc, p_dc) : MatrixXcd::Zero(p_ac, p_ac);
+        Yeq = Yn;
+        return false;
+    }
+    if (Yc.rows() < p_dc + p_ac || Yc.cols() < p_dc + p_ac) {
+        throw std::runtime_error("Converter Y-matrix is smaller than p_dc+p_ac.");
     }
     MatrixXcd Y_dc_blk = Yc.block(0,    0,    p_dc, p_dc);
     MatrixXcd B        = Yc.block(0,    p_dc, p_dc, p_ac);
@@ -459,21 +570,21 @@ MatrixXcd StabilityEstimate::compute_transfer_function(
     if (dc_cut) {
         // DC cut: H = Y_eq,conv_main · Z_dc    (eq. 15 of paper)
         // Y_eq,conv_main = Y_dc + B·(Y_eq,AC − Y_dq)^{-1}·A   (eq. 12)
+        // Yeq is the DC closing admittance; H = Yn · Yeq^{-1} uses one LU solve.
         if (!ac_sub_main_early) {
             std::cerr << "Error: AC subnetwork '" << ac_area << "' not found.\n";
-            return MatrixXcd::Zero(p_dc, p_dc);
+            return false;
         }
         MatrixXcd Y_eq_AC_main =
             compute_equivalent_admittance_parameters_num(ac_sub_main_early, frequency);
-        MatrixXcd Y_eq_conv_main =
-            Y_dc_blk + B * (Y_eq_AC_main - Y_dq).inverse() * A;
-
-        return Y_eq_conv_main * Z_dc;   // p_dc × p_dc
+        Yn = Y_dc_blk + B * solveRegularized(Y_eq_AC_main - Y_dq, A);
+        Yeq = Y_dc_ext;
+        return true;
 
     } else {
         // AC cut: H = Y_eq,conv_AC · Z_eq,AC
         //
-        // Schur complement: close DC port with external admittance Y_dc_ext = Z_dc^{-1}.
+        // Schur complement: close DC port with the DC-grid admittance Y_dc_ext.
         // KCL at DC port: -Y_dc_ext · v_dc = Y_dc · v_dc + B · v_ac
         //   => v_dc = -(Y_dc + Y_dc_ext)^{-1} · B · v_ac
         // Substitute into AC current:
@@ -483,16 +594,37 @@ MatrixXcd StabilityEstimate::compute_transfer_function(
 
         if (!ac_sub_main_early) {
             std::cerr << "Error: AC subnetwork '" << ac_area << "' not found.\n";
-            return MatrixXcd::Zero(p_ac, p_ac);
+            return false;
         }
         MatrixXcd Y_eq_AC_main =
             compute_equivalent_admittance_parameters_num(ac_sub_main_early, frequency);
 
-        MatrixXcd Y_dc_ext = Z_dc.inverse();    // external DC admittance seen from DC port
-        MatrixXcd Y_eq_conv_AC = Y_dq - A * (Y_dc_blk + Y_dc_ext).inverse() * B;
-
-        return Y_eq_conv_AC * Y_eq_AC_main.inverse();  // p_ac × p_ac
+        Yn = Y_dq - A * solveRegularized(Y_dc_blk + Y_dc_ext, B);
+        Yeq = Y_eq_AC_main;
+        return true;
     }
+}
+
+MatrixXcd StabilityEstimate::compute_transfer_function(
+        string converter_name, string location, double frequency) {
+    MatrixXcd Yn, Yeq;
+    if (!compute_cut_admittances(converter_name, location, frequency, Yn, Yeq)) {
+        if (Yn.size() == 0)
+            return MatrixXcd::Zero(1, 1);
+        return MatrixXcd::Zero(Yn.rows(), Yn.cols());
+    }
+    return mulRightInverse(Yn, Yeq);
+}
+
+MatrixXcd StabilityEstimate::compute_driving_point_impedance(
+        string converter_name, string location, double frequency) {
+    MatrixXcd Yn, Yeq;
+    if (!compute_cut_admittances(converter_name, location, frequency, Yn, Yeq)) {
+        if (Yn.size() == 0)
+            return MatrixXcd::Zero(1, 1);
+        return MatrixXcd::Zero(Yn.rows(), Yn.cols());
+    }
+    return invertRegularized(Yn + Yeq);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -501,22 +633,24 @@ MatrixXcd StabilityEstimate::compute_transfer_function(
 
 void StabilityEstimate::writeFileTF(string converter_name, string location,
         double start_frequency, double end_frequency, int number_of_points) {
+    const std::string tag = yeff_ ? "_yeff" : "";
+    writeComplexMatrixCsv(
+        "./files/" + converter_name + "_" + location + tag + ".csv",
+        number_of_points, start_frequency, end_frequency,
+        [&](double frequency) {
+            return compute_transfer_function(converter_name, location, frequency);
+        });
+}
 
-    std::ofstream myfile;
-    myfile.open("./files/" + converter_name + "_" + location + ".csv");
-
-    double gap = (end_frequency - start_frequency) / (number_of_points - 1);
-    double frequency = start_frequency;
-    for (int p = 0; p < number_of_points; p++) {
-		MatrixXcd TF = compute_transfer_function(converter_name, location, frequency);
-        myfile << frequency << ",";
-        for (int i = 0; i < TF.rows(); i++)
-            for (int j = 0; j < TF.cols(); ++j)
-                myfile << TF(i,j).real() << "+1i*(" << TF(i,j).imag() << "),";
-        myfile << "\n";
-        frequency += gap;
-    }
-    myfile.close();
+void StabilityEstimate::writeFileZin(string converter_name, string location,
+        double start_frequency, double end_frequency, int number_of_points) {
+    const std::string tag = yeff_ ? "_yeff" : "";
+    writeComplexMatrixCsv(
+        "./files/" + converter_name + "_" + location + tag + "_Zin.csv",
+        number_of_points, start_frequency, end_frequency,
+        [&](double frequency) {
+            return compute_driving_point_impedance(converter_name, location, frequency);
+        });
 }
 
 void StabilityEstimate::bodeplotTF(string converter_name, string location,

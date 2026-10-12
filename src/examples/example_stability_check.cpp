@@ -4,11 +4,11 @@
  */
 #include "Examples.h"
 
-#include "../network.h"
-#include "../Bus.h"
-#include "../Include_components.h"
-#include "../Solver/Stability_Estimate/Stability_estimate.h"
-#include "../Solver/OPF/Powerflow.h"
+#include "network/network.h"
+#include "network/Bus.h"
+#include "core/Include_components.h"
+#include "Solver/Stability_Estimate/Stability_estimate.h"
+#include "Solver/OPF/Powerflow.h"
 
 void example_stability_check(bool plotting_enabled /*=true*/) {
     ///* ---------- 0 Set Network Object ---------- */
@@ -74,14 +74,16 @@ void example_stability_check(bool plotting_enabled /*=true*/) {
     net.connectElementToBus(br1_dc, /*terminal=*/2, bus2_dc);
 
     ///*  ---------- 2.3 Create Converters ---------- */
+    const double Vll_rms = 345.0e3;
+    const double Vm_peak = Vll_rms * std::sqrt(2.0 / 3.0); // Park V_m: peak phase
     vector<double> converter_params1 = {
         2 * M_PI * 50,  // Omega (Nominal Frequency in rad/s)
         50.0 * 1e6,     // Active Power (P) in W
         0 * 1e6,        // Reactive Power (Q) in VA
         0.0,            // Theta (Voltage Angle in rad)
-        345.0 * 1e3,    // AC Voltage (V_m) in V
+        Vm_peak,        // AC Voltage (V_m) peak phase in V
         50 * 1e6,       // DC power (P_dc) in W
-        400.0 * 1e3,    // DC Voltage (V_dc) in kV
+        400.0 * 1e3,    // DC Voltage (V_dc) in V
         0.05,           // Arm Inductance (L_arm) in H
         1.07,           // Arm Resistance (R_arm) in Ω
         0.01,           // Capacitance per Submodule (C_arm) in F
@@ -105,15 +107,17 @@ void example_stability_check(bool plotting_enabled /*=true*/) {
     MMC* mmc1 = new MMC("MMC1", "AC1_DC1", converter_params1, controller_params1);
     net.connectElementToBus(mmc1, 1, bus2_ac);
     net.connectElementToBus(mmc1, 2, bus1_dc);
+    map<string, double> mmc1_info = { {"type_dc", 1}, {"type_ac", 1} };
+    mmc1->setOPFInfo(mmc1_info);
 
     vector<double> converter_params2 = {
         2 * M_PI * 50,  // Omega (Nominal Frequency in rad/s)
         -50.0 * 1e6,   // Active Power (P) in W
         -10e6,              // Reactive Power (Q) in VA
         0.0,            // Theta (Voltage Angle in rad)
-        345.0 * 1e3,    // AC Voltage (V_m) in V
+        Vm_peak,        // AC Voltage (V_m) peak phase in V
         -50 * 1e6,     // DC power (P_dc) in W
-        400.0 * 1e3,    // DC Voltage (V_dc) in kV
+        400.0 * 1e3,    // DC Voltage (V_dc) in V
         0.05,           // Arm Inductance (L_arm) in H
         1.07,           // Arm Resistance (R_arm) in Ω
         0.01,           // Capacitance per Submodule (C_arm) in F
@@ -124,7 +128,7 @@ void example_stability_check(bool plotting_enabled /*=true*/) {
     };
     std::vector<double> controller_params2 = {
         1, 0, 0.001103374, 0.00073, 1, 0, // PLL controller parameters
-        1, 0, 2, 82, 2, 0, 400e3, // DC voltage controller parameters
+        1, 0, 2, 82, 1, 400e3, // DC voltage controller parameters
         0, // active power
         0, // AC voltage
         1, 0, 6.6667e-07, 3.3333e-04, 1, -10e6, // reactive power
@@ -137,6 +141,8 @@ void example_stability_check(bool plotting_enabled /*=true*/) {
     MMC* mmc2 = new MMC("MMC2", "AC2_DC1", converter_params2, controller_params2);
     net.connectElementToBus(mmc2, 1, bus3_ac);
     net.connectElementToBus(mmc2, 2, bus2_dc);
+    map<string, double> mmc2_info = { {"type_dc", 2}, {"type_ac", 1} };
+    mmc2->setOPFInfo(mmc2_info);
 
     ///*----- 3 OPF Implementatiopn ----- */
     PowerFlow pf;

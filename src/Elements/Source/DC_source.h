@@ -35,8 +35,11 @@ public:
     /** @brief Stamp the source into the symbolic MNA matrix. */
     void writeMNAmatrix(SymEngine::DenseMatrix&, std::unordered_map<Bus*, int>&, int, std::map<Element*, std::vector<RCP<const Basic>>>&) override;
 
-    std::vector<MatrixXcd> simulateInputStep(
-        const std::vector<MatrixXcd>& states, int nKeep) const override;
+    std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency) override;
+
+    void simulateInputStep(
+        const std::vector<MatrixXcd>& states, int nKeep,
+        std::vector<MatrixXcd>& out) const override;
 
 private:
 };

@@ -11,7 +11,7 @@
  *  - `hvdc2ptp`    two point-to-point HVDC links, for use with the `ieee9` AC grid
  */
 #include "Examples.h"
-#include "../Solver/OPF/Powerflow.h"
+#include "Solver/OPF/Powerflow.h"
 
 void example_OPF_ieee9(bool plotting_enabled /*=true*/)
 {

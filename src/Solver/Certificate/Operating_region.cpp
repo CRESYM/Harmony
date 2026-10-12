@@ -3,7 +3,7 @@
  */
 #include "Operating_region.h"
 
-#include "../../Elements/Converter/MMC.h"
+#include "Elements/Converter/MMC.h"
 
 #include <cmath>
 #include <iostream>

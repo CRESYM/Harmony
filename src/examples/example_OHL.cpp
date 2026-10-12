@@ -4,9 +4,9 @@
  */
 #include "Examples.h"
 
-#include "../network.h"
-#include "../Bus.h"
-#include "../Include_components.h"
+#include "network/network.h"
+#include "network/Bus.h"
+#include "core/Include_components.h"
 
 /**
  * @brief Example function to model and analyze an overhead line (OHL).

@@ -6,8 +6,8 @@
 #ifndef ELEMENT_H
 #define ELEMENT_H
 
-#include "../Constants.h"
-#include "../Solver/Helper_Functions/Helper_Functions.h"
+#include "core/Constants.h"
+#include "Solver/Helper_Functions/Helper_Functions.h"
 
 class Bus; // Forward declaration of Bus class
 
@@ -62,22 +62,16 @@ public:
     int getOutputPins() const { return output_pins; }
 
     /**
-     * @brief Set the number of input pins/phases.
-     * @param pins New input pin count.
-     */
-    void setInputPins(int pins) { input_pins = pins; }
-
-    /**
-     * @brief Set the number of output pins/phases.
-     * @param pins New output pin count.
-     */
-    void setOutputPins(int pins) { output_pins = pins; }
-
-    /**
      * @brief Enable or disable coordinate transformation for this element.
      * @param flag True to apply transformation (e.g. three-phase to dq).
      */
 	void setTransformation(bool flag) { transformation = flag; }
+
+    /**
+     * @brief Query whether coordinate transformation is enabled for this element.
+     * @return Current transformation flag.
+     */
+    bool getTransformation() const { return transformation; }
 
     /**
      * @brief Get the element type symbol.
@@ -193,6 +187,14 @@ public:
     virtual std::vector<std::vector<complex<double>>> compute_y_parameters(double frequency);
 
     /**
+     * @brief Abc-frame Y-parameters at @p frequency, even if transformation is enabled.
+     *
+     * Used when Park A0 is applied to an assembled AC-block equivalent rather than
+     * per component. Restores the element's transformation flag before returning.
+     */
+    std::vector<std::vector<complex<double>>> compute_y_parameters_abc(double frequency);
+
+    /**
      * @brief Get the symbolic or stored Y-parameter matrix.
      * @return SymEngine dense matrix representing Y-parameters.
      */
@@ -232,12 +234,16 @@ public:
     /**
      * @brief Simulate a step response given input states (override in dynamic elements).
      * @param states Input state trajectories per channel.
-     * @param nKeep Number of states to retain in the output.
-     * @return Simulated state matrices; empty for static elements.
+     * @param nKeep Number of harmonic columns to retain in the output.
+     * @param out Filled with this step's input matrices. Callers may reuse @p out
+     *        across steps to avoid reallocating.
      */
-    virtual std::vector<MatrixXcd> simulateInputStep(
-        const std::vector<MatrixXcd>& states, int nKeep) const {
-        return {};
+    virtual void simulateInputStep(
+        const std::vector<MatrixXcd>& states, int nKeep,
+        std::vector<MatrixXcd>& out) const {
+        (void)states;
+        (void)nKeep;
+        out.clear();
     }
 
     /**
@@ -276,7 +282,20 @@ public:
     void setOPFInfo(std::map<std::string, double>& info) { element_OPF_info = info; }
 
 protected:
+	/// Fill Matpower-style r, x, b from a numeric two-port Y at the OPF frequency.
+	void fillOpfBranchFromY(std::map<std::string, double>& branchData,
+		std::map<std::string, double>& globalParams,
+		const std::vector<std::vector<std::complex<double>>>& Y) const;
+
 	bool transformation = false; // Flag to indicate if a transformation is applied (e.g. three-phase to dq-frame)
+
+	bool isAcLocation() const;
+	bool isDcLocation() const;
+	bool isMmcLocation() const;
+	static double finiteOmega(double omega);
+	/// Bipolar loop 2x2: Y_eq = T^T Y T with T = [1/2, -1/2]^T at each end.
+	std::vector<std::vector<complex<double>>> reduceDcY(
+		const std::vector<std::vector<complex<double>>>& Y) const;
 
     std::string element_symbol; // Element symbol (e.g., R, L, C)
 	std::string element_location; // Element location (it can be AC1,2,... or DC1,2,... or PEC1,2,...)

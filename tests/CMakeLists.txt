@@ -1,41 +1,23 @@
-# -----------------------------------------------------------------------------
-# 1. Project Setup
-# -----------------------------------------------------------------------------
-
 cmake_minimum_required(VERSION 4.0)
-project(testharmony)
-
-# Set the C++ Standard (GoogleTest requires >= 14)
-# std::variant included in Constants.h requires >= 17)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Enable testing in CMake
-enable_testing()
 
 # -----------------------------------------------------------------------------
-# 2. Define testharmony Executable
+# testharmony — GoogleTest suite linked against harmony_core and harmony_examples.
+#
+# Configure from the repository root:
+#   cmake -S . -B build -DGUROBI_PATH=...
+#   cmake --build build --config Release --target testharmony
+#   ctest --test-dir build -C Release
 # -----------------------------------------------------------------------------
 
-# Load the list of harmony source and header files.
-include(${CMAKE_CURRENT_SOURCE_DIR}/../sources.cmake)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    message(FATAL_ERROR
+        "testharmony is built from the repository root (it links harmony_core).\n"
+        "  cmake -S . -B build -DGUROBI_PATH=\"<gurobi>\"\n"
+        "  cmake --build build --config Release --target testharmony\n"
+        "  ctest --test-dir build -C Release")
+endif()
 
-# Remove examples and main.cpp since they are not needed by the tests
-list(REMOVE_ITEM HARMONY_SOURCE_FILES "src/main.cpp")
-
-# Prepend the relative path ("../") to harmony files
-set(CORRECTED_HARMONY_SOURCES "")
-set(CORRECTED_HARMONY_HEADERS "")
-foreach(source_file IN LISTS HARMONY_SOURCE_FILES)
-    list(APPEND CORRECTED_HARMONY_SOURCES "../${source_file}")
-endforeach()
-foreach(header_file IN LISTS HARMONY_HEADER_FILES)
-    list(APPEND CORRECTED_HARMONY_HEADERS "../${header_file}")
-endforeach()
-
-# Create the Harmony executable from the project source files.
-add_executable(
-    testharmony
+set(TESTHARMONY_SOURCES
     testSimpleNetwork.cpp
     teststatespacemodel.cpp
     testABCDforming.cpp
@@ -56,37 +38,20 @@ add_executable(
     testJsonPipeline.cpp
     testexamples.cpp
     utils.cpp
-    ${CORRECTED_HARMONY_HEADERS}     # defined in sources.cmake
-    ${CORRECTED_HARMONY_SOURCES}     # defined in sources.cmake
 )
 
-# -----------------------------------------------------------------------------
-# 3. Compiler and Project Options
-# -----------------------------------------------------------------------------
+add_executable(testharmony ${TESTHARMONY_SOURCES})
 
-# Add all header directories to the include path
-set(HARMONY_HEADER_DIRS "")
-foreach(header ${CORRECTED_HARMONY_HEADERS})
-    get_filename_component(dir ${header} DIRECTORY)
-    list(APPEND HARMONY_HEADER_DIRS ${dir})
-endforeach()
-list(REMOVE_DUPLICATES HARMONY_HEADER_DIRS)
-include_directories(${HARMONY_HEADER_DIRS})
+target_include_directories(testharmony PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
-# Add the MP compiler flag for parallel compilation.
-# /EHa enables catching of Windows structured exceptions (SEH) via catch(...),
-# which prevents GFM/certificate tests from crashing on KINSOL failures.
-if (MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /EHa")
+# /EHa: catch Windows SEH (KINSOL failures) via catch(...) in GFM/certificate tests.
+if(MSVC)
+    target_compile_options(testharmony PRIVATE /EHa)
 endif()
 
-# Specify the output directory where the test executable will be placed
-set_target_properties(testharmony PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build
-)
-
-# Create the 'files' directory needed by the Element::WriteValues function
-# The function should be modified to avoid hardcoding the output directory
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/files")
 
 
@@ -110,26 +75,19 @@ link_symengine(testharmony)
 link_sundials(testharmony)
 link_implot(testharmony)
 link_gurobi(testharmony)
+link_nlohmann_json(testharmony)
 
-# Google Test library
+target_link_libraries(testharmony PRIVATE harmony_core harmony_examples harmony_core)
+
 include(FetchContent)
 FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/b796f7d44681514f58a683a3a71ff17c94edb0c1.zip
+    googletest
+    URL https://github.com/google/googletest/archive/b796f7d44681514f58a683a3a71ff17c94edb0c1.zip
 )
-# Windows: Prevent overriding the parent project's compiler/linker settings
-# Currently no parent CMake project, but good to keep for the future
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
-target_link_libraries(
-    testharmony
-    PRIVATE
-    GTest::gtest_main
-)
+target_link_libraries(testharmony PRIVATE GTest::gtest_main)
 
-# -----------------------------------------------------------------------------
-# 5. Register tests with CTest
-# -----------------------------------------------------------------------------
 include(GoogleTest)
 
 # Windows CI: do not use gtest_discover_tests. Conda CMake 4.4 runs the exe
@@ -212,11 +170,6 @@ endforeach()
         COMMENT "Copy imported runtime DLLs next to testharmony.exe"
     )
 
-    # Do not set TEST_LAUNCHER (cmake -E env). CMake 4.4 on CI wraps every test
-    # in that launcher and the process aborts with 0xc0000409 before gtest runs.
-    # Rely on copied DLLs plus ENVIRONMENT_MODIFICATION / run-ctest PATH instead.
-
-    # Names match CI: ctest -E TestExamples / ctest -R TestExamples
     add_test(NAME testharmony COMMAND testharmony --gtest_filter=-TestExamples.*)
     add_test(NAME TestExamples COMMAND testharmony --gtest_filter=TestExamples.*)
     set(_harmony_path_mods "")
@@ -224,7 +177,7 @@ endforeach()
         list(APPEND _harmony_path_mods "PATH=path_list_prepend:${_dir}")
     endforeach()
     set_tests_properties(testharmony TestExamples PROPERTIES
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     )
     if(_harmony_path_mods)
         set_tests_properties(testharmony TestExamples PROPERTIES
@@ -235,5 +188,6 @@ else()
     gtest_discover_tests(testharmony
         DISCOVERY_MODE PRE_TEST
         DISCOVERY_TIMEOUT 60
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 endif()

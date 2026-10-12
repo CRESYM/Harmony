@@ -140,27 +140,12 @@ Replace `<option>` with one or more of the options listed below.
 The test suite is built in much the same way as Harmony. Starting from the *root directory* of the repository, with the `harmony` Conda environment activated, run:
 
 ```bash
-# Enter the tests directory
-cd tests
-
-# Create and enter the build directory
-mkdir build
-cd build
-
-# Configure the CMake project specifying the path to your Gurobi installation, for example:
-#   Windows:  cmake .. -DGUROBI_PATH="C:/gurobi1202/win64"
-#   Linux:    cmake .. -DGUROBI_PATH="/opt/gurobi1301/linux64"
-#   MacOS:    cmake .. -DGUROBI_PATH="/Library/gurobi1200/macos_universal2"
-cmake .. -DGUROBI_PATH="gurobi_installation_dir_config" 
-
-# Compile the test suite. 
-# Replace 4 with the number of CPU cores you wish to use for parallel compilation.
-cmake --build . --config Release -j 4
-
-# Run the tests.
-# Replace 4 with the desired level of parallelism.
-ctest -j 4
+# From the repository root (reuse the same build/ tree as Harmony)
+cmake --build build --config Release --target testharmony -j 4
+ctest --test-dir build -C Release
 ```
+
+`testharmony` links `harmony_core` and `harmony_examples`; you do not configure a second CMake project under `tests/`.
 
 ## Documentation
 

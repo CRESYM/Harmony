@@ -1,0 +1,32 @@
+{
+    "simulation": {
+        "title": "wt3_2p5mw",
+        "description": "Harmony WT3 Y(f) vs MATLAB WT3_DFIG_SequenceImpedance_2p5MW_v6_directEval.",
+        "output_directory": "./files",
+        "frequency_range": { "start": 1, "end": 1000, "points": 200 }
+    },
+    "buses": [
+        { "id": "bus1", "location": "AC1", "pins": 3, "enabled": true }
+    ],
+    "components": [
+        {
+            "id": "DFIG",
+            "location": "AC1",
+            "type": "wt_type_3",
+            "parameters": [
+                690.0, 50.0, 2500000.0, 0.0, 0.0, -0.35,
+                0.0026357112818360907, 0.0003625396453819264, 0.0079498735684056,
+                0.3791181711339424, 0.0019044, 6.183131341933791e-05,
+                0.05325027336821547, 0.3550018224547698,
+                0.6624894640338, 33.12447320169, 0.0,
+                0.19044, 9.522, 0.0,
+                0.0, 0.0003
+            ],
+            "connected_bus": { "bus_id": "bus1", "terminal": 1 },
+            "enabled": true
+        }
+    ],
+    "computations": [
+        { "type": "y_matrix", "component_id": "DFIG" }
+    ]
+}

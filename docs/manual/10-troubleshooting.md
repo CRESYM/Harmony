@@ -145,6 +145,12 @@ Component references a bus id not defined in `"buses"`, or the bus has `"enabled
 - Compare against working vectors in `example_stability_check.cpp` or `tests/testMMC.cpp`
 - Reduce controller gains if eigenvalues indicate instability
 
+### MMC equilibrium does not match the AC–DC OPF point
+
+- `make_OPF` writes the PCC angle in **radians** (from `atan2`); do not treat `theta_s_k` as degrees
+- The OPF converter row must match the MMC plant: no default AC filter (`bf`) or MatACDC polynomial losses. `MMC::computePowerFlow` sets these unless `setOPFInfo` overrides them, and uses `rc + jω L_eq` with `L_eq = L_arm/2 + L_reactor`
+- After `make_OPF`, `dumpLinearizationOp` prints scheduled `Pac_MW` vs plant `Pac_ss_MW` from the equilibrium currents
+
 ---
 
 ## 10.4 Memory and crashes on exit

@@ -6,7 +6,7 @@
  * @brief Inductor element with frequency-domain admittance Y = 1/(sL).
  */
 
-#include "../Element.h"
+#include "Elements/Element.h"
 
 /**
  * @class Inductor

@@ -4,36 +4,34 @@
  */
 #include "Examples.h"
 
-#include "../Include_components.h"
-#include "../Constants.h"
+#include "core/Include_components.h"
+#include "core/Constants.h"
 
 void example_WT_type_3(bool plotting_enabled /*=true*/) {
-	// Example parameters for WT_type_3
+	// 2.5 MW / 690 V / 50 Hz DFIG. Currents and V1 follow from P, Q, slip.
 	vector<double> parameters = {
-		1080.0,			// nm_rpm
-		3,				// p
-		0.0644e-3,		// Lr
-		0.0092,			// Rr
-		1.0 / 0.33,		// Nsr
-		0.0092,			// Rs
-		0.1356e-3,		// Ls
-		48.873,			// Kp_pll
-		3070.1,			// Ki_pll
-		564.1,			// V1_mag
-		-59,			// V1_theta_deg
-		0.052,			// Krp
-		0.027,			// Kri
-		0.00245,		// Krd
-		5.8,			// Ir_mag
-		-22,			// Ir_theta_deg
-		1.452,			// Ksp
-		3384.0,			// Ksi
-		0.025,			// Ksd
-		152.3,			// Ic_mag
-		114.0,			// Ic_theta_deg
+		690.0,			// V_LL, line-to-line rms (V)
+		50.0,			// f1 (Hz)
+		2.5e6,			// P (W)
+		0.0,			// Qs (var)
+		0.0,			// Qgsc (var)
+		-0.35,			// slip
+		0.0026357112818360907,	// Lm, stator (H)
+		0.0003625396453819264,	// Lr, rotor-side leakage (H)
+		0.0079498735684056,	// Rr, rotor-side (Ohm)
+		1.0 / 2.6377,		// Nsr = Ns/Nr
+		0.0019044,		// Rs (Ohm)
+		6.183131341933791e-05,	// Ls = Lls leakage (H)
+		0.05325027336821547,	// Kp_pll (1/V)
+		0.3550018224547698,	// Ki_pll (1/(V s))
+		0.6624894640338,	// Krp, rotor-side (Ohm)
+		33.12447320169,		// Kri
+		0.0,			// Krd
+		0.19044,		// Ksp (Ohm)
+		9.522,			// Ksi
+		0.0,			// Ksd
 		0.0,			// Rf
-		0.001,			// Lf
-		50.0			// f1 (Grid frequency in Hz)
+		0.0003			// Lf (H)
 	};
 	
 	WTtype3* wt = new WTtype3("DFIG", "AC1", parameters);

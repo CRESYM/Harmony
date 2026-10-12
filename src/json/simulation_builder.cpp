@@ -8,7 +8,7 @@
 #include "json_validator.h"
 #include "json_parameters.h"
 
-#include "../Bus.h"
+#include "network/Bus.h"
 
 #include <set>
 

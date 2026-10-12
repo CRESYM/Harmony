@@ -3,8 +3,11 @@
  * @brief Implementation of the PowerFlow OPF solver algorithms.
  */
 #include "Powerflow.h"
-#include "../Helper_Functions/Helper_Functions.h"
-#include "../../Bus.h"   
+#include "Solver/Helper_Functions/Helper_Functions.h"
+#include "network/Bus.h"
+#include "ui/Visualization.h"
+
+#include "gurobi_c++.h" 
 
 using namespace std;
 
@@ -1189,11 +1192,11 @@ DCBusResult PowerFlow::getDCBusResult(const std::string& dcBusName,
 
     r.ps = safePick(ps_dc_k) * baseMW_dc;
     r.qs = safePick(qs_dc_k) * baseMW_dc;
-    r.thetas = safePick(theta_s_k) * 3.141592653 / 180;
+    r.thetas = safePick(theta_s_k); // radians (atan2 reconstruction)
     r.vs = std::sqrt(safePick(v2s_dc_k)) * global_params.at("ACbaseKV");
     r.pc = safePick(pc_dc_k) * baseMW_dc;
     r.qc = safePick(qc_dc_k) * baseMW_dc;
-    r.thetac = safePick(theta_c_k) * 3.141592653 / 180;
+    r.thetac = safePick(theta_c_k); // radians
     r.vc = std::sqrt(safePick(v2c_dc_k)) * global_params.at("ACbaseKV");
 
     return r;

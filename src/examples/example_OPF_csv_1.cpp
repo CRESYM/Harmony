@@ -3,7 +3,7 @@
  * @brief Runnable example: Variant OPF case from CSV data.
  */
 #include "Examples.h"
-#include "../Solver/OPF/Powerflow.h"
+#include "Solver/OPF/Powerflow.h"
 
 void example_OPF_csv_1(bool plotting_enabled /*=true*/)
 {

@@ -274,8 +274,23 @@ Harmony/.vs/Harmony/v15/.suo
 src/files/
 files/
 
+# Overlay intermediates. Keep results/*.svg; regenerate CSVs with the suite runners.
+benchmarking/powerimpedance/**/results/*.csv
+benchmarking/powerimpedance/**/results/timings.json
+benchmarking/powerimpedance/**/results/line_topology_summary.md
+benchmarking/unbalanced_yeff/**/results/*.csv
+benchmarking/matlab_pv/results/*.csv
+benchmarking/matlab_wt3/results/*.csv
+benchmarking/matlab_wt4/results/*.csv
+
 # Legacy input_file build artifacts (module moved to src/json/)
 input_file/
+
+# Legacy input_file build artifacts (module moved to src/json/)
+input_file/
+
+# Local clone used only while drafting PowerImpedance.jl benchmarks
+benchmarking/_powerimpedance_src/
 
 # Harmony build directory
 build/

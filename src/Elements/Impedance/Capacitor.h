@@ -6,7 +6,7 @@
  * @brief Capacitor element with frequency-domain admittance Y = sC.
  */
 
-#include "../Element.h"
+#include "Elements/Element.h"
 
 class Bus;
 

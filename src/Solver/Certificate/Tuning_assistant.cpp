@@ -3,7 +3,7 @@
  */
 #include "Tuning_assistant.h"
 
-#include "../../Elements/Converter/MMC.h"
+#include "Elements/Converter/MMC.h"
 
 #include <cmath>
 #include <iostream>

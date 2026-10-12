@@ -111,7 +111,9 @@ std::unique_ptr<Element> ComponentBuilder::buildFromJSON(
 		else if (comptype == "transformer_deltay") { raw = buildTransformerDeltaY(comp, params); }
 		else if (comptype == "transformer_deltay_real") { raw = buildTransformerDeltaYReal(comp, params); }
 		else if (comptype == "transformer_ydelta") { raw = buildTransformerYDelta(comp, params); }
+		else if (comptype == "transformer_ydelta_real") { raw = buildTransformerYDeltaReal(comp, params); }
 		else if (comptype == "transformer_deltadelta") { raw = buildTransformerDeltaDelta(comp, params); }
+		else if (comptype == "transformer_deltadelta_real") { raw = buildTransformerDeltaDeltaReal(comp, params); }
 		else {
 			throw std::invalid_argument("unknown type '" + comptype + "'");
 		}
@@ -369,10 +371,10 @@ Overhead_Line* ComponentBuilder::buildOverheadLine(const JSON& comp, const JsonP
 		cond.at("organization").get<std::string>(),
 		numbersInt,
 		geometry,
-		params.resolveScalar(cond.value("ybc", JSON(0.0)), "overhead_line ybc"),
-		params.resolveScalar(cond.value("delta_ybc", JSON(0.0)), "overhead_line delta_ybc"),
-		params.resolveScalar(cond.value("delta_xbc", JSON(0.0)), "overhead_line delta_xbc"),
-		params.resolveScalar(cond.value("delta_tilde_xbc", JSON(0.0)), "overhead_line delta_tilde_xbc"));
+		params.resolveScalar(cond.value("rc", JSON(0.0)), "overhead_line conductor rc"),
+		params.resolveScalar(cond.value("Rdc", JSON(0.0)), "overhead_line conductor Rdc"),
+		params.resolveScalar(cond.value("dsag", JSON(0.0)), "overhead_line conductor dsag"),
+		params.resolveScalar(cond.value("dsb", JSON(0.0)), "overhead_line conductor dsb"));
 
 	const JSON& gw = comp.at("groundwire");
 	std::vector<double> gwGeo;
@@ -383,29 +385,50 @@ Overhead_Line* ComponentBuilder::buildOverheadLine(const JSON& comp, const JsonP
 	const auto groundwire = std::make_tuple(
 		static_cast<int>(params.resolveScalar(gw.at("count"), "overhead_line groundwire count")),
 		gwGeo,
-		params.resolveScalar(gw.value("delta_xg", JSON(0.0)), "overhead_line delta_xg"));
+		params.resolveScalar(gw.value("mu_g", JSON(1.0)), "overhead_line groundwire mu_g"));
+
+	double length_m = 0.0;
+	if (comp.contains("length") && comp.contains("length_km")) {
+		throw std::invalid_argument(
+			"ERROR: overhead_line has both 'length' (metres) and 'length_km'.\n");
+	}
+	if (comp.contains("length")) {
+		length_m = readScalarField(comp, "length", params);
+	}
+	else if (comp.contains("length_km")) {
+		length_m = readScalarField(comp, "length_km", params) * 1000.0;
+	}
+	else {
+		throw std::invalid_argument(
+			"ERROR: overhead_line requires 'length' (metres) or 'length_km'.\n");
+	}
 
 	return new Overhead_Line(
 		comp["id"],
 		comp.value("location", "AC1"),
-		readScalarField(comp, "length_km", params),
+		length_m,
 		earth, conductor, groundwire);
 }
 
 MMC* ComponentBuilder::buildMMC(const JSON& comp, const JsonParameterTable& params) {
 	const auto converterParams = readNumericArray(comp, "converter_params", params);
+	MMC* mmc = nullptr;
 	if (comp.contains("filter_params")) {
-		return new MMC(
+		mmc = new MMC(
 			comp["id"], comp["location"], converterParams,
 			readNumericArray(comp, "controller_params", params),
 			readNumericArray(comp, "filter_params", params));
 	}
-	if (comp.contains("controller_params")) {
-		return new MMC(
+	else if (comp.contains("controller_params")) {
+		mmc = new MMC(
 			comp["id"], comp["location"], converterParams,
 			readNumericArray(comp, "controller_params", params));
 	}
-	return new MMC(comp["id"], comp["location"], converterParams);
+	else {
+		mmc = new MMC(comp["id"], comp["location"], converterParams);
+	}
+	applyOpfInfo(mmc, comp, params);
+	return mmc;
 }
 
 WTtype3* ComponentBuilder::buildWTtype3(const JSON& comp, const JsonParameterTable& params) {
@@ -464,6 +487,29 @@ std::vector<double> ComponentBuilder::readTransformerRealValues(
 	findScalar("L_secondary", v, params);
 	findScalar("turns_ratio", v, params);
 	findScalar("phase_shift", v, params);
+
+	const bool hasRm = v.contains("R_magnetizing");
+	const bool hasLm = v.contains("L_magnetizing");
+	if (hasRm != hasLm) {
+		throw std::invalid_argument(
+			"ERROR: R_magnetizing and L_magnetizing must both be provided.\n");
+	}
+
+	if (hasRm) {
+		findScalar("R_magnetizing", v, params);
+		findScalar("L_magnetizing", v, params);
+		return {
+			readScalarField(v, "R_primary", params),
+			readScalarField(v, "L_primary", params),
+			readScalarField(v, "R_secondary", params),
+			readScalarField(v, "L_secondary", params),
+			readScalarField(v, "R_magnetizing", params),
+			readScalarField(v, "L_magnetizing", params),
+			readScalarField(v, "turns_ratio", params),
+			readScalarField(v, "phase_shift", params)
+		};
+	}
+
 	return {
 		readScalarField(v, "R_primary", params),
 		readScalarField(v, "L_primary", params),
@@ -502,8 +548,16 @@ TransformerYDelta* ComponentBuilder::buildTransformerYDelta(const JSON& comp, co
 	return new TransformerYDelta(comp["id"], comp["location"], comp["pins"], readTransformerClassicValues(comp, params));
 }
 
+TransformerYDelta_real* ComponentBuilder::buildTransformerYDeltaReal(const JSON& comp, const JsonParameterTable& params) {
+	return new TransformerYDelta_real(comp["id"], comp["location"], comp["pins"], readTransformerRealValues(comp, params));
+}
+
 TransformerDeltaDelta* ComponentBuilder::buildTransformerDeltaDelta(const JSON& comp, const JsonParameterTable& params) {
 	return new TransformerDeltaDelta(comp["id"], comp["location"], comp["pins"], readTransformerClassicValues(comp, params));
+}
+
+TransformerDeltaDelta_real* ComponentBuilder::buildTransformerDeltaDeltaReal(const JSON& comp, const JsonParameterTable& params) {
+	return new TransformerDeltaDelta_real(comp["id"], comp["location"], comp["pins"], readTransformerRealValues(comp, params));
 }
 
 void ComponentBuilder::findNumber(const std::string& key, const JSON& j) {

@@ -4,10 +4,10 @@
  */
 #include "Examples.h"
 
-#include "../network.h"
-#include "../Bus.h"
-#include "../Include_components.h"
-#include "../Solver/OPF/Powerflow.h"
+#include "network/network.h"
+#include "network/Bus.h"
+#include "core/Include_components.h"
+#include "Solver/OPF/Powerflow.h"
 
 
 void example_OPF_double_area(bool plotting_enabled /*=true*/) {
@@ -573,7 +573,7 @@ void example_OPF_double_area(bool plotting_enabled /*=true*/) {
     };
     std::vector<double> controller_params2 = {
         1, 0, 0.001103374, 0.00073, 1, 0, // PLL
-        1, 0, 2, 82, 2, 0, v_dc, // dc_voltage
+        1, 0, 2, 82, 1, v_dc, // dc_voltage
         0, // active_power
         0, // ac_voltage
         1, 0, 6.6667e-07, 3.3333e-04, 1, 0.0, // reactive_power (OPF AC-V via type_ac=2)

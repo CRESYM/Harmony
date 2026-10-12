@@ -1,7 +1,11 @@
 #include <gtest/gtest.h>
-#include "Load.h"
-#include "Bus.h"
+#include "Elements/Load/Load.h"
+#include "Elements/Source/DC_source.h"
+#include "network/Bus.h"
+#include "Solver/Helper_Functions/Standard_functions.h"
 #include "utils.h"
+
+#include <filesystem>
 
 class TestElement : public testing::Test {};
 
@@ -125,7 +129,8 @@ TEST_F(TestElement, TestWriteFile) {
     l1.writeFile(1000, 2000, 100);
 
     // Read expected data
-    std::string expected = readFile("../data/l1.csv");
+    std::string expected = readFile(
+        (std::filesystem::path(__FILE__).parent_path() / "data" / "l1.csv").string());
 
     // Check file was created in the exepcted path and with the expected name
     std::string actual;
@@ -275,4 +280,83 @@ TEST_F(TestElement, TestGetOtherBuses) {
     // Stop GTest capturing Harmony's output to std::cerr
     testing::internal::GetCapturedStderr();
     testing::internal::GetCapturedStdout();
+}
+
+// Two uncoupled DC conductors reduce to a loop two-port: Z_loop = 2 Z.
+TEST_F(TestElement, ReduceDcYBipolarLoop) {
+    DC_source src("src", "DC1", 2, 800e3, 10.0);
+    src.setTransformation(true);
+    const auto Y = src.compute_y_parameters(50.0);
+    ASSERT_EQ(Y.size(), 2u);
+    ASSERT_EQ(Y[0].size(), 2u);
+    EXPECT_NEAR(Y[0][0].real(), 0.05, 1e-12);
+    EXPECT_NEAR(Y[0][1].real(), -0.05, 1e-12);
+    EXPECT_NEAR(Y[1][0].real(), -0.05, 1e-12);
+    EXPECT_NEAR(Y[1][1].real(), 0.05, 1e-12);
+    EXPECT_NEAR(Y[0][0].imag(), 0.0, 1e-12);
+}
+
+TEST_F(TestElement, ParkA0BalancedShuntIsScaledIdentity) {
+    const std::complex<double> y(0.5, -0.1);
+    std::vector<std::vector<std::complex<double>>> Yabc(
+        3, std::vector<std::complex<double>>(3, { 0.0, 0.0 }));
+    Yabc[0][0] = Yabc[1][1] = Yabc[2][2] = y;
+    const auto Ydq = apply_park_A0(Yabc, Yabc);
+    ASSERT_EQ(Ydq.size(), 2u);
+    ASSERT_EQ(Ydq[0].size(), 2u);
+    EXPECT_NEAR(Ydq[0][0].real(), y.real(), 1e-12);
+    EXPECT_NEAR(Ydq[0][0].imag(), y.imag(), 1e-12);
+    EXPECT_NEAR(Ydq[1][1].real(), y.real(), 1e-12);
+    EXPECT_NEAR(Ydq[1][1].imag(), y.imag(), 1e-12);
+    EXPECT_NEAR(std::abs(Ydq[0][1]), 0.0, 1e-12);
+    EXPECT_NEAR(std::abs(Ydq[1][0]), 0.0, 1e-12);
+}
+
+TEST_F(TestElement, ParkYeffBalancedMatchesA0AndCCouplingVanishes) {
+    const std::complex<double> y(0.4, 0.2);
+    std::vector<std::vector<std::complex<double>>> Yabc(
+        3, std::vector<std::complex<double>>(3, { 0.0, 0.0 }));
+    Yabc[0][0] = Yabc[1][1] = Yabc[2][2] = y;
+
+    const auto Cm = apply_park_C_minus(Yabc);
+    const auto Cp = apply_park_C_plus(Yabc);
+    ASSERT_EQ(Cm.size(), 2u);
+    ASSERT_EQ(Cp.size(), 2u);
+    for (int i = 0; i < 2; ++i)
+        for (int j = 0; j < 2; ++j) {
+            EXPECT_NEAR(std::abs(Cm[i][j]), 0.0, 1e-12) << "C-(" << i << "," << j << ")";
+            EXPECT_NEAR(std::abs(Cp[i][j]), 0.0, 1e-12) << "C+(" << i << "," << j << ")";
+        }
+
+    const auto Ya0 = apply_park_A0(Yabc, Yabc);
+    const auto Yeff = apply_park_Yeff(Yabc, Yabc, Yabc, Yabc);
+    ASSERT_EQ(Yeff.size(), 2u);
+    for (int i = 0; i < 2; ++i)
+        for (int j = 0; j < 2; ++j) {
+            EXPECT_NEAR(Yeff[i][j].real(), Ya0[i][j].real(), 1e-12);
+            EXPECT_NEAR(Yeff[i][j].imag(), Ya0[i][j].imag(), 1e-12);
+        }
+}
+
+TEST_F(TestElement, ParkYeffUnbalancedDiffersFromA0) {
+    std::vector<std::vector<std::complex<double>>> Yabc(
+        3, std::vector<std::complex<double>>(3, { 0.0, 0.0 }));
+    Yabc[0][0] = { 0.5, 0.0 };
+    Yabc[1][1] = { 0.5, 0.0 };
+    Yabc[2][2] = { 0.2, 0.0 };
+
+    const auto Ya0 = apply_park_A0(Yabc, Yabc);
+    const auto Yeff = apply_park_Yeff(Yabc, Yabc, Yabc, Yabc);
+    const auto Cm = apply_park_C_minus(Yabc);
+    double cnorm = 0.0;
+    for (int i = 0; i < 2; ++i)
+        for (int j = 0; j < 2; ++j)
+            cnorm += std::norm(Cm[i][j]);
+    EXPECT_GT(cnorm, 1e-8);
+
+    double diff = 0.0;
+    for (int i = 0; i < 2; ++i)
+        for (int j = 0; j < 2; ++j)
+            diff += std::norm(Yeff[i][j] - Ya0[i][j]);
+    EXPECT_GT(std::sqrt(diff), 1e-8);
 }

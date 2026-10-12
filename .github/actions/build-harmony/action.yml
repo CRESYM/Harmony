@@ -16,5 +16,9 @@ runs:
         fi
         mkdir -p build
         cd build
-        cmake .. -DGUROBI_PATH="${{ inputs.gurobi_path }}"
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          cmake .. -DGUROBI_PATH="${{ inputs.gurobi_path }}"
+        else
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DGUROBI_PATH="${{ inputs.gurobi_path }}"
+        fi
         cmake --build . --config Release --target Harmony --target HarmonyUI -j4

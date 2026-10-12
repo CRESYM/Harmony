@@ -41,17 +41,6 @@ void harmonyApplyUiStyleScale(const float scale) {
 	style.GrabMinSize = 14.f * scale;
 }
 
-ImFont* harmonyConfigureLauncherUi(ImGuiIO& io, ImFont** bannerFontOut) {
-	harmonyInitUiFont(io, kHarmonyUiFontSizePx);
-	harmonyApplyUiStyleScale(kHarmonyUiStyleScale);
-
-	ImFont* bannerFont = harmonyInitBannerFont(io, kHarmonyLauncherBannerFontSizePx);
-	if (bannerFontOut != nullptr) {
-		*bannerFontOut = bannerFont;
-	}
-	return io.Fonts->Fonts[0];
-}
-
 ImFont* harmonyConfigurePlotUi(ImGuiIO& io) {
 	harmonyInitUiFont(io, kHarmonyPlotUiFontSizePx);
 	harmonyApplyUiStyleScale(kHarmonyPlotUiStyleScale);

@@ -6,7 +6,7 @@
  * @brief Base class for load elements connected to network buses.
  */
 
-#include "../Element.h"
+#include "Elements/Element.h"
 
 /**
  * @class Load_base

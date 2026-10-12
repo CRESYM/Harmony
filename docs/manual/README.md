@@ -74,7 +74,7 @@ Certificates live **in** this manual: [Chapter 8](08-certificates.md) (detail) a
 Harmony/
 ├── src/                  Main library, CLI, UI, examples, json/
 ├── tests/                GoogleTest suite
-├── install/              Installer project + res/ assets (incl. HARMONY_figure.png)
+├── install/res/          Overview figure (HARMONY_figure.png)
 └── docs/                 Documentation hub → README.md
     ├── manual/           This user manual (chapters 1–12)
     ├── installation.md

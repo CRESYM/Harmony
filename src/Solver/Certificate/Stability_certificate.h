@@ -6,8 +6,8 @@
  * @brief Device-level passivity / phase / geometric metrics and plots.
  */
 
-#include "../../Constants.h"
-#include "../Helper_Functions/Visualization.h"
+#include "core/Constants.h"
+#include "ui/Visualization.h"
 #include "Certificate_spec.h"
 #include "Geometric_certificates.h"
 

@@ -3,16 +3,98 @@
  * @brief Implementation of Abstract base class for all electrical network components.
  */
 #include "Element.h"
-#include "../Bus.h"
+#include "network/Bus.h"
+#include "ui/Visualization.h"
 
-// Helper functions
-#include "../Solver/Helper_Functions/Helper_Functions.h"
+#include <stdexcept>
 
 
 /**
  * @brief Destructor for the Element class.
  */
 Element::~Element() {}
+
+bool Element::isAcLocation() const {
+	if (element_location.size() < 2) return false;
+	const char a = element_location[0], c = element_location[1];
+	return (a == 'A' || a == 'a') && (c == 'C' || c == 'c');
+}
+
+bool Element::isDcLocation() const {
+	if (element_location.size() < 2) return false;
+	const char d = element_location[0], c = element_location[1];
+	return (d == 'D' || d == 'd') && (c == 'C' || c == 'c');
+}
+
+bool Element::isMmcLocation() const {
+	return element_location.find('_') < element_location.length();
+}
+
+void Element::fillOpfBranchFromY(std::map<std::string, double>& branchData,
+	std::map<std::string, double>& globalParams,
+	const std::vector<std::vector<std::complex<double>>>& Y) const
+{
+	const int n = static_cast<int>(Y.size());
+	if (n < 2 || (n % 2) != 0 || Y[0].size() != static_cast<size_t>(n))
+		throw std::runtime_error("[OPF] " + element_symbol + " Y-matrix is not a square two-port.");
+	const int p = n / 2;
+
+	const std::complex<double> Y11 = Y[0][0];
+	const std::complex<double> Y12 = Y[0][static_cast<size_t>(p)];
+	if (std::abs(Y12) < 1e-18)
+		throw std::runtime_error("[OPF] " + element_symbol + " series admittance Y12 is zero.");
+
+	const bool dc = isDcLocation();
+	const double Zbase = dc ? globalParams.at("DCZbase") : globalParams.at("ACZbase");
+	const std::complex<double> Zs = -std::complex<double>(1.0, 0.0) / Y12 / Zbase;
+	const std::complex<double> Yend = Y11 + Y12;
+
+	branchData["r"] = std::real(Zs);
+	branchData["x"] = dc ? 0.0 : std::imag(Zs);
+	branchData["b"] = dc ? 0.0 : 2.0 * std::imag(Yend) * Zbase;
+	if (!dc) {
+		branchData["transformer"] = 0;
+		branchData["tap"] = 1.0;
+		branchData["shift"] = 0.0;
+		branchData["c_rating_a"] = 1.0;
+		branchData["g_fr"] = std::real(Yend);
+		branchData["b_fr"] = std::imag(Yend);
+		branchData["g_to"] = std::real(Yend);
+		branchData["b_to"] = std::imag(Yend);
+	}
+	if (element_location.size() >= 3)
+		branchData["grid"] = static_cast<int>(element_location[2] - '0');
+	for (auto& [key, value] : element_OPF_info)
+		branchData[key] = value;
+}
+
+double Element::finiteOmega(double omega) {
+	const double min_w = 1e-6;
+	if (std::abs(omega) < min_w)
+		return (omega < 0.0) ? -min_w : min_w;
+	return omega;
+}
+
+// Bipolar loop two-port. Phase order is [end1 core0, end1 core1, end2 core0, end2 core1].
+// V = V+ − V−, I = (I+ − I−)/2 with V+ = V/2, V− = −V/2:
+//   T = [1/2, −1/2]^T at each end,  Y_eq = blkdiag(T,T)^T  Y  blkdiag(T,T).
+std::vector<std::vector<complex<double>>> Element::reduceDcY(
+	const std::vector<std::vector<complex<double>>>& Y) const {
+	if (Y.size() == 2 && !Y[0].empty() && Y[0].size() == 2)
+		return Y;
+	if (Y.size() < 4 || Y[0].size() < 4 || (Y.size() % 2) != 0 || Y.size() != Y[0].size())
+		return Y;
+	const int n = static_cast<int>(Y.size()) / 2;
+	auto mix = [&Y](int i0, int i1, int j0, int j1) {
+		return (Y[i0][j0] + Y[i1][j1] - Y[i0][j1] - Y[i1][j0]) / 4.0;
+	};
+	std::vector<std::vector<complex<double>>> Ydc(2, std::vector<complex<double>>(2));
+	Ydc[0][0] = mix(0, 1, 0, 1);
+	Ydc[0][1] = mix(0, 1, n, n + 1);
+	Ydc[1][0] = mix(n, n + 1, 0, 1);
+	Ydc[1][1] = mix(n, n + 1, n, n + 1);
+	return Ydc;
+}
 
 /**
  * @brief Attaches a bus to a specific terminal of the element.
@@ -62,9 +144,9 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
 	m1[omega] = real_double(angular_frequency - omega_0);
 	m2[omega] = real_double(angular_frequency + omega_0);
 
-    bool is_ac = (element_location[0] == 'A' || element_location[0] == 'a') && (element_location[1] == 'C' || element_location[1] == 'c');
-	bool is_dc = (element_location[0] == 'D' || element_location[0] == 'd') && (element_location[1] == 'C' || element_location[1] == 'c');
-    bool is_mmc = (element_location.find('_') < element_location.length());
+    bool is_ac = isAcLocation();
+	bool is_dc = isDcLocation();
+    bool is_mmc = isMmcLocation();
 
     if (transformation && is_ac && !is_mmc) {
         std::vector<std::vector<complex<double>>> Y_val_exact1(Y_matrix.nrows());
@@ -86,18 +168,16 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
 		return Y;
     }
     else if (is_dc && transformation) {
-        std::vector<std::vector<complex<double>>> Y_val_exact(2);
-        for (int i = 0; i < 2; i++)
-            Y_val_exact[i].resize(2);
-
-        for (int i = 0; i < 2; ++i) {
-            for (int j = 0; j < 2; ++j) {
-                RCP<const Basic> r = subs(Y_matrix.get(2*i, 2*j), m);
+        std::vector<std::vector<complex<double>>> Y_val_exact(Y_matrix.nrows());
+        for (int i = 0; i < Y_matrix.nrows(); i++)
+            Y_val_exact[i].resize(Y_matrix.ncols());
+        for (int i = 0; i < Y_matrix.nrows(); ++i) {
+            for (int j = 0; j < Y_matrix.ncols(); ++j) {
+                RCP<const Basic> r = subs(Y_matrix.get(i, j), m);
                 Y_val_exact[i][j] = eval_complex_double(*r);
-                //cout << "Computing Y[" << i << "][" << j << "] for DC element with transformation: " << element_symbol << " equal to: " << Y_val_exact[i][j] << endl;
             }
         }
-        return Y_val_exact;
+        return reduceDcY(Y_val_exact);
     }
     else {
         std::vector<std::vector<complex<double>>> Y_val_exact(Y_matrix.nrows());
@@ -113,6 +193,14 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
     }
 }
 
+std::vector<std::vector<complex<double>>> Element::compute_y_parameters_abc(double frequency) {
+    const bool saved = transformation;
+    transformation = false;
+    auto Y = compute_y_parameters(frequency);
+    transformation = saved;
+    return Y;
+}
+
 /**
  * @brief Applies a transformation (e.g., abc to dq) to the admittance matrices.
  * @param Y1 The admittance matrix computed at angular frequency (omega - omega_0).
@@ -120,59 +208,7 @@ std::vector<std::vector<complex<double>>> Element::compute_y_parameters(double f
  * @return The transformed 2D vector of complex numbers representing the Y-parameter matrix in the new frame.
  */
 std::vector<std::vector<complex<double>>> Element::apply_transformation(std::vector<std::vector<complex<double>>>& Y1, std::vector<std::vector<complex<double>>>& Y2) {
-    
-    // The transformation is applied to a 6x6 matrix, so we expect Y1 and Y2 to be of that size.
-    if (Y1.size() != 6 || Y1[0].size() != 6 || Y2.size() != 6 || Y2[0].size() != 6) {
-        // Return Y1 if dimensions are not as expected, or handle error appropriately
-        return Y1;
-    }
-
-    // Transformation matrix for abc to dq0 (Clarke-Park)
-    complex<double> ang = std::exp(complex<double>(0, 2.0 * M_PI / 3.0));
-    complex<double> imag_unit(0, 1);
-
-    // Using vector<vector> for transformation matrices
-    vector<vector<complex<double>>> a(3, vector<complex<double>>(3));   
-    a[0] = { 1.0, ang, ang * ang };
-    a[1] = { imag_unit, imag_unit*ang, imag_unit*ang * ang };
-    a[2] = { 0.0, 0.0, 0.0 };
-	vector<vector<complex<double>>> a_tran = mat_transpose(a);
-
-    vector<vector<complex<double>>> a_conj(3, vector<complex<double>>(3));
-    a_conj[0] = { 1.0, conj(ang), conj(ang * ang) };
-    a_conj[1] = { -imag_unit, -imag_unit * conj(ang), -imag_unit * conj(ang * ang) };
-    a_conj[2] = { 0.0, 0.0, 0.0 };
-	vector<vector<complex<double>>> a_conj_tran = mat_transpose(a_conj);
-    
-	// Admittance at angular frequency omega - omega_0
-    auto Y11 = get_block(Y1, 0, 0, 3, 3);
-    auto Y12 = get_block(Y1, 0, 3, 3, 3);
-    auto Y21 = get_block(Y1, 3, 0, 3, 3);
-    auto Y22 = get_block(Y1, 3, 3, 3, 3);
-
-	// Admittance at angular frequency omega + omega_0
-    auto Y2_11 = get_block(Y2, 0, 0, 3, 3);
-    auto Y2_12 = get_block(Y2, 0, 3, 3, 3);
-    auto Y2_21 = get_block(Y2, 3, 0, 3, 3);
-    auto Y2_22 = get_block(Y2, 3, 3, 3, 3);
-
-    // Perform transformation: Y_dq = T_inv * Y_abc * T
-    auto Y11_dq = mul_scalar(mat_add(mat_mul(mat_mul(a, Y11), a_conj_tran), mat_mul(mat_mul(a_conj, Y2_11), a_tran)), 1.0 / 6.0);
-	auto Y12_dq = mul_scalar(mat_add(mat_mul(mat_mul(a, Y12), a_conj_tran), mat_mul(mat_mul(a_conj, Y2_12), a_tran)), 1.0 / 6.0);
-	auto Y21_dq = mul_scalar(mat_add(mat_mul(mat_mul(a, Y21), a_conj_tran), mat_mul(mat_mul(a_conj, Y2_21), a_tran)), 1.0 / 6.0);
-	auto Y22_dq = mul_scalar(mat_add(mat_mul(mat_mul(a, Y22), a_conj_tran), mat_mul(mat_mul(a_conj, Y2_22), a_tran)), 1.0 / 6.0);
-
-    // Combine transformed blocks into a single matrix
-    vector<vector<complex<double>>> Y_dq(4, vector<complex<double>>(4));
-    for (int i = 0; i < 2; ++i) {
-        for (int j = 0; j < 2; ++j) {
-            Y_dq[i][j] = Y11_dq[i][j];
-            Y_dq[i][j + 2] = Y12_dq[i][j];
-            Y_dq[i + 2][j] = Y21_dq[i][j];
-            Y_dq[i + 2][j + 2] = Y22_dq[i][j];
-        }
-    }
-    return Y_dq;
+    return apply_park_A0(Y1, Y2);
 }
 
 /**

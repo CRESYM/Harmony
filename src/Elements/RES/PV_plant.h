@@ -55,7 +55,7 @@ private:
 	double L_2; // Grid-side inductance in henries
 
 	// Grid parameters
-	double V_g; // Grid voltage in volts, assumed to have the optimal operation of PLL
+	double V_g; // Grid voltage L-L rms (V)
 	double f_g; // Grid frequency in hertz
 
 	// Control parameters

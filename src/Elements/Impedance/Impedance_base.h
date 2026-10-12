@@ -6,7 +6,7 @@
  * @brief Base class for passive impedance-type network elements.
  */
 
-#include "../Element.h"
+#include "Elements/Element.h"
 
 /**
  * @class Impedance_base
