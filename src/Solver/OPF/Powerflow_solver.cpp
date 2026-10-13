@@ -327,7 +327,35 @@ void PowerFlow::solve_opf(
             model.addConstr(lc_dc(i) >= 0.0);
             model.addConstr(Ic_dc(i) >= 0.0);
             model.addConstr(v2c_dc(i) >= 0.0);
-            model.addQConstr(Ic_dc(i) * Ic_dc(i) + 0 * 0 <= lc_dc(i) * 1);
+            // Original constraint: uncomment to restore the single-cone relaxation.
+            // model.addQConstr(Ic_dc(i) * Ic_dc(i) + 0 * 0 <= lc_dc(i) * 1);
+
+            // BEGIN four-segment relaxation (comment out to restore the original).
+            // Four equal segments tighten lc = Ic^2 on [0, Imax].
+            constexpr int currentSegments = 4;
+            const double currentMax = conv_dc(i, 16);
+            GRBLinExpr selectedSegments = 0.0;
+            GRBLinExpr currentSum = 0.0;
+            GRBQuadExpr squareLower = 0.0;
+            GRBLinExpr squareUpper = 0.0;
+            for (int segment = 0; segment < currentSegments; ++segment) {
+                const double lower = currentMax * segment / currentSegments;
+                const double upper = currentMax * (segment + 1) / currentSegments;
+                GRBVar selected = model.addVar(0.0, 1.0, 0.0, GRB_BINARY);
+                GRBVar currentPart = model.addVar(0.0, upper, 0.0, GRB_CONTINUOUS);
+                model.addConstr(currentPart >= lower * selected);
+                model.addConstr(currentPart <= upper * selected);
+                selectedSegments += selected;
+                currentSum += currentPart;
+                squareLower += currentPart * currentPart;
+                squareUpper += (lower + upper) * currentPart - lower * upper * selected;
+            }
+            model.addConstr(selectedSegments == 1.0);
+            model.addConstr(Ic_dc(i) == currentSum);
+            // Quadratic lower bound and the selected segment's secant upper bound.
+            model.addQConstr(squareLower <= lc_dc(i));
+            model.addConstr(lc_dc(i) <= squareUpper);
+            // END four-segment relaxation.
         }
 
         // 4. Constraint for vsc control model
@@ -588,6 +616,7 @@ void PowerFlow::solve_opf(
         * SET OPTIMIZATION OBJECTIVE
         **************************************************/
 
+        // Shared generation-cost expression for both objective modes.
         GRBQuadExpr obj = 0.0;
         for (int ng = 0; ng < ngrids; ++ng) {
 
@@ -641,7 +670,26 @@ void PowerFlow::solve_opf(
         }
         GRBVar genCost = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS);
 
-        model.setObjective(obj);
+        // Original objective: uncomment to restore generation-cost minimization.
+        // model.setObjective(obj);
+
+        // BEGIN weighted objective (comment out to restore the original).
+        // Station losses include converter internals and the AC interface, in MW.
+        GRBLinExpr stationLossMW = 0.0;
+        for (int i = 0; i < nconvs_dc; ++i) {
+            stationLossMW += baseMW_dc * (convPloss_dc(i) + ps_dc(i) + pc_dc(i));
+        }
+        constexpr double generationCostWeight = 1.0;
+        constexpr double stationLossWeight = 10.0;
+        if (nconvs_dc > 0) {
+            GRBQuadExpr weightedObjective = generationCostWeight * obj
+                + stationLossWeight * stationLossMW;
+            model.setObjective(weightedObjective, GRB_MINIMIZE);
+        } else {
+            // Preserve the original AC-only objective assembly.
+            model.setObjective(obj);
+        }
+        // END weighted objective.
         model.set(GRB_DoubleParam_TimeLimit, 600);
         model.set(GRB_IntParam_Threads, 8);
         model.set(GRB_IntParam_Presolve, 2);
@@ -937,7 +985,8 @@ void PowerFlow::solve_opf(
             }
             OPF_OUT << "\n-----   -----  ------------------  --------  ---------  -------  -------   ---------  -----------";
 
-            double GenCostResUSA = model.get(GRB_DoubleAttr_ObjVal);;
+            // double GenCostResUSA = model.get(GRB_DoubleAttr_ObjVal);;
+            double GenCostResUSA = obj.getValue();
             double GenCostResEURO = GenCostResUSA / 1.08;
             OPF_OUT << "\n The total generation cost is $" << std::fixed << std::setprecision(2)
                 << GenCostResUSA << "/MWh (\u20AC" << GenCostResEURO << "/MWh)";
@@ -1152,7 +1201,8 @@ void PowerFlow::solve_opf(
             this->convState_dc = convState_dc;
             this->fbus_dc = fbus_dc;
             this->tbus_dc = tbus_dc;
-            this->total_gen_cost_ = model.get(GRB_DoubleAttr_ObjVal);
+            // this->total_gen_cost_ = model.get(GRB_DoubleAttr_ObjVal);
+            this->total_gen_cost_ = obj.getValue();
             this->opf_solved_ = true;
         }
 
