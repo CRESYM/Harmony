@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HARMONY_UI_BANNER_GUI_H
+#define HARMONY_UI_BANNER_GUI_H
 
 struct ImFont;
 struct ImGuiIO;
@@ -38,3 +39,5 @@ ImFont* harmonyInitBannerFont(ImGuiIO& io, float sizePixels = 10.0f);
 
 /** @brief Draw the embedded banner inside the active ImGui window. */
 void harmonyDrawBannerImGui(ImFont* bannerFont, bool compact = false);
+
+#endif // HARMONY_UI_BANNER_GUI_H

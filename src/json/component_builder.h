@@ -1,4 +1,6 @@
-#pragma once
+#ifndef HARMONY_JSON_COMPONENT_BUILDER_H
+#define HARMONY_JSON_COMPONENT_BUILDER_H
+
 #include <iostream>
 #include <memory>
 
@@ -87,3 +89,5 @@ private:
 		const JsonParameterTable& params,
 		const char* exprField);
 };
+
+#endif // HARMONY_JSON_COMPONENT_BUILDER_H

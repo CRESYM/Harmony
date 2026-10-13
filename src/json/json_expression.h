@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HARMONY_JSON_EXPRESSION_H
+#define HARMONY_JSON_EXPRESSION_H
 
 #include <string>
 #include <vector>
@@ -51,3 +52,5 @@ public:
 	static SymEngine::DenseMatrix toRowMatrix(
 		const std::vector<SymEngine::RCP<const SymEngine::Basic>>& exprs);
 };
+
+#endif // HARMONY_JSON_EXPRESSION_H

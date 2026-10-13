@@ -1,4 +1,6 @@
-#pragma once
+#ifndef HARMONY_JSON_SIMULATION_BUILDER_H
+#define HARMONY_JSON_SIMULATION_BUILDER_H
+
 #include "component_builder.h"
 
 /**
@@ -77,3 +79,5 @@ private:
 
 	JSON simulationConfig_;
 };
+
+#endif // HARMONY_JSON_SIMULATION_BUILDER_H
