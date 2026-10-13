@@ -1,5 +1,5 @@
-#ifndef _HELPER_FUNCTIONS_H_
-#define _HELPER_FUNCTIONS_H_
+#ifndef HARMONY_SOLVER_HELPERFUNCTIONS_HELPER_FUNCTIONS_H
+#define HARMONY_SOLVER_HELPERFUNCTIONS_HELPER_FUNCTIONS_H
 
 /**
  * @file Helper_Functions.h
@@ -17,4 +17,4 @@
 #include "Writer.h"
 #include "DQsym_Conversion_Functions.h"
 
-#endif
+#endif // HARMONY_SOLVER_HELPERFUNCTIONS_HELPER_FUNCTIONS_H

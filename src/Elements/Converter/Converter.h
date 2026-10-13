@@ -1,5 +1,5 @@
-#ifndef _CONVERTER_H_
-#define _CONVERTER_H_
+#ifndef HARMONY_ELEMENTS_CONVERTER_CONVERTER_H
+#define HARMONY_ELEMENTS_CONVERTER_CONVERTER_H
 
 /**
  * @file Converter.h
@@ -172,4 +172,4 @@ protected:
 
 };
 
-#endif // _CONVERTER_H_
+#endif // HARMONY_ELEMENTS_CONVERTER_CONVERTER_H

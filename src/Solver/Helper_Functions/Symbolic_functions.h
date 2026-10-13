@@ -1,5 +1,5 @@
-#ifndef _SYMBOLIC_FUNCTIONS_H_
-#define _SYMBOLIC_FUNCTIONS_H_
+#ifndef HARMONY_SOLVER_HELPERFUNCTIONS_SYMBOLIC_FUNCTIONS_H
+#define HARMONY_SOLVER_HELPERFUNCTIONS_SYMBOLIC_FUNCTIONS_H
 
 /**
  * @file Symbolic_functions.h
@@ -156,4 +156,4 @@ extern RCP<const Basic> addSym(const RCP<const Basic>& a, const RCP<const Basic>
 extern RCP<const Basic> subSym(const RCP<const Basic>& a, const RCP<const Basic>& b);
 
 
-#endif
+#endif // HARMONY_SOLVER_HELPERFUNCTIONS_SYMBOLIC_FUNCTIONS_H

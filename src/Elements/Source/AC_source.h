@@ -1,5 +1,5 @@
-#ifndef AC_SOURCE_H
-#define AC_SOURCE_H
+#ifndef HARMONY_ELEMENTS_SOURCE_AC_SOURCE_H
+#define HARMONY_ELEMENTS_SOURCE_AC_SOURCE_H
 
 /**
  * @file AC_source.h
@@ -65,5 +65,5 @@ private:
 
 };
 
-#endif
+#endif // HARMONY_ELEMENTS_SOURCE_AC_SOURCE_H
 

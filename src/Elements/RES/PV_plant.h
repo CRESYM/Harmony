@@ -1,5 +1,5 @@
-#ifndef PV_PLANT_H_
-#define PV_PLANT_H_
+#ifndef HARMONY_ELEMENTS_RES_PV_PLANT_H
+#define HARMONY_ELEMENTS_RES_PV_PLANT_H
 
 /**
  * @file PV_plant.h
@@ -71,4 +71,4 @@ private:
 
 };
 
-#endif  // PV_PLANT_H_
+#endif  // HARMONY_ELEMENTS_RES_PV_PLANT_H

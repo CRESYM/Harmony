@@ -1,5 +1,5 @@
-#ifndef TRANSFORMER_Y_DELTA_REAL_H
-#define TRANSFORMER_Y_DELTA_REAL_H
+#ifndef HARMONY_ELEMENTS_TRANSFORMER_TRANSFORMER_Y_DELTA_REAL_H
+#define HARMONY_ELEMENTS_TRANSFORMER_TRANSFORMER_Y_DELTA_REAL_H
 
 /**
  * @file Transformer_Y_Delta_real.h
@@ -27,4 +27,4 @@ public:
     ~TransformerYDelta_real() override;
 };
 
-#endif
+#endif // HARMONY_ELEMENTS_TRANSFORMER_TRANSFORMER_Y_DELTA_REAL_H

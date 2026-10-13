@@ -1,5 +1,5 @@
-#ifndef _LOAD_BASE_H_
-#define _LOAD_BASE_H_
+#ifndef HARMONY_ELEMENTS_LOAD_LOAD_BASE_H
+#define HARMONY_ELEMENTS_LOAD_LOAD_BASE_H
 
 /**
  * @file Load_base.h
@@ -30,4 +30,4 @@ public:
 		std::map<std::string, double>& globalParams) const override;
 };
 
-#endif
+#endif // HARMONY_ELEMENTS_LOAD_LOAD_BASE_H

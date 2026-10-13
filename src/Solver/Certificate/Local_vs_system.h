@@ -1,5 +1,5 @@
-#ifndef LOCAL_VS_SYSTEM_H
-#define LOCAL_VS_SYSTEM_H
+#ifndef HARMONY_SOLVER_CERTIFICATE_LOCAL_VS_SYSTEM_H
+#define HARMONY_SOLVER_CERTIFICATE_LOCAL_VS_SYSTEM_H
 
 /**
  * @file Local_vs_system.h
@@ -39,4 +39,4 @@ LocalVsSystemResult compareLocalVsSystem(
 
 void reportLocalVsSystem(const LocalVsSystemResult& result, bool plotting_enabled = true);
 
-#endif // LOCAL_VS_SYSTEM_H
+#endif // HARMONY_SOLVER_CERTIFICATE_LOCAL_VS_SYSTEM_H

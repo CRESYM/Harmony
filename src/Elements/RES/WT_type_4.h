@@ -1,5 +1,5 @@
-#ifndef _WT_TYPE_4_H_
-#define _WT_TYPE_4_H_
+#ifndef HARMONY_ELEMENTS_RES_WT_TYPE_4_H
+#define HARMONY_ELEMENTS_RES_WT_TYPE_4_H
 
 /**
  * @file WT_type_4.h
@@ -51,4 +51,4 @@ private:
 	double Lf = 0.00012;				// Filter inductance (H)
 };
 
-#endif
+#endif // HARMONY_ELEMENTS_RES_WT_TYPE_4_H

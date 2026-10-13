@@ -1,5 +1,5 @@
-#ifndef OPERATING_REGION_H
-#define OPERATING_REGION_H
+#ifndef HARMONY_SOLVER_CERTIFICATE_OPERATING_REGION_H
+#define HARMONY_SOLVER_CERTIFICATE_OPERATING_REGION_H
 
 /**
  * @file Operating_region.h
@@ -48,4 +48,4 @@ OperatingRegionResult certifyOperatingPoints(
 
 void reportOperatingRegion(const OperatingRegionResult& result, bool plotting_enabled = true);
 
-#endif // OPERATING_REGION_H
+#endif // HARMONY_SOLVER_CERTIFICATE_OPERATING_REGION_H

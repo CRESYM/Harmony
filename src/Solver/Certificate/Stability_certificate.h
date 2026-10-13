@@ -1,5 +1,5 @@
-#ifndef STABILITY_CERTIFICATE_H
-#define STABILITY_CERTIFICATE_H
+#ifndef HARMONY_SOLVER_CERTIFICATE_STABILITY_CERTIFICATE_H
+#define HARMONY_SOLVER_CERTIFICATE_STABILITY_CERTIFICATE_H
 
 /**
  * @file Stability_certificate.h
@@ -176,4 +176,4 @@ void plot_certificate_geometric_sweep(
 	const CertificateSweep& sweep,
 	const std::string& title = "Geometric certificates");
 
-#endif // STABILITY_CERTIFICATE_H
+#endif // HARMONY_SOLVER_CERTIFICATE_STABILITY_CERTIFICATE_H

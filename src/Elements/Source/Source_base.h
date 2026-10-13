@@ -1,5 +1,5 @@
-#ifndef _SOURCE_BASE_H
-#define _SOURCE_BASE_H
+#ifndef HARMONY_ELEMENTS_SOURCE_SOURCE_BASE_H
+#define HARMONY_ELEMENTS_SOURCE_SOURCE_BASE_H
 
 /**
  * @file Source_base.h
@@ -52,4 +52,4 @@ protected:
     double Q_max;  // Max reactive power output [MVA]
 };
 
-#endif
+#endif // HARMONY_ELEMENTS_SOURCE_SOURCE_BASE_H

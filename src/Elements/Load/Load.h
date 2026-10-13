@@ -1,5 +1,5 @@
-#ifndef _LOAD_H_
-#define _LOAD_H_
+#ifndef HARMONY_ELEMENTS_LOAD_LOAD_H
+#define HARMONY_ELEMENTS_LOAD_LOAD_H
 
 /**
  * @file Load.h
@@ -64,4 +64,4 @@ private:
 
 	// element_OPF_info is containing values for element_symbol, grid_area, rated_voltage_kv, R, L, C
 };
-#endif
+#endif // HARMONY_ELEMENTS_LOAD_LOAD_H

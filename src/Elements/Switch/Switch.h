@@ -1,5 +1,5 @@
-#ifndef SWITCH_H
-#define SWITCH_H
+#ifndef HARMONY_ELEMENTS_SWITCH_SWITCH_H
+#define HARMONY_ELEMENTS_SWITCH_SWITCH_H
 
 /**
  * @file Switch.h
@@ -55,5 +55,5 @@ private:
     std::vector<bool> phaseState;           // true = closed, false = open
 };
 
-#endif // SWITCH_H
+#endif // HARMONY_ELEMENTS_SWITCH_SWITCH_H
 

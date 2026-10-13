@@ -1,5 +1,5 @@
-#ifndef _DQSYM_CONVERSION_FUNCTIONS_H_
-#define _DQSYM_CONVERSION_FUNCTIONS_H_
+#ifndef HARMONY_SOLVER_HELPERFUNCTIONS_DQSYM_CONVERSION_FUNCTIONS_H
+#define HARMONY_SOLVER_HELPERFUNCTIONS_DQSYM_CONVERSION_FUNCTIONS_H
 
 /**
  * @file DQsym_Conversion_Functions.h
@@ -133,4 +133,4 @@ extern void dqn2abc_group_into(const MatrixXcd& Y, int group, double theta, Vect
 extern ABCResult simulate_dqn2abc(const MatrixXcd& Xdcpnz_c,
     double freq_hz, double t0, double t1, double Ts);
 
-#endif // _DQSYM_CONVERSION_FUNCTIONS_H_
+#endif // HARMONY_SOLVER_HELPERFUNCTIONS_DQSYM_CONVERSION_FUNCTIONS_H

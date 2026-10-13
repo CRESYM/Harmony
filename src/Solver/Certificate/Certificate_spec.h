@@ -1,5 +1,5 @@
-#ifndef CERTIFICATE_SPEC_H
-#define CERTIFICATE_SPEC_H
+#ifndef HARMONY_SOLVER_CERTIFICATE_CERTIFICATE_SPEC_H
+#define HARMONY_SOLVER_CERTIFICATE_CERTIFICATE_SPEC_H
 
 /**
  * @file Certificate_spec.h
@@ -64,4 +64,4 @@ struct GfmTuningBounds {
 	double scale_Q_hi = 4.0;
 };
 
-#endif // CERTIFICATE_SPEC_H
+#endif // HARMONY_SOLVER_CERTIFICATE_CERTIFICATE_SPEC_H

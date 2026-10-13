@@ -4,8 +4,8 @@
  * @ingroup impedance
  */
 
-#ifndef _IMPEDANCE_H_
-#define _IMPEDANCE_H_
+#ifndef HARMONY_ELEMENTS_IMPEDANCE_IMPEDANCE_H
+#define HARMONY_ELEMENTS_IMPEDANCE_IMPEDANCE_H
 
 #include "Impedance_base.h"
 
@@ -47,4 +47,4 @@ public:
 private:
 };
 
-#endif // _IMPEDANCE_H_
+#endif // HARMONY_ELEMENTS_IMPEDANCE_IMPEDANCE_H

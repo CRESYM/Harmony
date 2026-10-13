@@ -1,5 +1,5 @@
-#ifndef DEVICE_GATE_H
-#define DEVICE_GATE_H
+#ifndef HARMONY_SOLVER_CERTIFICATE_DEVICE_GATE_H
+#define HARMONY_SOLVER_CERTIFICATE_DEVICE_GATE_H
 
 /**
  * @file Device_gate.h
@@ -43,4 +43,4 @@ DeviceGateResult evaluateDeviceGate(
 /** @brief Register gate plots and print a one-line verdict. */
 void reportDeviceGate(const DeviceGateResult& result, bool plotting_enabled = true);
 
-#endif // DEVICE_GATE_H
+#endif // HARMONY_SOLVER_CERTIFICATE_DEVICE_GATE_H

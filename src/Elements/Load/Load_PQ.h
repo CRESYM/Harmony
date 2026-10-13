@@ -1,5 +1,5 @@
-#ifndef _LOADPQ_H_  
-#define _LOADPQ_H_  
+#ifndef HARMONY_ELEMENTS_LOAD_LOADPQ_H  
+#define HARMONY_ELEMENTS_LOAD_LOADPQ_H
 
 /**
  * @file Load_PQ.h
@@ -37,4 +37,4 @@ private:
   
 };  
   
-#endif
+#endif // HARMONY_ELEMENTS_LOAD_LOADPQ_H

@@ -1,5 +1,5 @@
-#ifndef _IMPEDANCE_BASE_H_
-#define _IMPEDANCE_BASE_H_
+#ifndef HARMONY_ELEMENTS_IMPEDANCE_IMPEDANCE_BASE_H
+#define HARMONY_ELEMENTS_IMPEDANCE_IMPEDANCE_BASE_H
 
 /**
  * @file Impedance_base.h
@@ -34,4 +34,4 @@ private:
 };
 
 
-#endif
+#endif // HARMONY_ELEMENTS_IMPEDANCE_IMPEDANCE_BASE_H

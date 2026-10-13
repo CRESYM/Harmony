@@ -1,5 +1,5 @@
-#ifndef OVERHEAD_LINE_H
-#define OVERHEAD_LINE_H
+#ifndef HARMONY_ELEMENTS_TRANSMISSIONLINE_OVERHEAD_LINE_H
+#define HARMONY_ELEMENTS_TRANSMISSIONLINE_OVERHEAD_LINE_H
 
 /**
  * @file overhead_line.h
@@ -132,5 +132,5 @@ private:
 	std::vector<std::vector<complex<double>>> compute_y_at_omega(double omega_rad);
 };
 
-#endif // OVERHEAD_LINE_H
+#endif // HARMONY_ELEMENTS_TRANSMISSIONLINE_OVERHEAD_LINE_H
 

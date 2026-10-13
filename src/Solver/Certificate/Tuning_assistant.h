@@ -1,5 +1,5 @@
-#ifndef TUNING_ASSISTANT_H
-#define TUNING_ASSISTANT_H
+#ifndef HARMONY_SOLVER_CERTIFICATE_TUNING_ASSISTANT_H
+#define HARMONY_SOLVER_CERTIFICATE_TUNING_ASSISTANT_H
 
 /**
  * @file Tuning_assistant.h
@@ -49,4 +49,4 @@ GfmTuningResult tuneGfmDroops(
 
 void reportGfmTuning(const GfmTuningResult& result, bool plotting_enabled = true);
 
-#endif // TUNING_ASSISTANT_H
+#endif // HARMONY_SOLVER_CERTIFICATE_TUNING_ASSISTANT_H
