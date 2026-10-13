@@ -1,5 +1,5 @@
-#ifndef _VISUALIZATION_H_
-#define _VISUALIZATION_H_
+#ifndef HARMONY_UI_VISUALIZATION_H
+#define HARMONY_UI_VISUALIZATION_H
 
 /**
  * @file Visualization.h
@@ -190,4 +190,4 @@ struct OPFVisualData {
  */
 void viz_opf(const OPFVisualData& data);
 
-#endif // _VISUALIZATION_H_
+#endif // HARMONY_UI_VISUALIZATION_H

@@ -11,8 +11,8 @@
  * by the translation units that need them.
  */
 
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef HARMONY_CORE_CONSTANTS_H
+#define HARMONY_CORE_CONSTANTS_H
 
 // SymEngine library for symbolic mathematics
 #include <symengine/basic.h>
@@ -131,4 +131,4 @@ Eigen::MatrixXd map2dense(const Table& tbl,
     return M;
 }
 
-#endif // CONSTANTS_H
+#endif // HARMONY_CORE_CONSTANTS_H

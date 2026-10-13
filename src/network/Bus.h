@@ -3,8 +3,8 @@
  * @brief Electrical bus (node) representation with pin count, connections, and OPF metadata.
  */
 
-#ifndef BUS_H
-#define BUS_H
+#ifndef HARMONY_NETWORK_BUS_H
+#define HARMONY_NETWORK_BUS_H
 
 #include "core/Constants.h"
 
@@ -146,4 +146,4 @@ private:
 	// This includes area and voltage limits.
 };
 
-#endif // BUS_H
+#endif // HARMONY_NETWORK_BUS_H

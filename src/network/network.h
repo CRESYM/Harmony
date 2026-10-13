@@ -3,8 +3,8 @@
  * @brief Top-level electrical network container: buses, elements, connections, and hierarchical grids.
  */
 
-#ifndef NETWORK_H
-#define NETWORK_H
+#ifndef HARMONY_NETWORK_H
+#define HARMONY_NETWORK_H
 
 #include "core/Constants.h"
 
@@ -220,4 +220,4 @@ public:
 
 /** @} */ // end of network group
 
-#endif // NETWORK_H
+#endif // HARMONY_NETWORK_H

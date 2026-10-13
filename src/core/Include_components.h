@@ -1,5 +1,5 @@
-#ifndef INCLUDE_COMPONENTS_H
-#define INCLUDE_COMPONENTS_H
+#ifndef HARMONY_CORE_INCLUDE_COMPONENTS_H
+#define HARMONY_CORE_INCLUDE_COMPONENTS_H
 
 /**
  * @file Include_components.h
@@ -66,7 +66,7 @@
 #include "Solver/State_Space_Model/State_Space_Model.h"
 
 
-#endif // !INCLUDE_COMPONENTS_H
+#endif // HARMONY_CORE_INCLUDE_COMPONENTS_H
 
 
 
