@@ -227,26 +227,27 @@ void analyzeSnapshot(Network* net, const DQsymResult& result, double t, bool plo
         stability.add_areas(net);
         stability.print_summary();
         for (auto& [name, elem] : net->get_converters()) {
+            const auto& convName = name;
             if (!result.stateHist.count(name))
                 continue;
             auto trySide = [&](const char* loc) {
                 try {
-                    stability.writeFileTF(name, loc, fStart, fEnd, fPoints);
-                    std::cout << "[DQsym] Wrote TF CSV for '" << name << "' at " << loc << "\n";
+                    stability.writeFileTF(convName, loc, fStart, fEnd, fPoints);
+                    std::cout << "[DQsym] Wrote TF CSV for '" << convName << "' at " << loc << "\n";
                 }
                 catch (const std::exception& ex) {
                     std::cout << "[DQsym] Transfer-function CSV at " << loc << " for '"
-                        << name << "' failed: " << ex.what() << "\n";
+                        << convName << "' failed: " << ex.what() << "\n";
                 }
                 if (plotResults) {
                     try {
-                        stability.bodeplotTF(name, loc, fStart, fEnd, fPoints);
-                        stability.nyquistplotTF(name, loc, fStart, std::min(fEnd, 2000.0),
+                        stability.bodeplotTF(convName, loc, fStart, fEnd, fPoints);
+                        stability.nyquistplotTF(convName, loc, fStart, std::min(fEnd, 2000.0),
                             std::min(fPoints, 400));
                     }
                     catch (const std::exception& ex) {
                         std::cout << "[DQsym] Impedance plots at " << loc << " for '"
-                            << name << "' failed: " << ex.what() << "\n";
+                            << convName << "' failed: " << ex.what() << "\n";
                     }
                 }
             };
