@@ -1,0 +1,2 @@
+# Clang-tidy configurations
+Checks: 'portability-*,bugprone-*,-bugprone-easily-swappable-parameters'

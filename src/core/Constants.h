@@ -47,7 +47,7 @@
 #include <unsupported/Eigen/NonLinearOptimization>
 #include <unsupported/Eigen/NumericalDiff>
 
-#define _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES // NOLINT(bugprone-reserved-identifier)
 #include <math.h> 
 #include <string>
 #include <iostream>

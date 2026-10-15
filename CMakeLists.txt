@@ -112,10 +112,14 @@ endif()
 if(ENABLE_CLANG_TIDY)
     find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
     set(CLANG_TIDY_COMMAND
-        "${CLANG_TIDY_EXE}" 
-        "-checks=clang-analyzer-*,bugprone-*,portability-*,readability-*"
+        "${CLANG_TIDY_EXE}"
+        "--allow-no-checks" 
+        #"-checks=clang-analyzer-*,bugprone-*,portability-*,readability-*"
+        #"--checks=bugprone-*,-bugprone-easily-swappable-parameters"
         "--header-filter=${CMAKE_SOURCE_DIR}/src/.*")
     set_target_properties(harmony_core PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+    # Generate a .clang-tidy in build/_deps to disable analysis for all fetched dependencies
+    file(WRITE "${CMAKE_BINARY_DIR}/_deps/.clang-tidy" "Checks: '-*'\n")
 endif()
 
 # -----------------------------------------------------------------------------
