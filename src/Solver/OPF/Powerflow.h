@@ -148,9 +148,10 @@ public:
      * @param writeTxt Write text output files (default false).
      * @param plotResult Open OPF visualization (default false).
      * @param print_info Print diagnostic information (default false).
+     * @param MISOCP Enable the strengthened MISOCP model; false keeps the original SOCP.
      */
     void make_OPF(Network* net, std::map<std::string, double>& global_params, bool vscControl = true, bool writeTxt = false,
-        bool plotResult = false, bool print_info = false, bool include_dc = true);
+        bool plotResult = false, bool print_info = false, bool include_dc = true, bool MISOCP = false);
 
     /**
      * @brief Builds AC-only OPF data from a Harmony network and runs the solver.
@@ -184,10 +185,11 @@ public:
      * @param writeTxt Write text output files.
      * @param plotResult Open OPF visualization.
      * @param print_info Print diagnostic information.
+     * @param MISOCP Enable piecewise current constraints and the station-loss objective (default false).
      */
     void solve_opf(const std::string& dc_name,
         const std::string& ac_name, std::unordered_map<std::string, Eigen::MatrixXd>* dataOPF,
-        bool vscControl, bool writeTxt, bool plotResult, bool print_info);
+        bool vscControl, bool writeTxt, bool plotResult, bool print_info, bool MISOCP = false);
 
     /**
      * @brief Returns the nested OPF result dictionary (read-only).

@@ -176,5 +176,6 @@ void example_point2point_case() {
     global_params["DCZbase"] =
         global_params["DCbaseKV"] * global_params["DCbaseKV"] / global_params["baseMVA"];
 
-    pf.make_OPF(&net, global_params, false, false, false, true);
+    pf.make_OPF(&net, global_params, false, false, false, true,
+        true, /*MISOCP=*/true);
 }

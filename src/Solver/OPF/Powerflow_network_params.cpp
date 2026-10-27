@@ -940,7 +940,7 @@ void PowerFlow::make_AC_OPF(Network* net, std::map<std::string, double>& global_
 }
 
 void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_params, bool vscControl,
-    bool writeTxt, bool plotResult, bool print_info, bool include_dc)
+    bool writeTxt, bool plotResult, bool print_info, bool include_dc, bool MISOCP)
 {
     conv_point.clear();
     opf_user_base_mva_ = global_params.count("baseMVA") ? global_params["baseMVA"] : 100.0;
@@ -1129,7 +1129,7 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
 	cout << "[make_OPF] Finished transforming data to Eigen::MatrixXd.\n";
 
     //solveHmo_opf(dataOPF, vscControl, writeTxt, plotResult);
-    solve_opf("", "", &dataOPF, vscControl, writeTxt, plotResult, print_info);
+    solve_opf("", "", &dataOPF, vscControl, writeTxt, plotResult, print_info, MISOCP);
 
     
     // Update each MMC element with OPF results
