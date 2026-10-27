@@ -304,17 +304,7 @@ conversion.
 | Inverter | `P_G > 0` ⇒ `ps,pn ≤ 0` (network injections) | `Pac,Pdc > 0` (AC export / DC import) |
 | Rectifier | `P_G < 0` ⇒ `ps,pn ≥ 0` | `Pac,Pdc < 0` |
 
-`MMC::computePowerFlow` writes `P_G = Pac` (MW) so that OPF’s `pn = −P_G`
-matches. It also maps the MMC plant into the MatACDC converter row: `bf = 0`,
-zero polynomial losses, and `rc + j xc = R_eq + jω L_eq` with
-`L_eq = L_arm/2 + L_reactor` (override via `setOPFInfo` if you need a
-different equivalent). After OPF, `make_OPF` maps results back with
-`Pac = −ps`, `Qac = −qs`, `Pdc = −pn` and the PCC angle in **radians**
-before `update_MMC`. Seed MMC examples in machine signs (`Pac`/`Pdc` same
-sign), not raw OPF injections. Use `vscControl = true` when a converter
-holds DC voltage or scheduled P/Q so the linearized equilibrium is that
-setpoint; `false` lets the optimiser choose converter setpoints (CSV
-benchmarks with no DC-voltage slack).
+For component-built cases, see [Mapping between OPF and converter models](#mapping-between-opf-and-converter-models) below for the equivalent impedance, loss defaults, control settings, and conversion back to MMC operating quantities.
 
 The OPF pairs converter row `i` with DC bus row `i`. `make_OPF` sorts
 converter rows (and `conv_point`) by `BUSDC_I` so this holds even when
@@ -369,11 +359,231 @@ published MATPOWER optima to within the second-order-cone relaxation gap
 
 **Requirements:** A valid Gurobi license.
 
+### Mapping between OPF and converter models
+
+For a network built from Harmony components, `PowerFlow::make_OPF` constructs
+the steady-state OPF representation from the shared `Network` and its element
+parameters. After a successful solve, it converts the converter terminal
+quantities and updates the associated MMC objects. The MMC models then determine
+their internal converter and controller states before small-signal analysis.
+
+This automatic MMC update belongs to the component-built `make_OPF` workflow.
+Calling `solve_opf` directly with CSV case files supplies an OPF case; it does
+not by itself create or initialize corresponding dynamic MMC objects.
+
+#### Shared parameters and model representations
+
+**Loads.** A series RLC `Load` retains its impedance characteristics in the
+frequency-domain model. `Load::computePowerFlow()` uses the same parameters to
+calculate fixed three-phase active and reactive demands at the AC base voltage
+and nominal angular frequency. For a balanced load,
+
+$$
+P_{\mathrm{load}}=
+\frac{3V_{\mathrm{ph},b}^{2}R}{R^{2}+X^{2}},
+\qquad
+Q_{\mathrm{load}}=
+\frac{3V_{\mathrm{ph},b}^{2}X}{R^{2}+X^{2}},
+\qquad
+V_{\mathrm{ph},b}=\frac{V_{b,\mathrm{LL,rms}}}{\sqrt{3}}.
+$$
+
+Here, $V_{b,\mathrm{LL,rms}}$ is `ACbaseKV * 1e3` in volts, and
+$X=\omega_0L-1/(\omega_0C)$ when the corresponding elements are present.
+In the implementation, `C == 0` omits the capacitive term and `L == 0` omits
+the inductive term. The resulting W/var demands are divided by $10^6$ for
+storage as MW/Mvar in the OPF data. These representations match the load powers
+at the reference voltage and frequency; the fixed OPF demand does not reproduce
+the RLC load's voltage and frequency dependence away from those conditions.
+
+For a directly specified `LoadPQ`, `LoadPQ::computePowerFlow()` stores the given
+P and Q after converting W/var to MW/Mvar. See
+[Sources and loads](06-component-reference.md#62-sources-and-loads) for the
+component constructors.
+
+**Converter impedance and losses.** When the OPF converter row is generated
+from an MMC object, `MMC::computePowerFlow()` uses
+
+$$
+R_{\mathrm{eq}}=\frac{R_{\mathrm{arm}}}{2}+R_{\mathrm{reactor}},
+\qquad
+L_{\mathrm{eq}}=\frac{L_{\mathrm{arm}}}{2}+L_{\mathrm{reactor}},
+$$
+
+$$
+r_{\mathrm{eq}}=\frac{R_{\mathrm{eq}}}{Z_{b,\mathrm{ac}}},
+\qquad
+x_{\mathrm{eq}}=\frac{\omega_0L_{\mathrm{eq}}}{Z_{b,\mathrm{ac}}}.
+$$
+
+The OPF fields `rc` and `xc` are therefore per-unit quantities on `ACZbase`.
+This mapping retains the equivalent series impedance and its resistive losses.
+Unless explicitly supplied through `setOPFInfo`, `bf`, `rtf`, `xtf`, `LossA`,
+`LossB`, `LossCrec`, and `LossCinv` are set to zero. This avoids adding a filter,
+transformer, or empirical loss term without a corresponding specification in
+the selected MMC model. Explicit `rc` and `xc` settings also override the
+equivalent-impedance defaults.
+
+CSV converter cases are a separate input path and may specify additional
+interface elements and empirical internal losses of the form
+$p_{\mathrm{loss}}=a+bI+cI^2$, where $I$ is the converter current magnitude and
+$a$, $b$, and $c$ are the constant, linear, and quadratic loss coefficients.
+Those data must be matched to the intended dynamic converter model when its
+initialization is required; they are not automatically equivalent to the
+defaults derived from an MMC object.
+
+#### Control modes and reference updates
+
+The MMC retains its selected controllers and their parameters.
+`MMC::computePowerFlow()` infers the OPF control types from the enabled
+controllers unless explicit `type_dc` or `type_ac` settings are supplied:
+
+| Enabled controller | Inferred OPF setting | Steady-state control |
+|---|---|---|
+| `active_power` | `type_dc = 1` | Scheduled DC-side active power |
+| `dc_voltage` | `type_dc = 2` | DC voltage |
+| `droop` | `type_dc = 3` | DC power-voltage droop |
+| `ac_voltage` | `type_ac = 2` | AC voltage magnitude |
+| `reactive_power` | `type_ac = 1` | Reactive power |
+
+For type inference, the DC-side check order is `active_power`, `dc_voltage`,
+then `droop`; the AC-side order is `ac_voltage`, then `reactive_power`.
+Explicit OPF type settings take priority. When `vscControl` is enabled, the OPF
+adds the corresponding steady-state control constraints. When it is disabled,
+the OPF can choose new converter setpoints within the remaining constraints.
+The type-1 OPF active-power constraint acts on the DC port; it is not a direct
+constraint fixing the MMC's AC-side active-power reference.
+
+After OPF, `update_MMC()` updates references from the converted terminal
+quantities:
+
+| Enabled controller | Updated reference |
+|---|---|
+| `dc_voltage` | $V_{\mathrm{dc}}$; takes priority over `active_power` |
+| `active_power` | $P_{\mathrm{ac}}$, when `dc_voltage` is absent |
+| `reactive_power` | $Q_{\mathrm{ac}}$; takes priority over `ac_voltage` |
+| `ac_voltage` | $(V_d,V_q)$, when `reactive_power` is absent |
+| `occ` | $(I_d,I_q)$ calculated from terminal voltage and power |
+
+These reference-update priorities differ from the type-inference order when
+both controllers in a pair are enabled. The selected OPF types and controller
+configuration should therefore be considered together. Other enabled internal
+loops receive the references calculated by `update_MMC()` for the new operating
+point. The controller structure and gains are retained.
+
+#### Units, power signs, and reference frames
+
+The OPF uses per-unit quantities, while the MMC operating-point interface uses
+V, W, var, and radians. With $S_b=10^6\,\texttt{baseMW\_dc}$ as the physical
+power base used for the converter/DC OPF quantities, `make_OPF` converts
+
+$$
+P_{\mathrm{ac}}=-S_b p_s^{\mathrm{VSC}},
+\qquad
+Q_{\mathrm{ac}}=-S_b q_s^{\mathrm{VSC}},
+\qquad
+P_{\mathrm{dc}}=-S_b p_j^{\mathrm{DC}}.
+$$
+
+Here, $s$ is the converter PCC and $j$ is its associated DC bus. The minus signs
+map the OPF port convention to the MMC machine convention: positive
+$P_{\mathrm{ac}}$ denotes export to the AC network and positive
+$P_{\mathrm{dc}}$ denotes import from the DC network. The reactive-power sign
+follows the dq equations below.
+
+The AC voltage is converted from line-to-line RMS to phase-voltage peak:
+
+$$
+V_m=\sqrt{\frac{2}{3}}\,V_{b,\mathrm{LL,rms}}v_s^{\mathrm{VSC}},
+\qquad
+V_{\mathrm{dc}}=V_{b,\mathrm{dc}}v_j^{\mathrm{DC}}.
+$$
+
+The voltage bases are `ACbaseKV * 1e3` and `DCbaseKV * 1e3` in volts.
+The implementation takes the square root of the optimized squared-voltage
+variables before scaling them. The recovered PCC angle is passed in **radians**.
+In `update_MMC()`, the grid-frame voltage components are
+
+$$
+V_d=V_m\cos\theta_s^{\mathrm{VSC}},
+\qquad
+V_q=-V_m\sin\theta_s^{\mathrm{VSC}}.
+$$
+
+The power and current conventions satisfy
+
+$$
+P_{\mathrm{ac}}=\frac{3}{2}(V_dI_d+V_qI_q),
+\qquad
+Q_{\mathrm{ac}}=\frac{3}{2}(V_qI_d-V_dI_q),
+$$
+
+which give the current references
+
+$$
+I_d=\frac{2}{3}\frac{V_dP_{\mathrm{ac}}+V_qQ_{\mathrm{ac}}}{V_d^2+V_q^2},
+\qquad
+I_q=\frac{2}{3}\frac{V_qP_{\mathrm{ac}}-V_dQ_{\mathrm{ac}}}{V_d^2+V_q^2}.
+$$
+
+For PLL-based control, the nonlinear model retains electrical states in the
+grid frame and rotates the voltage and current copies used by the controllers
+into the converter frame. For the terminal voltage, the implemented rotation is
+
+$$
+\begin{bmatrix}V_d^{\mathrm{ctrl}}\\V_q^{\mathrm{ctrl}}\end{bmatrix}
+=
+\begin{bmatrix}\cos\theta_c&-\sin\theta_c\\
+\sin\theta_c&\cos\theta_c\end{bmatrix}
+\begin{bmatrix}V_d\\V_q\end{bmatrix},
+$$
+
+where $\theta_c$ is the controller angle state. This transformation is part of
+the nonlinear state-derivative function and is included in its linearization.
+
+#### Equilibrium initialization and linearization
+
+The OPF supplies terminal operating quantities, not the internal MMC and
+controller states. After the conversions above, the component-built workflow
+uses the following sequence (arguments are physical quantities):
+
+```cpp
+mmc->update_MMC(Vm_V, theta_rad, Pac_W, Qac_Var, Vdc_V, Pdc_W);
+mmc->solveEquilibrium();
+mmc->computeABCD();
+```
+
+`solveEquilibrium()` solves the nonlinear steady-state equations for the
+converter and enabled controllers. `computeABCD()` obtains the small-signal
+matrices at that state. Both use `MMC::computeStateDerivatives()`; the MMC
+controller updates during DQsym simulation also call this function. Thus the
+controller equations and their frame transformations are shared between these
+calculations. For linearization at a stored DQsym sample instead of a solved
+steady state, see [§7.4](#74-dqsym--dynamic-phasor-time-domain).
+
+The resulting converter model can be used for
+[stability assessment](#76-stability-assessment) and
+[converter eigenvalue analysis](#77-eigenvalues-and-participation-converters).
+OPF success alone does not establish a feasible nonlinear converter equilibrium
+or system stability. `make_OPF` skips MMC updates after an unsuccessful OPF
+solve and reports exceptions from equilibrium calculation or linearization.
+These checks are not an automatic nonlinear feasibility-restoration procedure.
+
+**Implementation references:**
+[load mapping](../../src/Elements/Load/Load.cpp),
+[PQ load mapping](../../src/Elements/Load/Load_PQ.cpp),
+[MMC-to-OPF mapping](../../src/Elements/Converter/MMC.h),
+[OPF control constraints](../../src/Solver/OPF/Powerflow_solver.cpp),
+[OPF-to-MMC mapping](../../src/Solver/OPF/Powerflow_network_params.cpp), and
+[MMC references, equilibrium, and linearization](../../src/Elements/Converter/MMC.cpp).
+
 ---
 
 ## 7.6 Stability assessment
 
 **Goal:** Impedance-based stability analysis at converter interfaces in a hybrid AC–DC system.
+
+When using an OPF operating point, first follow the [OPF-to-converter mapping](#mapping-between-opf-and-converter-models) in §7.5, including terminal-unit conversions, controller-reference updates, and equilibrium initialization.
 
 ### Workflow
 

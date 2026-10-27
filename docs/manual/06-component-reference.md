@@ -61,9 +61,11 @@ Generator("GEN1", "AC1", 3, V, { R_f, L_f, X_d, T_f, X_m, … });
 ### Load / LoadPQ
 
 ```cpp
-Load("LOAD1", "AC1", 3, { P, Q, … });      // per-phase or aggregated per model
-LoadPQ("LOAD1", "AC1", 3, { P, Q, … });
+Load("LOAD1", "AC1", 3, { R, L, C });     // balanced per-phase RLC parameters
+LoadPQ("LOAD1", "AC1", 3, { P, Q });      // specified power in W / var
 ```
+
+For the conversion of RLC parameters to fixed OPF demands at the base voltage and nominal frequency, and the W/var-to-MW/Mvar conversion for `LoadPQ`, see [Shared parameters and model representations](07-analysis-workflows.md#shared-parameters-and-model-representations) in §7.5.
 
 ---
 
@@ -141,7 +143,7 @@ The most detailed converter model. Constructor variants accept:
 | 1 | P | W | Active power setpoint (**machine sign**: `>0` = export to AC) |
 | 2 | Q | var | Reactive power setpoint (same dq convention as dynamics) |
 | 3 | θ | rad | AC voltage angle |
-| 4 | V_m | V | AC voltage magnitude |
+| 4 | V_m | V | AC phase-voltage peak magnitude |
 | 5 | P_dc | W | DC power (**machine sign**: `>0` = import from DC; same sign as `P` when lossless) |
 | 6 | V_dc | V | DC voltage |
 | 7 | L_arm | H | Arm inductance |
@@ -161,6 +163,8 @@ Each slot begins with an enable flag (`0` = off, `1` = on). Disabled controllers
 Each enabled controller consumes a fixed-length parameter sub-vector in `controller_params`. DC-voltage control uses one PI integrator with pack `1, 0, Kp, Ki, 1, Vdc` (port voltage in; submodule energy stays in the plant). See `example_MMC.cpp` and `example_stability_check.cpp` for tuned sets.
 
 ### Typical workflow
+
+For initialization from OPF, see [Mapping between OPF and converter models](07-analysis-workflows.md#mapping-between-opf-and-converter-models) in §7.5. It describes the equivalent parameters, control-mode selection, reference updates, and unit/sign/frame conversions before the equilibrium and linearization calls below.
 
 ```cpp
 MMC* mmc = new MMC("MMC1", "AC1_DC1", converter_params, controller_params);
