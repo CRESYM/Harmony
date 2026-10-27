@@ -95,6 +95,57 @@ On the abc plot, **Ctrl+click** a time (or type `t*`) and click **Analyze at t\*
 
 **Goal:** Compute AC–DC dispatch, voltages, and converter setpoints for a given case.
 
+### Model selection: SOCP and MISOCP
+
+Harmony supports the original second-order cone programming (SOCP) model and
+an enhanced mixed-integer SOCP (MISOCP) model. The final C++ argument `MISOCP`
+defaults to `false` in both `solve_opf` and `make_OPF`; `make_OPF` passes it to
+`solve_opf`.
+
+| Argument | Model | Objective and converter-current constraints |
+|----------|-------|--------------------------------------------|
+| Omitted, `false`, or `0` | Original SOCP | Generation cost only; original quadratic current-square relaxation |
+| `true` or `1` | Enhanced MISOCP | Generation cost plus weighted converter-station losses; four equal current intervals with binary selectors and quadratic lower/secant upper bounds |
+
+The MISOCP model (MISOCP-b in the reported comparisons) includes both converter
+internal losses and AC-interface active losses in the station-loss term. The
+current implementation uses weights of 1 for generation cost (in $/h) and 10
+for station losses (in MW). These weights are implementation settings, not
+additional arguments of the model-selection interface. The converter-specific
+changes have no effect on an AC-only case without converters.
+
+For a prepared CSV case, omit the final argument to use SOCP, or enable MISOCP
+explicitly:
+
+```cpp
+PowerFlow pf;
+pf.solve_opf("mtdc3", "ac5", nullptr, true, false, false, true); // SOCP
+pf.solve_opf("mtdc3", "ac5", nullptr, true, false, false, true,
+             /*MISOCP=*/true); // MISOCP
+```
+
+For an existing component-built network and its `global_params`, the equivalent
+alternatives are:
+
+```cpp
+pf.make_OPF(&net, global_params, false, false, false, true); // SOCP
+pf.make_OPF(&net, global_params, false, false, false, true,
+            true, /*MISOCP=*/true); // MISOCP
+```
+
+Select one call for the desired model. The C++ examples `example_stability_check`
+and `example_point2point_case` explicitly enable MISOCP to obtain converter
+operating points for subsequent initialization and stability analysis. Other
+bundled OPF examples retain the default SOCP model. The current JSON OPF runner
+also uses SOCP; it does not expose the `MISOCP` argument as a JSON option.
+
+The enhanced model tightens the converter current-square relaxation and can
+improve operating-point consistency, at the cost of additional binary variables.
+It remains a relaxed formulation: a successful solve does not guarantee nonlinear
+feasibility, successful converter initialization, or system stability. See
+[Mapping between OPF and MMC converter models](#mapping-between-opf-and-converter-models)
+for the subsequent initialization workflow and its checks.
+
 ### CSV case files
 
 Harmony's CSV workflow follows the same preparation convention as
@@ -359,6 +410,8 @@ published MATPOWER optima to within the second-order-cone relaxation gap
 
 **Requirements:** A valid Gurobi license.
 
+<a id="mapping-between-opf-and-converter-models"></a>
+
 ### Mapping between OPF and MMC converter models
 
 For a network built from Harmony components, `PowerFlow::make_OPF` constructs
@@ -592,6 +645,11 @@ These checks are not an automatic nonlinear feasibility-restoration procedure.
 **Goal:** Impedance-based stability analysis at converter interfaces in a hybrid AC–DC system.
 
 When using an OPF operating point, first follow the [OPF-to-converter mapping](#mapping-between-opf-and-converter-models) in §7.5, including terminal-unit conversions, controller-reference updates, and equilibrium initialization.
+
+The C++ examples `example_stability_check` and `example_point2point_case`
+use MISOCP for their OPF initialization step; see
+[Model selection: SOCP and MISOCP](#model-selection-socp-and-misocp)
+for the enabling argument and model differences.
 
 ### Workflow
 

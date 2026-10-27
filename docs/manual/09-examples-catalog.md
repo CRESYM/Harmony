@@ -46,13 +46,18 @@ Most plotting examples accept `bool plotting_enabled = true`. Use `--no-plot` in
 
 ## 9.2 Solver examples — OPF
 
+The C++ examples `point2point_case` and `stability_check` explicitly use
+MISOCP; other bundled OPF examples use the default SOCP model. See
+[Model selection: SOCP and MISOCP](07-analysis-workflows.md#model-selection-socp-and-misocp)
+for the C++ argument and formulation differences.
+
 | Example | `--cpp` name | File | Description |
 |---------|--------------|------|-------------|
 | `example_OPF_single_area()` | `opf_single_area` | `example_OPF_single_area.cpp` | Single-area hybrid OPF |
 | `example_OPF_double_area()` | `opf_double_area` | `example_OPF_double_area.cpp` | Double-area hybrid OPF |
 | `example_OPF_csv()` | `opf_csv` | `example_OPF_csv.cpp` | OPF from CSV data |
 | `example_OPF_csv_1()` | `opf_csv_1` | `example_OPF_csv_1.cpp` | Variant CSV OPF |
-| `example_point2point_case()` | `point2point_case` | `example_point2point_case.cpp` | Point-to-point HVDC-style case |
+| `example_point2point_case()` | `point2point_case` | `example_point2point_case.cpp` | Point-to-point HVDC-style case; MISOCP |
 | `example_OPF_PV()` | `opf_pv` | `example_OPF_PV.cpp` | OPF with PV plant |
 | `example_OPF_WT()` | `opf_wt` | `example_OPF_WT.cpp` | OPF with wind plant |
 
@@ -78,7 +83,7 @@ Most plotting examples accept `bool plotting_enabled = true`. Use `--no-plot` in
 | Example | `--cpp` name | File | Description |
 |---------|--------------|------|-------------|
 | `example_state_space()` | `state_space` | `example_state_space.cpp` | Form A,B,C,D for RLC network |
-| `example_stability_check()` | `stability_check` | `example_stability_check.cpp` | **Full AC–DC hybrid stability study** |
+| `example_stability_check()` | `stability_check` | `example_stability_check.cpp` | **Full AC–DC hybrid stability study**; MISOCP initialization |
 | `example_admittance_parameters()` | `admittance_parameters` | `example_admittance_parameters.cpp` | Equivalent admittance utilities |
 
 ---
