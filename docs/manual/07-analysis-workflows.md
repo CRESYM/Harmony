@@ -359,7 +359,7 @@ published MATPOWER optima to within the second-order-cone relaxation gap
 
 **Requirements:** A valid Gurobi license.
 
-### Mapping between OPF and converter models
+### Mapping between OPF and MMC converter models
 
 For a network built from Harmony components, `PowerFlow::make_OPF` constructs
 the steady-state OPF representation from the shared `Network` and its element
