@@ -474,7 +474,7 @@ point. The controller structure and gains are retained.
 #### Units, power signs, and reference frames
 
 The OPF uses per-unit quantities, while the MMC operating-point interface uses
-V, W, var, and radians. With $S_b=10^6\,\texttt{baseMW\_dc}$ as the physical
+V, W, var, and radians. With $`S_b=10^6\,\texttt{baseMW\_dc}`$ as the physical
 power base used for the converter/DC OPF quantities, `make_OPF` converts
 
 $$
@@ -530,13 +530,21 @@ For PLL-based control, the nonlinear model retains electrical states in the
 grid frame and rotates the voltage and current copies used by the controllers
 into the converter frame. For the terminal voltage, the implemented rotation is
 
-$$
-\begin{bmatrix}V_d^{\mathrm{ctrl}}\\V_q^{\mathrm{ctrl}}\end{bmatrix}
+```math
+\begin{bmatrix}
+V_d^{\mathrm{ctrl}} \\
+V_q^{\mathrm{ctrl}}
+\end{bmatrix}
 =
-\begin{bmatrix}\cos\theta_c&-\sin\theta_c\\
-\sin\theta_c&\cos\theta_c\end{bmatrix}
-\begin{bmatrix}V_d\\V_q\end{bmatrix},
-$$
+\begin{bmatrix}
+\cos\theta_c & -\sin\theta_c \\
+\sin\theta_c & \cos\theta_c
+\end{bmatrix}
+\begin{bmatrix}
+V_d \\
+V_q
+\end{bmatrix}.
+```
 
 where $\theta_c$ is the controller angle state. This transformation is part of
 the nonlinear state-derivative function and is included in its linearization.
