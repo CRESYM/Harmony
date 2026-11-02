@@ -140,6 +140,7 @@ def plot_overlay(h_rows, m_rows, out_path: Path, title: str | None = None) -> di
         ph_h = unwrap_deg(ph_h)
         ph_m = unwrap_deg(ph_m)
 
+        tag = name[1:]
         axm, axp, axr = axes[row]
         axm.plot(freqs, mag_h, color=HARM_COLOR, lw=2.4, label="Harmony")
         axm.plot(freqs, mag_m, color=ML_COLOR, lw=1.6, ls="--", label="MATLAB")
@@ -148,15 +149,27 @@ def plot_overlay(h_rows, m_rows, out_path: Path, title: str | None = None) -> di
         axr.plot(freqs, rel, color="#111827", lw=1.5)
         axr.set_yscale("log")
 
-        _style(axm, ylabel=rf"$|{name}|$ (dB)", title=name if row == 0 else None)
-        _style(axp, ylabel="phase (deg)")
-        _style(axr, ylabel=r"$|H-M|/|M|$")
+        _style(
+            axm,
+            ylabel=rf"$|Y_{{{tag}}}|$ [dB]",
+            title="Magnitude" if row == 0 else None,
+        )
+        _style(
+            axp,
+            ylabel=rf"$\angle Y_{{{tag}}}$ [deg]",
+            title="Phase" if row == 0 else None,
+        )
+        _style(
+            axr,
+            ylabel=rf"$|Y_{{{tag}}}^{{H}}-Y_{{{tag}}}^{{M}}|/|Y_{{{tag}}}^{{M}}|$",
+            title="Relative error" if row == 0 else None,
+        )
         if row == 0:
             axm.legend(frameon=False, loc="best")
-        if row == 3:
-            axm.set_xlabel("f (Hz)")
-            axp.set_xlabel("f (Hz)")
-            axr.set_xlabel("f (Hz)")
+        if row == len(NAMES) - 1:
+            axm.set_xlabel("Frequency [Hz]")
+            axp.set_xlabel("Frequency [Hz]")
+            axr.set_xlabel("Frequency [Hz]")
 
     fig.suptitle(
         title

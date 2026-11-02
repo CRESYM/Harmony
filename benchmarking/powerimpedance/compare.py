@@ -554,7 +554,7 @@ def plot_overlay(case: dict, h_rows, p_rows, out_path: Path, h_block_rows=None) 
         axr.set_yscale("log")
         _style_axes(axm, ylabel="Magnitude [dB]" if col == 0 else None, title=name)
         _style_axes(axp, ylabel="Phase [deg]" if col == 0 else None)
-        err_ylabel = "|H-PI|/max(|H|,|PI|)" if col == 0 else None
+        err_ylabel = r"$|H-\mathrm{PI}|/\max(|H|,|\mathrm{PI}|)$" if col == 0 else None
         _style_axes(axr, ylabel=err_ylabel, xlabel="Frequency [Hz]")
         axr.set_ylim(1e-8, 2.0)
         if col == 0 and rel_b:

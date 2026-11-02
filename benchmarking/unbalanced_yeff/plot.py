@@ -116,6 +116,7 @@ def plot_tf(a0_rows, yeff_rows, out_path: Path, title: str | None = None) -> dic
         ph_a = unwrap_deg(ph_a)
         ph_y = unwrap_deg(ph_y)
 
+        tag = name[1:]
         axm, axp, axr = axes[row]
         axm.plot(freqs, mag_a, color=A0_COLOR, lw=2.6, label=r"block $A_0$")
         axm.plot(freqs, mag_y, color=YEFF_COLOR, lw=1.9, ls="--", label=r"block $Y_{\mathrm{eff}}$")
@@ -125,13 +126,25 @@ def plot_tf(a0_rows, yeff_rows, out_path: Path, title: str | None = None) -> dic
         axr.set_yscale("log")
         axr.set_ylim(1e-6, 2.0)
 
-        _style(axm, ylabel="Magnitude [dB]", title=rf"$H_{{{name[1:]}}}$")
-        _style(axp, ylabel="Phase [deg]")
+        _style(
+            axm,
+            ylabel=rf"$|H_{{{tag}}}|$ [dB]",
+            title="Magnitude" if row == 0 else None,
+        )
+        _style(
+            axp,
+            ylabel=rf"$\angle H_{{{tag}}}$ [deg]",
+            title="Phase" if row == 0 else None,
+        )
         _style(
             axr,
-            ylabel=r"$|H_{\mathrm{eff}}-A_0|/\max(|H|)$",
-            xlabel="Frequency [Hz]" if row == 3 else None,
+            ylabel=rf"$|H_{{{tag}}}^{{\mathrm{{eff}}}}-H_{{{tag}}}^{{A_0}}|/\max(|H_{{{tag}}}|)$",
+            title="Relative error" if row == 0 else None,
         )
+        if row == len(NAMES) - 1:
+            axm.set_xlabel("Frequency [Hz]")
+            axp.set_xlabel("Frequency [Hz]")
+            axr.set_xlabel("Frequency [Hz]")
 
     axes[0][0].legend(loc="best", frameon=True, fontsize=9)
     fig.suptitle(
