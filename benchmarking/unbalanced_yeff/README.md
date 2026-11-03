@@ -144,3 +144,21 @@ $10\,\mathrm{Hz}$ to $1\,\mathrm{kHz}$ (Harmony Release, 2026-09-01):
 ### $H$ at the MMC AC cut ($2\,\mathrm{GW}$ offset-vertical OHL, $250\,\mathrm{km}$)
 
 ![TF H OHL concentric](ohl/results/overlay_H_ohl_conc.svg)
+
+## Nyquist–Bode of the eigenvalues
+
+The Bode plots above show the four entries of $H$. The stability curve is the two eigenvalues of $H$. Nyquist draws each eigenvalue in the complex plane. The boundary is the point $-1$. Bode of the same eigenvalues is magnitude and phase versus frequency. Circle marks $10\,\mathrm{Hz}$, square marks $1\,\mathrm{kHz}$.
+
+| Case | SVG |
+|------|-----|
+| $R_c=5\,\Omega$ only | [nyquist_H.svg](rlc/results/nyquist_H.svg) |
+| $R,L,C$ unbalance on $c$ | [nyquist_H_strong.svg](rlc/results/nyquist_H_strong.svg) |
+| $2\,\mathrm{GW}$ RLC unbalance | [nyquist_H_2gw.svg](rlc/results/nyquist_H_2gw.svg) |
+| $150\,\mathrm{km}$ vertical OHL | [nyquist_H_ohl.svg](ohl/results/nyquist_H_ohl.svg) |
+| $250\,\mathrm{km}$ offset-vertical OHL | [nyquist_H_ohl_conc.svg](ohl/results/nyquist_H_ohl_conc.svg) |
+
+On the $10\,\mathrm{Hz}$–$1\,\mathrm{kHz}$ scan, $A_0$ and $Y_{\mathrm{eff}}$ do not give two different Nyquist results.
+
+The RLC cases stay about $0.9$ away from $-1$ for both formulas. The $250\,\mathrm{km}$ line is where $H$ itself differs the most ($1.77$ at $841\,\mathrm{Hz}$). That eigenvalue stays about $0.75$ away from $-1$, so the large Bode difference does not move the stability boundary.
+
+The $150\,\mathrm{km}$ vertical line is the curve that does go around $-1$. Both formulas do it, on eigenvalue 2, near $422\,\mathrm{Hz}$. A finer sweep from $300$ to $600\,\mathrm{Hz}$ ($301$ points) puts the closest approach at $0.013$ for $A_0$ ($420\,\mathrm{Hz}$) and $0.012$ for $Y_{\mathrm{eff}}$ ($419\,\mathrm{Hz}$). Both cross the real axis at about $-1.05$. The positive-frequency arc winds by $-0.97$ turns about $-1$ for both. Same loop, shifted by about $1\,\mathrm{Hz}$.

@@ -173,14 +173,27 @@ def main() -> None:
         if not a0 or not yeff:
             raise FileNotFoundError(f"Could not parse TF CSVs for {case['json']}")
         stats = yeff_plot.plot_tf(a0, yeff, outdir / case["out"], title=case["title"])
+        nyquist_name = case["out"].replace("overlay_", "nyquist_")
+        nstats = yeff_plot.plot_nyquist(a0, yeff, outdir / nyquist_name, title=case["title"])
         elapsed = time.perf_counter() - t0
         stats["wall_s"] = elapsed
+        stats["nyquist"] = nyquist_name
+        stats["loci"] = nstats["loci"]
         print(
             f"wrote {outdir / case['out']}  samples={stats['n']}  "
             f"mean Frob={stats['mean_frob']:.4e}  max={stats['max_frob']:.4e} "
             f"@ {stats['f_max_hz']:.4g} Hz  wall={elapsed:.1f} s",
             flush=True,
         )
+        print(f"wrote {outdir / nyquist_name}", flush=True)
+        for locus in nstats["loci"]:
+            print(
+                f"  eigenvalue {locus['eig']}:  "
+                f"|λ+1| A0={locus['dist_a0']:.4g} @ {locus['f_a0']:.4g} Hz,  "
+                f"Yeff={locus['dist_yeff']:.4g} @ {locus['f_yeff']:.4g} Hz,  "
+                f"max |λeff-λA0|/|λA0|={locus['max_rel']:.4g} @ {locus['f_max_rel']:.4g} Hz",
+                flush=True,
+            )
         summary.append((case["key"], stats, outdir))
 
     for folder in ("rlc", "ohl"):
@@ -195,6 +208,12 @@ def main() -> None:
             f"max={stats['max_frob']:.4e}  @ {stats['f_max_hz']:.4g} Hz  "
             f"{stats['wall_s']:.1f} s"
         )
+        for locus in stats["loci"]:
+            print(
+                f"           eig {locus['eig']}:  "
+                f"|λ+1| A0={locus['dist_a0']:.4g} @ {locus['f_a0']:.4g} Hz,  "
+                f"Yeff={locus['dist_yeff']:.4g} @ {locus['f_yeff']:.4g} Hz"
+            )
     print(f"  total wall {time.perf_counter() - t_all:.1f} s")
 
 
