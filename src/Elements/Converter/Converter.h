@@ -92,20 +92,20 @@ public:
 		Eigen::VectorXcd lambda = es.eigenvalues();      // Eigenvalues
 		Eigen::MatrixXcd W = V.inverse();                // Left eigenvectors (transpose of inverse if needed)
 
-		const int n = A_matrix.rows();
+		const Eigen::Index n = A_matrix.rows();
 		Eigen::MatrixXd P(n, n);
 
 		// Step 2: Compute participation factors
 		// P_ij = |phi_ij * psi_ji|
-		for (int i = 0; i < n; ++i) {
-			for (int j = 0; j < n; ++j) {
+		for (Eigen::Index i = 0; i < n; ++i) {
+			for (Eigen::Index j = 0; j < n; ++j) {
 				std::complex<double> val = V(i, j) * W(j, i);
 				P(i, j) = std::abs(val);
 			}
 		}
 
 		// Step 3: Normalize participation factors (optional)
-		for (int j = 0; j < n; ++j) {
+		for (Eigen::Index j = 0; j < n; ++j) {
 			double col_sum = P.col(j).sum();
 			if (col_sum > 0.0) {
 				P.col(j) /= col_sum;

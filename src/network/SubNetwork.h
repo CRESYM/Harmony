@@ -88,7 +88,7 @@ public:
      * @brief Get the number of registered output buses.
      * @return Count of entries in the output-bus map.
      */
-	const int getNumberOfOutputs() const { return outputBuses.size(); }
+	const size_t getNumberOfOutputs() const { return outputBuses.size(); }
 
     /**
      * @brief Get the sub-network name (alias for getSubNetworkName).
