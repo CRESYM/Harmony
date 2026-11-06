@@ -74,6 +74,13 @@ void Network::addElement(const std::string& designator, Element* elem) {
 
 // Function to connect an element to a bus
 void Network::connectElementToBus(Element* elem, int terminal, Bus* bus) {
+    if (elem == nullptr) {
+        throw std::invalid_argument("Network::connectElementToBus: element is null");
+    }
+    if (bus == nullptr) {
+        throw std::invalid_argument("Network::connectElementToBus: bus is null");
+    }
+    
     if (ownsResources_) {
         bool elemOwned = false;
         for (const auto& [key, owned] : ownedElements_) {
