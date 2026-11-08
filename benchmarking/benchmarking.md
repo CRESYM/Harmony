@@ -1,8 +1,15 @@
 ## PowerImpedance.jl
 
 Standalone $Y(f)$, OHL/cable topologies, and P2P HVDC vs
-[PowerImpedance.jl](https://github.com/Electa-Git/PowerImpedance.jl) 0.3.0:
+[PowerImpedance.jl](https://github.com/Electa-Git/PowerImpedance.jl) 0.4.0
+(tables below were measured on 0.3.0):
 [`powerimpedance/`](powerimpedance/).
+
+Which examples and tests Harmony can run, the Park comparison, and the
+PSCAD / Z-tool / IMTB notes:
+[`powerimpedance/harmony_pscad.md`](powerimpedance/harmony_pscad.md).
+Equations of the models Harmony does not have:
+[`powerimpedance/missing_models.pdf`](powerimpedance/missing_models.pdf).
 
 ```
 powerimpedance/standalone/   resistor, transformer, cable, OHL, MMC
@@ -22,7 +29,7 @@ included). See [`powerimpedance/README.md`](powerimpedance/README.md).
 | 10 Ω resistor | 0 |
 | Y-Y transformer | $1.1\times 10^{-6}$ |
 | Aerial cable / OHL | $1.6\times 10^{-4}$ / $2.7\times 10^{-4}$ |
-| GFL / c1 / c2 MMC $Y_{\mathrm{ac}}$ | $7.2$ / $7.4$ / $6.7\times 10^{-4}$ |
+| GFL $P{+}Q$ / $V_{\mathrm{dc}}{+}Q$ / c1 / c2 | $7.2$ / $5.2$ / $4.3$ / $6.7\times 10^{-4}$ |
 | P2P $Y_n$ / $Z_{\mathrm{eq}}$ / $H$ | $2.8\times 10^{-4}$ / $4.6\times 10^{-3}$ / $4.6\times 10^{-3}$ |
 
 ## Unbalanced AC $Y_{\mathrm{eff}}$

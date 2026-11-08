@@ -1,8 +1,15 @@
 # Harmony vs PowerImpedance.jl
 
+Case list, Park check, and PSCAD / Z-tool / IMTB:
+[harmony_pscad.md](harmony_pscad.md).
+Equations of the models Harmony cannot run:
+[missing_models.pdf](missing_models.pdf).
+
 Standalone admittance, OHL/cable topologies, and the P2P HVDC network,
-compared against [PowerImpedance.jl](https://github.com/Electa-Git/PowerImpedance.jl)
-0.3.0.
+compared against [PowerImpedance.jl](https://github.com/Electa-Git/PowerImpedance.jl).
+The Julia project resolves tag `v0.4.0`. The tables below were measured with
+0.3.0. Version 0.4.0 removes `@network`, `Setpoint`, and `update!`, so
+`run_pi.jl`, `run_pi_lines.jl`, and `run_pi_networks.jl` still call the 0.3 API.
 
 ```
 powerimpedance/
@@ -82,9 +89,10 @@ Relative Frobenius $\|Y_H-Y_{PI}\|/\|Y_{PI}\|$ (81 or 41 log points):
 | Y-Y transformer | 41 | $1.11\times 10^{-6}$ | $3.17\times 10^{-6}$ |
 | aerial cable $Y$ | 41 | $1.64\times 10^{-4}$ | $1.60\times 10^{-3}$ |
 | OHL $Y$ | 41 | $2.71\times 10^{-4}$ | $2.93\times 10^{-3}$ |
-| GFL MMC $Y$ | 81 | $7.21\times 10^{-4}$ | $1.43\times 10^{-3}$ |
-| c1 $Y_{\mathrm{ac}}$ (Vdc+Q) | 81 | $7.40\times 10^{-4}$ | $1.95\times 10^{-3}$ |
-| c2 $Y_{\mathrm{ac}}$ (P+Q) | 81 | $6.74\times 10^{-4}$ | $1.19\times 10^{-3}$ |
+| GFL MMC $Y$ ($P+Q$, example plant) | 81 | $7.21\times 10^{-4}$ | $1.43\times 10^{-3}$ |
+| GFL MMC $Y$ ($V_{\mathrm{dc}}+Q$, example plant) | 81 | $5.18\times 10^{-4}$ | $1.41\times 10^{-3}$ |
+| c1 $Y_{\mathrm{ac}}$ ($V_{\mathrm{dc}}+Q$) | 81 | $4.29\times 10^{-4}$ | $1.10\times 10^{-3}$ |
+| c2 $Y_{\mathrm{ac}}$ ($P+Q$) | 81 | $6.74\times 10^{-4}$ | $1.19\times 10^{-3}$ |
 
 MMC AC current rows from PowerImpedance are sign-flipped (load vs generator)
 before the comparison.
@@ -96,6 +104,32 @@ before the comparison.
 ### Standalone c2 ($P+Q$)
 
 ![c2 AC admittance](standalone/results/overlay_mmc_c2.svg)
+
+### Example plant, $V_{\mathrm{dc}}+Q$
+
+![example plant Vdc+Q](standalone/results/overlay_mmc_gfl_vdc.svg)
+
+## PSCAD references Harmony cannot overlay
+
+`controls/run_pi_vs_pscad.jl` rebuilds the PowerImpedance test models and
+compares them with the PSCAD/Z-tool files in the package tests. Harmony has
+no matching component for these controllers.
+
+| Case | Samples | Mean Frob | Max |
+|------|---------|-----------|-----|
+| GFM MMC, uncompensated, total energy | 58 | $5.69\times 10^{-4}$ | $4.28\times 10^{-3}$ |
+| GFM MMC, compensated modulation, leg energy | 192 | $5.93\times 10^{-3}$ | $1.17\times 10^{-2}$ |
+| Two-level converter, $V_{\mathrm{dc}}$ + QV-droop | 28 | $1.51\times 10^{-3}$ | $2.50\times 10^{-3}$ |
+| Two-level converter, $P+Q$ | 36 | $1.60\times 10^{-3}$ | $3.02\times 10^{-3}$ |
+| Synchronous machine | 240 | $3.43\times 10^{-3}$ | $0.204$ |
+| Induction machine | 80 | $9.44\times 10^{-4}$ | $4.88\times 10^{-3}$ |
+
+The synchronous-machine maximum is one frequency bin. The package test still
+passes because it applies `rtol = 9\times 10^{-3}` to the whole sweep at once.
+
+`test/data/data_MMC_bipolar.txt` is a 192-point, 4-port scan
+($d,q$ and the positive and negative poles). PowerImpedance 0.4.0 still
+exposes one DC port (`DC_CM`), and Harmony's MMC admittance is $3\times 3$.
 
 ## Line topologies
 

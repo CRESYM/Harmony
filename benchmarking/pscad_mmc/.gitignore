@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+external/
+*.gf*/
+*.if*/
+*.exe
+*.dll
+*.obj
+*.log

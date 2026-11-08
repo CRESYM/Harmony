@@ -28,6 +28,7 @@ CASES = [
     {"id": "cable", "suite": "standalone", "json": "cable.json", "harmony_csv": "cable.csv"},
     {"id": "ohl", "suite": "standalone", "json": "ohl.json", "harmony_csv": "ohl.csv"},
     {"id": "mmc_gfl", "suite": "standalone", "json": "mmc_gfl.json", "harmony_csv": "MMC1.csv"},
+    {"id": "mmc_gfl_vdc", "suite": "standalone", "json": "mmc_gfl_vdc.json", "harmony_csv": "gfl_vdc.csv"},
     {"id": "mmc_c1", "suite": "standalone", "json": "mmc_c1.json", "harmony_csv": "c1.csv"},
     {"id": "mmc_c2", "suite": "standalone", "json": "mmc_c2.json", "harmony_csv": "c2.csv"},
     {
@@ -114,6 +115,7 @@ def main() -> None:
         "cable",
         "ohl",
         "mmc_gfl",
+        "mmc_gfl_vdc",
         "mmc_c1",
         "mmc_c2",
         "standalone",
@@ -209,6 +211,7 @@ def main() -> None:
                 "cable",
                 "ohl",
                 "mmc_gfl",
+                "mmc_gfl_vdc",
                 "mmc_c1",
                 "mmc_c2",
             ],

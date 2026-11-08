@@ -1,0 +1,7 @@
+GFL MMC benchmark: Harmony reference vs archived PSCAD measurements
+Frequency samples: 160; range: 1-1000 Hz
+Mean relative complex matrix Frobenius error: 3.605989268%
+Maximum error: 7.982932780% at 323 Hz
+Acceptance: mean below 5%; PASS. This is not a per-frequency error bound.
+Nine model regression tests: PASS. Full standalone verification: PASS.
+PSCAD source: MMC_GFL_Benchmark.pscx with the original Z-tool measurement interface.

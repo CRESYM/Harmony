@@ -71,6 +71,17 @@ CASES = [
         "plot_entries": ["Yddc", "Ydd", "Yqq"],
     },
     {
+        "id": "mmc_gfl_vdc",
+        "suite": "standalone",
+        "title": "MMC GFL Vdc+Q (example_MMC plant)",
+        "harmony_csv": "gfl_vdc.csv",
+        "pi_csv": "pi_mmc_gfl_vdc.csv",
+        "spot_hz": [1, 5, 10, 50, 100, 500, 1000],
+        "named_entries": ["Yddc", "Ydcd", "Ydcq", "Yadc", "Ydd", "Ydq", "Yqdc", "Yqd", "Yqq"],
+        "pi_flip_rows": [2, 3],
+        "plot_entries": ["Yddc", "Ydd", "Yqq"],
+    },
+    {
         "id": "mmc_c1",
         "suite": "standalone",
         "title": "P2P c1 MMC Vdc+Q",

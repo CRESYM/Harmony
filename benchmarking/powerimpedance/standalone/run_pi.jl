@@ -197,6 +197,70 @@ function run_mmc_gfl()
     print_spot("Y", Ys, freqs, 1000.0)
 end
 
+function run_mmc_gfl_vdc()
+    println("\n=== MMC GFL Vdc+Q (example_MMC plant, c1 pu gains) ===")
+    freqs = logspace(1.0, 1000.0, 81)
+    Vm_kV = 100.0
+    Vac_LL_RMS_kV = Vm_kV / sqrt(2 / 3)
+    Sbase_MW = 100.0
+    Vdc_kV = 200.0
+
+    PI = PowerImpedance
+    elec = PI.ElectricalMMC(
+        Lₐᵣₘ = 50e-3,
+        Rₐᵣₘ = 1.07,
+        Cₐᵣₘ = 10e-3,
+        N = 400,
+        Lᵣ = 60e-3,
+        Rᵣ = 0.535,
+        turnsRatio = 1.0,
+        ωbase = 100π,
+        vACbase_LL_RMS = Vac_LL_RMS_kV,
+        Sbase = Sbase_MW,
+        vDC_base = Vdc_kV,
+    )
+    setpoint = PI.Setpoint(
+        Pac = Sbase_MW,
+        Qac = 0.0,
+        θac = 0.0,
+        Vac = Vm_kV,
+        Pdc = Sbase_MW,
+        Vdc = Vdc_kV,
+    )
+    elem = mmc(
+        elec = elec,
+        meas = PI.Measurement(),
+        sync = PI.PLLSynchronization(
+            pi_ctrl = PI.PIControl(Kp = 0.28, Ki = 12.5664),
+        ),
+        delta_control = PI.ΔdqControlGFL(
+            outer_active = PI.OuterActiveVdcControl(
+                pi_ctrl = PI.PIControl(Kp = 5.0, Ki = 15.0),
+            ),
+            outer_reactive = PI.OuterReactiveQControl(
+                pi_ctrl = PI.PIControl(Kp = 0.1, Ki = 31.4159),
+            ),
+            occ = PI.InnerCurrentPIControl(
+                pi_ctrl = PI.PIControl(Kp = 0.7691, Ki = 522.7654),
+                activate_ω_c_multiplication = true,
+            ),
+        ),
+        sigma_control = PI.ΣdqzControlTEC(
+            ccsc = PI.CirculatingCurrentSuppressionControl(
+                PI.PIControl(Kp = 0.1048, Ki = 48.1914),
+            ),
+        ),
+        modulation = PI.UncompensatedModulation(timeDelay = 0.0),
+        setpoint = setpoint,
+        limits = PI.Limits(P_min = -2.0, P_max = 2.0, Q_min = -1.0, Q_max = 1.0),
+    )
+    PowerImpedance.update!(elem, setpoint)
+    println("  A=$(size(elem.A)) B=$(size(elem.B)) C=$(size(elem.C)) D=$(size(elem.D))")
+    Ys = sweep_y(s -> PowerImpedance.eval_y(elem, s), freqs)
+    write_y_csv(joinpath(OUTDIR, "pi_mmc_gfl_vdc.csv"), freqs, Ys)
+    print_spot("Y", Ys, freqs, 50.0)
+end
+
 function run_mmc_c1()
     println("\n=== P2P c1 standalone (Vdc+Q, ElectricalMMC vDC_base=800) ===")
     freqs = logspace(1.0, 1000.0, 81)
@@ -305,6 +369,7 @@ function main()
         "cable" => run_cable,
         "ohl" => run_ohl,
         "mmc_gfl" => run_mmc_gfl,
+        "mmc_gfl_vdc" => run_mmc_gfl_vdc,
         "mmc_c1" => run_mmc_c1,
         "mmc_c2" => run_mmc_c2,
     ]
