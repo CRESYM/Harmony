@@ -12,6 +12,7 @@ int main(int argc, char* argv[]) {
 	if (argc > 0) {
 		initCliPaths(argv[0]);
 	}
+	int unused_variable_for_clangtidy_ci_test = 42;
 
 	const CliOptions opts = parseCli(argc, argv);
 
