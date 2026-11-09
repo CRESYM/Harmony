@@ -5,6 +5,7 @@
 #include "Cable.h"
 
 #include <algorithm>
+#include <cmath>
 
 /**
  * @brief Constructs a new Cable object.
@@ -166,9 +167,10 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
         const int outer = static_cast<int>(n_l) - 1;
         for (int i = 0; i < static_cast<int>(n); ++i) {
             const double H = 2.0 * positions[i].second;
+			const double gamma_earth = std::exp(gamma_num);
             RCP<const Basic> Z_g = mul(mul(s, real_double(mu_g / (2.0 * M_PI))),
                 sub(sub(real_double(0.5),
-                    log(mul(m_g, real_double(gamma_num * d_outer / 2.0)))),
+                    log(mul(m_g, real_double(gamma_earth * d_outer / 2.0)))),
                     mul(m_g, real_double(2.0 * H / 3.0))));
             const int idx = i * static_cast<int>(n_l) + outer;
             Z.set(idx, idx, add(Z.get(idx, idx), Z_g));
@@ -184,9 +186,10 @@ Cable::Cable(const string& symbol, const std::string& location, int pins, const 
             double dy = positions[i].second - positions[j].second;
             double d_ij_num = sqrt(dx * dx + dy * dy);
 
+            const double gamma_earth = std::exp(gamma_num);
             RCP<const Basic> Z_g = mul(mul(s, real_double(mu_g / (2.0 * M_PI))),
                 sub(sub(real_double(0.5),
-                    log(mul(m_g, real_double(gamma_num * d_ij_num / 2.0)))),
+                    log(mul(m_g, real_double(gamma_earth * d_ij_num / 2.0)))),
                     mul(m_g, real_double(2.0 * H / 3.0))));
 
             // Add mutual Zg to the last layer entry of each cable (index = (i*n_l + n_l - 1))
@@ -411,15 +414,15 @@ void Cable::updateLayers() {
 
 			}
 		}
+	}
 
-		// Semiconductor configuration
-		if (getInsulator("I1") && getInsulator("I1")->a != 0) {
-			double x = log(getInsulator("I1")->ro / getInsulator("I1")->ri) / log(getInsulator("I1")->b / getInsulator("I1")->a);
-			getInsulator("I1")->permittivity *= x;
-			double N = 1.4;
-			// Assuming 'permeability' represents relative permeability
-			getInsulator("I1")->permeability *= (1 + 2 * pow(M_PI * N, 2) * (pow(getInsulator("I1")->ro, 2) - pow(getInsulator("I1")->ri, 2)) / log(getInsulator("I1")->ro / getInsulator("I1")->ri));
-		}
+	// Once per cable, after any screen merge. The conductor loop above must not
+	// repeat this: a three-layer cable would otherwise cube the correction.
+	if (getInsulator("I1") && getInsulator("I1")->a != 0) {
+		// Screen thicknesses shrink the insulation radii. Permittivity is rescaled
+		// so the original radii keep the same capacitance: ε *= ln(ro/ri)/ln(b/a).
+		double x = log(getInsulator("I1")->ro / getInsulator("I1")->ri) / log(getInsulator("I1")->b / getInsulator("I1")->a);
+		getInsulator("I1")->permittivity *= x;
 	}
 }
 

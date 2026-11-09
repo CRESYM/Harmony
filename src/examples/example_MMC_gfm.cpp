@@ -31,12 +31,12 @@ void example_MMC_gfm(bool plotting_enabled /*=true*/) {
 
 	const double Vgd = Vm;
 	const double Vgq = 0.0;
-	const double Id = (2.0 / 3.0) * (Pac * Vgd + Qac * Vgq) / (Vgd * Vgd + Vgq * Vgq);
-	const double Iq = (2.0 / 3.0) * (Pac * Vgq - Qac * Vgd) / (Vgd * Vgd + Vgq * Vgq);
+	const double Id = (2.0 / 3.0) * (Pac * Vgd - Qac * Vgq) / (Vgd * Vgd + Vgq * Vgq);
+	const double Iq = (2.0 / 3.0) * (Pac * Vgq + Qac * Vgd) / (Vgd * Vgd + Vgq * Vgq);
 	const double vMd0 = Vgd + Reqac * Id + omega * Leqac * Iq;
 	const double vMq0 = Vgq + Reqac * Iq - omega * Leqac * Id;
 	const double Egfm_ref = std::hypot(vMd0, vMq0);
-	const double theta_gfm0 = std::atan2(vMq0, vMd0);
+	const double theta_gfm0 = std::atan2(-vMq0, vMd0);
 
 	const double Kdroop_P = 2.0 * M_PI * 0.5 / 100e6;
 	const double Kdroop_Q = 0.02 * Egfm_ref / 50e6;
@@ -82,7 +82,7 @@ void example_MMC_gfm(bool plotting_enabled /*=true*/) {
 	const double Iq_h = x_eq(plant + 1);
 	const double iSz_h = x_eq(plant + 2);
 	const double Pac_h = 1.5 * (Vgd * Id_h + Vgq * Iq_h);
-	const double Qac_h = 1.5 * (-Vgd * Iq_h + Vgq * Id_h);
+	const double Qac_h = 1.5 * (Vgd * Iq_h - Vgq * Id_h);
 
 	// Controller order: energy(1), zcc(1), gfm(3) at indices 0..4
 	const double theta_h = x_eq(2);

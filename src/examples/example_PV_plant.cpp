@@ -9,8 +9,8 @@
 
 void example_PV_plant(bool plotting_enabled /*=true*/) {
 	vector<double> pv_parameters = {
-		1009603.68,	// P_pv (W), RTDS array MPP
-		2000.8,		// I_pv (A), Np*Imp
+		1009603.68,	// P_pv (W), nameplate; linearisation uses the diode MPP
+		2000.8,		// I_pv (A), nameplate; replaced by the MPP current
 		1044.0,		// N_s
 		656.0,		// N_p
 		1.9267367660446415, // n (MATLAB MPP diode fit)

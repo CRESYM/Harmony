@@ -1177,12 +1177,6 @@ git-tree-sha1 = "283bf85d4a767481dd924dff0eee1735e95f449e"
 uuid = "46d2c3a1-f734-5fdb-9937-b9b9aeba4221"
 version = "0.2.7"
 
-[[deps.Munkres]]
-deps = ["LinearAlgebra", "Test"]
-git-tree-sha1 = "6a3d884ec6c0ffd87524ab672b907afb6ea15388"
-uuid = "4cefb923-2b6f-58c4-9e65-6821f26b7b51"
-version = "0.2.0"
-
 [[deps.MutableArithmetics]]
 deps = ["LinearAlgebra", "SparseArrays", "Test"]
 git-tree-sha1 = "dc5b2c4c111c46bc79ac4405eeb563523b39c004"
@@ -1418,28 +1412,31 @@ uuid = "85a6dd25-e78a-55b7-8502-1745935b8125"
 version = "0.2.4"
 
 [[deps.PowerImpedance]]
-deps = ["ControlSystemsBase", "DataStructures", "Dates", "DelimitedFiles", "Distributions", "DocStringExtensions", "ForwardDiff", "FunctionWrappers", "InfrastructureModels", "Interpolations", "Ipopt", "JuMP", "LaTeXStrings", "LinearAlgebra", "Logging", "LsqFit", "Markdown", "Mmap", "Munkres", "NaNMath", "NonlinearSolve", "Parameters", "Peaks", "PowerModels", "PowerModelsACDC", "Printf", "Random", "RobustAndOptimalControl", "SciMLBase", "SciMLLogging", "StaticArrays", "Statistics", "SteadyStateDiffEq", "TypedTables"]
-git-tree-sha1 = "c27a202622c9e6a726d5a76a3ee28e3655149004"
-repo-rev = "main"
+deps = ["Base64", "ControlSystemsBase", "DataStructures", "Dates", "DelimitedFiles", "Distributions", "DocStringExtensions", "Downloads", "ForwardDiff", "FunctionWrappers", "Hungarian", "InfrastructureModels", "Interpolations", "Ipopt", "JuMP", "LaTeXStrings", "LinearAlgebra", "Logging", "LsqFit", "Markdown", "Mmap", "NaNMath", "NonlinearSolve", "Parameters", "Peaks", "PowerModels", "PowerModelsACDC", "Printf", "Random", "RobustAndOptimalControl", "SHA", "SciMLBase", "SciMLLogging", "StaticArrays", "Statistics", "SteadyStateDiffEq", "TOML", "TypedTables"]
+git-tree-sha1 = "98d1ff1e4f20cb1f64334eb20e2f677a5eee3c31"
+repo-rev = "v0.4.0"
 repo-url = "https://github.com/Electa-Git/PowerImpedance.jl"
 uuid = "2b9e73d6-9f99-4895-a28a-fad5d1cd90f9"
-version = "0.3.0"
+version = "0.4.0"
 
     [deps.PowerImpedance.extensions]
     PowerImpedanceCairoMakieExt = ["Makie", "CairoMakie"]
     PowerImpedanceGLMakieExt = ["Makie", "GLMakie"]
-    PowerImpedanceLineCableModelsExt = "LineCableModels"
-    PowerImpedanceLineCableModelsMeasurementsExt = ["LineCableModels", "Measurements"]
+    PowerImpedanceGraphMakieExt = ["Makie", "GraphMakie", "Graphs", "NetworkLayout"]
     PowerImpedanceMakieExt = "Makie"
     PowerImpedanceMeasurementsExt = "Measurements"
+    PowerImpedancePSCADExt = "PythonCall"
     PowerImpedanceWGLMakieExt = ["Makie", "WGLMakie"]
 
     [deps.PowerImpedance.weakdeps]
     CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
     GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
-    LineCableModels = "dffb7669-8cd4-4628-99dd-7694e356ba37"
+    GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
+    Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
     Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
     Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
+    NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
+    PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
     WGLMakie = "276b4fcb-3e11-5398-bf8b-a0c2d153d008"
 
 [[deps.PowerModels]]

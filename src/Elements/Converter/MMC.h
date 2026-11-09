@@ -18,9 +18,9 @@ class Filter;
  * @brief Modular Multilevel Converter with arm dynamics and control loops.
  * @ingroup converter
  *
- * Park (report eq. 4.54): vd = Vm cos θ, vq = −Vm sin θ.
- * Pac = 3/2 (vd id + vq iq),  Qac = 3/2 (vq id − vd iq),  Pdc = 3 vdc iΣz.
- * Signs: Pac>0 AC export, Qac>0 ⇒ iq<0 at vq=0, Pdc>0 DC import.
+ * PowerImpedance frame: vd = Vm cos θ, vq = −Vm sin θ.
+ * Pac = 3/2 (vd id + vq iq),  Qac = 3/2 (vd iq − vq id),  Pdc = 3 vdc iΣz.
+ * Signs: Pac>0 AC export, Qac>0 ⇒ iq>0 at vq=0, Pdc>0 DC import.
  * OPF (MatACDC): P_G=Pac, Q_G=Qac in MW; solver uses pn=−P_G, qs=−Q_G;
  * make_OPF writes back Pac=−ps, Qac=−qs, Pdc=−pn.
  */
@@ -143,7 +143,7 @@ public:
         if (!element_OPF_info.count("rc"))
             data["rc"] = R_eq / globalParams["ACZbase"];
         // MatACDC P_G/Q_G: OPF enforces pn = -P_G and qs = -Q_G.
-        // P_G/Q_G are MMC machine powers in MW (report Park Q = 1.5(Vq Id − Vd Iq)).
+        // P_G/Q_G are MMC machine powers in MW (Q = 1.5(Vq Id − Vd Iq)).
         data["P_g"] = P / 1e6;
         data["Q_g"] = Q / 1e6;
         data["Vtar"] = V_dc / 1e3 / globalParams["DCbaseKV"]; // Seting of DC v-control value

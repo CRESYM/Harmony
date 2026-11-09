@@ -179,8 +179,9 @@ def dump(name, payload, dest=None):
 # Power-flow linearisation point used by the overlay JSON (skip Harmony OPF).
 # Indices in converter_params: Pac, Qac, theta, Vm, Pdc, Vdc.
 P2P_PI_OP = {
-    "c1": [-100316619.29, 100000000.0, -0.006596211679321095, 307649.6295688735, -100165413.04, 800000.0],
-    "c2": [100000000.0, 100000000.0, 0.031205439828107417, 304179.4385933678, 100136222.4, 799766.85551],
+    # Qac is power delivered to the AC bus. PowerImpedance holds q_ref = -0.1 pu.
+    "c1": [-100316619.29, -100000000.0, -0.006596211679321095, 307649.6295688735, -100165413.04, 800000.0],
+    "c2": [100000000.0, -100000000.0, 0.031205439828107417, 304179.4385933678, 100136222.4, 799766.85551],
 }
 
 
@@ -227,8 +228,9 @@ def p2p_payload():
             ohl("tl1", 25.0, "B2", "B3", "AC1"),
             ohl("tl78", 90.0, "B6", "B7", "AC2"),
             cable_dc(),
-            mmc("c1", "AC1_DC1", "B3", "B4", -100e6, 100e6, True, 0.06, 0.535),
-            mmc("c2", "AC2_DC1", "B6", "B5", 100e6, 100e6, False, 0.0461, 0.4103),
+            # Q is power delivered to the AC bus, equal to PowerImpedance q_ac*S = -q_into.
+            mmc("c1", "AC1_DC1", "B3", "B4", -100e6, -100e6, True, 0.06, 0.535),
+            mmc("c2", "AC2_DC1", "B6", "B5", 100e6, -100e6, False, 0.0461, 0.4103),
         ],
         "computations": [
             {"type": "network_summary"},
@@ -305,7 +307,7 @@ def write_mmc_c1():
                 {"id": "dc_bus", "location": "DC1", "pins": 2, "enabled": True},
             ],
             "components": [
-                mmc("c1", "AC1_DC1", "ac_bus", "dc_bus", -100e6, 100e6, True, 0.06, 0.535),
+                mmc("c1", "AC1_DC1", "ac_bus", "dc_bus", -100e6, -100e6, True, 0.06, 0.535),
             ],
             "computations": [y_matrix("c1", 1, 1000, 81)],
         },
@@ -313,7 +315,7 @@ def write_mmc_c1():
     )
 
 
-def write_mmc_c2(q_ac=100e6, name="mmc_c2.json", cid="c2"):
+def write_mmc_c2(q_ac=-100e6, name="mmc_c2.json", cid="c2"):
     dump(
         name,
         {

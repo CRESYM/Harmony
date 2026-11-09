@@ -35,6 +35,7 @@ std::map<std::string, ExampleFn> harmonyCppExampleRegistry() {
 	add("wt_type_3", example_WT_type_3);
 	add("wt_type_4", example_WT_type_4);
 	add("pv_plant", example_PV_plant);
+	add("pv_ydq_compare", example_PV_ydq_compare);
 	add("ohl", example_OHL);
 	add("cable", example_cable);
 	add("transformer", [](bool) { example_transformer(); });

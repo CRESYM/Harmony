@@ -66,7 +66,18 @@ CASES = [
         "pi_csv": "pi_mmc_gfl.csv",
         "spot_hz": [1, 5, 10, 50, 100, 500, 1000],
         "named_entries": ["Yddc", "Ydcd", "Ydcq", "Yadc", "Ydd", "Ydq", "Yqdc", "Yqd", "Yqq"],
-        # New PowerImpedance MMC uses load-sign AC currents; Harmony uses generator sign.
+        # Same frame as PowerImpedance. Both AC current rows are load versus generator.
+        "pi_flip_rows": [2, 3],
+        "plot_entries": ["Yddc", "Ydd", "Yqq"],
+    },
+    {
+        "id": "mmc_gfl_vdc",
+        "suite": "standalone",
+        "title": "MMC GFL Vdc+Q (example_MMC plant)",
+        "harmony_csv": "gfl_vdc.csv",
+        "pi_csv": "pi_mmc_gfl_vdc.csv",
+        "spot_hz": [1, 5, 10, 50, 100, 500, 1000],
+        "named_entries": ["Yddc", "Ydcd", "Ydcq", "Yadc", "Ydd", "Ydq", "Yqdc", "Yqd", "Yqq"],
         "pi_flip_rows": [2, 3],
         "plot_entries": ["Yddc", "Ydd", "Yqq"],
     },
@@ -209,11 +220,26 @@ def apply_row_flips(vals, n: int, rows_1based):
     return out
 
 
+def apply_col_flips(vals, n: int, cols_1based):
+    if not cols_1based:
+        return vals
+    out = list(vals)
+    for c in cols_1based:
+        for r in range(n):
+            k = r * n + (c - 1)
+            out[k] = -out[k]
+    return out
+
+
 def prepare_rows(case, h_rows, p_rows):
     n = int(round(math.sqrt(len(p_rows[0][1]))))
     flip_rows = case.get("pi_flip_rows") or []
-    if flip_rows:
-        p_rows = [(f, apply_row_flips(v, n, flip_rows)) for f, v in p_rows]
+    flip_cols = case.get("pi_flip_cols") or []
+    if flip_rows or flip_cols:
+        p_rows = [
+            (f, apply_col_flips(apply_row_flips(v, n, flip_rows), n, flip_cols))
+            for f, v in p_rows
+        ]
     return h_rows, p_rows, n, flip_rows
 
 

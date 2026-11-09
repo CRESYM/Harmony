@@ -181,7 +181,7 @@ TEST_F(TestStabilityEstimate, TestOperatingPoint) {
         const double vgd = mmc.getVm() * std::cos(mmc.getTheta());
         const double vgq = -mmc.getVm() * std::sin(mmc.getTheta());
         const double pac = 1.5 * (vgd * x(p) + vgq * x(p + 1));
-        const double qac = 1.5 * (vgq * x(p) - vgd * x(p + 1));
+        const double qac = 1.5 * (vgd * x(p + 1) - vgq * x(p));
         const double pdc = 3.0 * mmc.getVdc() * x(p + 2);
         return std::tuple<double, double, double>(pac, qac, pdc);
     };

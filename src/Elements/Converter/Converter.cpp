@@ -24,7 +24,7 @@ void Converter::dumpLinearizationOp(const std::string& id) const
 		isz = equilibrium_state(p + 2);
 	}
 	const double pac_ss = 1.5 * (vgd * id_a + vgq * iq);
-	const double qac_ss = 1.5 * (vgq * id_a - vgd * iq);
+	const double qac_ss = 1.5 * (vgd * iq - vgq * id_a);
 	const double pdc_ss = 3.0 * V_dc * isz;
 	const double vac_pu = (v_ln_pk > 0.0) ? V_m / v_ln_pk : 0.0;
 	std::cout << "OP_MMC id=" << id

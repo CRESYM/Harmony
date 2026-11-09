@@ -290,8 +290,14 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> computeJacobians(
         xp(i) += h; xm(i) -= h;
         A.col(i) = (rhs(t, xp, u) - rhs(t, xm, u)) / (2.0 * h);
     }
+    // Inputs of one call share a scale (MMC/2LC/PV: volts). A zero q-axis
+    // voltage must not shrink that channel to eps*1, or ∂f/∂vq is lost in
+    // the cancellation of the large d-axis terms.
+    double u_scale = 1.0;
+    for (int j = 0; j < nu; ++j)
+        u_scale = std::max(u_scale, std::abs(u(j)));
     for (int j = 0; j < nu; ++j) {
-        double h = eps * std::max(1.0, std::abs(u(j)));
+        double h = eps * std::max(u_scale, std::abs(u(j)));
         Eigen::VectorXd up = u, um = u;
         up(j) += h; um(j) -= h;
         B.col(j) = (rhs(t, x, up) - rhs(t, x, um)) / (2.0 * h);

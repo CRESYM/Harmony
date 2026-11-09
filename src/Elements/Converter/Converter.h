@@ -55,11 +55,11 @@ public:
 			return;
 		V_dc = u(0);
 		V_m = std::hypot(u(1), u(2));
-		theta = std::atan2(-u(2), u(1));
+		theta = std::atan2(u(2), u(1));
 		const int p = static_cast<int>(x.size()) - 12;
 		if (p >= 0 && static_cast<int>(x.size()) >= p + 2) {
 			P = 1.5 * (u(1) * x(p) + u(2) * x(p + 1));
-			Q = 1.5 * (u(2) * x(p) - u(1) * x(p + 1));
+			Q = 1.5 * (u(1) * x(p + 1) - u(2) * x(p));
 		}
 	}
 
@@ -130,7 +130,7 @@ public:
 protected:
 	double omega_0;  // Nominal frequency
 	double P;        // Active power [W]; >0 = AC export. P = 1.5(Vd Id + Vq Iq)
-	double Q;        // Reactive power [VAr]; report Park Q = 1.5(Vq Id - Vd Iq)
+	double Q;        // Reactive power [VAr]; Q = 1.5(Vq Id - Vd Iq)
 	double P_dc;     // DC power [W]; >0 = DC import. Pdc = 3 Vdc iΣz
 	double P_min;    // Min active power output [W]
 	double P_max;    // Max active power output [W]

@@ -100,6 +100,7 @@ std::unique_ptr<Element> ComponentBuilder::buildFromJSON(
 		else if (comptype == "cable") { raw = buildCable(comp, params); }
 		else if (comptype == "overhead_line") { raw = buildOverheadLine(comp, params); }
 		else if (comptype == "mmc") { raw = buildMMC(comp, params); }
+		else if (comptype == "2lc") { raw = buildTwoLC(comp, params); }
 		else if (comptype == "wt_type_3") { raw = buildWTtype3(comp, params); }
 		else if (comptype == "wt_type_4") { raw = buildWTtype4(comp, params); }
 		else if (comptype == "wp_plant") { raw = buildWPplant(comp, params); }
@@ -429,6 +430,21 @@ MMC* ComponentBuilder::buildMMC(const JSON& comp, const JsonParameterTable& para
 	}
 	applyOpfInfo(mmc, comp, params);
 	return mmc;
+}
+
+TwoLC* ComponentBuilder::buildTwoLC(const JSON& comp, const JsonParameterTable& params) {
+	const auto converterParams = readNumericArray(comp, "converter_params", params);
+	TwoLC* converter = nullptr;
+	if (comp.contains("controller_params")) {
+		converter = new TwoLC(
+			comp["id"], comp["location"], converterParams,
+			readNumericArray(comp, "controller_params", params));
+	}
+	else {
+		converter = new TwoLC(comp["id"], comp["location"], converterParams);
+	}
+	applyOpfInfo(converter, comp, params);
+	return converter;
 }
 
 WTtype3* ComponentBuilder::buildWTtype3(const JSON& comp, const JsonParameterTable& params) {

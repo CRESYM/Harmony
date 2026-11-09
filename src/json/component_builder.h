@@ -51,6 +51,7 @@ private:
 	static Cable* buildCable(const JSON& comp, const JsonParameterTable& params);
 	static Overhead_Line* buildOverheadLine(const JSON& comp, const JsonParameterTable& params);
 	static MMC* buildMMC(const JSON& comp, const JsonParameterTable& params);
+	static TwoLC* buildTwoLC(const JSON& comp, const JsonParameterTable& params);
 	static WTtype3* buildWTtype3(const JSON& comp, const JsonParameterTable& params);
 	static WTtype4* buildWTtype4(const JSON& comp, const JsonParameterTable& params);
 	static WPplant* buildWPplant(const JSON& comp, const JsonParameterTable& params);

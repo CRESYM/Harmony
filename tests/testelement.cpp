@@ -296,6 +296,41 @@ TEST_F(TestElement, ReduceDcYBipolarLoop) {
     EXPECT_NEAR(Y[0][0].imag(), 0.0, 1e-12);
 }
 
+// PowerImpedance frame (vq = −V sin): a shunt inductor has Z_dq = +ω0 L and Z_qd = −ω0 L.
+TEST_F(TestElement, ParkA0ShuntInductorHasDesignReportCrossCoupling) {
+    const double L = 0.05;
+    const double f0 = 50.0;
+    const double f = 10.0;
+    const double w0 = 2.0 * M_PI * f0;
+    auto y_at = [&](double freq) {
+        const std::complex<double> y(0.0, -1.0 / (2.0 * M_PI * freq * L));
+        std::vector<std::vector<std::complex<double>>> Y(
+            3, std::vector<std::complex<double>>(3, { 0.0, 0.0 }));
+        Y[0][0] = Y[1][1] = Y[2][2] = y;
+        return Y;
+    };
+    const auto Ydq = apply_park_A0(y_at(f - f0), y_at(f + f0));
+    ASSERT_EQ(Ydq.size(), 2u);
+    const auto a = Ydq[0][0];
+    const auto b = Ydq[0][1];
+    const auto c = Ydq[1][0];
+    const auto d = Ydq[1][1];
+    const auto det = a * d - b * c;
+    const auto zdd = d / det;
+    const auto zdq = -b / det;
+    const auto zqd = -c / det;
+    const auto zqq = a / det;
+    const double x = 2.0 * M_PI * f * L;
+    EXPECT_NEAR(zdd.real(), 0.0, 1e-6);
+    EXPECT_NEAR(zdd.imag(), x, 1e-6);
+    EXPECT_NEAR(zqq.real(), 0.0, 1e-6);
+    EXPECT_NEAR(zqq.imag(), x, 1e-6);
+    EXPECT_NEAR(zdq.real(), w0 * L, 1e-6);
+    EXPECT_NEAR(zdq.imag(), 0.0, 1e-6);
+    EXPECT_NEAR(zqd.real(), -w0 * L, 1e-6);
+    EXPECT_NEAR(zqd.imag(), 0.0, 1e-6);
+}
+
 TEST_F(TestElement, ParkA0BalancedShuntIsScaledIdentity) {
     const std::complex<double> y(0.5, -0.1);
     std::vector<std::vector<std::complex<double>>> Yabc(

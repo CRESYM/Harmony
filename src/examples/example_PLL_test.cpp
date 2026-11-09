@@ -75,8 +75,8 @@ void example_PLL_test() {
         //  LAYER 1: First correct_dq, inside the PLL feedback
         //  Drives Vq_corr -> 0 via the PI
         // ===============================================================
-        Vd_corr = Vgd_grid * cw + Vgq_grid * sw;
-        Vq_corr = -Vgd_grid * sw + Vgq_grid * cw;
+        Vd_corr = Vgd_grid * cw - Vgq_grid * sw;
+        Vq_corr = Vgd_grid * sw + Vgq_grid * cw;
 
         Eigen::VectorXd out_pi = pll.define_equations(x_pi, Vq_corr, 0.0);
         double dxpi_dt = out_pi(0);
@@ -87,8 +87,8 @@ void example_PLL_test() {
         //  LAYER 2: Second correct_dq, downstream Vdq output
         //  Same Vdq input, same rotation angle.
         // ===============================================================
-        Vd_out = Vgd_grid * cw + Vgq_grid * sw;
-        Vq_out = -Vgd_grid * sw + Vgq_grid * cw;
+        Vd_out = Vgd_grid * cw - Vgq_grid * sw;
+        Vq_out = Vgd_grid * sw + Vgq_grid * cw;
 
         // ===============================================================
         //  LAYER 3: Third correct_dq, Idq rotated by the PLL angle        // <-- ADDED
@@ -96,8 +96,8 @@ void example_PLL_test() {
         //  Output (Id_out, Iq_out) is the current expressed in the
         //  PLL-aligned reference frame for downstream controllers.
         // ===============================================================
-        Id_out = Igd_grid * cw + Igq_grid * sw;                           // <-- ADDED
-        Iq_out = -Igd_grid * sw + Igq_grid * cw;                           // <-- ADDED
+        Id_out = Igd_grid * cw - Igq_grid * sw;
+        Iq_out = Igd_grid * sw + Igq_grid * cw;
 
         // ===============================================================
         //  Log

@@ -32,6 +32,8 @@ set(TESTHARMONY_SOURCES
     testrealtransformer.cpp
     testtransformerclassic.cpp
     testMMC.cpp
+    test2LC.cpp
+    testPVgeneric.cpp
     testStabilityEstimate.cpp
     testCertificate.cpp
     testOPF.cpp

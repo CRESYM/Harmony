@@ -260,6 +260,20 @@ void Element::writeFile(double start_frequency, double end_frequency, int number
     myfile.close();
 }
 
+void Element::writeFile(const std::vector<double>& frequencies) {
+    std::ofstream myfile("./files/" + element_symbol + ".csv");
+    for (double frequency : frequencies) {
+        std::vector<std::vector<complex<double>>> Y = compute_y_parameters(frequency);
+        myfile << frequency << ",";
+        for (int i = 0; i < Y_matrix.nrows(); ++i) {
+            for (int j = 0; j < Y_matrix.ncols(); ++j) {
+                myfile << Y[i][j].real() << "+1i*(" << Y[i][j].imag() << "),";
+            }
+        }
+        myfile << "\n";
+    }
+}
+
 /**
  * @brief Generates data and triggers a Bode plot for the Y-parameter matrix.
  * @param start_frequency The starting frequency for the plot.

@@ -1163,7 +1163,7 @@ void PowerFlow::make_OPF(Network* net, std::map<std::string, double>& global_par
             // MatACDC OPF injections (ps, qs, pn) use network-injection signs:
             // inverter: ps,pn ≤ 0 (power into AC network / out of DC network).
             // MMC machine: Pac>0 AC export, Pdc>0 DC import, Qac report Park
-            // Q = 1.5(Vq Id − Vd Iq). Bridge: Pac = -ps, Qac = -qs, Pdc = -pn.
+            // Q = 1.5(Vd Iq − Vq Id), vq = −Vm sin θ. Bridge: Pac = -ps, Qac = -qs, Pdc = -pn.
             const double Pac_MW = -ps_dc_k(k) * baseMW_dc;
             const double Qac_MVar = -qs_dc_k(k) * baseMW_dc;
             // AC filter-bus voltage / angle from OPF (v2s in pu^2 of ACbaseKV LL-RMS,

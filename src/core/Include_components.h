@@ -54,6 +54,7 @@
 // Power Electronics
 #include "Elements/Converter/Converter.h"
 #include "Elements/Converter/MMC.h"
+#include "Elements/Converter/TwoLC.h"
 //#include "Elements/Converter/Simple_MMC.h"
 
 // RES
@@ -62,6 +63,7 @@
 #include "Elements/RES/WT_type_4.h"
 #include "Elements/RES/WP_plant.h"
 #include "Elements/RES/PV_plant.h"
+#include "Elements/RES/PV_generic.h"
 
 #include "Solver/State_Space_Model/State_Space_Model.h"
 

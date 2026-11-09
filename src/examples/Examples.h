@@ -89,6 +89,9 @@ extern void example_WT_type_4(bool plotting_enabled = true);
 /** @brief Photovoltaic plant model demonstration. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_PV_plant(bool plotting_enabled = true);
 
+/** @brief Write Ydq(f) for PVplant and PVgeneric on the shared 1 MW example. */
+extern void example_PV_ydq_compare(bool plotting_enabled = true);
+
 /** @brief Overhead transmission line geometry and Y-parameter sweep. @param plotting_enabled Enable result plots. @ingroup examples */
 extern void example_OHL(bool plotting_enabled = true);
 

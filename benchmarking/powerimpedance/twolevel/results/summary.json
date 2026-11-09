@@ -1,0 +1,37 @@
+[
+  {
+    "id": "p_q",
+    "title": "2LC P+Q",
+    "mean_dB": -54.62523925944574,
+    "max_dB": -46.21679699307106,
+    "n": 31
+  },
+  {
+    "id": "vdc_q",
+    "title": "2LC Vdc+Q",
+    "mean_dB": -64.18285224121963,
+    "max_dB": -60.49649798171564,
+    "n": 31
+  },
+  {
+    "id": "statcom",
+    "title": "2LC STATCOM Vdc+Q",
+    "mean_dB": -65.69001951459552,
+    "max_dB": -59.83522890900022,
+    "n": 31
+  },
+  {
+    "id": "owf",
+    "title": "2LC energy-hub wind P+Q",
+    "mean_dB": -49.20522047321473,
+    "max_dB": -44.75248610352503,
+    "n": 31
+  },
+  {
+    "id": "wind",
+    "title": "2LC weak-grid wind P+Q",
+    "mean_dB": -57.54060408767584,
+    "max_dB": -44.64365848239883,
+    "n": 31
+  }
+]

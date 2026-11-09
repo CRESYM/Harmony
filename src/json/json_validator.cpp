@@ -32,6 +32,7 @@ void requireKeys(const JSON& j, const std::set<std::string>& keys, const char* c
 bool componentUsesJsonPins(const std::string& type) {
 	return type != "overhead_line"
 		&& type != "mmc"
+		&& type != "2lc"
 		&& type != "wt_type_3"
 		&& type != "wt_type_4"
 		&& type != "pv_plant"
@@ -308,7 +309,7 @@ void JsonValidator::validateByType(
 		return;
 	}
 
-	if (type == "mmc") {
+	if (type == "mmc" || type == "2lc") {
 		rejectUnknownKeys(comp, allow({
 			"converter_params", "controller_params", "filter_params", "opf_info"
 		}), ctx.c_str());

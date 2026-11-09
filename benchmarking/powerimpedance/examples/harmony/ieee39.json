@@ -1,0 +1,2941 @@
+{
+  "simulation": {
+    "title": "ieee39",
+    "description": "ieee39",
+    "output_directory": "./files",
+    "frequency_range": {
+      "frequencies": [
+        1.0,
+        1.3283086480017505,
+        1.7644038643562385,
+        2.3436729115920993,
+        3.113120996555228,
+        3.2336202320362872,
+        4.135185542000137,
+        5.49280271653059,
+        7.29613735013509,
+        9.691522339193016,
+        9.923756942997684,
+        12.873332935452236,
+        17.09975946676697,
+        19.82911831727418,
+        20.710678118654755,
+        22.713758378456365,
+        27.286241621543635,
+        30.17088168272582,
+        32.90024053323303,
+        37.12666706454776,
+        40.076243057002316,
+        40.308477660806986,
+        42.70386264986491,
+        43.92560525107726,
+        44.50719728346941,
+        45.86481445799986,
+        46.886879003444776,
+        47.6563270884079,
+        48.23559613564376,
+        48.67169135199825,
+        49.0,
+        51.0,
+        51.32830864800175,
+        51.76440386435624,
+        52.3436729115921,
+        53.113120996555224,
+        53.23362023203629,
+        54.13518554200014,
+        55.49280271653059,
+        57.29613735013509,
+        59.691522339193014,
+        62.87333293545224,
+        67.09975946676697,
+        70.71067811865476,
+        72.71375837845636,
+        74.76219372380456,
+        80.17088168272582,
+        90.07624305700232,
+        93.92560525107726,
+        103.23362023203629,
+        115.7227008669993,
+        120.71067811865476,
+        124.76219372380456,
+        143.92560525107726,
+        165.7227008669993,
+        170.13089673184237,
+        174.76219372380456,
+        215.7227008669993,
+        220.13089673184237,
+        242.4017738212865,
+        270.13089673184237,
+        292.4017738212865,
+        338.39980485786674,
+        342.4017738212865,
+        388.39980485786674,
+        438.39980485786674,
+        465.91481967489665,
+        515.9148196748966,
+        565.9148196748966,
+        635.2941166064296,
+        685.2941166064296,
+        735.2941166064296,
+        860.2821015130405,
+        910.2821015130405,
+        960.2821015130405,
+        1159.135587560979,
+        1209.135587560979,
+        1259.135587560979,
+        1556.1052575639262,
+        1606.1052575639262,
+        1656.1052575639262,
+        2083.4035032232423,
+        2133.4035032232423,
+        2183.4035032232423,
+        2783.818323008663,
+        2833.818323008663,
+        2883.818323008663,
+        3714.185385318225,
+        3764.185385318225,
+        3814.185385318225,
+        4950.0,
+        5000.0,
+        5050.0
+      ]
+    }
+  },
+  "buses": [
+    {
+      "id": "Bus1",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus2",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus3",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus4",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus5",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus6",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus7",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus8",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus9",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus10",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus11",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus12",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus13",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus14",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus15",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus16",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus17",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus18",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus19",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus20",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus21",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus22",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus23",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus24",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus25",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus26",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus27",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus28",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus29",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus30",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus31",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus32",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus33",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus34",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus35",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus36",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus37",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus38",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "Bus39",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    },
+    {
+      "id": "gnd",
+      "location": "AC1",
+      "pins": 3,
+      "enabled": true
+    }
+  ],
+  "components": [
+    {
+      "id": "T1_2",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 72473.0,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus1",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus2",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T1_39",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 44083.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus1",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus39",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T2_3",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 26626.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus2",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus3",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T2_25",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 15164.7,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus2",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus25",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T3_4",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 37559.0,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus3",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus4",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T3_18",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 23452.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus3",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus18",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T4_5",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 22570.7,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus4",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus5",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T4_14",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 22747.0,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus4",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus14",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T5_6",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 4584.7,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus5",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus6",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T5_8",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 19749.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus5",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus8",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T6_7",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 16222.7,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus6",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus7",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T6_11",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 14459.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus6",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus11",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T7_8",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 8111.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus7",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus8",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T8_9",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 64009.0,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus8",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus9",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T9_39",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 44083.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus9",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus39",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T10_11",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 7582.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus10",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus11",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T10_13",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 7582.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus10",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus13",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T13_14",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 17809.7,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus13",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus14",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T14_15",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 38264.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus14",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus15",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T15_16",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 16575.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus15",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus16",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T16_17",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 15693.7,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus16",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus17",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T16_19",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 34385.0,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus16",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus19",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T16_21",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 23805.0,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus16",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus21",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T16_24",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 10403.7,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus16",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus24",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T17_18",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 14459.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus17",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus18",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T17_27",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 30505.7,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus17",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus27",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T21_22",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 24686.7,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus21",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus22",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T22_23",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 16928.0,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus22",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus23",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T23_24",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 61716.7,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus23",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus24",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T25_26",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 56955.73,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus25",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus26",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T26_27",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 25921.0,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus26",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus27",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T26_28",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 83582.0,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus26",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus28",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T26_29",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 110208.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus26",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus29",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "T28_29",
+      "location": "AC1",
+      "type": "overhead_line",
+      "length": 26626.3,
+      "earth": [
+        1.0,
+        1.0,
+        100.0
+      ],
+      "conductor": {
+        "organization": "flat",
+        "number_bundles": [
+          3,
+          1
+        ],
+        "geometry": [
+          10.0,
+          30.0
+        ],
+        "rc": 0.015,
+        "Rdc": 0.063,
+        "dsag": 10.0,
+        "dsb": 0.0
+      },
+      "groundwire": {
+        "count": 2,
+        "geometry": [
+          0.92,
+          0.0062,
+          10.0,
+          7.5,
+          6.5
+        ],
+        "mu_g": 1.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus28",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus29",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "TR2_30",
+      "location": "AC1",
+      "type": "transformer_yy_real",
+      "pins": 3,
+      "values": {
+        "R_primary": 0.0,
+        "L_primary": 0.003428758495373825,
+        "R_secondary": 0.0,
+        "L_secondary": 0.003428758495373825,
+        "turns_ratio": 1.0,
+        "phase_shift": 0.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus2",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus30",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "TR6_31",
+      "location": "AC1",
+      "type": "transformer_yy_real",
+      "pins": 3,
+      "values": {
+        "R_primary": 0.0,
+        "L_primary": 0.004735854275378211,
+        "R_secondary": 0.0,
+        "L_secondary": 0.004735854275378211,
+        "turns_ratio": 1.0,
+        "phase_shift": 0.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus6",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus31",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "TR10_32",
+      "location": "AC1",
+      "type": "transformer_yy_real",
+      "pins": 3,
+      "values": {
+        "R_primary": 0.0,
+        "L_primary": 0.003788683420302569,
+        "R_secondary": 0.0,
+        "L_secondary": 0.003788683420302569,
+        "turns_ratio": 1.0,
+        "phase_shift": 0.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus10",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus32",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "TR11_12",
+      "location": "AC1",
+      "type": "transformer_yy_real",
+      "pins": 3,
+      "values": {
+        "R_primary": 0.09522000000000001,
+        "L_primary": 0.008240386439158087,
+        "R_secondary": 0.09522000000000001,
+        "L_secondary": 0.008240386439158087,
+        "turns_ratio": 1.0,
+        "phase_shift": 0.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus11",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus12",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "TR12_13",
+      "location": "AC1",
+      "type": "transformer_yy_real",
+      "pins": 3,
+      "values": {
+        "R_primary": 0.09522000000000001,
+        "L_primary": 0.008240386439158087,
+        "R_secondary": 0.09522000000000001,
+        "L_secondary": 0.008240386439158087,
+        "turns_ratio": 1.0,
+        "phase_shift": 0.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus12",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus13",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "TR19_20",
+      "location": "AC1",
+      "type": "transformer_yy_real",
+      "pins": 3,
+      "values": {
+        "R_primary": 0.04165875,
+        "L_primary": 0.0026141915600087725,
+        "R_secondary": 0.04165875,
+        "L_secondary": 0.0026141915600087725,
+        "turns_ratio": 1.0,
+        "phase_shift": 0.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus19",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus20",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "TR19_33",
+      "location": "AC1",
+      "type": "transformer_yy_real",
+      "pins": 3,
+      "values": {
+        "R_primary": 0.04165875,
+        "L_primary": 0.002689965228414824,
+        "R_secondary": 0.04165875,
+        "L_secondary": 0.002689965228414824,
+        "turns_ratio": 1.0,
+        "phase_shift": 0.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus19",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus33",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "TR20_34",
+      "location": "AC1",
+      "type": "transformer_yy_real",
+      "pins": 3,
+      "values": {
+        "R_primary": 0.05356125,
+        "L_primary": 0.0034098150782723114,
+        "R_secondary": 0.05356125,
+        "L_secondary": 0.0034098150782723114,
+        "turns_ratio": 1.0,
+        "phase_shift": 0.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus20",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus34",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "TR22_35",
+      "location": "AC1",
+      "type": "transformer_yy_real",
+      "pins": 3,
+      "values": {
+        "R_primary": 0.0,
+        "L_primary": 0.002708908645516337,
+        "R_secondary": 0.0,
+        "L_secondary": 0.002708908645516337,
+        "turns_ratio": 1.0,
+        "phase_shift": 0.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus22",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus35",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "TR23_36",
+      "location": "AC1",
+      "type": "transformer_yy_real",
+      "pins": 3,
+      "values": {
+        "R_primary": 0.02975625,
+        "L_primary": 0.005152609451611493,
+        "R_secondary": 0.02975625,
+        "L_secondary": 0.005152609451611493,
+        "turns_ratio": 1.0,
+        "phase_shift": 0.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus23",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus36",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "TR25_37",
+      "location": "AC1",
+      "type": "transformer_yy_real",
+      "pins": 3,
+      "values": {
+        "R_primary": 0.035707499999999996,
+        "L_primary": 0.0043948727675509796,
+        "R_secondary": 0.035707499999999996,
+        "L_secondary": 0.0043948727675509796,
+        "turns_ratio": 1.0,
+        "phase_shift": 0.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus25",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus37",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "TR29_38",
+      "location": "AC1",
+      "type": "transformer_yy_real",
+      "pins": 3,
+      "values": {
+        "R_primary": 0.047610000000000006,
+        "L_primary": 0.0029551730678360035,
+        "R_secondary": 0.047610000000000006,
+        "L_secondary": 0.0029551730678360035,
+        "turns_ratio": 1.0,
+        "phase_shift": 0.0
+      },
+      "connected_buses": [
+        {
+          "bus_id": "Bus29",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus38",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "Zg30",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "0.191736 + 0.0122063*s",
+      "connected_buses": [
+        {
+          "bus_id": "gnd",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus30",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "Zg31",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "0.191736 + 0.0122063*s",
+      "connected_buses": [
+        {
+          "bus_id": "gnd",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus31",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "Zg32",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "0.191736 + 0.0122063*s",
+      "connected_buses": [
+        {
+          "bus_id": "gnd",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus32",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "Zg33",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "0.191736 + 0.0122063*s",
+      "connected_buses": [
+        {
+          "bus_id": "gnd",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus33",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "Zg34",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "0.191736 + 0.0122063*s",
+      "connected_buses": [
+        {
+          "bus_id": "gnd",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus34",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "Zg35",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "0.191736 + 0.0122063*s",
+      "connected_buses": [
+        {
+          "bus_id": "gnd",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus35",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "Zg36",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "0.191736 + 0.0122063*s",
+      "connected_buses": [
+        {
+          "bus_id": "gnd",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus36",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "Zg37",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "0.191736 + 0.0122063*s",
+      "connected_buses": [
+        {
+          "bus_id": "gnd",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus37",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "Zg38",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "0.191736 + 0.0122063*s",
+      "connected_buses": [
+        {
+          "bus_id": "gnd",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus38",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "Zg39",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "0.191736 + 0.0122063*s",
+      "connected_buses": [
+        {
+          "bus_id": "gnd",
+          "terminal": 1
+        },
+        {
+          "bus_id": "Bus39",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB3",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "369.6224381383592 + 0.008769280453674401*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus3",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB4a",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "209.65735673070452 + 0.2455883318497604*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus4",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB4b",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "0.0 + 1/(8.022933489194473e-06*s)",
+      "connected_buses": [
+        {
+          "bus_id": "Bus4",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB5",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "0.0 + 1/(1.6045866978388945e-05*s)",
+      "connected_buses": [
+        {
+          "bus_id": "Bus5",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB7",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "450.8870593310175 + 0.515647238357094*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus7",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB8",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "204.74211689539132 + 0.21973524797164862*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus8",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB12",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "114.44370554893409 + 4.274279855018891*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus12",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB15",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "302.7445773103992 + 0.46075262375868786*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus15",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB16",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "357.89752393573394 + 0.11170923897289167*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus16",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB18",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "727.1086810183424 + 0.439453927240922*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus18",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB20",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "171.11089251219235 + 0.08250031568478439*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus20",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB21",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "369.33745746873535 + 0.4934243081623836*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus21",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB23",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "430.5981458898191 + 0.46850846545669544*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus23",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB24",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "354.08662957084215 + 1/(3.008886375859467e-05*s)",
+      "connected_buses": [
+        {
+          "bus_id": "Bus24",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB25",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "508.77176009087094 + 0.34124475974608715*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus25",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB26",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "843.6758634968994 + 0.3284450645283823*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus26",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB27",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "395.0568735393939 + 0.3378709104804845*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus27",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB28",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "567.6020820822316 + 0.24206709484168532*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus28",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB29",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "416.09504186039237 + 0.12567343895636293*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus29",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB32",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "10350.022497847836 + 16.472035273186066*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus32",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    },
+    {
+      "id": "LoadB39",
+      "location": "AC1",
+      "type": "impedance",
+      "pins": 3,
+      "z_expr": "102.5536285566405 + 0.0739216955979743*s",
+      "connected_buses": [
+        {
+          "bus_id": "Bus39",
+          "terminal": 1
+        },
+        {
+          "bus_id": "gnd",
+          "terminal": 2
+        }
+      ],
+      "enabled": true
+    }
+  ],
+  "computations": [
+    {
+      "type": "y_matrix",
+      "frequency_range": {
+        "frequencies": [
+          1.0,
+          1.3283086480017505,
+          1.7644038643562385,
+          2.3436729115920993,
+          3.113120996555228,
+          3.2336202320362872,
+          4.135185542000137,
+          5.49280271653059,
+          7.29613735013509,
+          9.691522339193016,
+          9.923756942997684,
+          12.873332935452236,
+          17.09975946676697,
+          19.82911831727418,
+          20.710678118654755,
+          22.713758378456365,
+          27.286241621543635,
+          30.17088168272582,
+          32.90024053323303,
+          37.12666706454776,
+          40.076243057002316,
+          40.308477660806986,
+          42.70386264986491,
+          43.92560525107726,
+          44.50719728346941,
+          45.86481445799986,
+          46.886879003444776,
+          47.6563270884079,
+          48.23559613564376,
+          48.67169135199825,
+          49.0,
+          51.0,
+          51.32830864800175,
+          51.76440386435624,
+          52.3436729115921,
+          53.113120996555224,
+          53.23362023203629,
+          54.13518554200014,
+          55.49280271653059,
+          57.29613735013509,
+          59.691522339193014,
+          62.87333293545224,
+          67.09975946676697,
+          70.71067811865476,
+          72.71375837845636,
+          74.76219372380456,
+          80.17088168272582,
+          90.07624305700232,
+          93.92560525107726,
+          103.23362023203629,
+          115.7227008669993,
+          120.71067811865476,
+          124.76219372380456,
+          143.92560525107726,
+          165.7227008669993,
+          170.13089673184237,
+          174.76219372380456,
+          215.7227008669993,
+          220.13089673184237,
+          242.4017738212865,
+          270.13089673184237,
+          292.4017738212865,
+          338.39980485786674,
+          342.4017738212865,
+          388.39980485786674,
+          438.39980485786674,
+          465.91481967489665,
+          515.9148196748966,
+          565.9148196748966,
+          635.2941166064296,
+          685.2941166064296,
+          735.2941166064296,
+          860.2821015130405,
+          910.2821015130405,
+          960.2821015130405,
+          1159.135587560979,
+          1209.135587560979,
+          1259.135587560979,
+          1556.1052575639262,
+          1606.1052575639262,
+          1656.1052575639262,
+          2083.4035032232423,
+          2133.4035032232423,
+          2183.4035032232423,
+          2783.818323008663,
+          2833.818323008663,
+          2883.818323008663,
+          3714.185385318225,
+          3764.185385318225,
+          3814.185385318225,
+          4950.0,
+          5000.0,
+          5050.0
+        ]
+      },
+      "plot": false
+    }
+  ]
+}

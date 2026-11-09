@@ -154,6 +154,11 @@ public:
     void writeFile(double start_frequency, double end_frequency, int number_of_points);
 
     /**
+     * @brief Write Y-parameter samples at the given frequencies (Hz).
+     */
+    void writeFile(const std::vector<double>& frequencies);
+
+    /**
      * @brief Plot Y-parameter matrix entries versus frequency.
      * @param start_frequency Lower bound of frequency range (Hz).
      * @param end_frequency Upper bound of frequency range (Hz).

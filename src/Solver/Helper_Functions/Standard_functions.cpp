@@ -227,18 +227,20 @@ struct ParkKernels {
 
 ParkKernels makeParkKernels()
 {
-    // Fourier kernel of Park (4.54): φ = −2π/3 so a = [1, α², α] with α = e^{j 2π/3}.
+    // PowerImpedance / PSCAD qaxis=1: vd from cos, vq from −sin.
+    // Row 1 is −j times row 0. A passive inductor then has Z_dq = +ω0 L.
+    // φ = −2π/3 so row 0 is [1, α², α], α = e^{j 2π/3}.
     const complex<double> ang = std::exp(complex<double>(0, -2.0 * M_PI / 3.0));
     const complex<double> imag_unit(0, 1);
     ParkKernels k;
     k.a.assign(3, vector<complex<double>>(3));
     k.a[0] = { 1.0, ang, ang * ang };
-    k.a[1] = { imag_unit, imag_unit * ang, imag_unit * ang * ang };
+    k.a[1] = { -imag_unit, -imag_unit * ang, -imag_unit * ang * ang };
     k.a[2] = { 0.0, 0.0, 0.0 };
     k.a_tran = mat_transpose(k.a);
     k.a_conj.assign(3, vector<complex<double>>(3));
     k.a_conj[0] = { 1.0, conj(ang), conj(ang * ang) };
-    k.a_conj[1] = { -imag_unit, -imag_unit * conj(ang), -imag_unit * conj(ang * ang) };
+    k.a_conj[1] = { imag_unit, imag_unit * conj(ang), imag_unit * conj(ang * ang) };
     k.a_conj[2] = { 0.0, 0.0, 0.0 };
     k.a_conj_tran = mat_transpose(k.a_conj);
     return k;

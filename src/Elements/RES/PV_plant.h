@@ -30,8 +30,8 @@ public:
 
 private:
 	// Parameters specific to the PV plant model
-	double P_pv; // Rated power of the PV plant in watts
-	double I_pv; // Rated current of the PV plant in amperes
+	double P_pv; // Ideal-diode maximum power at 298.15 K, in watts
+	double I_pv; // Array current at that maximum-power point, in amperes
 	double N_s;  // Number of series-connected modules
 	double N_p;  // Number of parallel-connected strings
 	double n;	// ideally factor of the diode

@@ -77,7 +77,6 @@ function _ohl_from_gen(c)
         ),
         groundwires = gw,
         earth_parameters = c.earth,
-        transformation = false,
     )
 end
 
@@ -93,7 +92,6 @@ function _cable_from_gen(c)
         I1 = Insulator(rᵢ = 24.25e-3, rₒ = 41.75e-3, ϵᵣ = 2.3),
         I2 = Insulator(rᵢ = 46.25e-3, rₒ = 49.75e-3, ϵᵣ = 2.3),
         I3 = Insulator(rᵢ = 60.55e-3, rₒ = 65.75e-3, ϵᵣ = 2.3),
-        transformation = false,
     )
 end
 
@@ -107,7 +105,7 @@ function run_line_topologies()
             t = @elapsed begin
                 println("  OHL ", c.id)
                 elem = _ohl_from_gen(c)
-                Ys = sweep_y(s -> PowerImpedance.get_y(elem, s), freqs)
+                Ys = sweep_y(s -> PowerImpedance.eval_y(elem, s), freqs)
                 write_y_csv(joinpath(OUTDIR, "pi_$(c.id).csv"), freqs, Ys)
                 print_spot(c.id, Ys, freqs, 50.0)
             end
@@ -122,7 +120,7 @@ function run_line_topologies()
             t = @elapsed begin
                 println("  cable ", c.id)
                 elem = _cable_from_gen(c)
-                Ys = sweep_y(s -> PowerImpedance.get_y(elem, s), freqs)
+                Ys = sweep_y(s -> PowerImpedance.eval_y(elem, s), freqs)
                 write_y_csv(joinpath(OUTDIR, "pi_$(c.id).csv"), freqs, Ys)
                 print_spot(c.id, Ys, freqs, 50.0)
             end

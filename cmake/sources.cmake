@@ -37,6 +37,7 @@ set(Element_Header_Files src/Elements/Element.h)
 set(Element_Converter_Header_Files
     src/Elements/Converter/Converter.h
     src/Elements/Converter/MMC.h
+    src/Elements/Converter/TwoLC.h
 )
 set(Element_Impedance_Header_Files
     src/Elements/Impedance/Impedance_base.h
@@ -84,6 +85,7 @@ set(Element_RES_Header_Files
     src/Elements/RES/WT_type_4.h
     src/Elements/RES/WP_plant.h
     src/Elements/RES/PV_plant.h
+    src/Elements/RES/PV_generic.h
 )
 set(Solver_State_Space_Model_Header_Files
     src/Solver/State_Space_Model/State_Space_Model.h
@@ -158,6 +160,7 @@ set(Element_Source_Files src/Elements/Element.cpp)
 set(Element_Converter_Source_Files
     src/Elements/Converter/Converter.cpp
     src/Elements/Converter/MMC.cpp
+    src/Elements/Converter/TwoLC.cpp
 )
 set(Element_Impedance_Source_Files
     src/Elements/Impedance/Impedance_base.cpp
@@ -205,6 +208,7 @@ set(Element_RES_Source_Files
     src/Elements/RES/WT_type_4.cpp
     src/Elements/RES/WP_plant.cpp
     src/Elements/RES/PV_plant.cpp
+    src/Elements/RES/PV_generic.cpp
 )
 set(Solver_State_Space_Model_Source_Files
     src/Solver/State_Space_Model/State_Space_Model.cpp
@@ -292,6 +296,7 @@ set(Examples_Source_files
     src/examples/example_WT_type_3.cpp
     src/examples/example_WT_type_4.cpp
     src/examples/example_PV_plant.cpp
+    src/examples/example_PV_ydq_compare.cpp
     src/examples/example_OHL.cpp
     src/examples/example_cable.cpp
     src/examples/example_transformer.cpp

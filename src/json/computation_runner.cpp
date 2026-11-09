@@ -120,10 +120,21 @@ void runYMatrix(const JSON& calc, Network& network, const JSON& defaultRange, co
 				continue;
 			}
 		}
-		std::cout << "Computing Y-matrix for '" << id << "' ("
-			<< range.start << "-" << range.end << " Hz, "
-			<< range.points << " points)\n";
-		elem->writeFile(range.start, range.end, range.points);
+		if (rangeJson.contains("frequencies") && rangeJson.at("frequencies").is_array()) {
+			std::vector<double> frequencies;
+			frequencies.reserve(rangeJson.at("frequencies").size());
+			for (const auto& item : rangeJson.at("frequencies"))
+				frequencies.push_back(item.get<double>());
+			std::cout << "Computing Y-matrix for '" << id << "' ("
+				<< frequencies.size() << " listed frequencies)\n";
+			elem->writeFile(frequencies);
+		}
+		else {
+			std::cout << "Computing Y-matrix for '" << id << "' ("
+				<< range.start << "-" << range.end << " Hz, "
+				<< range.points << " points)\n";
+			elem->writeFile(range.start, range.end, range.points);
+		}
 		if (jsonPlotRequested(calc, plottingEnabled)) {
 			elem->plotYParameters(range.start, range.end, range.points);
 		}

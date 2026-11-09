@@ -113,6 +113,8 @@ MMC::MMC(const std::string& symbol, const std::string& location, const std::vect
     L_arm = converter_params[7]; R_arm = converter_params[8]; C_arm = converter_params[9];
     N = static_cast<int>(converter_params[10]); L_reactor = converter_params[11]; 
     R_reactor = converter_params[12]; t_delay = converter_params[13];
+    if (converter_params.size() > 14)
+        pade_order = static_cast<int>(std::lround(converter_params[14]));
 
     // Initialize active and reactive power limits for power flow calculations
     P_min = 0.5 * P;
@@ -353,8 +355,8 @@ void MMC::init_Filter(const std::vector<double>& filter_params) {
  * @param theta AC voltage phase angle [rad].
  * @param Pac Active power [W], MMC machine convention: positive = export to AC
  *        (AC current leaving the converter).
- * @param Qac Reactive power [VAr], report Park: Q = 1.5(Vq Id - Vd Iq).
- *        With Vq≈0, Vd>0: Q>0 ⇒ Iq<0.
+ * @param Qac Reactive power [VAr], Q = 1.5(Vd Iq − Vq Id).
+ *        With Vq≈0, Vd>0: Q>0 ⇒ Iq>0. PowerImpedance frame.
  * @param Vdc DC voltage [V].
  * @param Pdc DC power [W], MMC machine convention: positive = import from DC
  *        (DC current entering the converter). For a lossless inverter,
@@ -379,9 +381,9 @@ void MMC::update_MMC(double Vm, double theta, double Pac, double Qac, double Vdc
         throw std::runtime_error("Voltage magnitude too small for dq transformation.");
     }
 
-    // Report Park (4.54): Pac = 1.5(Vd Id + Vq Iq), Qac = 1.5(Vq Id - Vd Iq).
-    const double Id = (2.0 / 3.0) * (Vgd * P + Vgq * Q) / denom;
-    const double Iq = (2.0 / 3.0) * (Vgq * P - Vgd * Q) / denom;
+    // P = 1.5(Vd Id + Vq Iq), Q = 1.5(Vd Iq − Vq Id).
+    const double Id = (2.0 / 3.0) * (Vgd * P - Vgq * Q) / denom;
+    const double Iq = (2.0 / 3.0) * (Vgq * P + Vgd * Q) / denom;
 
     // Set OCC controller reference (dq current)
     if (controls.count("occ")) {
@@ -485,8 +487,8 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     double iDelta_d = iDelta_d_g, iDelta_q = iDelta_q_g;
     double iSigma_d = iSigma_d_g, iSigma_q = iSigma_q_g;
     double Pac = 1.5 * (Vgd_g * iDelta_d_g + Vgq_g * iDelta_q_g);
-    // Report Park: Q = 1.5(Vq id - Vd iq); with Vq≈0, Vd>0: +Q ⇒ −iq.
-    double Qac = 1.5 * (Vgq_g * iDelta_d_g - Vgd_g * iDelta_q_g);
+    // Q = 1.5(Vd iq − Vq id); with Vq≈0, Vd>0: +Q ⇒ +iq.
+    double Qac = 1.5 * (Vgd_g * iDelta_q_g - Vgq_g * iDelta_d_g);
     double Vac_mag = std::sqrt(Vgd_g * Vgd_g + Vgq_g * Vgq_g);
 
     // Extract control reference voltages (user must assign these before this call)
@@ -625,7 +627,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     if (controls.count("pll")) {
         double theta_c = x(i + 1);
         const double cos_theta = std::cos(theta_c);
-        const double sin_theta = std::sin(theta_c); 
+        const double sin_theta = std::sin(theta_c);
         T_theta << cos_theta, -sin_theta, sin_theta, cos_theta;
         I_theta << cos_theta, sin_theta, -sin_theta, cos_theta;
 
@@ -638,6 +640,8 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         Vgd = Vg(0);
         Vgq = Vg(1);
 
+        // vq = −V sin and T = [[cos, −sin], [sin, cos]]. A frame that is ahead
+        // makes vq positive, so the PI measurement is +vq.
         state_variables = controls["pll"]->define_equations(x(i), Vgq, 0);
         F(i) = state_variables(0);
         const double delta_omega = state_variables(1);
@@ -659,7 +663,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
         const double Qac_f = x(gfm_index_ + 2);
 
         Pac = 1.5 * (Vgd_g * iDelta_d_g + Vgq_g * iDelta_q_g);
-        Qac = 1.5 * (Vgq_g * iDelta_d_g - Vgd_g * iDelta_q_g);
+        Qac = 1.5 * (Vgd_g * iDelta_q_g - Vgq_g * iDelta_d_g);
 
         const auto* gfm = controls.at("gfm").get();
         const double Kdroop_P = gfm->getParameters()[0];
@@ -688,7 +692,7 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
 
         const double Vgfm = E_ref + Kdroop_Q * (Qac_f - Qac_ref);
         const double e_d = Vgfm * std::cos(theta_gfm);
-        const double e_q = Vgfm * std::sin(theta_gfm);
+        const double e_q = -Vgfm * std::sin(theta_gfm);
         gfm_vMDelta_d = e_d - Rvirt * iDelta_d_g - omega_0 * Lvirt * iDelta_q_g;
         gfm_vMDelta_q = e_q - Rvirt * iDelta_q_g + omega_0 * Lvirt * iDelta_d_g;
     }
@@ -797,8 +801,8 @@ MatrixXd MMC::computeStateDerivatives(const Eigen::VectorXd& x, const Eigen::Vec
     if (has_reactive_power_ctrl) {
         state_variables = controls["reactive_power"]->define_equations(x(i), Qac, 0);
         F(i) = state_variables(0);
-        // (13d): i_q^{Δ*} = −K_{P,Q}(Q*−Q) − K_{I,Q} ξ_Q  (Q = 1.5(Vq Id − Vd Iq)).
-        double iDelta_q_ref = -state_variables(1);
+        // Q = 1.5(Vd iq − Vq id), so a positive PI output raises iq.
+        double iDelta_q_ref = state_variables(1);
         i += 1;
         if (has_occ) controls["occ"]->setReference(iDelta_q_ref, 1);
     } else if (has_ac_voltage_ctrl) {
@@ -1135,13 +1139,12 @@ Eigen::MatrixXd MMC::computePlantJacobian(
     //  Part 2: Current equation rows
     // ===================================================================
     //
-    // F0 = diDd/dt = (vMDd - Vgd - Req*iDd - Leq*w*iDq) / Leq  ... wait
-    // Actually: F0 = -(Vgd - vMDd + Req*iDd + Leq*iDq*w) / Leq
-    //              = (vMDd/Leq) - Req/Leq*iDd - w*iDq - Vgd/Leq
+    // F0 = diDd/dt = (vMDd - Vgd - Req*iDd - Leq*w*iDq) / Leq
+    //              = -(Vgd - vMDd + Req*iDd + Leq*iDq*w) / Leq
 
     // Row 0: diDd/dt
     J(0, 0) = -Req / Leq;                 // d/d(iDd)
-    J(0, 1) = w;                         // d/d(iDq)  Park: −(−ω L iq)/L
+    J(0, 1) = -w;                        // d/d(iDq): −(+ω L iq)/L
     J(0, 5) = dvMDd_vCDd / Leq;         // d/d(vCDd)
     J(0, 6) = dvMDd_vCDq / Leq;         // d/d(vCDq)
     J(0, 7) = dvMDd_vCDZd / Leq;        // d/d(vCDZd)
@@ -1151,7 +1154,7 @@ Eigen::MatrixXd MMC::computePlantJacobian(
     J(0, 11) = dvMDd_vCSz / Leq;         // d/d(vCSz)
 
     // Row 1: diDq/dt = (vMDq/Leq) - Req/Leq*iDq + w*iDd
-    J(1, 0) = -w;                         // d/d(iDd)  Park: −(+ω L id)/L
+    J(1, 0) = w;                          // d/d(iDd): −(−ω L id)/L
     J(1, 1) = -Req / Leq;                  // d/d(iDq)
     J(1, 5) = dvMDq_vCDd / Leq;
     J(1, 6) = dvMDq_vCDq / Leq;
@@ -1175,7 +1178,7 @@ Eigen::MatrixXd MMC::computePlantJacobian(
     // Row 3: diSd/dt = -(vMSd + Ra*iSd - 2*La*iSq*w) / La
     //                = -vMSd/La - Ra/La*iSd + 2*w*iSq
     J(3, 3) = -Ra / La;                    // d/d(iSd)
-    J(3, 4) = 2 * w;                       // d/d(iSq)
+    J(3, 4) = 2 * w;                       // d/d(iSq): −(−2 ω iq)
     J(3, 5) = -dvMSd_vCDd / La;
     J(3, 6) = -dvMSd_vCDq / La;
     J(3, 7) = -dvMSd_vCDZd / La;
@@ -1186,7 +1189,7 @@ Eigen::MatrixXd MMC::computePlantJacobian(
 
     // Row 4: diSq/dt = -(vMSq + Ra*iSq + 2*La*iSd*w) / La
     //                = -vMSq/La - Ra/La*iSq - 2*w*iSd
-    J(4, 3) = -2 * w;                      // d/d(iSd)
+    J(4, 3) = -2 * w;                      // d/d(iSd): −(+2 ω id)
     J(4, 4) = -Ra / La;                    // d/d(iSq)
     J(4, 5) = -dvMSq_vCDd / La;
     J(4, 6) = -dvMSq_vCDq / La;
@@ -1217,7 +1220,7 @@ Eigen::MatrixXd MMC::computePlantJacobian(
     J(5, 2) = n2c * mDd;                // d/d(iSz)
     J(5, 3) = n2c * (mDd / 2 + mDZd / 2);  // d/d(iSd)
     J(5, 4) = n2c * (-(mDq / 2 + mDZq / 2)); // d/d(iSq)
-    J(5, 6) = -w;                        // d/d(vCDq) — cross-coupling
+    J(5, 6) = -w;                        // d/d(vCDq)
 
     // Row 6: dvCDq/dt = -n2c*(iDq*(mDd/4-mDZd/4) - iSz*mDq + iSq*(mDd/2-mDZd/2)
     //                        + iSd*(mDq/2-mDZq/2) + iDd*(... wait
@@ -1403,7 +1406,7 @@ void MMC::computeOpenLoopArmRefs(
     const double Vgd = V_m * std::cos(theta);
     const double Vgq = -V_m * std::sin(theta);
 
-    // J2 = [[0, 1], [-1, 0]]: vd = R id + ωL iq + L p id, vq = R iq − ωL id + L p iq.
+    // vMd = Vd + R id + ωL iq, vMq = Vq + R iq − ωL id.
     vMDelta_d = Vgd + Reqac * Id + Leqac * Iq * w;
     vMDelta_q = Vgq + Reqac * Iq - Leqac * Id * w;
     vMSigma_z = Vdc / 2.0 - R_arm * iSigma_z;
@@ -1470,8 +1473,8 @@ void MMC::solveEquilibrium() {
         throw std::runtime_error("Voltage magnitude too small for dq transformation.");
     }
 
-    const double Id = (2.0 / 3.0) * (Vgd * P + Vgq * Q) / denom;
-    const double Iq = (2.0 / 3.0) * (Vgq * P - Vgd * Q) / denom;
+    const double Id = (2.0 / 3.0) * (Vgd * P - Vgq * Q) / denom;
+    const double Iq = (2.0 / 3.0) * (Vgq * P + Vgd * Q) / denom;
     const double iSigma_z = (std::abs(V_dc) > 1e-3) ? P_dc / (3.0 * V_dc) : 0.0;
 
     if (controls.count("pll") && n >= 2) {
@@ -1511,7 +1514,7 @@ void MMC::solveEquilibrium() {
     if (has_gfm) {
         gfm_E_ref_ = std::hypot(vMDelta_d, vMDelta_q);
         if (gfm_index_ >= 0) {
-            x0(gfm_index_) = std::atan2(vMDelta_q, vMDelta_d);
+            x0(gfm_index_) = std::atan2(-vMDelta_q, vMDelta_d);
             x0(gfm_index_ + 1) = P;
             x0(gfm_index_ + 2) = Q;
         }
@@ -1532,7 +1535,7 @@ void MMC::solveEquilibrium() {
         if (has_gfm) {
             gfm_E_ref_ = std::hypot(vMDelta_d, vMDelta_q);
             if (gfm_index_ >= 0) {
-                x0(gfm_index_) = std::atan2(vMDelta_q, vMDelta_d);
+                x0(gfm_index_) = std::atan2(-vMDelta_q, vMDelta_d);
                 x0(gfm_index_ + 1) = P;
                 x0(gfm_index_ + 2) = Q;
             }

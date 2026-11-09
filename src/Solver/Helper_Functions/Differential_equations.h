@@ -69,7 +69,9 @@ Eigen::VectorXd findEquilibriumRobust(
  * @param x State at which to evaluate.
  * @param u Input at which to evaluate.
  * @param t Evaluation time (default 0).
- * @param eps Finite-difference step size (default 1e-8).
+ * @param eps Finite-difference step size (default 1e-8). Each input step is
+ *        eps times the largest absolute input, so a zero channel keeps the
+ *        scale of the rest of u.
  * @return Pair (df/dx, df/du).
  */
 std::pair<Eigen::MatrixXd, Eigen::MatrixXd> computeJacobians(

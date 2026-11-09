@@ -4,6 +4,8 @@
  */
 #include "PV_plant.h"
 
+#include <cmath>
+
 PVplant::PVplant(const string& symbol, const std::string& location, const vector<double>& parameters) : RES_base(symbol, location) {
 	// Default parameters for a PV plant can be set here if needed
 	if (parameters.size() != 26) {
@@ -49,9 +51,48 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 	K_p_pll = parameters[24]; // Proportional gain of the PLL
 	K_i_pll = parameters[25]; // Integral gain of the PLL
 
-	// Calculation of the operation point
-	// Assuming operation at maximum power point (MPP), calculate V_pv and I_pv
-	double V_pv = P_pv / I_pv; // Voltage at MPP
+	// Linearise at the ideal-diode maximum-power point. The supplied power and
+	// current are only a nameplate; V = P/I is not on dP/dV = 0 for this diode.
+	constexpr double kBoltzmann = 1.380649e-23;
+	constexpr double kElectron = 1.602176634e-19;
+	constexpr double Tn = 298.15;
+	const double Vt = N_s * n * kBoltzmann * Tn / kElectron;
+	const double supplied_power = P_pv;
+	auto exponent = [Vt](double voltage) {
+		double x = voltage / Vt;
+		if (x > 80.0)
+			x = 80.0;
+		return std::exp(x);
+	};
+	auto currentAt = [&](double voltage) {
+		return N_p * (I_sc - I0 * (exponent(voltage) - 1.0));
+	};
+	auto slopeAt = [&](double voltage) {
+		return -N_p * I0 / Vt * exponent(voltage);
+	};
+	const double Voc = Vt * std::log(I_sc / I0 + 1.0);
+	double low = 1e-4 * Voc;
+	double high = Voc * (1.0 - 1e-8);
+	for (int iter = 0; iter < 80; ++iter) {
+		const double mid = 0.5 * (low + high);
+		const double dP_dV = currentAt(mid) + mid * slopeAt(mid);
+		if (dP_dV > 0.0)
+			low = mid;
+		else
+			high = mid;
+	}
+	const double V_pv = 0.5 * (low + high);
+	I_pv = currentAt(V_pv);
+	P_pv = V_pv * I_pv;
+	if (!(P_pv > 0.0) || std::abs(currentAt(V_pv) + V_pv * slopeAt(V_pv)) > 1e-6 * I_pv) {
+		cerr << "Error: PV plant maximum-power point did not converge." << endl;
+		exit(EXIT_FAILURE);
+	}
+	if (std::abs(supplied_power - P_pv) > 0.01 * P_pv) {
+		cerr << "Warning: [" << symbol << "] supplied power " << supplied_power
+			<< " W is replaced by the ideal-diode maximum power " << P_pv << " W." << endl;
+	}
+
 	double I_dc = P_pv / V_dc; // DC current through the boost converter
 	double D = 1 - (V_pv / V_dc); // Duty cycle of the boost converter
 	if (D < 0 || D > 1) {
@@ -117,12 +158,9 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 	// PV panel model, dynamical model of the PV array
 	// Boost controller
 	RCP<const Basic> gb = add(real_double(kp_boost), div(real_double(ki_boost), s));
-	// PV coefficient
-	double Tn = 298.15;
-	double k = 1.380649e-23;
-	double q = 1.602176634e-19;
-	double k_pv = -q * (N_p * I0 + N_p * I_sc - I_pv) / (N_s * n * k * Tn);
-	double k_mp = pow(N_s * n * k * Tn / q, 2) / (N_p * I0 * V_pv * exp(q * V_pv / (N_s * n * k * Tn)) + I_pv / V_pv * pow(N_s * n * k * Tn / q, 2));
+	// PV coefficient at the maximum-power point solved above
+	double k_pv = -kElectron * (N_p * I0 + N_p * I_sc - I_pv) / (N_s * n * kBoltzmann * Tn);
+	double k_mp = pow(Vt, 2) / (N_p * I0 * V_pv * exp(V_pv / Vt) + I_pv / V_pv * pow(Vt, 2));
 	double lambda = k_pv * k_mp;
 	// cout << k_pv << " " << k_mp << " " << lambda << endl;
 
@@ -208,14 +246,14 @@ PVplant::PVplant(const string& symbol, const std::string& location, const vector
 
 	// Matrices for calculation of the transfer function from m_dq, i_2dq, v_dc to v_pccdq
 	DenseMatrix Gvv = createZeroMatrix(2, 2);
-	mul_dense_dense(M1_inv, Hm, Gvv); // Gmv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1 * Hv
+	mul_dense_dense(M1_inv, Hm, Gvv); // Gvv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1 * Hm
 	DenseMatrix Giv = createZeroMatrix(2, 2);
 	mul_dense_dense(M1, Zl2, M1); // M1 = (Zrl1*Yc*(I + Z_rc*Yc)^-1 + I)*Zl2
 	add_dense_dense(M1, Zrl1, M1); // M1 = Zrl1 + Zl2 + Zrl1*Yc*(I + Z_rc*Yc)^-1*Zrl2
 	mul_dense_scalar(M1, real_double(-1.0), M1); // M1 = -(Zrl1 + Zl2 + Zrl1*Yc*(I + Z_rc*Yc)^-1*Zrl2)
 	mul_dense_dense(M1_inv, M1, Giv); // Giv = M1_inv * M1
 	DenseMatrix Gmv = createZeroMatrix(2, 2);
-	mul_dense_dense(M1_inv, Hv, Gmv); // Gvv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1 * Hm
+	mul_dense_dense(M1_inv, Hv, Gmv); // Gmv = (I + Zrl1*Yc*(I + Z_rc*Yc)^-1)^-1 * Hv
 
 	// Matrices for calculation of the transfer function from m_dq, i_2dq, v_dc to i_dc
 	DenseMatrix Gmi = Ni;

@@ -154,9 +154,9 @@ TEST_F(TestMMC, TestGfmModeEquilibrium) {
 	const double Id_h = x_eq(plant);
 	const double Iq_h = x_eq(plant + 1);
 	// True GFM SS: Pac=Pref ⇒ Id=2P/(3V) when Vgq=0; Iq ≠ 0 from Q–V droop / plant.
-	// Report Park Q = 1.5(Vq id − Vd iq). Qref=0; Iq is GFM droop/plant, not OCC inversion.
+	// PSCAD Park Q = 1.5(Vd iq − Vq id). Qref=0; Iq is GFM droop/plant, not OCC inversion.
 	EXPECT_NEAR(Id_h, (2.0 / 3.0) * Pac / Vm, 1e-3);
-	EXPECT_NEAR(Iq_h, 8.326, 0.05);
+	EXPECT_NEAR(Iq_h, 14.066, 0.05);
 }
 
 TEST_F(TestMMC, TestYMatrixVdcControl) {
