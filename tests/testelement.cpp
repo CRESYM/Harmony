@@ -296,7 +296,7 @@ TEST_F(TestElement, ReduceDcYBipolarLoop) {
     EXPECT_NEAR(Y[0][0].imag(), 0.0, 1e-12);
 }
 
-// PowerImpedance frame (vq = −V sin): a shunt inductor has Z_dq = +ω0 L and Z_qd = −ω0 L.
+// PSCAD frame (vq = −V sin): a shunt inductor has Z_dq = +ω0 L and Z_qd = −ω0 L.
 TEST_F(TestElement, ParkA0ShuntInductorHasDesignReportCrossCoupling) {
     const double L = 0.05;
     const double f0 = 50.0;

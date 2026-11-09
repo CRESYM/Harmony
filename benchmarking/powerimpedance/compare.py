@@ -5,104 +5,19 @@ import argparse
 import csv
 import math
 import re
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-REPO = ROOT.parents[1]
-if str(ROOT / "lines") not in sys.path:
-    sys.path.insert(0, str(ROOT / "lines"))
 
 
 def results_dir(case=None, suite=None) -> Path:
-    name = suite or (case or {}).get("suite", "standalone")
+    name = suite or (case or {}).get("suite", "p2p")
     path = ROOT / name / "results"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
 CASES = [
-    {
-        "id": "resistor",
-        "suite": "standalone",
-        "title": "10 Ohm series resistor",
-        "harmony_csv": "R1.csv",
-        "pi_csv": "pi_resistor.csv",
-        "spot_hz": [10, 50, 1000, 10000],
-        "plot_entries": ["Y11"],
-    },
-    {
-        "id": "transformer_yy",
-        "suite": "standalone",
-        "title": "Y-Y real transformer (example windings)",
-        "harmony_csv": "T_YY.csv",
-        "pi_csv": "pi_transformer_yy.csv",
-        "spot_hz": [10, 50, 500, 5000, 10000],
-        "plot_entries": ["Y11", "Y14", "Y44"],
-    },
-    {
-        "id": "cable",
-        "suite": "standalone",
-        "title": "Aerial coaxial cable (example_cable layers)",
-        "harmony_csv": "cable.csv",
-        "pi_csv": "pi_cable.csv",
-        "spot_hz": [1, 10, 50, 100, 1000],
-        "plot_entries": ["Y11", "Y12"],
-    },
-    {
-        "id": "ohl",
-        "suite": "standalone",
-        "title": "Two-bundle flat OHL (example_OHL)",
-        "harmony_csv": "ohl.csv",
-        "pi_csv": "pi_ohl.csv",
-        "spot_hz": [1, 10, 50, 100, 1000],
-        "plot_entries": ["Y11", "Y12", "Y13", "Y14"],
-    },
-    {
-        "id": "mmc_gfl",
-        "suite": "standalone",
-        "title": "MMC GFL (example_MMC plant + PI default GFL)",
-        "harmony_csv": "MMC1.csv",
-        "pi_csv": "pi_mmc_gfl.csv",
-        "spot_hz": [1, 5, 10, 50, 100, 500, 1000],
-        "named_entries": ["Yddc", "Ydcd", "Ydcq", "Yadc", "Ydd", "Ydq", "Yqdc", "Yqd", "Yqq"],
-        # Same frame as PowerImpedance. Both AC current rows are load versus generator.
-        "pi_flip_rows": [2, 3],
-        "plot_entries": ["Yddc", "Ydd", "Yqq"],
-    },
-    {
-        "id": "mmc_gfl_vdc",
-        "suite": "standalone",
-        "title": "MMC GFL Vdc+Q (example_MMC plant)",
-        "harmony_csv": "gfl_vdc.csv",
-        "pi_csv": "pi_mmc_gfl_vdc.csv",
-        "spot_hz": [1, 5, 10, 50, 100, 500, 1000],
-        "named_entries": ["Yddc", "Ydcd", "Ydcq", "Yadc", "Ydd", "Ydq", "Yqdc", "Yqd", "Yqq"],
-        "pi_flip_rows": [2, 3],
-        "plot_entries": ["Yddc", "Ydd", "Yqq"],
-    },
-    {
-        "id": "mmc_c1",
-        "suite": "standalone",
-        "title": "P2P c1 MMC Vdc+Q",
-        "harmony_csv": "c1.csv",
-        "pi_csv": "pi_mmc_c1.csv",
-        "spot_hz": [1, 5, 10, 50, 100, 500, 1000],
-        "named_entries": ["Yddc", "Ydcd", "Ydcq", "Yadc", "Ydd", "Ydq", "Yqdc", "Yqd", "Yqq"],
-        "pi_flip_rows": [2, 3],
-        "plot_entries": ["Ydd", "Ydq", "Yqd", "Yqq"],
-    },
-    {
-        "id": "mmc_c2",
-        "suite": "standalone",
-        "title": "P2P c2 MMC P+Q",
-        "harmony_csv": "c2.csv",
-        "pi_csv": "pi_mmc_c2.csv",
-        "spot_hz": [1, 5, 10, 50, 100, 500, 1000],
-        "named_entries": ["Yddc", "Ydcd", "Ydcq", "Yadc", "Ydd", "Ydq", "Yqdc", "Yqd", "Yqq"],
-        "pi_flip_rows": [2, 3],
-        "plot_entries": ["Ydd", "Ydq", "Yqd", "Yqq"],
-    },
     {
         "id": "p2p_cable",
         "suite": "p2p",
@@ -155,14 +70,6 @@ CASES = [
         "plot_entries": ["Zdd", "Zdq", "Zqd", "Zqq"],
     },
 ]
-
-
-try:
-    from line_cases import compare_cases as _line_compare_cases
-
-    CASES.extend(_line_compare_cases())
-except ImportError:
-    pass
 
 
 HARM_PAT = re.compile(

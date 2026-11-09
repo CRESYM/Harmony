@@ -18,7 +18,7 @@ class Filter;
  * @brief Modular Multilevel Converter with arm dynamics and control loops.
  * @ingroup converter
  *
- * PowerImpedance frame: vd = Vm cos θ, vq = −Vm sin θ.
+ * PSCAD frame: vd = Vm cos θ, vq = −Vm sin θ.
  * Pac = 3/2 (vd id + vq iq),  Qac = 3/2 (vd iq − vq id),  Pdc = 3 vdc iΣz.
  * Signs: Pac>0 AC export, Qac>0 ⇒ iq>0 at vq=0, Pdc>0 DC import.
  * OPF (MatACDC): P_G=Pac, Q_G=Qac in MW; solver uses pn=−P_G, qs=−Q_G;

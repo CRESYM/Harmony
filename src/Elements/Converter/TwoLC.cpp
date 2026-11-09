@@ -232,7 +232,7 @@ TwoLC::Evaluation TwoLC::evaluate(const Eigen::VectorXd& x, const Eigen::VectorX
         out.F.segment(i, ndelay) = Adelay * xdelay + Bdelay * m;
         m = Cdelay * xdelay + Ddelay * m;
         i += ndelay;
-        // PowerImpedance rotates the delayed modulation by ω0*τ.
+        // PSCAD frame: delayed modulation is rotated by ω0*τ.
         const double angle = omega_0 * t_delay;
         const double cth = std::cos(angle);
         const double sth = std::sin(angle);

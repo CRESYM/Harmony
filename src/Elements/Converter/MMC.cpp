@@ -356,7 +356,7 @@ void MMC::init_Filter(const std::vector<double>& filter_params) {
  * @param Pac Active power [W], MMC machine convention: positive = export to AC
  *        (AC current leaving the converter).
  * @param Qac Reactive power [VAr], Q = 1.5(Vd Iq − Vq Id).
- *        With Vq≈0, Vd>0: Q>0 ⇒ Iq>0. PowerImpedance frame.
+ *        With Vq≈0, Vd>0: Q>0 ⇒ Iq>0. PSCAD frame.
  * @param Vdc DC voltage [V].
  * @param Pdc DC power [W], MMC machine convention: positive = import from DC
  *        (DC current entering the converter). For a lossless inverter,

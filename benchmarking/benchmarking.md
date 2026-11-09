@@ -1,118 +1,17 @@
-## PowerImpedance.jl
+## Point-to-point HVDC
 
-Standalone $Y(f)$, OHL/cable topologies, and P2P HVDC vs
-[PowerImpedance.jl](https://github.com/Electa-Git/PowerImpedance.jl) 0.4.0
-(tables below were measured on 0.3.0):
+P2P HVDC at c2 AC (B6) against
+[PowerImpedance.jl](https://github.com/Electa-Git/PowerImpedance.jl) 0.4.0:
 [`powerimpedance/`](powerimpedance/).
-
-Which examples and tests Harmony can run, the Park comparison, and the
-PSCAD / Z-tool / IMTB notes:
-[`powerimpedance/harmony_pscad.md`](powerimpedance/harmony_pscad.md).
-Equations of the models Harmony does not have:
-[`powerimpedance/missing_models.pdf`](powerimpedance/missing_models.pdf).
-
-```
-powerimpedance/standalone/   resistor, transformer, cable, OHL, MMC
-powerimpedance/lines/        named towers and coaxial layouts
-powerimpedance/p2p/          Zin, Zeq, Yn, H at c2 AC
-```
 
 ```bash
 python benchmarking/powerimpedance/run_all.py
 ```
 
-Typical wall on this machine: **5–8 min** for the full suite (Julia compile
-included). See [`powerimpedance/README.md`](powerimpedance/README.md).
+See [`powerimpedance/README.md`](powerimpedance/README.md).
 
-| Case | Mean Frobenius rel |
-|------|--------------------|
-| 10 Ω resistor | 0 |
-| Y-Y transformer | $1.1\times 10^{-6}$ |
-| Aerial cable / OHL | $1.6\times 10^{-4}$ / $2.7\times 10^{-4}$ |
-| GFL $P{+}Q$ / $V_{\mathrm{dc}}{+}Q$ / c1 / c2 | $7.2$ / $5.2$ / $4.3$ / $6.7\times 10^{-4}$ |
-| P2P $Y_n$ / $Z_{\mathrm{eq}}$ / $H$ | $2.8\times 10^{-4}$ / $4.6\times 10^{-3}$ / $4.6\times 10^{-3}$ |
-
-## Unbalanced AC $Y_{\mathrm{eff}}$
-
-Block Park $A_0$ vs $Y_{\mathrm{eff}}$ (eq. 18): [`unbalanced_yeff/`](unbalanced_yeff/).
-
-```
-unbalanced_yeff/rlc/    lab and 2 GW RLC
-unbalanced_yeff/ohl/    2 GW untransposed OHL
-```
-
-```bash
-python benchmarking/unbalanced_yeff/run.py
-```
-
-Typical wall: **1–2 min** for all five cases.
-[`unbalanced_yeff/README.md`](unbalanced_yeff/README.md).
-
-## MATLAB PV $Y_{dq}$
-
-Standalone plant admittance vs `PV_RTDS_ZhaoValidatedEngine.m`
-($C_{\mathrm{dc}}=32\,\mathrm{mF}$, $Z=-A^{-1}B$):
-[`matlab_pv/`](matlab_pv/).
-
-```bash
-python benchmarking/matlab_pv/run.py
-```
-
-Harmony **blue**, MATLAB **orange**. Overlay: [`matlab_pv/results/overlay_Y.svg`](matlab_pv/results/overlay_Y.svg).
-
-Typical wall: **~16 s**. Mean Frobenius relative error $2.0\times 10^{-6}$.
-
-## PVplant vs PVgeneric $Y_{dq}$
-
-Symbolic `PVplant` and ODE `PVgeneric` on the 1 MW example:
-[`pv_ode/`](pv_ode/).
-
-```bash
-python benchmarking/pv_ode/run.py
-```
-
-PVplant **blue**, PVgeneric **orange**. Overlay: [`pv_ode/results/overlay_Y.svg`](pv_ode/results/overlay_Y.svg).
-
-Mean Frobenius relative error $0.53$ ($1$–$1000\,\mathrm{Hz}$). The diagonals
-agree near $1\,\mathrm{Hz}$; the curves separate above that.
-
-## MATLAB WT3 $Y_{dq}$
-
-Standalone DFIG admittance vs `WT3_DFIG_SequenceImpedance_2p5MW_v6_directEval.m`:
-[`matlab_wt3/`](matlab_wt3/).
-
-```bash
-python benchmarking/matlab_wt3/run.py
-```
-
-Harmony **blue**, MATLAB **orange**. Overlay: [`matlab_wt3/results/overlay_Y.svg`](matlab_wt3/results/overlay_Y.svg).
-
-Typical wall: **~18 s**. Mean Frobenius relative error $1.7\times 10^{-6}$.
-
-## MATLAB WT4 $Y_{dq}$
-
-Standalone type-4 GSC admittance vs `WT4_RTDS_Implementation_v2_EquationConsistent.m`
-(reduced-$L$, $Y=BA^{-1}$): [`matlab_wt4/`](matlab_wt4/).
-
-```bash
-python benchmarking/matlab_wt4/run.py
-```
-
-Harmony **blue**, MATLAB **orange**. Overlay: [`matlab_wt4/results/overlay_Y.svg`](matlab_wt4/results/overlay_Y.svg).
-
-Typical wall: **~26 s**. Mean Frobenius relative error $3.0\times 10^{-6}$.
-
-## Benchmarking examples:
-- Three-phase transformer models as published here:
-```
-@ARTICLE{11629608,
-  author={Lekić, Aleksandra and Alsarayreh, Saif and Dimoulias, Stelios C. and Malamaki, Kyriaki - Nefeli D.},
-  journal={IEEE Transactions on Power Delivery}, 
-  title={Admittance-Based Modeling and Validation of Three-Phase Transformers in Converter-Dominated Power Systems}, 
-  year={2026},
-  volume={},
-  number={},
-  pages={1-4},
-  keywords={Modeling;Transformers;Admittance;Matrices;Titanium;Power systems;Voltage;Current;TV;IP networks;Admittance matrix;frequency-domain modeling;harmonic analysis;three-phase transformer modeling},
-  doi={10.1109/TPWRD.2026.3718749}}
-```
+| Quantity | Mean Frobenius rel |
+|----------|--------------------|
+| DC cable $Y$ | $1.16\times 10^{-5}$ |
+| $Y_n$ / $Z_{\mathrm{eq}}$ / $H$ | $6.83\times 10^{-5}$ / $4.38\times 10^{-3}$ / $4.35\times 10^{-3}$ |
+| $Z_{\mathrm{in}}$ | $7.28\times 10^{-2}$ |

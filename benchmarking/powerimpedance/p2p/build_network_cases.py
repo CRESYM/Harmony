@@ -7,9 +7,7 @@ import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-PI_ROOT = ROOT.parent
 HARMONY = ROOT / "harmony"
-STANDALONE_HARMONY = PI_ROOT / "standalone" / "harmony"
 
 # geometry = [Δxbc, ybc]; rc/Rdc/dsag/dsb match C++ Conductors(...).
 P2P_OHL = {
@@ -289,62 +287,8 @@ def write_p2p_pi_op():
     dump("p2p_pi_op.json", payload)
 
 
-def write_mmc_c1():
-    dump(
-        "mmc_c1.json",
-        {
-            "simulation": {
-                "title": "pi_p2p_mmc_c1",
-                "description": "Standalone P2P c1: Vdc+Q, S=1000 MW, Vac=380 kV, Vdc=800 kV.",
-                "output_directory": "./files",
-                "frequency_range": {"start": 1, "end": 1000, "points": 81},
-                "nominal_power": 1000.0,
-                "nominal_voltage": 380.0,
-                "dc_nominal_voltage": 800.0,
-            },
-            "buses": [
-                {"id": "ac_bus", "location": "AC1", "pins": 3, "enabled": True},
-                {"id": "dc_bus", "location": "DC1", "pins": 2, "enabled": True},
-            ],
-            "components": [
-                mmc("c1", "AC1_DC1", "ac_bus", "dc_bus", -100e6, -100e6, True, 0.06, 0.535),
-            ],
-            "computations": [y_matrix("c1", 1, 1000, 81)],
-        },
-        STANDALONE_HARMONY,
-    )
-
-
-def write_mmc_c2(q_ac=-100e6, name="mmc_c2.json", cid="c2"):
-    dump(
-        name,
-        {
-            "simulation": {
-                "title": "pi_p2p_mmc_c2",
-                "description": "Standalone P2P c2: P+Q, Lr=0.0461 H, Rr=0.4103 Ohm.",
-                "output_directory": "./files",
-                "frequency_range": {"start": 1, "end": 1000, "points": 81},
-                "nominal_power": 1000.0,
-                "nominal_voltage": 380.0,
-                "dc_nominal_voltage": 800.0,
-            },
-            "buses": [
-                {"id": "ac_bus", "location": "AC1", "pins": 3, "enabled": True},
-                {"id": "dc_bus", "location": "DC1", "pins": 2, "enabled": True},
-            ],
-            "components": [
-                mmc(cid, "AC1_DC1", "ac_bus", "dc_bus", 100e6, q_ac, False, 0.0461, 0.4103),
-            ],
-            "computations": [y_matrix(cid, 1, 1000, 81)],
-        },
-        STANDALONE_HARMONY,
-    )
-
-
 if __name__ == "__main__":
     HARMONY.mkdir(parents=True, exist_ok=True)
     write_p2p()
     write_p2p_pi_op()
-    write_mmc_c1()
-    write_mmc_c2()
 

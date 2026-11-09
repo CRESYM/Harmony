@@ -227,7 +227,7 @@ struct ParkKernels {
 
 ParkKernels makeParkKernels()
 {
-    // PowerImpedance / PSCAD qaxis=1: vd from cos, vq from −sin.
+    // PSCAD frame: vd from cos, vq from −sin.
     // Row 1 is −j times row 0. A passive inductor then has Z_dq = +ω0 L.
     // φ = −2π/3 so row 0 is [1, α², α], α = e^{j 2π/3}.
     const complex<double> ang = std::exp(complex<double>(0, -2.0 * M_PI / 3.0));
