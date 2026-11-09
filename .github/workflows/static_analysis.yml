@@ -4,14 +4,14 @@ on:
   pull_request:
     branches: [ main, "develop", "68-static-analysis" ]
 
-permissions:
-  contents: read
-  pull-requests: write
-  checks: write
-
 jobs:
   clang-tidy:
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
 
     steps:
       - name: Checkout Repository
@@ -45,6 +45,8 @@ jobs:
       - name: Run cpp-linter (PR Comments & Annotations)
         uses: cpp-linter/cpp-linter-action@v2
         id: linter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           style: ''                    # Disable clang-format checks (clang-tidy only)
           database: 'build'            # Folder containing compile_commands.json
