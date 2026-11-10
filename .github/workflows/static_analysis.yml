@@ -51,9 +51,7 @@ jobs:
           style: ''                    # Disable clang-format checks (clang-tidy only)
           database: 'build'            # Folder containing compile_commands.json
           lines-changed-only: true     # Analyze ONLY lines modified in this PR
-          #thread-comments: true        # Post/update a single summary comment on the PR thread
-          # only 'update' a single comment in a pull request thread.
-          # Pull requests from forks get a read-only token, so skip the comment there.
+          # Only 'update' a single comment in a PR thread. PRs from forks get a read-only token, so skip the comment there.
           thread-comments: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'update' }}
           step-summary: true           # Add analysis summary to GitHub Actions job summary
           extra-args: '--header-filter=${{ github.workspace }}/src/.*'
