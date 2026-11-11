@@ -31,7 +31,7 @@ cmake_minimum_required(VERSION 4.0)
 #
 #   ENABLE_CLANG_TIDY
 #       Enable static analysis with Clang Tidy
-#       Default: ON
+#       Default: OFF
 #
 # In short:
 #   - Build settings are configured here
@@ -115,8 +115,11 @@ if(ENABLE_CLANG_TIDY)
         "${CLANG_TIDY_EXE}"
         "--allow-no-checks"
         "--header-filter=${CMAKE_SOURCE_DIR}/src/.*"
-        "--exclude-header-filter=.*miniconda3.*")
-    set_target_properties(harmony_core PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+        "--exclude-header-filter=.*miniconda3.*"            # Skip checks on dependencies
+        "--exclude-header-filter=.*stb_image_write\\.h")    # Skip check on third-part header file
+    foreach(HARMONY_TARGET IN ITEMS harmony_core harmony_examples Harmony HarmonyUI)
+        set_target_properties(${HARMONY_TARGET} PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+    endforeach()
     # Generate a .clang-tidy in build/_deps to disable analysis for all fetched dependencies
     file(WRITE "${CMAKE_BINARY_DIR}/_deps/.clang-tidy" "Checks: '-*'\n")
 endif()
