@@ -108,10 +108,10 @@ mkdir static_analysis
 cmake -B static_analysis -S . -DGUROBI_PATH=<path_to_gurobi_installation> -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DUSE_PRECOMPILED_HEADERS=OFF
 ```
 
-The optiosn have the following purposes:
-* `-B static_analysis`: Stores the generated build files in the static_analysis directory, keeping them separate from your normal build.
-* `-S .`: Specifies the root directory of the Harmony source code.
-* `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON`: Generates compile_commands.json, which contains the compiler commands for the project's source files.
+The options have the following purposes:
+* `-B static_analysis`: Stores the generated build files in the `qstatic_analysis` directory, keeping them separate from your normal build.
+* `-S .`: Specifies the path to the top-level `CMakeLists.txt` file.
+* `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON`: Generates `compile_commands.json`, which contains the compiler commands for the project's source files.
 * `-DUSE_PRECOMPILED_HEADERS=OFF`: Disables precompiled headers, which can interfere with Clang-Tidy analysis.
 
 **2. Run Clang-Tidy**. Once CMake has finished configuring the project, you can run Clang-Tidy using:
@@ -147,6 +147,45 @@ grep -E '^[^ ]+\.cpp:[0-9]+:[0-9]+: warning: ' output.txt | sed -E 's/:([0-9]+):
 
 This prints the number of warnings associated with each file, sorted from highest to lowest, followed by the total number of warnings.
 
+<details>
+<summary>Example output</summary>
+
+```bash
+36 /Users/yq/tmp/Harmony/src/ui/Visualization.cpp
+23 /Users/yq/tmp/Harmony/src/Solver/OPF/Powerflow_network_params.cpp
+20 /Users/yq/tmp/Harmony/src/Elements/Converter/MMC.cpp
+18 /Users/yq/tmp/Harmony/src/Solver/Helper_Functions/Symbolic_functions.cpp
+15 /Users/yq/tmp/Harmony/src/Solver/Stability_Estimate/Stability_estimate.cpp
+13 /Users/yq/tmp/Harmony/src/Elements/Transmission_Line/Cable.cpp
+10 /Users/yq/tmp/Harmony/src/Solver/Helper_Functions/Standard_functions.cpp
+10 /Users/yq/tmp/Harmony/src/Solver/Certificate/Stability_certificate.cpp
+8 /Users/yq/tmp/Harmony/src/Solver/Helper_Functions/Differential_equations.cpp
+8 /Users/yq/tmp/Harmony/src/Solver/DQsym/DQsym.cpp
+7 /Users/yq/tmp/Harmony/src/Solver/OPF/Powerflow_solver.cpp
+6 /Users/yq/tmp/Harmony/src/Solver/State_Space_Model/State_Space_Model.cpp
+6 /Users/yq/tmp/Harmony/src/Solver/Helper_Functions/DQsym_Conversion_Functions.cpp
+5 /Users/yq/tmp/Harmony/src/ui/harmony_launcher.cpp
+4 /Users/yq/tmp/Harmony/src/Elements/Source/Source_base.cpp
+3 /Users/yq/tmp/Harmony/src/json/computation_runner.cpp
+3 /Users/yq/tmp/Harmony/src/Elements/Transmission_Line/overhead_line.cpp
+3 /Users/yq/tmp/Harmony/src/Elements/Impedance/Impedance_base.cpp
+2 /Users/yq/tmp/Harmony/src/Solver/OPF/Powerflow_data.cpp
+2 /Users/yq/tmp/Harmony/src/Solver/Certificate/Operating_region.cpp
+2 /Users/yq/tmp/Harmony/src/examples/example_DQsym_math_operations.cpp
+2 /Users/yq/tmp/Harmony/src/Elements/Transmission_Line/Transmissionline.cpp
+2 /Users/yq/tmp/Harmony/src/Elements/Load/Load.cpp
+2 /Users/yq/tmp/Harmony/src/Elements/Element.cpp
+1 /Users/yq/tmp/Harmony/src/examples/example_WT_type_4.cpp
+1 /Users/yq/tmp/Harmony/src/examples/example_PV_plant.cpp
+1 /Users/yq/tmp/Harmony/src/examples/example_MMC_gfm.cpp
+1 /Users/yq/tmp/Harmony/src/examples/example_generator.cpp
+1 /Users/yq/tmp/Harmony/src/Elements/RES/WT_type_3.cpp
+1 /Users/yq/tmp/Harmony/src/Elements/RES/RES_base.cpp
+1 /Users/yq/tmp/Harmony/src/Elements/RES/PV_plant.cpp
+TOTAL 217
+```
+</details>
+
 ### Running Clang-Tidy as part of the CMake build
 
 Alternatively, you can enable Clang-Tidy directly in the CMake configuration. In this mode, Clang-Tidy runs automatically whenever a source file is compiled. This is useful if you want to check your code regularly during development.
@@ -168,7 +207,7 @@ cmake --build . --config Release -j
 
 Clang-Tidy will now run automatically as part of the compilation process. Its findings will appear in the terminal output alongside the normal compiler messages.
 
-Note: Running Clang-Tidy as part of the build increases compilation time. It is therefore generally recommended to use standalone execution when you only want to check your changes occasionally, for example before opening a pull request.
+**Note**: Running Clang-Tidy as part of the build increases compilation time. It is therefore generally recommended to use standalone execution when you only want to check your changes occasionally, for example before opening a pull request.
 
 ## Related documentation
 
