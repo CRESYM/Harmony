@@ -58,7 +58,7 @@ Clang-Tidy supports many different checks. The checks used in Harmony are specif
 * `clang-analyzer`: **26 warnings**. Uses deeper static analysis to detect potential bugs, such as null pointer dereferences, uninitialized values, and incorrect memory access.
 * `cppcoreguidelines`: **4178 warnings**. Checks compliance with the C++ Core Guidelines, promoting safer, more maintainable, and more idiomatic C++ code.
 
-**Note**: The warning counts below reflect the results of a static analysis run on the current version of the Harmony codebase (commit `f8a9300d59d`). They are provided as a snapshot and may change as the codebase evolves or the Clang-Tidy configuration is updated.
+**Note**: The warning counts below reflect the results of a static analysis run on the current version of the Harmony codebase (commit [`f8a9300d59d`](https://github.com/CRESYM/Harmony/tree/f8a9300d59d0eaf124a1842d93ecab75ce9be293)). They are provided as a snapshot and may change as the codebase evolves or the Clang-Tidy configuration is updated.
 
 Clang-Tidy is automatically run on pull requests targeting the `develop` and `main` branches. The check focuses on warnings in code introduced or modified by the pull request, rather than reporting all existing warnings in the codebase. You can also run Clang-Tidy locally to check your changes and identify potential issues before opening a pull request.
 
