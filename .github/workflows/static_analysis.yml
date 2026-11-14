@@ -2,7 +2,7 @@ name: Static Analysis
 
 on:
   pull_request:
-    branches: [ main, "develop", "68-static-analysis" ]
+    branches: [ main, "develop" ]
 
 jobs:
   clang-tidy:
@@ -17,10 +17,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      #- name: Install Dependencies
-      #  run: |
-      #    sudo apt-get update
-      #    sudo apt-get install -y clang-tidy ninja-build
 
       # Install dependencies
       # Call .github/actions/setup-env/action.yml
