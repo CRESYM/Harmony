@@ -1,5 +1,5 @@
-#ifndef INDUCTOR_H
-#define INDUCTOR_H
+#ifndef HARMONY_ELEMENTS_IMPEDANCE_INDUCTOR_H
+#define HARMONY_ELEMENTS_IMPEDANCE_INDUCTOR_H
 
 /**
  * @file Inductor.h
@@ -39,4 +39,4 @@ private:
     double initial_value = 0; // Initial current value for the inductor, not used for now
 };
 
-#endif // INDUCTOR_H
+#endif // HARMONY_ELEMENTS_IMPEDANCE_INDUCTOR_H

@@ -1,5 +1,5 @@
-#ifndef _CONTROL_BLOCK_H_
-#define _CONTROL_BLOCK_H_
+#ifndef HARMONY_CONTROL_CONTROL_BLOCK_H
+#define HARMONY_CONTROL_CONTROL_BLOCK_H
 
 #include "core/Constants.h"
 
@@ -24,4 +24,4 @@ public:
 	virtual ~ControlBlock() = default;
 };
 
-#endif // !_CONTROL_BLOCK_H_
+#endif // HARMONY_CONTROL_CONTROL_BLOCK_H

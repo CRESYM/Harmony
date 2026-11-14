@@ -1,5 +1,5 @@
-#ifndef _RES_BASE_H_
-#define _RES_BASE_H_
+#ifndef HARMONY_ELEMENTS_RES_RES_BASE_H
+#define HARMONY_ELEMENTS_RES_RES_BASE_H
 
 /**
  * @file RES_base.h
@@ -28,4 +28,4 @@ public:
 };
 
 
-#endif
+#endif // HARMONY_ELEMENTS_RES_RES_BASE_H

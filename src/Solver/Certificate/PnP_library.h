@@ -1,5 +1,5 @@
-#ifndef PNP_LIBRARY_H
-#define PNP_LIBRARY_H
+#ifndef HARMONY_SOLVER_CERTIFICATE_PNP_LIBRARY_H
+#define HARMONY_SOLVER_CERTIFICATE_PNP_LIBRARY_H
 
 /**
  * @file PnP_library.h
@@ -57,4 +57,4 @@ private:
 	std::vector<PnPDeviceRecord> records_;
 };
 
-#endif // PNP_LIBRARY_H
+#endif // HARMONY_SOLVER_CERTIFICATE_PNP_LIBRARY_H

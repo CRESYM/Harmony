@@ -1,5 +1,5 @@
-#ifndef FILTER_H
-#define FILTER_H
+#ifndef HARMONY_CONTROL_FILTER_H
+#define HARMONY_CONTROL_FILTER_H
 
 #include "Control_block.h"
 
@@ -89,4 +89,4 @@ private:
     double bandwidth;    // Bandwidth
 };
 
-#endif // FILTER_H
+#endif // HARMONY_CONTROL_FILTER_H

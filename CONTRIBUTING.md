@@ -74,7 +74,7 @@ If you continue working on the branch after pushing it, remember to push your ne
 
 **8. Open a pull request**
 
-When your changes are ready for review, open a pull request to merge your branch into `develop`. 
+When your changes are ready for review, open a pull request (PR) to merge your branch into `develop`. 
 
 A pull request is a request for the team to review your changes before they become part of the shared development version of Harmony.
 
@@ -85,6 +85,13 @@ When creating the pull request:
 - Add at least one member of the Harmony team as a reviewer.
 - Mention anything that the reviewer should pay particular attention to.
 - If there are known limitations or tests that you could not run, mention them.
+
+When a pull request targeting the `develop` branch is opened, the following GitHub Actions workflows are automatically triggered:
+* **Build and test (Windows, Linux and macOS)**: Three separate workflows build Harmony and run its tests on Windows, Linux and macOS. These checks help ensure that the proposed changes compile and that the existing functionality remains intact across all supported operating systems.
+* **Static analysis (Clang-Tidy)**: This workflow runs [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/index.html) on the code introduced or modified in the pull request. It uses the checks configured in the [.clang-tidy](.clang-tidy) file to identify potential issues. Any findings are reported in the workflow results and a comment is automatically added to the pull request. See the [developer guide](docs/developer-guide.md) for more information.
+
+You can monitor the progress and results of these workflows in the _Checks_ tab of the pull request. If a workflow fails or Clang-Tidy reports issues that need to be addressed, make the necessary corrections in your branch and push the updated commits to GitHub. The existing pull request will be updated automatically, and the relevant workflows will run again to check your changes.
+
 
 **9. Address review comments**
 

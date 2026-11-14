@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HARMONY_UI_LOG_CAPTURE_H
+#define HARMONY_UI_LOG_CAPTURE_H
 
 #include <functional>
 #include <mutex>
@@ -37,3 +38,5 @@ private:
 	std::streambuf* oldCout_;
 	std::streambuf* oldCerr_;
 };
+
+#endif // HARMONY_UI_LOG_CAPTURE_H

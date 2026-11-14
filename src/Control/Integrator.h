@@ -1,5 +1,5 @@
-#ifndef _INTEGRATOR_H_
-#define _INTEGRATOR_H_
+#ifndef HARMONY_CONTROL_INTEGRATOR_H
+#define HARMONY_CONTROL_INTEGRATOR_H
 
 #include "Control_block.h"
 
@@ -36,4 +36,4 @@ private:
 	
 };
 
-#endif
+#endif // HARMONY_CONTROL_INTEGRATOR_H

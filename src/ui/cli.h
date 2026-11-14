@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HARMONY_UI_CLI_H
+#define HARMONY_UI_CLI_H
 
 #include <filesystem>
 #include <functional>
@@ -105,3 +106,5 @@ std::filesystem::path resolveJsonPath(
 void printJsonNotFoundHelp(
 	const std::string& input,
 	const std::vector<std::filesystem::path>& searchPaths);
+
+#endif // HARMONY_UI_CLI_H

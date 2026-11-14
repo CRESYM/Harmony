@@ -1,5 +1,5 @@
-#ifndef CAPACITOR_H
-#define CAPACITOR_H
+#ifndef HARMONY_ELEMENTS_IMPEDANCE_CAPACITOR_H
+#define HARMONY_ELEMENTS_IMPEDANCE_CAPACITOR_H
 
 /**
  * @file Capacitor.h
@@ -38,4 +38,4 @@ private:
 	double initial_value = 0; // Initial voltage across the capacitor, not used for now
 };
 
-#endif // CAPACITOR_H
+#endif // HARMONY_ELEMENTS_IMPEDANCE_CAPACITOR_H

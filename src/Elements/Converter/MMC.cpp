@@ -1017,7 +1017,7 @@ void MMC::computeABCD() {
     A_matrix = A;
     B_matrix = B;
 
-    int n = A_matrix.cols();
+    Eigen::Index n = A_matrix.cols();
     C_matrix = Eigen::MatrixXd::Zero(3,n);
 
 	C_matrix(1, n - 12) = 1; // location of iDelta_d
@@ -1671,7 +1671,7 @@ std::vector<std::vector<complex<double>>> MMC::compute_y_parameters(double frequ
     // s: Laplace variable (jω)
 	double omega_num = 2.0 * M_PI * frequency;
 	std::complex<double> s_num = std::complex<double>(0, omega_num);
-    const int n = A_matrix.rows();
+    const Eigen::Index n = A_matrix.rows();
     if (n == 0) {
         std::vector<std::vector<complex<double>>> Y_zero(Y_matrix.nrows(),
             std::vector<complex<double>>(Y_matrix.ncols(), {0.0, 0.0}));
@@ -1762,7 +1762,7 @@ void MMC::writeMNAmatrix(
 
     RCP<const Basic> Leq = real_double(L_eq), Req = real_double(R_eq);
     RCP<const Basic> La = real_double(L_arm), Ra = real_double(R_arm), Ca = real_double(C_arm);
-    int lastCol = MNA.ncols() - 1;
+    Eigen::Index lastCol = MNA.ncols() - 1;
 
     std::vector<RCP<const Basic>> state_syms;
     for (int i = 0; i < 12; ++i)

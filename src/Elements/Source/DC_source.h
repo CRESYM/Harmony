@@ -4,8 +4,8 @@
  * @ingroup source
  */
 
-#ifndef _DC_SOURCE_H_
-#define _DC_SOURCE_H_
+#ifndef HARMONY_ELEMENTS_SOURCE_DC_SOURCE_H
+#define HARMONY_ELEMENTS_SOURCE_DC_SOURCE_H
 
 #include "Source_base.h"
 
@@ -44,4 +44,4 @@ public:
 private:
 };
 
-#endif
+#endif // HARMONY_ELEMENTS_SOURCE_DC_SOURCE_H

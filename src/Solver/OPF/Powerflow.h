@@ -1,5 +1,5 @@
-#ifndef POWERFLOW_H
-#define POWERFLOW_H
+#ifndef HARMONY_SOLVER_OPF_POWERFLOW_H
+#define HARMONY_SOLVER_OPF_POWERFLOW_H
 
 /**
  * @file Powerflow.h
@@ -286,4 +286,4 @@ private:
 
 };
 
-#endif // POWERFLOW_H
+#endif // HARMONY_SOLVER_OPF_POWERFLOW_H

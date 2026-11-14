@@ -1,5 +1,5 @@
-#ifndef TRANSFORMER_DELTA_Y_REAL_H
-#define TRANSFORMER_DELTA_Y_REAL_H
+#ifndef HARMONY_ELEMENTS_TRANSFORMER_TRANSFORMER_DELTA_Y_REAL_H
+#define HARMONY_ELEMENTS_TRANSFORMER_TRANSFORMER_DELTA_Y_REAL_H
 
 /**
  * @file Transformer_Delta_Y_real.h
@@ -31,4 +31,4 @@ private:
     // inherited from parent class
 };
 
-#endif
+#endif // HARMONY_ELEMENTS_TRANSFORMER_TRANSFORMER_DELTA_Y_REAL_H

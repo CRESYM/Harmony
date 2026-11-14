@@ -1,5 +1,5 @@
-#ifndef _RESISTOR_H_
-#define _RESISTOR_H_
+#ifndef HARMONY_ELEMENTS_IMPEDANCE_RESISTOR_H
+#define HARMONY_ELEMENTS_IMPEDANCE_RESISTOR_H
 
 /**
  * @file Resistor.h
@@ -37,4 +37,4 @@ private:
     std::vector<double> R_values;
 };
 
-#endif // _RESISTOR_H_
+#endif // HARMONY_ELEMENTS_IMPEDANCE_RESISTOR_H

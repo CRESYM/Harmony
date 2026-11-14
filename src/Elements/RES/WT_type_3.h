@@ -1,5 +1,5 @@
-#ifndef _WT_TYPE_3_H_
-#define _WT_TYPE_3_H_
+#ifndef HARMONY_ELEMENTS_RES_WT_TYPE_3_H
+#define HARMONY_ELEMENTS_RES_WT_TYPE_3_H
 
 /**
  * @file WT_type_3.h
@@ -61,4 +61,4 @@ private:
 };
 
 
-#endif
+#endif // HARMONY_ELEMENTS_RES_WT_TYPE_3_H

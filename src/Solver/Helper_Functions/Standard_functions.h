@@ -1,5 +1,5 @@
-#ifndef _STANDARD_FUNCTIONS_H_
-#define _STANDARD_FUNCTIONS_H_
+#ifndef HARMONY_SOLVER_HELPERFUNCTIONS_STANDARD_FUNCTIONS_H
+#define HARMONY_SOLVER_HELPERFUNCTIONS_STANDARD_FUNCTIONS_H
 
 /**
  * @file Standard_functions.h
@@ -135,4 +135,4 @@ extern vector<vector<complex<double>>> apply_park_Yeff(
     const vector<vector<complex<double>>>& Y_p1,
     const vector<vector<complex<double>>>& Y_p3);
 
-#endif // _STANDARD_FUNCTIONS_H_
+#endif // HARMONY_SOLVER_HELPERFUNCTIONS_STANDARD_FUNCTIONS_H

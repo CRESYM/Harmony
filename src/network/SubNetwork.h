@@ -3,8 +3,8 @@
  * @brief Hierarchical sub-network view for modular AC/DC grids and converter interfaces.
  */
 
-#ifndef SUBNETWORK_H
-#define SUBNETWORK_H
+#ifndef HARMONY_NETWORK_SUBNETWORK_H
+#define HARMONY_NETWORK_SUBNETWORK_H
 
 #include "network.h"
 
@@ -88,7 +88,7 @@ public:
      * @brief Get the number of registered output buses.
      * @return Count of entries in the output-bus map.
      */
-	const int getNumberOfOutputs() const { return outputBuses.size(); }
+	const size_t getNumberOfOutputs() const { return outputBuses.size(); }
 
     /**
      * @brief Get the sub-network name (alias for getSubNetworkName).
@@ -102,4 +102,4 @@ public:
     void printInfo() const;
 };
 
-#endif // SUBNETWORK_H
+#endif // HARMONY_NETWORK_SUBNETWORK_H

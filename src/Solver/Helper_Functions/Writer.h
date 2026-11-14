@@ -1,5 +1,5 @@
-#ifndef _WRITER_H_
-#define _WRITER_H_
+#ifndef HARMONY_SOLVER_HELPERFUNCTIONS_WRITER_H
+#define HARMONY_SOLVER_HELPERFUNCTIONS_WRITER_H
 
 /**
  * @file Writer.h
@@ -18,4 +18,4 @@
 extern void write_file(const std::vector<double>& time, const std::vector<Eigen::MatrixXd>& values, const std::vector<std::string>& headers, const std::string& filename);
 
 
-#endif // _WRITER_H_
+#endif // HARMONY_SOLVER_HELPERFUNCTIONS_WRITER_H

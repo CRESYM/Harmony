@@ -3,8 +3,8 @@
  * @brief Abstract base class for all electrical network components.
  */
 
-#ifndef ELEMENT_H
-#define ELEMENT_H
+#ifndef HARMONY_ELEMENTS_ELEMENT_H
+#define HARMONY_ELEMENTS_ELEMENT_H
 
 #include "core/Constants.h"
 #include "Solver/Helper_Functions/Helper_Functions.h"
@@ -309,4 +309,4 @@ protected:
 
 /** @} */ // end of elements group
 
-#endif // ELEMENT_H
+#endif // HARMONY_ELEMENTS_ELEMENT_H

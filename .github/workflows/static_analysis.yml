@@ -1,0 +1,59 @@
+name: Static Analysis
+
+on:
+  pull_request:
+    branches: [ main, "develop" ]
+
+jobs:
+  clang-tidy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+
+      # Install dependencies
+      # Call .github/actions/setup-env/action.yml
+      # This script creates the conda env and installs Gurobi and its license
+      - name: Install dependencies
+        uses: ./.github/actions/setup-env
+        with:
+          gurobi_wlsaccessid: ${{ secrets.GUROBI_WLSACCESSID }}
+          gurobi_wlssecret: ${{ secrets.GUROBI_WLSSECRET }}
+          gurobi_licenseid: ${{ secrets.GUROBI_LICENSEID }}
+
+      # Configure CMake. Generate compile_commands.json for cpp-linter.
+      - name: Configure CMake
+        shell: bash -l {0}
+        run: |
+          cmake -B build -S . \
+            -DGUROBI_PATH="${{ github.workspace }}/dependencies/gurobi1301/linux64" \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_CLANG_TIDY=OFF
+
+      - name: Run cpp-linter (PR Comments & Annotations)
+        uses: cpp-linter/cpp-linter-action@v2
+        id: linter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          style: ''                    # Disable clang-format checks (clang-tidy only)
+          database: 'build'            # Folder containing compile_commands.json
+          lines-changed-only: true     # Analyze ONLY lines modified in this PR
+          # Only 'update' a single comment in a PR thread. PRs from forks get a read-only token, so skip the comment there.
+          thread-comments: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'update' }}
+          step-summary: true           # Add analysis summary to GitHub Actions job summary
+          extra-args: '--header-filter=${{ github.workspace }}/src/.*'
+
+      - name: Check Linter Status
+        if: steps.linter.outputs.checks-failed != '0'
+        run: |
+          echo "Clang-Tidy detected issues in modified lines."
+          exit 1

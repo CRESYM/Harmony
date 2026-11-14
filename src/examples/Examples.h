@@ -1,5 +1,5 @@
-#ifndef _EXAMPLES_H_
-#define _EXAMPLES_H_
+#ifndef HARMONY_EXAMPLES_H
+#define HARMONY_EXAMPLES_H
 
 /**
  * @file Examples.h
@@ -116,4 +116,4 @@ extern void example_point2point_case();
 /** @brief PLL controller test using ProportionalIntegralController. @ingroup examples */
 extern void example_PLL_test();
 
-#endif
+#endif // HARMONY_EXAMPLES_H

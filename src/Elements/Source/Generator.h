@@ -1,5 +1,5 @@
-#ifndef GENERATOR_H
-#define GENERATOR_H
+#ifndef HARMONY_ELEMENTS_SOURCE_GENERATOR_H
+#define HARMONY_ELEMENTS_SOURCE_GENERATOR_H
 
 /**
  * @file Generator.h
@@ -38,5 +38,5 @@ private:
 
 };
 
-#endif
+#endif // HARMONY_ELEMENTS_SOURCE_GENERATOR_H
 

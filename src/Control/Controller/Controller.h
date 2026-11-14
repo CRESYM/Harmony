@@ -1,5 +1,5 @@
-#ifndef CONTROLLER_H
-#define CONTROLLER_H
+#ifndef HARMONY_CONTROL_CONTROLLER_H
+#define HARMONY_CONTROL_CONTROLLER_H
 
 #include "Control/Control_block.h"
 
@@ -105,4 +105,4 @@ protected:
     std::vector<double> reference; // Reference values
 };
 
-#endif // CONTROLLER_H
+#endif // HARMONY_CONTROL_CONTROLLER_H

@@ -1,5 +1,5 @@
-#ifndef WP_PLANT_H_
-#define WP_PLANT_H_
+#ifndef HARMONY_ELEMENTS_RES_WP_PLANT_H
+#define HARMONY_ELEMENTS_RES_WP_PLANT_H
 
 /**
  * @file WP_plant.h
@@ -29,4 +29,4 @@ private:
 	std::unique_ptr<RES_base> wind_turbine;
 };
 
-#endif // !WP_PLANT_H_
+#endif // HARMONY_ELEMENTS_RES_WP_PLANT_H

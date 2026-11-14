@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HARMONY_JSON_PARAMETERS_H
+#define HARMONY_JSON_PARAMETERS_H
 
 #include <map>
 #include <string>
@@ -51,3 +52,5 @@ public:
 private:
 	std::map<std::string, double> values_;
 };
+
+#endif // HARMONY_JSON_PARAMETERS_H

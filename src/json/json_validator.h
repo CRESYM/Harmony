@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HARMONY_JSON_VALIDATOR_H
+#define HARMONY_JSON_VALIDATOR_H
 
 #include <nlohmann/json.hpp>
 #include <set>
@@ -26,3 +27,5 @@ private:
 	static void rejectUnknownKeys(const JSON& j, const std::set<std::string>& allowed, const char* context);
 	static void validateByType(const JSON& comp, const std::string& type, const JsonParameterTable& params);
 };
+
+#endif // HARMONY_JSON_VALIDATOR_H

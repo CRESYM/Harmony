@@ -1,5 +1,5 @@
-#ifndef MMC_H
-#define MMC_H
+#ifndef HARMONY_ELEMENTS_CONVERTER_MMC_H
+#define HARMONY_ELEMENTS_CONVERTER_MMC_H
 
 /**
  * @file MMC.h
@@ -278,4 +278,4 @@ private:
     
 };
 
-#endif // MMC_H
+#endif // HARMONY_ELEMENTS_CONVERTER_MMC_H

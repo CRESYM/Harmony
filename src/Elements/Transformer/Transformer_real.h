@@ -1,5 +1,5 @@
-#ifndef TRANSFORMER_REAL_H
-#define TRANSFORMER_REAL_H
+#ifndef HARMONY_ELEMENTS_TRANSFORMER_TRANSFORMER_REAL_H
+#define HARMONY_ELEMENTS_TRANSFORMER_TRANSFORMER_REAL_H
 
 /**
  * @file Transformer_real.h
@@ -37,4 +37,4 @@ private:
     double a = 0.0;  // Turns ratio NP/NS
 };
 
-#endif // TRANSFORMER_REAL_H
+#endif // HARMONY_ELEMENTS_TRANSFORMER_TRANSFORMER_REAL_H

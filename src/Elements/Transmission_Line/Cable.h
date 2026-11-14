@@ -1,5 +1,5 @@
-#ifndef _CABLE_H_
-#define _CABLE_H_
+#ifndef HARMONY_ELEMENTS_TRANSMISSIONLINE_CABLE_H
+#define HARMONY_ELEMENTS_TRANSMISSIONLINE_CABLE_H
 
 /**
  * @file Cable.h
@@ -189,4 +189,4 @@ private:
 	std::vector<std::vector<complex<double>>> compute_y_at_omega(double omega_rad);
 };
 
-#endif
+#endif // HARMONY_ELEMENTS_TRANSMISSIONLINE_CABLE_H

@@ -1,5 +1,5 @@
-#ifndef STATE_SPACE_MODEL
-#define STATE_SPACE_MODEL
+#ifndef HARMONY_SOLVER_STATESPACEMODEL_STATE_SPACE_MODEL_H
+#define HARMONY_SOLVER_STATESPACEMODEL_STATE_SPACE_MODEL_H
 
 /**
  * @file State_Space_Model.h
@@ -313,4 +313,4 @@ private:
     void expandBForDQsym();   ///< Post-process: raw B → B_dqsym (all groups of 3)
 };
 
-#endif
+#endif // HARMONY_SOLVER_STATESPACEMODEL_STATE_SPACE_MODEL_H

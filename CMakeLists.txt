@@ -25,6 +25,14 @@ cmake_minimum_required(VERSION 4.0)
 #         macOS:   /Library/gurobi1200/macos_universal2
 #         Linux:   /opt/gurobi1301/linux64
 #
+#   USE_PRECOMPILED_HEADERS
+#       Enable precompiled headers for Harmony, HarmonyUI and harmony_examples
+#       Default: ON
+#
+#   ENABLE_CLANG_TIDY
+#       Enable static analysis with Clang Tidy
+#       Default: OFF
+#
 # In short:
 #   - Build settings are configured here
 #   - Source files are listed in sources.cmake
@@ -73,19 +81,24 @@ add_library(
 )
 
 # -----------------------------------------------------------------------------
-# 3. Pre-compiled Headers and Windows Options
+# 3. Pre-compiled Headers (PCH) and Windows Options
 # -----------------------------------------------------------------------------
+option(ENABLE_CLANG_TIDY "Enable static analysis with Clang Tidy" OFF)
+option(USE_PRECOMPILED_HEADERS "Enable precompiled headers for Harmony, HarmonyUI and harmony_examples" ON)
 
 # Slim PCH: Eigen + SymEngine + Constants only. Include_components.h and
 # Helper_Functions.h change too often and pull too much to be worth caching.
-target_precompile_headers(harmony_core PRIVATE
-    <Eigen/Dense>
-    <symengine/basic.h>
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/core/Constants.h"
-)
-target_precompile_headers(Harmony REUSE_FROM harmony_core)
-target_precompile_headers(HarmonyUI REUSE_FROM harmony_core)
-target_precompile_headers(harmony_examples REUSE_FROM harmony_core)
+# PCH is disabled when clang-tidy is ON to prevent analysis of third-party headers.
+if (USE_PRECOMPILED_HEADERS AND NOT ENABLE_CLANG_TIDY)
+    target_precompile_headers(harmony_core PRIVATE
+        <Eigen/Dense>
+        <symengine/basic.h>
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/core/Constants.h"
+    )
+    target_precompile_headers(Harmony REUSE_FROM harmony_core)
+    target_precompile_headers(HarmonyUI REUSE_FROM harmony_core)
+    target_precompile_headers(harmony_examples REUSE_FROM harmony_core)
+endif()
 
 if (MSVC)
     # Set Harmony as a startup project on Visual Studio Solution
@@ -93,6 +106,22 @@ if (MSVC)
 
     # Add the MP compiler flag for parallel compilation
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+endif()
+
+# Enable clang-tidy analysis
+if(ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
+    set(CLANG_TIDY_COMMAND
+        "${CLANG_TIDY_EXE}"
+        "--allow-no-checks"
+        "--header-filter=${CMAKE_SOURCE_DIR}/src/.*"
+        "--exclude-header-filter=.*miniconda3.*"            # Skip checks on dependencies
+        "--exclude-header-filter=.*stb_image_write\\.h")    # Skip check on third-part header file
+    foreach(HARMONY_TARGET IN ITEMS harmony_core harmony_examples Harmony HarmonyUI)
+        set_target_properties(${HARMONY_TARGET} PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+    endforeach()
+    # Generate a .clang-tidy in build/_deps to disable analysis for all fetched dependencies
+    file(WRITE "${CMAKE_BINARY_DIR}/_deps/.clang-tidy" "Checks: '-*'\n")
 endif()
 
 # -----------------------------------------------------------------------------

@@ -1,5 +1,5 @@
-#ifndef _DQSYM_H_
-#define _DQSYM_H_
+#ifndef HARMONY_SOLVER_DQSYM_DQSYM_H
+#define HARMONY_SOLVER_DQSYM_DQSYM_H
 
 /**
  * @file DQsym.h
@@ -202,4 +202,4 @@ private:
     std::unordered_map<std::string, Element*> converters;
 };
 
-#endif
+#endif // HARMONY_SOLVER_DQSYM_DQSYM_H

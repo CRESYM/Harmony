@@ -1,5 +1,5 @@
-#ifndef _INCLUDE_CONTROL_BLOCKS_H
-#define _INCLUDE_CONTROL_BLOCKS_H
+#ifndef HARMONY_CORE_INCLUDE_CONTROL_BLOCKS_H
+#define HARMONY_CORE_INCLUDE_CONTROL_BLOCKS_H
 
 /**
  * @file Include_control_blocks.h
@@ -19,4 +19,4 @@
 #include "Control/Filter.h"
 #include "Control/Integrator.h"
 
-#endif
+#endif // HARMONY_CORE_INCLUDE_CONTROL_BLOCKS_H

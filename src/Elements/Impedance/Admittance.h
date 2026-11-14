@@ -1,5 +1,5 @@
-#ifndef _ADMITTANCE_H_
-#define _ADMITTANCE_H_
+#ifndef HARMONY_ELEMENTS_IMPEDANCE_ADMITTANCE_H
+#define HARMONY_ELEMENTS_IMPEDANCE_ADMITTANCE_H
 
 /**
  * @file Admittance.h
@@ -37,5 +37,5 @@ private:
     //DenseMatrix Y_matrix; // Admittance matrix
 };
 
-#endif // _ADMITTANCE_H_
+#endif // HARMONY_ELEMENTS_IMPEDANCE_ADMITTANCE_H
 

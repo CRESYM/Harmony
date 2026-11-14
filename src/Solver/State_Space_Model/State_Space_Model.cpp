@@ -365,7 +365,7 @@ void StateSpaceModel::expandBForDQsym()
             for (int p = 0; p < g.rawCols; ++p) {
                 int group_base = g.dqsymStartCol + p * 3;
                 Eigen::VectorXd raw_col = B.col(g.rawStartCol + p);
-                int nx = B.rows();
+                Eigen::Index nx = B.rows();
                 for (int ph = 0; ph < 3; ++ph) {
                     if (group_base + ph < nu_dqsym) {
                         Eigen::VectorXd diag_col = Eigen::VectorXd::Zero(nx);
@@ -381,7 +381,7 @@ void StateSpaceModel::expandBForDQsym()
 
     // D_dqsym: same expansion pattern applied to D
     if (D.cols() > 0) {
-        int ny = D.rows();
+        Eigen::Index ny = D.rows();
         D_dqsym = Eigen::MatrixXd::Zero(ny, nu_dqsym);
         for (const auto& g : input_groups) {
             if (g.rawCols == g.dqsymCols) {

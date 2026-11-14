@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HARMONY_JSON_COMPUTATION_RUNNER_H
+#define HARMONY_JSON_COMPUTATION_RUNNER_H
 
 #include "simulation_builder.h"
 
@@ -27,3 +28,5 @@ private:
 	void registerBuiltins();
 	static std::string normalizeType(const JSON& calc);
 };
+
+#endif // HARMONY_JSON_COMPUTATION_RUNNER_H

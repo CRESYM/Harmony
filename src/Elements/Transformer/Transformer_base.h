@@ -1,5 +1,5 @@
-#ifndef TRANSFORMER_BASE_H
-#define TRANSFORMER_BASE_H
+#ifndef HARMONY_ELEMENTS_TRANSFORMER_TRANSFORMER_BASE_H
+#define HARMONY_ELEMENTS_TRANSFORMER_TRANSFORMER_BASE_H
 
 /**
  * @file Transformer_base.h
@@ -63,4 +63,4 @@ protected:
     //std::complex<double> voltage_secondary; // Secondary winding voltage
 };
 
-#endif
+#endif // HARMONY_ELEMENTS_TRANSFORMER_TRANSFORMER_BASE_H
