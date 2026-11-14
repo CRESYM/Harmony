@@ -52,9 +52,16 @@ API comments: use Doxygen `/** … */` so they appear in the generated reference
 
 Harmony uses [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/index.html) to check the code for potential problems and deviations from recommended C++ coding practices. This process is called _static analysis_: the code is inspected without actually running the application.
 
-Clang-Tidy supports many different checks. The checks used in Harmony are specified in the repository's [.clang-tidy](../.clang-tidy) configuration file.
+Clang-Tidy supports many different checks. The checks used in Harmony are specified in the repository's [.clang-tidy](../.clang-tidy) configuration file. The current enabled checks and the number of warnings they produce are:
+* `portability`: **7 warnings**. Detects code that may behave differently across platforms, compilers, or architectures.
+* `bugprone`: **198 warnings**. Identifies suspicious code constructs and common programming mistakes that could lead to bugs or unexpected behavior. Excludes `bugprone-easily-swappable-parameters`.
+* `clang-analyzer`: **26 warnings**. Uses deeper static analysis to detect potential bugs, such as null pointer dereferences, uninitialized values, and incorrect memory access.
+* `cppcoreguidelines`: **4178 warnings**. Checks compliance with the C++ Core Guidelines, promoting safer, more maintainable, and more idiomatic C++ code.
 
-Clang-Tidy is automatically run on pull requests targeting the `develop` and `main` branches. You can also run it locally to check your changes before opening a pull request.
+**Note**: The warning counts below reflect the results of a static analysis run on the current version of the Harmony codebase (commit `f8a9300d59d`). They are provided as a snapshot and may change as the codebase evolves or the Clang-Tidy configuration is updated.
+
+Clang-Tidy is automatically run on pull requests targeting the `develop` and `main` branches. The check focuses on warnings in code introduced or modified by the pull request, rather than reporting all existing warnings in the codebase. You can also run Clang-Tidy locally to check your changes and identify potential issues before opening a pull request.
+
 
 ### Installing Clang-Tidy
 
@@ -98,7 +105,7 @@ There are two ways to run Clang-Tidy locally:
 
 Clang-Tidy needs to know how Harmony is compiled, including which compiler options and external libraries are used. This information is provided through a file called `compile_commands.json`. CMake can generate this file automatically when the `CMAKE_EXPORT_COMPILE_COMMANDS` option is enabled. 
 
-**1. Configure the project**. Run the following commands from the root of the repository, replacing `<path_to_gurobi>` with the path to your local Gurobi installation. For example, on Linux: `/opt/gurobi1301/linux64` and on macOS: `/Library/gurobi1301/macos_universal2`
+**1. Configure the project**. Run the following commands from the root of the repository, replacing `<path_to_gurobi_installation>` with the path to your local Gurobi installation. For example, on Linux: `/opt/gurobi1301/linux64` and on macOS: `/Library/gurobi1301/macos_universal2`
 
 ```bash
 # Create a separate build directory for static analysis

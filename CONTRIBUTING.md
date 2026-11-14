@@ -88,7 +88,7 @@ When creating the pull request:
 
 When a pull request targeting the `develop` branch is opened, the following GitHub Actions workflows are automatically triggered:
 * **Build and test (Windows, Linux and macOS)**: Three separate workflows build Harmony and run its tests on Windows, Linux and macOS. These checks help ensure that the proposed changes compile and that the existing functionality remains intact across all supported operating systems.
-* **Static analysis (Clang-Tidy)**: This workflow runs [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/index.html) on the code introduced or modified in the pull request. It uses the checks configured in the [.clang-tidy](.clang-tidy) file to identify potential issues. Any findings are reported in the workflow results and a comment is automatically added to the pull request.
+* **Static analysis (Clang-Tidy)**: This workflow runs [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/index.html) on the code introduced or modified in the pull request. It uses the checks configured in the [.clang-tidy](.clang-tidy) file to identify potential issues. Any findings are reported in the workflow results and a comment is automatically added to the pull request. See the [developer guide](docs/developer-guide.md) for more information.
 
 You can monitor the progress and results of these workflows in the _Checks_ tab of the pull request. If a workflow fails or Clang-Tidy reports issues that need to be addressed, make the necessary corrections in your branch and push the updated commits to GitHub. The existing pull request will be updated automatically, and the relevant workflows will run again to check your changes.
 

@@ -1,2 +1,2 @@
 # Clang-tidy configurations
-Checks: 'portability-*,bugprone-*,-bugprone-easily-swappable-parameters,clang-analyzer-*'
+Checks: 'portability-*,bugprone-*,-bugprone-easily-swappable-parameters,clang-analyzer-*,cppcoreguidelines-*'
