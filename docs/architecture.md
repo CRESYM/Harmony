@@ -276,9 +276,182 @@ classDiagram
 
 </details>
 
+## Network
+
+<details>
+  <summary>Network and Subnetwork</summary>
+
+```mermaid
+---
+config:
+  theme: redux-color
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+  direction LR
+  class Network {
+      +Network()
+      +liveFlag() std::shared_ptr
+      +addBus(...) void
+      +addBusView(...) void
+      +addElement(...) void
+      +addElementView(...) void
+      +connectElementToBus(...) void
+      +deleteElement(...) void
+      +deleteBus(...) void
+      +printConnections() void
+      +printBuses() void
+      +printElements() void
+      +print_summary() void
+      +getBuses() std::unordered_map~std::string, Bus*~&
+      +getElements() std::unordered_map~std::string, Element*~&
+      +getConnections() Net&
+      +add_areas() void
+      +empty_areas() void
+      +is_area_empty() bool
+      +get_ac_grid_names() std::vector~std::string~
+      +get_dc_grid_names() std::vector~std::string~
+      +get_ac_grids() std::unordered_map~std::string, SubNetwork*~&
+      +get_dc_grids() std::unordered_map~std::string, SubNetwork*~&
+      +get_converters() std::unordered_map~std::string, Element*~&
+  }
+
+  class SubNetwork {
+      +SubNetwork(...)
+      +getSubNetworkName() std::string
+      +setSubNetworkName(...) void
+      +addOutput(...) void
+      +setTransformation(...) void
+      +getTransformation() bool
+      +getOutputs() std::unordered_map~std::string, Bus*~&
+      +getNumberOfOutputs() size_t
+      +getName() std::string
+      +printInfo() void
+  }
+  Network <|-- SubNetwork
+```
+  
+</details>
+
+
+<!-- ***************************************************************** -->
+<!-- BUS -->
+<!-- ***************************************************************** -->
+
+<details>
+  <summary>Bus</summary>
+
+```mermaid
+---
+config:
+  theme: redux-color
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+  class Bus {
+      +Bus(...)
+      +getBusName() std::string
+      +getPinNumber() int
+      +getBusLocation() std::string
+      +getConnectedElements() std::vector~Element*~
+      +setBusName(...) void
+      +isGround() bool
+      +attachElement(...) void
+      +detachElement(...) void
+      +printConnectedElements() void
+      +computePowerFlowAC(...) void
+      +computePowerFlowDC(...) void
+      +setOPFInfo(...) void
+      +getOPFInfo() std::map~std::string, double~
+  }
+```
+
+</details>
+
+## Control
+
+<!-- ***************************************************************** -->
+<!-- CONTROL -->
+<!-- ***************************************************************** -->
+
+<details>
+  <summary>Filter, Integrator and Controllers</summary>
+  
+```mermaid
+---
+config:
+  theme: redux-color
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+  class ControlBlock {
+      +ControlBlock()
+      +printValues() void
+  }
+
+  class Filter {
+      +Filter(...)
+      +printValues() void
+      +updateParameters(...) void
+      +define_differential_equations(...) VectorXd
+      +getFilterSize() int
+  }
+
+  class Integrator {
+      +Integrator()
+      +define_differential_equations(...) Eigen::VectorXd
+  }
+
+  class Controller {
+      +Controller(...)
+      +define_equations(...) Eigen::VectorXd
+      +printValues() void
+      +setReference(...) void
+      +getReference() std::vector~double~
+      +getControllerSymbol() std::string
+      +getNumberOfSignals() int
+      +getParameters() std::vector~double~
+      +setParameters(...) void
+  }
+
+  class ProportionalController {
+      +ProportionalController(...)
+      +define_equations(...) Eigen::VectorXd
+      +printValues() void
+      +getK() double
+      +setK(...) void
+      +getParameters() std::vector~double~
+      +setParameters(...) void
+  }
+
+  class ProportionalIntegralController {
+      +ProportionalIntegralController(...)
+      +updateParameters(...) void
+      +define_equations(...) Eigen::VectorXd
+      +printValues() void
+      +getKp() double
+      +getKi() double
+      +getZeta() double
+      +getBandwidth() double
+      +getParameters() std::vector~double~
+      +setParameters(...) void
+  }
+
+  ControlBlock <|-- Filter
+  ControlBlock <|-- Integrator
+  ControlBlock <|-- Controller
+  Controller <|-- ProportionalController
+  Controller <|-- ProportionalIntegralController
+```
+
+</details>
+
 ## Solvers
 
-The diagrams below illustrate the class structure of the Solvers in Harmony. Unlike Elements, which share a common Element base class, each Solver is an independent class with its own structure and implementation. Consequently, each Solver is represented separately, without any shared class hierarchy or common structure.
+The diagrams below illustrate the class structure of the solvers in Harmony. Unlike elements, which share a common `element` base class, each solver is an independent class with its own structure and implementation. Consequently, each solver is represented separately, without any shared class hierarchy or common structure.
 
 For detailed information about each class, including its properties and methods, please refer to the [API documentation](https://cresym.github.io/Harmony-Doc/api/index.html).
 
