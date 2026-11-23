@@ -1,13 +1,50 @@
 # Harmony Architecture
 
+This document provides an overview of Harmony's software architecture. It illustrates the main application components, their relationships, and the organization of the core classes and computational modules.
 
+The first diagram presents the **top-level architecture** of Harmony, showing the main application entry points (CLI and GUI) and how they connect to the execution layer and the JSON simulation pipeline. It provides a high-level view of how user interactions are handled and how simulations are initiated.
+
+The subsequent diagrams provide a more detailed view of the internal architecture, covering the main class structures and relationships of the elements, network, control components and solvers.
+
+These diagrams are intended to document the overall architecture and provide insight into how the different parts of Harmony are organized. For detailed information about individual classes, including their methods and attributes, please refer to the [API documentation](https://cresym.github.io/Harmony-Doc/api/index.html).
+
+<details>
+  <summary>Top-level architecture</summary>
+  
+```mermaid
+---
+config:
+  theme: redux-color
+  themeVariables:
+    lineColor: '#64748B'
+---
+flowchart LR
+  subgraph ENTRY["Harmony entry points"]
+    CLI["CLI<br><i>src/main.cpp</i>"]
+    GUI["GUI<br><i>src/ui/harmony_<br>ui_main.cpp</i>"]
+  end
+  subgraph RUN["Execution layer"]
+    RUNNER["Unified CLI runner<br><i>src/ui/cli.cpp</i>"]
+    CPPREG["Example registry<br><i>src/examples/</i>"]
+    JSONPIPE
+  end
+  subgraph JSONPIPE["JSON simulation pipeline<br><i>src/json/</i>"]
+    J1["Build elements"]
+    J2["Assemble and<br>validate grid"]
+    J3["Run Simulation"]
+  end
+  J1 --> J2
+  J2 --> J3
+  USER["User"] --> CLI & GUI
+  CLI --> RUNNER
+  GUI --> RUNNER
+  RUNNER --> CPPREG & J1
+```
+  
+</details>
 
 ## Elements
-The diagrams below illustrate the class structure and relationships of all Elements in Harmony. All Elements inherit from the `Element` base class.
-
-For readability and ease of navigation, the diagrams are divided into several smaller, interconnected components rather than presenting all classes in a single diagram.
-
-These diagrams are intended to provide an overview of the class hierarchy and the relationships between classes, rather than document their individual implementations or functionality. For detailed information about each class, including its properties and methods, please refer to the [API documentation](https://cresym.github.io/Harmony-Doc/api/index.html).
+The diagrams below illustrate the class structure and relationships of all Elements in Harmony. All Elements inherit from the `Element` base class. For readability and ease of navigation, the diagrams are divided into several smaller, interconnected components rather than presenting all classes in a single diagram.
 
 
 ### Network and Passive Elements
@@ -451,9 +488,7 @@ classDiagram
 
 ## Solvers
 
-The diagrams below illustrate the class structure of the solvers in Harmony. Unlike elements, which share a common `element` base class, each solver is an independent class with its own structure and implementation. Consequently, each solver is represented separately, without any shared class hierarchy or common structure.
-
-For detailed information about each class, including its properties and methods, please refer to the [API documentation](https://cresym.github.io/Harmony-Doc/api/index.html).
+The diagrams below illustrate the class structure of the solvers in Harmony. Unlike elements, which share a common `Element` base class, each solver is an independent class with its own structure and implementation. Consequently, each solver is represented separately, without any shared class hierarchy or common structure.
 
 <!-- ***************************************************************** -->
 <!-- Certificate -->
@@ -907,7 +942,3 @@ classDiagram
 ```
 
 </details>
-
-
-
-
