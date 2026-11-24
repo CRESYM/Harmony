@@ -42,8 +42,8 @@ jobs:
       - name: Build and run the tests
         shell: bash -l {0}
         run: |
-          mkdir tests/build
-          cd tests/build
+          mkdir build
+          cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DGUROBI_PATH="/Library/gurobi1301/macos_universal2" -DENABLE_TEST_COVERAGE=ON
           cmake --build . --config Release -j4
           ctest -j 4
@@ -55,9 +55,9 @@ jobs:
       - name: Generate test coverage report
         shell: bash -l {0}
         run: |
-          cd tests/build
+          cd build
           lcov --capture --directory . --output-file coverage.info --ignore-errors inconsistent,unsupported,format
-          lcov --remove coverage.info '/usr/*' '*/googletest/*' '*/miniconda3/*' '/Library/*' --output-file coverage.info --ignore-errors inconsistent,unsupported,format,unused
+          lcov --remove coverage.info '/usr/*' '*/googletest/*' '*/miniconda3/*' '/Library/*' '*/_deps/*' --output-file coverage.info --ignore-errors inconsistent,unsupported,format,unused
           genhtml coverage.info --output-directory coverage_report --ignore-errors inconsistent,unsupported,format,unused,category
 
       # Store html report as an artifact

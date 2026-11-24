@@ -33,6 +33,10 @@ cmake_minimum_required(VERSION 4.0)
 #       Enable static analysis with Clang Tidy
 #       Default: OFF
 #
+#   ENABLE_TEST_COVERAGE
+#       Enable test coverage tracking
+#       Default: OFF
+#
 # In short:
 #   - Build settings are configured here
 #   - Source files are listed in sources.cmake
@@ -85,6 +89,7 @@ add_library(
 # -----------------------------------------------------------------------------
 option(ENABLE_CLANG_TIDY "Enable static analysis with Clang Tidy" OFF)
 option(USE_PRECOMPILED_HEADERS "Enable precompiled headers for Harmony, HarmonyUI and harmony_examples" ON)
+option(ENABLE_TEST_COVERAGE "Enable test coverage tracking" OFF)
 
 # Slim PCH: Eigen + SymEngine + Constants only. Include_components.h and
 # Helper_Functions.h change too often and pull too much to be worth caching.
@@ -122,6 +127,14 @@ if(ENABLE_CLANG_TIDY)
     endforeach()
     # Generate a .clang-tidy in build/_deps to disable analysis for all fetched dependencies
     file(WRITE "${CMAKE_BINARY_DIR}/_deps/.clang-tidy" "Checks: '-*'\n")
+endif()
+
+# Enable clang-tidy analysis
+if(ENABLE_TEST_COVERAGE)
+    foreach(HARMONY_TARGET IN ITEMS harmony_core harmony_examples Harmony HarmonyUI)
+        target_compile_options(${HARMONY_TARGET} PRIVATE -O0 -g --coverage)
+        target_link_options(${HARMONY_TARGET} PRIVATE --coverage)
+    endforeach()
 endif()
 
 # -----------------------------------------------------------------------------

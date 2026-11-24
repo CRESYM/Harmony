@@ -56,7 +56,6 @@ file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/files")
 
 
 # Enable test coverage
-option(ENABLE_TEST_COVERAGE "Enable test coverage tracking" OFF)
 if(ENABLE_TEST_COVERAGE)
     target_compile_options(testharmony PRIVATE -O0 -g --coverage)
     target_link_options(testharmony PRIVATE --coverage)
