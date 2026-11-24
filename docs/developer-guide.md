@@ -31,7 +31,8 @@ The compiler include root is `src/` only. Quoted includes are paths under that r
 2. Register headers/sources in [`cmake/sources.cmake`](../cmake/sources.cmake).
 3. If the type should be loadable from JSON, extend `src/json/` builders + [`input-file-format.md`](input-file-format.md).
 4. Prefer a small example under `src/examples/` and a unit test under `tests/`.
-5. Document the workflow in the [User Manual](manual/README.md) when it is user-facing.
+5. Add a diagram for your class in [`docs/architecture`](architecture.md). 
+6. Document the workflow in the [User Manual](manual/README.md) when it is user-facing.
 
 API comments: use Doxygen `/** … */` so they appear in the generated reference ([doxygen/README.md](doxygen/README.md)).
 
