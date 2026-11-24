@@ -65,5 +65,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: harmony-test-coverage
-          path: tests/build/coverage_report
+          path: build/coverage_report
           retention-days: 30
