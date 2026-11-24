@@ -46,7 +46,7 @@ Harmony can be compiled on Windows, Linux and macOS. The requirements for each o
     - Linux: GNU C and C++ compilers (tested version with 11.4.0) and GNU make
     - MacOS: Apple Clang C and C++ compilers (tested with version 21.0.0) and GNU make
     - Windows: [Visual Studio](https://visualstudio.microsoft.com) - version 2022 or newer, with a "Desktop Development for C++" workload installed (See [installation docs.](https://learn.microsoft.com/en-us/visualstudio/install/install-visual-studio?view=vs-2022))
-- [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python, and a few other packages. Select **Add to path** during installation to allow miniconda to be used from Visual Studio.
+- [miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) - a miniature version of Anaconda that includes only conda, Python, and a few other packages. **Select 'Add to path'** during installation to allow miniconda to be used from Visual Studio.
 - [Gurobi](https://www.gurobi.com/product/download-center/optimizer-software) - optimization software (license required, free for academics).
 - Additional system packages (Linux only):
     - ```bash
@@ -124,7 +124,7 @@ Replace `<option>` with one or more of the options listed below.
 
 | Option | Description |
 |----------|-----------|
-| `--help -h` | Display the help message. |
+| `--help`, `-h` | Display the help message. |
 | `--cpp <example-name>` | Run one of the built-in examples. |
 | `--json <path-to-file>` | Run a simulation from a JSON input file. |
 | `--json-path <directory>` | Set the directory used to search for JSON input files. |
@@ -132,7 +132,7 @@ Replace `<option>` with one or more of the options listed below.
 | `--list-json` | List all JSON input files in the current search path. |
 | `--no-plot` | Disable plotting (applies to examples only). |
 | `--search-path <directory>` | Add a directory to the search path for JSON input files. |
-| `--verbose` `-v` | Enable verbose output. |
+| `--verbose`, `-v` | Enable verbose output. |
 
 
 ### Building and running the tests
@@ -140,27 +140,27 @@ Replace `<option>` with one or more of the options listed below.
 The test suite is built in much the same way as Harmony. Starting from the *root directory* of the repository, with the `harmony` Conda environment activated, run:
 
 ```bash
-# From the repository root (reuse the same build/ tree as Harmony)
+# From the root of the repository
 cmake --build build --config Release --target testharmony -j 4
 ctest --test-dir build -C Release
 ```
 
-`testharmony` links `harmony_core` and `harmony_examples`; you do not configure a second CMake project under `tests/`.
-
 ## Documentation
 
-Start at the **[documentation index](docs/README.md)** — it maps the user manual, install/run guides, JSON reference, certificates, and API docs.
+Browse the **[docs directory](docs/README.md)** for the full project documentation or jump directly to a topic.
 
-| Audience | Document |
-|----------|----------|
-| Tutorials & workflows | [User Manual](docs/manual/README.md) |
-| Install / build / test | [installation.md](docs/installation.md) |
-| Run GUI / CLI | [running-harmony.md](docs/running-harmony.md) |
-| JSON schema | [input-file-format.md](docs/input-file-format.md) |
-| Certificates | [Manual Ch. 8](docs/manual/08-certificates.md) |
-| Extend / contribute | [developer-guide.md](docs/developer-guide.md) |
-| CI / packaging | [maintainer-guide.md](docs/maintainer-guide.md) |
-| C++ API (Doxygen) | [doxygen/README.md](docs/doxygen/README.md) |
+| Document | Covers |
+|----------|--------|
+| [User Manual](docs/manual/README.md) | Core concepts, component reference, solvers and workflows |
+| [API Reference](docs/doxygen/README.md) | Doxygen generated API documentation |
+| [Architecture](docs/architecture.md) | System architecture and class diagrams for elements and solvers |
+| [Installation Guide](docs/installation.md) | Installing, building, and running tests |
+| [Running Harmony](docs/running-harmony.md) | GUI and CLI usage |
+| [Input File Format](docs/input-file-format.md) | JSON configuration schema and supported options |
+| [Manual Ch. 8](docs/manual/08-certificates.md) | Certificates |
+| [Contributing Guidelines](CONTRIBUTING.md) | Make contributions to the project |
+| [Developer Guide](docs/developer-guide.md) | Repository structure, adding new files, static analysis |
+| [Maintainer Guide](docs/maintainer-guide.md) | Adding dependencies, GitHub Actions workflows and release packaging |
 
 
 ## Contributors
